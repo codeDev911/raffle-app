@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "postinstall": "prisma db push --accept-data-loss ",
+    "postinstall": "prisma db push --accept-data-loss",
     "lint": "next lint"
   },
   "dependencies": {
