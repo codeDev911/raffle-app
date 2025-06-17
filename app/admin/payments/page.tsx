@@ -19,6 +19,7 @@ import {
   Eye,
   Mail,
   MoreHorizontal,
+  RefreshCw,
 } from "lucide-react"
 import { formatCurrency, formatDateTime } from "@/lib/utils"
 import { ExportCSVButton } from "@/components/export-csv-button"
@@ -60,26 +61,63 @@ export default function AdminPaymentsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [lastFetch, setLastFetch] = useState<Date | null>(null)
 
   useEffect(() => {
     fetchPayments()
+    // Set up auto-refresh every 30 seconds in production
+    const interval = setInterval(fetchPayments, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
     filterPayments()
   }, [payments, searchTerm, statusFilter])
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true)
+    setError(null)
+
     try {
-      const response = await fetch("/api/admin/payments")
+      // Add cache-busting timestamp
+      const timestamp = new Date().getTime()
+      const response = await fetch(`/api/admin/payments?t=${timestamp}`, {
+        method: "GET",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
-      setPayments(data.payments)
-      setStats(data.stats)
+      console.log("Fetched payments data:", data)
+
+      setPayments(data.payments || [])
+      setStats(
+        data.stats || {
+          totalRevenue: 0,
+          pendingPayments: 0,
+          failedPayments: 0,
+          successRate: 0,
+        },
+      )
+      setLastFetch(new Date())
     } catch (error) {
       console.error("Error fetching payments:", error)
+      setError("Failed to fetch payments data. Please try again.")
     } finally {
-      setIsLoading(false)
+      if (showLoading) setIsLoading(false)
     }
+  }
+
+  const handleRefresh = () => {
+    fetchPayments(true)
   }
 
   const filterPayments = () => {
@@ -149,8 +187,29 @@ export default function AdminPaymentsPage() {
     { key: "createdAt", label: "Date" },
   ]
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>
+  if (isLoading && payments.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <p>Loading payments data...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && payments.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={handleRefresh} className="bg-red-500 hover:bg-red-600">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try Again
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -159,9 +218,18 @@ export default function AdminPaymentsPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Payment Management</h1>
-          <p className="text-gray-600 mt-2">Monitor and manage all payment transactions</p>
+          <div className="flex items-center gap-4 mt-2">
+            <p className="text-gray-600">Monitor and manage all payment transactions</p>
+            {lastFetch && <p className="text-sm text-gray-500">Last updated: {formatDateTime(lastFetch)}</p>}
+          </div>
         </div>
-        <ExportCSVButton data={filteredPayments} filename="payments" headers={csvHeaders} />
+        <div className="flex gap-2">
+          <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isLoading} className="rounded-2xl">
+            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          <ExportCSVButton data={filteredPayments} filename="payments" headers={csvHeaders} />
+        </div>
       </div>
 
       {/* Stats */}
@@ -303,7 +371,12 @@ export default function AdminPaymentsPage() {
                             <Eye className="mr-2 h-4 w-4" />
                             View Details
                           </Link>
-                        </DropdownMenuItem> 
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <div>
+                            <ReceiptModal payment={payment} />
+                          </div>
+                        </DropdownMenuItem>
                         <DropdownMenuItem>
                           <Mail className="mr-2 h-4 w-4" />
                           Contact Customer

@@ -3,8 +3,18 @@ import { Badge } from "@/components/ui/badge"
 import { Trophy, Users, CreditCard, TrendingUp, Gift, DollarSign, AlertCircle } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 import { formatCurrency, formatDate } from "@/lib/utils"
+import { unstable_noStore as noStore } from "next/cache"
+
+// Force dynamic rendering and disable caching
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 async function getDashboardStats() {
+  // Disable function caching
+  noStore()
+
+  console.log("Fetching dashboard stats...")
+
   const [totalRevenue, activeRaffles, totalCustomers, pendingPayments, recentRaffles, recentCustomers, recentPayments] =
     await Promise.all([
       prisma.payment.aggregate({
@@ -51,15 +61,25 @@ async function getDashboardStats() {
             select: { name: true, email: true },
           },
           entries: {
-              select: {
+            select: {
               raffle: {
                 select: { title: true },
               },
-            }
+            },
           },
         },
       }),
     ])
+
+  console.log("Dashboard stats fetched:", {
+    totalRevenue: totalRevenue._sum.amount,
+    activeRaffles,
+    totalCustomers,
+    pendingPayments,
+    recentRafflesCount: recentRaffles.length,
+    recentCustomersCount: recentCustomers.length,
+    recentPaymentsCount: recentPayments.length,
+  })
 
   return {
     totalRevenue: totalRevenue._sum.amount || 0,
@@ -112,6 +132,7 @@ export default async function AdminDashboard() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-gray-600 mt-2">Welcome to your admin dashboard. Here's what's happening today.</p>
+        <p className="text-xs text-gray-500 mt-1">Last updated: {new Date().toLocaleString()}</p>
       </div>
 
       {/* Stats Grid */}
@@ -155,26 +176,33 @@ export default async function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.recentRaffles.map((raffle) => (
-                <div key={raffle.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                  <div>
-                    <h4 className="font-semibold text-gray-900">{raffle.title}</h4>
-                    <p className="text-sm text-gray-600">
-                      {raffle._count.entries} entries • {formatCurrency(raffle.price * raffle._count.entries)}
-                    </p>
+              {stats.recentRaffles.length > 0 ? (
+                stats.recentRaffles.map((raffle) => (
+                  <div key={raffle.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{raffle.title}</h4>
+                      <p className="text-sm text-gray-600">
+                        {raffle._count.entries} entries • {formatCurrency(raffle.price * raffle._count.entries)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <Badge
+                        className={`rounded-2xl ${
+                          raffle.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {raffle.status}
+                      </Badge>
+                      <p className="text-xs text-gray-500 mt-1">{formatDate(new Date(raffle.endDate))}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <Badge
-                      className={`rounded-2xl ${
-                        raffle.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {raffle.status}
-                    </Badge>
-                    <p className="text-xs text-gray-500 mt-1">{formatDate(new Date(raffle.endDate))}</p>
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <Gift className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500">No recent raffles found</p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -190,21 +218,28 @@ export default async function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.recentCustomers.map((customer) => {
-                const totalSpent = customer.payments.reduce((sum, payment) => sum + payment.amount, 0)
-                return (
-                  <div key={customer.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
-                    <div>
-                      <h4 className="font-semibold text-gray-900">{customer.name}</h4>
-                      <p className="text-sm text-gray-600">{customer.email}</p>
+              {stats.recentCustomers.length > 0 ? (
+                stats.recentCustomers.map((customer) => {
+                  const totalSpent = customer.payments.reduce((sum, payment) => sum + payment.amount, 0)
+                  return (
+                    <div key={customer.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                      <div>
+                        <h4 className="font-semibold text-gray-900">{customer.name}</h4>
+                        <p className="text-sm text-gray-600">{customer.email}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-green-600">{formatCurrency(totalSpent)}</p>
+                        <p className="text-xs text-gray-500">{formatDate(new Date(customer.createdAt))}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-green-600">{formatCurrency(totalSpent)}</p>
-                      <p className="text-xs text-gray-500">{formatDate(new Date(customer.createdAt))}</p>
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })
+              ) : (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500">No recent customers found</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -232,38 +267,47 @@ export default async function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {stats.recentPayments.map((payment) => (
-                  <tr key={payment.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className="font-medium text-gray-900">{payment.user.name}</p>
-                        <p className="text-sm text-gray-600">{payment.user.email}</p>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <p className="text-gray-900">{payment.entries[0]?.raffle?.title || "N/A"}</p>
-                    </td>
-                    <td className="py-3 px-4">
-                      <p className="font-semibold text-green-600">{formatCurrency(payment.amount)}</p>
-                    </td>
-                    <td className="py-3 px-4">
-                      <Badge
-                        className={`rounded-2xl ${
-                          payment.status === "COMPLETED"
-                            ? "bg-green-100 text-green-700"
-                            : payment.status === "PENDING"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {payment.status}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4">
-                      <p className="text-sm text-gray-600">{formatDate(new Date(payment.createdAt))}</p>
+                {stats.recentPayments.length > 0 ? (
+                  stats.recentPayments.map((payment) => (
+                    <tr key={payment.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-medium text-gray-900">{payment.user.name}</p>
+                          <p className="text-sm text-gray-600">{payment.user.email}</p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <p className="text-gray-900">{payment.entries[0]?.raffle?.title || "N/A"}</p>
+                      </td>
+                      <td className="py-3 px-4">
+                        <p className="font-semibold text-green-600">{formatCurrency(payment.amount)}</p>
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge
+                          className={`rounded-2xl ${
+                            payment.status === "COMPLETED"
+                              ? "bg-green-100 text-green-700"
+                              : payment.status === "PENDING"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {payment.status}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4">
+                        <p className="text-sm text-gray-600">{formatDate(new Date(payment.createdAt))}</p>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center">
+                      <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-500">No recent payments found</p>
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

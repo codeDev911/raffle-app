@@ -1,9 +1,17 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { unstable_noStore as noStore } from "next/cache"
+
+// Force dynamic rendering and disable caching
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 export async function GET(request: NextRequest) {
+  // Disable function caching
+  noStore()
+
   try {
-    
+     
 
     const [payments, stats] = await Promise.all([
       prisma.payment.findMany({
@@ -47,7 +55,15 @@ export async function GET(request: NextRequest) {
       entries: (payment.metadata as any)?.quantity || 1,
     }))
 
-    return NextResponse.json({
+    console.log("API: Payments data fetched successfully:", {
+      paymentsCount: formattedPayments.length,
+      totalRevenue: totalRevenue._sum.amount,
+      pendingPayments,
+      failedPayments,
+      successRate,
+    })
+
+    const response = NextResponse.json({
       payments: formattedPayments,
       stats: {
         totalRevenue: totalRevenue._sum.amount || 0,
@@ -56,8 +72,15 @@ export async function GET(request: NextRequest) {
         successRate,
       },
     })
+
+    // Add cache-control headers to prevent caching
+    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate")
+    response.headers.set("Pragma", "no-cache")
+    response.headers.set("Expires", "0")
+
+    return response
   } catch (error) {
-    console.error("Error fetching payments:", error)
+    console.error("API Error fetching payments:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
