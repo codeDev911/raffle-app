@@ -65,7 +65,7 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen bg-gray-50">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />

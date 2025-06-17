@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   CreditCard,
   Search,
@@ -15,10 +16,15 @@ import {
   TrendingUp,
   AlertTriangle,
   Smartphone,
+  Eye,
+  Mail,
+  MoreHorizontal,
 } from "lucide-react"
 import { formatCurrency, formatDateTime } from "@/lib/utils"
 import { ExportCSVButton } from "@/components/export-csv-button"
+import { ReceiptModal } from "@/components/receipt-modal"
 import Link from "next/link"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface Payment {
   id: string
@@ -217,109 +223,112 @@ export default function AdminPaymentsPage() {
         <CardHeader>
           <CardTitle className="flex items-center">
             <CreditCard className="mr-2 h-5 w-5 text-red-500" />
-            Recent Payments ({filteredPayments.length})
+            Payments ({filteredPayments.length})
           </CardTitle>
           <CardDescription>All payment transactions and their status</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {filteredPayments.map((payment) => (
-              <div key={payment.id} className="bg-gray-50 p-6 rounded-2xl hover:bg-gray-100 transition-colors">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <h3 className="text-lg font-semibold text-gray-900">{payment.user.name}</h3>
-                        <Badge
-                          className={`rounded-2xl ${
-                            payment.status === "COMPLETED"
-                              ? "bg-green-100 text-green-700"
-                              : payment.status === "PENDING"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : payment.status === "PROCESSING"
-                                  ? "bg-blue-100 text-blue-700"
-                                  : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {payment.status === "COMPLETED" && <CheckCircle className="w-3 h-3 mr-1" />}
-                          {payment.status === "PENDING" && <Clock className="w-3 h-3 mr-1" />}
-                          {payment.status === "PROCESSING" && <AlertTriangle className="w-3 h-3 mr-1" />}
-                          {payment.status === "FAILED" && <XCircle className="w-3 h-3 mr-1" />}
-                          {payment.status}
-                        </Badge>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-green-500">{formatCurrency(payment.amount)}</div>
-                        <div className="text-sm text-gray-500">{payment.entries} entries</div>
-                      </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Customer</TableHead>
+                <TableHead>Raffle</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Entries</TableHead>
+                <TableHead>Method</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPayments.map((payment) => (
+                <TableRow key={payment.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{payment.user.name}</div>
+                      <div className="text-sm text-gray-500">{payment.user.email}</div>
                     </div>
-
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-500">Payment ID:</span>
-                        <div className="font-medium">{payment.id.slice(0, 8)}...</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Transaction ID:</span>
-                        <div className="font-medium">{payment.transactionId || "N/A"}</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Method:</span>
-                        <div className="flex items-center space-x-1">
-                          <Smartphone className="h-3 w-3" />
-                          <span className="font-medium">{payment.method}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Date:</span>
-                        <div className="font-medium">{formatDateTime(new Date(payment.createdAt))}</div>
-                      </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-medium">{payment.raffleName}</div>
+                    <div className="text-sm text-gray-500">ID: {payment.id.slice(0, 8)}...</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-bold text-green-600">{formatCurrency(payment.amount)}</div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="rounded-2xl">
+                      {payment.entries}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <Smartphone className="h-4 w-4 text-gray-400" />
+                      <span>{payment.method}</span>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={`rounded-2xl ${
+                        payment.status === "COMPLETED"
+                          ? "bg-green-100 text-green-700"
+                          : payment.status === "PENDING"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : payment.status === "PROCESSING"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {payment.status === "COMPLETED" && <CheckCircle className="w-3 h-3 mr-1" />}
+                      {payment.status === "PENDING" && <Clock className="w-3 h-3 mr-1" />}
+                      {payment.status === "PROCESSING" && <AlertTriangle className="w-3 h-3 mr-1" />}
+                      {payment.status === "FAILED" && <XCircle className="w-3 h-3 mr-1" />}
+                      {payment.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">{formatDateTime(new Date(payment.createdAt))}</div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/payments/${payment.id}`}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Details
+                          </Link>
+                        </DropdownMenuItem> 
+                        <DropdownMenuItem>
+                          <Mail className="mr-2 h-4 w-4" />
+                          Contact Customer
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
-                    <div className="mt-3">
-                      <span className="text-gray-500">Raffle:</span>
-                      <div className="font-medium text-blue-600">{payment.raffleName}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Customer: {payment.user.email}</span>
-                  <div className="flex space-x-2">
-                    <Button asChild variant="outline" size="sm" className="rounded-2xl">
-                      <Link href={`/admin/payments/${payment.id}`}>View Details</Link>
-                    </Button>
-                    {payment.status === "PENDING" && (
-                      <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white rounded-2xl">
-                        Approve
-                      </Button>
-                    )}
-                    {payment.status === "FAILED" && (
-                      <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white rounded-2xl">
-                        Retry
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          {filteredPayments.length === 0 && (
+            <div className="text-center py-12">
+              <CreditCard className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No payments found</h3>
+              <p className="text-gray-600">
+                {searchTerm || statusFilter !== "All"
+                  ? "Try adjusting your search or filters"
+                  : "Payments will appear here once customers make purchases"}
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {filteredPayments.length === 0 && !isLoading && (
-        <Card className="rounded-2xl shadow-lg border-0">
-          <CardContent className="p-12 text-center">
-            <CreditCard className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No payments found</h3>
-            <p className="text-gray-600">
-              {searchTerm || statusFilter !== "All"
-                ? "Try adjusting your search or filters"
-                : "Payments will appear here once customers make purchases"}
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

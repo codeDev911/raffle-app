@@ -19,6 +19,7 @@ import { prisma } from "@/lib/prisma"
 import { formatCurrency, formatDateTime } from "@/lib/utils"
 import { notFound } from "next/navigation"
 import { UpdatePaymentStatus } from "@/components/update-payment-status"
+import { ReceiptModal } from "@/components/receipt-modal"
 
 async function getPaymentDetails(id: string) {
   const payment = await prisma.payment.findUnique({
@@ -89,8 +90,7 @@ export default async function PaymentDetailsPage({ params }: { params: { id: str
               : payment.status === "PENDING"
                 ? "bg-yellow-100 text-yellow-700"
                 : payment.status === "PROCESSING"
-                  ? "bg-blue-100 text-blue-700"
-                  
+                  ? "bg-blue-100 text-blue-700" 
                     : "bg-red-100 text-red-700"
           }`}
         >
@@ -161,7 +161,7 @@ export default async function PaymentDetailsPage({ params }: { params: { id: str
           </Card>
 
           {/* Raffle Information */}
-          {payment.entries?.raffle && (
+          {payment.entries[0]?.raffle && (
             <Card className="rounded-2xl shadow-lg border-0">
               <CardHeader>
                 <CardTitle>Raffle Information</CardTitle>
@@ -175,7 +175,7 @@ export default async function PaymentDetailsPage({ params }: { params: { id: str
                   />
                   <div>
                     <h3 className="text-lg font-semibold">{payment.entries[0].raffle.title}</h3>
-                    <p className="text-gray-600">Entry Price: {formatCurrency(payment.entries[0].raffle.price)}</p>
+                    <p className="text-gray-600">entries[0] Price: {formatCurrency(payment.entries[0].raffle.price)}</p>
                     <Button asChild variant="outline" size="sm" className="mt-2 rounded-2xl">
                       <Link href={`/admin/raffles/${payment.entries[0].raffle.id}`}>View Raffle Details</Link>
                     </Button>
@@ -257,9 +257,24 @@ export default async function PaymentDetailsPage({ params }: { params: { id: str
               )}
 
               <div className="space-y-2">
-                <Button variant="outline" className="w-full rounded-2xl">
-                  Send Receipt
-                </Button>
+                <ReceiptModal
+                  payment={{
+                    id: payment.id,
+                    amount: payment.amount,
+                    status: payment.status,
+                    method: payment.method,
+                    transactionId: payment.transactionId,
+                    createdAt: payment.createdAt.toISOString(),
+                    entries: payment.entries,
+                    raffleName: payment.raffleName,
+                    user: {
+                      name: payment.user.name,
+                      email: payment.user.email,
+                      phone: payment.user.phone ?? undefined,
+                      city: payment.user.city ?? undefined,
+                    },
+                  }}
+                />
                 <Button variant="outline" className="w-full rounded-2xl">
                   Contact Customer
                 </Button>
