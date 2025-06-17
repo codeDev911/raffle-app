@@ -8,8 +8,14 @@ import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { DeleteRaffleButton } from "@/components/delete-raffle-button"
+import { unstable_noStore as noStore } from "next/cache"
+
+// Force dynamic rendering and disable caching
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 async function getRaffles() {
+  noStore() // Disable caching for this function
   return await prisma.raffle.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -118,7 +124,7 @@ export default async function AdminRafflesPage() {
                       <Trophy className="h-4 w-4 text-yellow-500" />
                       <div>
                         <p className="text-sm text-gray-600">Revenue</p>
-                        <p className="font-semibold text-green-600">₹{revenue.toLocaleString()}</p>
+                        <p className="font-semibold text-green-600">{formatCurrency(revenue * 100)}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">

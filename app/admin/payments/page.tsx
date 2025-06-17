@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -13,54 +16,88 @@ import {
   AlertTriangle,
   Smartphone,
 } from "lucide-react"
-import { prisma } from "@/lib/prisma"
 import { formatCurrency, formatDateTime } from "@/lib/utils"
+import { ExportCSVButton } from "@/components/export-csv-button"
+import Link from "next/link"
 
-async function getPaymentsData() {
-  const [payments, stats] = await Promise.all([
-    prisma.payment.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
-    }),
-    Promise.all([
-      prisma.payment.aggregate({
-        where: { status: "COMPLETED" },
-        _sum: { amount: true },
-      }),
-      prisma.payment.count({ where: { status: "PENDING" } }),
-      prisma.payment.count({ where: { status: "FAILED" } }),
-      prisma.payment.count(),
-    ]),
-  ])
-
-  const [totalRevenue, pendingPayments, failedPayments, totalPayments] = stats
-  const completedPayments = totalPayments - pendingPayments - failedPayments
-  const successRate = totalPayments > 0 ? (completedPayments / totalPayments) * 100 : 0
-
-  return {
-    payments: payments.map((payment) => ({
-      ...payment,
-      raffleName: (payment.metadata as any)?.raffleName || "Unknown Raffle",
-      entries: (payment.metadata as any)?.quantity || 1,
-    })),
-    stats: {
-      totalRevenue: totalRevenue._sum.amount || 0,
-      pendingPayments,
-      failedPayments,
-      successRate,
-    },
+interface Payment {
+  id: string
+  amount: number
+  status: string
+  method: string
+  transactionId: string | null
+  createdAt: string
+  user: {
+    name: string
+    email: string
   }
+  raffleName: string
+  entries: number
 }
 
-export default async function AdminPaymentsPage() {
-  const { payments, stats } = await getPaymentsData()
+interface PaymentStats {
+  totalRevenue: number
+  pendingPayments: number
+  failedPayments: number
+  successRate: number
+}
+
+export default function AdminPaymentsPage() {
+  const [payments, setPayments] = useState<Payment[]>([])
+  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([])
+  const [stats, setStats] = useState<PaymentStats>({
+    totalRevenue: 0,
+    pendingPayments: 0,
+    failedPayments: 0,
+    successRate: 0,
+  })
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("All")
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    fetchPayments()
+  }, [])
+
+  useEffect(() => {
+    filterPayments()
+  }, [payments, searchTerm, statusFilter])
+
+  const fetchPayments = async () => {
+    try {
+      const response = await fetch("/api/admin/payments")
+      const data = await response.json()
+      setPayments(data.payments)
+      setStats(data.stats)
+    } catch (error) {
+      console.error("Error fetching payments:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const filterPayments = () => {
+    let filtered = payments
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (payment) =>
+          payment.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          payment.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          payment.raffleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          payment.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          payment.transactionId?.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+    }
+
+    // Apply status filter
+    if (statusFilter !== "All") {
+      filtered = filtered.filter((payment) => payment.status === statusFilter)
+    }
+
+    setFilteredPayments(filtered)
+  }
 
   const paymentStats = [
     {
@@ -93,12 +130,32 @@ export default async function AdminPaymentsPage() {
     },
   ]
 
+  const csvHeaders = [
+    { key: "id", label: "Payment ID" },
+    { key: "user.name", label: "Customer Name" },
+    { key: "user.email", label: "Customer Email" },
+    { key: "raffleName", label: "Raffle" },
+    { key: "amount", label: "Amount (PKR)" },
+    { key: "entries", label: "Entries" },
+    { key: "method", label: "Payment Method" },
+    { key: "status", label: "Status" },
+    { key: "transactionId", label: "Transaction ID" },
+    { key: "createdAt", label: "Date" },
+  ]
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64">Loading...</div>
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Payment Management</h1>
-        <p className="text-gray-600 mt-2">Monitor and manage all payment transactions</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Payment Management</h1>
+          <p className="text-gray-600 mt-2">Monitor and manage all payment transactions</p>
+        </div>
+        <ExportCSVButton data={filteredPayments} filename="payments" headers={csvHeaders} />
       </div>
 
       {/* Stats */}
@@ -131,22 +188,25 @@ export default async function AdminPaymentsPage() {
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input placeholder="Search payments..." className="pl-10 rounded-2xl" />
+                <Input
+                  placeholder="Search payments..."
+                  className="pl-10 rounded-2xl"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" className="rounded-2xl">
-                All
-              </Button>
-              <Button variant="outline" className="rounded-2xl">
-                Completed
-              </Button>
-              <Button variant="outline" className="rounded-2xl">
-                Pending
-              </Button>
-              <Button variant="outline" className="rounded-2xl">
-                Failed
-              </Button>
+              {["All", "COMPLETED", "PENDING", "PROCESSING", "FAILED"].map((status) => (
+                <Button
+                  key={status}
+                  variant={statusFilter === status ? "default" : "outline"}
+                  className="rounded-2xl"
+                  onClick={() => setStatusFilter(status)}
+                >
+                  {status === "All" ? "All" : status.charAt(0) + status.slice(1).toLowerCase()}
+                </Button>
+              ))}
             </div>
           </div>
         </CardContent>
@@ -157,13 +217,13 @@ export default async function AdminPaymentsPage() {
         <CardHeader>
           <CardTitle className="flex items-center">
             <CreditCard className="mr-2 h-5 w-5 text-red-500" />
-            Recent Payments
+            Recent Payments ({filteredPayments.length})
           </CardTitle>
           <CardDescription>All payment transactions and their status</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {payments.map((payment) => (
+            {filteredPayments.map((payment) => (
               <div key={payment.id} className="bg-gray-50 p-6 rounded-2xl hover:bg-gray-100 transition-colors">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex-1">
@@ -226,8 +286,8 @@ export default async function AdminPaymentsPage() {
                 <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
                   <span className="text-sm text-gray-500">Customer: {payment.user.email}</span>
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" className="rounded-2xl">
-                      View Details
+                    <Button asChild variant="outline" size="sm" className="rounded-2xl">
+                      <Link href={`/admin/payments/${payment.id}`}>View Details</Link>
                     </Button>
                     {payment.status === "PENDING" && (
                       <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white rounded-2xl">
@@ -247,12 +307,16 @@ export default async function AdminPaymentsPage() {
         </CardContent>
       </Card>
 
-      {payments.length === 0 && (
+      {filteredPayments.length === 0 && !isLoading && (
         <Card className="rounded-2xl shadow-lg border-0">
           <CardContent className="p-12 text-center">
             <CreditCard className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No payments found</h3>
-            <p className="text-gray-600">Payments will appear here once customers make purchases</p>
+            <p className="text-gray-600">
+              {searchTerm || statusFilter !== "All"
+                ? "Try adjusting your search or filters"
+                : "Payments will appear here once customers make purchases"}
+            </p>
           </CardContent>
         </Card>
       )}

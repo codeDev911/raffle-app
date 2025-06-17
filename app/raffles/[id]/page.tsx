@@ -72,7 +72,11 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
       return
     }
 
-    if (!raffle || raffle.currentEntries + entries > raffle.totalEntries) {
+    if (!raffle) {
+      alert("Raffle data not loaded.")
+      return
+    }
+    if (raffle.currentEntries + entries > raffle.totalEntries) {
       alert("Not enough entries available!")
       return
     }
@@ -312,7 +316,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
                 <div className="bg-green-50 p-4 rounded-2xl">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-medium">Total Cost:</span>
-                    <span className="text-2xl font-bold text-green-500">₹{totalCost.toLocaleString()}</span>
+                    <span className="text-2xl font-bold text-green-500">PKR {totalCost.toLocaleString()}</span>
                   </div>
                   <p className="text-sm text-gray-600 mt-1">
                     {entries} {entries === 1 ? "entry" : "entries"} × {formatCurrency(raffle.price)} each
@@ -326,7 +330,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
                   className="w-full bg-green-500 hover:bg-green-600 text-white rounded-2xl py-6 text-lg font-medium"
                 >
                   <Shield className="mr-2 h-5 w-5" />
-                  {submitting ? "Processing..." : `Enter Raffle - Pay ₹${totalCost.toLocaleString()}`}
+                  {submitting ? "Processing..." : `Enter Raffle - Pay PKR ${totalCost.toLocaleString()}`}
                 </Button>
 
                 <div className="flex items-center justify-center text-sm text-gray-500">
