@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const { raffleId, quantity, method } = initiatePaymentSchema.parse(body)
 
     // Get raffle details
-    const raffle = await prisma.raffle.findUnique({
+    const raffle = await   prisma.raffle.findUnique({
       where: { id: raffleId },
     })
 

@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Plus, X } from "lucide-react"
 import Link from "next/link"
+import { roundUpTwoDecimals } from "../../create/page"
 
 interface Raffle {
   id: string
@@ -23,6 +24,7 @@ interface Raffle {
   image?: string
   gallery: string[]
   price: number
+  realPrice:number,
   totalEntries: number
   currentEntries: number
   category: string
@@ -42,6 +44,7 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
     image: "",
     gallery: [] as string[],
     price: "",
+    realPrice:"",
     totalEntries: "",
     category: "",
     featured: false,
@@ -71,6 +74,7 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
             image: raffleData.image || "",
             gallery: raffleData.gallery || [],
             price: (raffleData.price / 100).toString(),
+            realPrice:(raffleData.realPrice / 100).toString(),
             totalEntries: raffleData.totalEntries.toString(),
             category: raffleData.category,
             featured: raffleData.featured,
@@ -272,6 +276,32 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid md:grid-cols-4 gap-6">
+               <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                  <SelectTrigger className="rounded-2xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DRAFT">Draft</SelectItem>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="real_price">Real Price (PKR) *</Label>
+                <Input
+                  id="real_price"
+                  type="number"
+                  value={formData.realPrice}
+                  onChange={(e) => setFormData({ ...formData, realPrice: e.target.value })}
+                  className="rounded-2xl"
+                  min="1"
+                  required
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="price">Price per Entry (PKR) *</Label>
                 <Input
@@ -296,19 +326,34 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                  <SelectTrigger className="rounded-2xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DRAFT">Draft</SelectItem>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="COMPLETED">Completed</SelectItem>
-                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="md:col-span-2 p-4 space-y-1 rounded-2xl bg-gray-100">
+                <Label htmlFor="" className="text-base font-bold">Revenue calculated</Label>
+                <p className="text-gray-800 text-sm">
+                  Total Aprox :{" "}
+                  <span >
+                    Rs. {Number.parseInt(formData.price) * Number.parseInt(formData.totalEntries) || 0}
+                  </span>
+                </p>
+                <p className="text-gray-800 text-sm">
+                  Earning %age :{" "}
+                  <span className={
+                    (roundUpTwoDecimals(((Number.parseInt(formData.price) * Number.parseInt(formData.totalEntries)) / Number.parseInt(formData.realPrice)) * 100) - 100) < 0
+                      ? "text-red-600"
+                      : "text-green-600"
+                  }>
+                    {roundUpTwoDecimals(((Number.parseInt(formData.price) * Number.parseInt(formData.totalEntries)) / Number.parseInt(formData.realPrice)) * 100) - 100 || 0}%
+                  </span>
+                </p>
+                <p className="text-gray-800 text-sm">
+                  Total Profit : Rs.{" "}
+                  <span className={
+                    (Number.parseInt(formData.price) * Number.parseInt(formData.totalEntries) - Number.parseInt(formData.realPrice)) < 0
+                      ? "text-red-600"
+                      : "text-green-600"
+                  }>
+                     {(Number.parseInt(formData.price) * Number.parseInt(formData.totalEntries) - Number.parseInt(formData.realPrice)) || 0}
+                  </span>
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="endDate">End Date *</Label>
@@ -321,6 +366,8 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
                   required
                 />
               </div>
+
+              
             </div>
 
             <div className="flex items-center space-x-2">

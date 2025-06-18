@@ -10,6 +10,7 @@ const createRaffleSchema = z.object({
   image: z.string().optional(),
   gallery: z.array(z.string()).optional(),
   price: z.number().min(1, "Price must be greater than 0"),
+  realPrice: z.number().min(1, "Real Price must be greater than 0"),
   totalEntries: z.number().min(1, "Total entries must be greater than 0"),
   category: z.string().min(1, "Category is required"),
   featured: z.boolean().optional(),
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...data,
         price: data.price * 100, // Convert to paisa
+        realPrice:data.realPrice * 100, // convert to paisa
         gallery: data.gallery || [],
         specifications: data.specifications || [],
         rules: data.rules || [],

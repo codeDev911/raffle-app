@@ -1,11 +1,26 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Trophy, Users, Clock, Star, Gift, Zap, Smartphone, CreditCard, CheckCircle, Shield } from "lucide-react"
+import {
+  Trophy,
+  Users,
+  Clock,
+  Star,
+  Gift,
+  Zap,
+  Smartphone,
+  CreditCard,
+  CheckCircle,
+  Shield,
+  TrendingUp,
+  Award,
+  MapPin,
+} from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { prisma } from "@/lib/prisma"
 import { formatCurrency } from "@/lib/utils"
+import { TypewriterEffect } from "@/components/typewriter-effect"
 
 async function getFeaturedRaffles() {
   return await prisma.raffle.findMany({
@@ -24,7 +39,7 @@ async function getFeaturedRaffles() {
 }
 
 async function getStats() {
-  const [totalWinners, totalPrizeValue, activeRaffles] = await Promise.all([
+  const [totalWinners, totalPrizeValue, activeRaffles, totalCustomers, totalEntries] = await Promise.all([
     prisma.winner.count(),
     prisma.winner.aggregate({
       _sum: { prizeValue: true },
@@ -32,93 +47,165 @@ async function getStats() {
     prisma.raffle.count({
       where: { status: "ACTIVE" },
     }),
+    prisma.user.count({
+      where: { role: "USER" },
+    }),
+    prisma.entry.count(),
   ])
 
   return {
     totalWinners,
     totalPrizeValue: totalPrizeValue._sum.prizeValue || 0,
     activeRaffles,
+    totalCustomers,
+    totalEntries,
   }
 }
 
 export default async function HomePage() {
   const [featuredRaffles, stats] = await Promise.all([getFeaturedRaffles(), getStats()])
 
+  const typewriterPhrases = [
+    `${stats.totalCustomers.toLocaleString()}+ Happy Customers`,
+    `${stats.activeRaffles}+ Amazing Raffles`,
+    "Electronics, Cars, Cash & More",
+    `${stats.totalWinners.toLocaleString()}+ Lucky Winners`,
+    "Across All Pakistan",
+    `${formatCurrency(stats.totalPrizeValue)} in Prizes`,
+    `${stats.totalEntries.toLocaleString()}+ Total Entries`,
+  ]
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-green-50 to-green-100 py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <Badge className="bg-green-500 text-white px-4 py-2 rounded-2xl">
-                  🇵🇰 Pakistan's #1 Raffle Platform
-                </Badge>
-                <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                  Win Amazing
-                  <span className="text-green-500"> Prizes</span>
-                  <br />
-                  Every Day!
-                </h1>
-                <p className="text-xl text-gray-600 leading-relaxed">
-                  Join thousands of Pakistanis winning incredible prizes through our fair and transparent raffle system.
-                  Pay easily with EasyPaisa or JazzCash!
-                </p>
-              </div>
+      <section className="relative bg-gradient-to-br from-green-50 via-green-100 to-emerald-50 py-24 px-4 overflow-hidden">
+        {/* Background Decorations */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-32 h-32 bg-green-200 rounded-full opacity-20 animate-pulse"></div>
+          <div className="absolute top-40 right-20 w-24 h-24 bg-emerald-300 rounded-full opacity-30 animate-bounce"></div>
+          <div className="absolute bottom-20 left-1/4 w-16 h-16 bg-green-400 rounded-full opacity-25 animate-pulse"></div>
+          <div className="absolute bottom-40 right-1/3 w-20 h-20 bg-emerald-200 rounded-full opacity-20 animate-bounce"></div>
+        </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  asChild
-                  size="lg"
-                  className="bg-green-500 hover:bg-green-600 text-white rounded-2xl px-8 py-6 text-lg shadow-lg"
-                >
-                  <Link href="/raffles">
-                    <Gift className="mr-2 h-5 w-5" />
-                    Browse Raffles
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  className="border-green-500 text-green-500 hover:bg-green-50 rounded-2xl px-8 py-6 text-lg"
-                >
-                  <Link href="#how-it-works">
-                    <Zap className="mr-2 h-5 w-5" />
-                    How It Works
-                  </Link>
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-6 pt-8">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-500">{stats.totalWinners.toLocaleString()}+</div>
-                  <div className="text-gray-600">Happy Winners</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-500">{formatCurrency(stats.totalPrizeValue)}</div>
-                  <div className="text-gray-600">Prizes Won</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-500">100%</div>
-                  <div className="text-gray-600">Fair & Transparent</div>
-                </div>
-              </div>
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center space-y-12">
+            {/* Badge */}
+            <div className="flex justify-center">
+              <Badge className="bg-green-500 text-white px-6 py-3 rounded-full text-lg font-semibold shadow-lg">
+                🇵🇰 Pakistan's #1 Raffle Platform
+              </Badge>
             </div>
 
-            <div className="relative">
-              <div className="relative z-10">
-                <Image
-                  src="/placeholder.svg?height=500&width=600"
-                  alt="Raffle Winners"
-                  width={600}
-                  height={500}
-                  className="rounded-2xl shadow-2xl"
-                />
+            {/* Main Heading */}
+            <div className="space-y-6">
+              <h1 className="text-6xl lg:text-7xl font-bold text-gray-900 leading-tight">
+                Win Amazing
+                <span className="text-green-500"> Prizes</span>
+                <br />
+                <span className="text-4xl lg:text-5xl text-gray-700">
+                  We Have{" "}
+                  <TypewriterEffect
+                    phrases={typewriterPhrases}
+                    className="text-green-500 font-bold"
+                    typingSpeed={80}
+                    deletingSpeed={40}
+                    pauseTime={2500}
+                  />
+                </span>
+              </h1>
+              <p className="text-2xl text-gray-600 leading-relaxed max-w-4xl mx-auto">
+                Join thousands of Pakistanis winning incredible prizes through our fair and transparent raffle system.
+                <br />
+                <span className="text-green-600 font-semibold">Pay easily with EasyPaisa or JazzCash!</span>
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+              <Button
+                asChild
+                size="lg"
+                className="bg-green-500 hover:bg-green-600 text-white rounded-2xl px-10 py-8 text-xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300"
+              >
+                <Link href="/raffles">
+                  <Gift className="mr-3 h-6 w-6" />
+                  Browse Raffles
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="border-2 border-green-500 text-green-500 hover:bg-green-50 rounded-2xl px-10 py-8 text-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              >
+                <Link href="#how-it-works">
+                  <Zap className="mr-3 h-6 w-6" />
+                  How It Works
+                </Link>
+              </Button>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pt-16">
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300 group">
+                <CardContent className="p-8 text-center">
+                  <div className="bg-green-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <Users className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-3xl font-bold text-green-500 mb-2">{stats.totalCustomers.toLocaleString()}+</div>
+                  <div className="text-gray-600 font-medium">Happy Customers</div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300 group">
+                <CardContent className="p-8 text-center">
+                  <div className="bg-blue-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <Trophy className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-3xl font-bold text-blue-500 mb-2">{stats.totalWinners.toLocaleString()}+</div>
+                  <div className="text-gray-600 font-medium">Lucky Winners</div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300 group">
+                <CardContent className="p-8 text-center">
+                  <div className="bg-purple-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <Award className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-3xl font-bold text-purple-500 mb-2">{formatCurrency(stats.totalPrizeValue)}</div>
+                  <div className="text-gray-600 font-medium">Prizes Won</div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300 group">
+                <CardContent className="p-8 text-center">
+                  <div className="bg-orange-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <MapPin className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-3xl font-bold text-orange-500 mb-2">100%</div>
+                  <div className="text-gray-600 font-medium">Fair & Transparent</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="pt-8">
+              <div className="bg-white/60 backdrop-blur-sm p-8 rounded-3xl inline-block shadow-xl">
+                <div className="flex flex-wrap items-center justify-center gap-8 text-green-700">
+                  <div className="flex items-center space-x-2">
+                    <Shield className="w-6 h-6" />
+                    <span className="font-semibold">SSL Encrypted</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="w-6 h-6" />
+                    <span className="font-semibold">PCI Compliant</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="w-6 h-6" />
+                    <span className="font-semibold">100% Secure</span>
+                  </div>
+                </div>
               </div>
-              <div className="absolute -top-4 -right-4 w-24 h-24 bg-green-500 rounded-2xl opacity-20"></div>
-              <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-green-300 rounded-2xl opacity-20"></div>
             </div>
           </div>
         </div>

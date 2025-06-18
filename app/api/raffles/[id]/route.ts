@@ -53,11 +53,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     const body = await request.json()
     const data = updateRaffleSchema.parse(body)
-
+    
     const raffle = await prisma.raffle.update({
       where: { id: params.id },
       data: {
         ...data,
+        realPrice:Number.parseInt(body.realPrice ) * 100, // conver to paisa,
         gallery: data.gallery || [],
         specifications: data.specifications || [],
         rules: data.rules || [],

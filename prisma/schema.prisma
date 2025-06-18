@@ -38,6 +38,7 @@ model Raffle {
   image           String?
   gallery         String[]
   price           Int // Price in PKR (paisa)
+  realPrice       Int  @default(0)// Price in PKR (paisa)
   totalEntries    Int
   currentEntries  Int         @default(0)
   category        String

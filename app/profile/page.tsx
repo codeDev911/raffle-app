@@ -149,7 +149,7 @@ export default async function ProfilePage() {
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl shadow-lg border-0 text-center">
+          {/* <Card className="rounded-2xl shadow-lg border-0 text-center">
             <CardContent className="p-6">
               <div className="bg-green-100 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <DollarSign className="w-6 h-6 text-green-600" />
@@ -157,7 +157,7 @@ export default async function ProfilePage() {
               <div className="text-3xl font-bold text-gray-900 mb-2">{formatCurrency(totalSpent)}</div>
               <div className="text-gray-600">Total Spent</div>
             </CardContent>
-          </Card>
+          </Card> */}
 
           <Card className="rounded-2xl shadow-lg border-0 text-center">
             <CardContent className="p-6">
