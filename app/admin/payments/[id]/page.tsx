@@ -70,14 +70,14 @@ export default async function PaymentDetailsPage({ params }: { params: { id: str
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <Button asChild variant="outline" size="sm" className="rounded-2xl">
+        <Link href="/admin/payments">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Payments
+        </Link>
+      </Button>
+      <div className="md:flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button asChild variant="outline" size="sm" className="rounded-2xl">
-            <Link href="/admin/payments">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Payments
-            </Link>
-          </Button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Payment Details</h1>
             <p className="text-gray-600 mt-2">Payment ID: {payment.id}</p>

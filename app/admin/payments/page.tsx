@@ -20,6 +20,7 @@ import {
   Mail,
   MoreHorizontal,
   RefreshCw,
+  Receipt,
 } from "lucide-react"
 import { formatCurrency, formatDateTime } from "@/lib/utils"
 import { ExportCSVButton } from "@/components/export-csv-button"
@@ -373,9 +374,15 @@ export default function AdminPaymentsPage() {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <div>
-                            <ReceiptModal payment={payment} />
-                          </div>
+                          <ReceiptModal
+                            payment={payment}
+                            trigger={
+                              <div className="flex items-center">
+                                <Receipt className="mr-2 h-4 w-4" />
+                                Send Receipt
+                              </div>
+                            }
+                          />
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                           <Mail className="mr-2 h-4 w-4" />

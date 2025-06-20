@@ -1,13 +1,15 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Users, CreditCard, Trophy, Calendar, Gift, Crown, Trash, PenIcon } from "lucide-react"
+import { ArrowLeft, Users, CreditCard, Trophy, Calendar, Gift, Crown, PenIcon, XCircleIcon } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { prisma } from "@/lib/prisma"
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils"
 import { notFound } from "next/navigation"
 import { WinnerSelectionDialog } from "@/components/winner-selection-dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { RealVsAproxModal } from "@/components/real-vs-aprox-modal"
 
 async function getRaffleDetails(id: string) {
   const raffle = await prisma.raffle.findUnique({
@@ -82,17 +84,42 @@ async function getRaffleDetails(id: string) {
       entries: entry.quantity,
     }))
 
+  // Calculate approximation data
+  const aproxRevenue = raffle.price * raffle.totalEntries
+  const aproxProfit = aproxRevenue - raffle.realPrice
+  const aproxPercentage = Math.ceil((aproxRevenue / raffle.realPrice) * 100)
+
+  // Calculate real data
+  const realProfit = totalRevenue - raffle.realPrice > 0 ? totalRevenue - raffle.realPrice : 0
+  const realPercentage = Math.ceil((totalRevenue / raffle.realPrice) * 100)
+
   return {
     raffle,
     totalRevenue,
     totalEntries,
     uniqueCustomers,
     payments,
+    aproxRevenue,
+    aproxProfit,
+    aproxPercentage,
+    realProfit,
+    realPercentage,
   }
 }
 
 export default async function AdminRaffleDetailPage({ params }: { params: { id: string } }) {
-  const { raffle, totalRevenue, totalEntries, uniqueCustomers, payments } = await getRaffleDetails(params.id)
+  const {
+    raffle,
+    totalRevenue,
+    totalEntries,
+    uniqueCustomers,
+    payments,
+    aproxRevenue,
+    aproxProfit,
+    aproxPercentage,
+    realProfit,
+    realPercentage,
+  } = await getRaffleDetails(params.id)
 
   const hasWinner = raffle.winners.length > 0
   const canSelectWinner = raffle.status === "ACTIVE" && totalEntries > 0 && !hasWinner
@@ -100,42 +127,138 @@ export default async function AdminRaffleDetailPage({ params }: { params: { id: 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button asChild variant="ghost" className="rounded-2xl">
-          <Link href="/admin/raffles">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Raffles
-          </Link>
-        </Button>
+      <Button asChild variant="ghost" className="rounded-2xl">
+        <Link href="/admin/raffles">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Raffles
+        </Link>
+      </Button>
+      <div className="flex -mt-6 items-center space-x-4">
         <div className="flex-1">
           <h1 className="text-3xl font-bold text-gray-900">{raffle.title}</h1>
           <p className="text-gray-600 mt-2">Detailed raffle information and management</p>
         </div>
-        <Button variant={"outline"}>
-           <Link className="flex items-center space-x-2" href={`/admin/raffles/${raffle.id}/edit`}>
-            <PenIcon />
-            <p>Edit</p>
-            </Link>
-        </Button>
-        <Button variant={"destructive"}>
-            <Link className="flex items-center space-x-2" href={`/admin/raffles/${raffle.id}/delete`}>
-                <Trash />
-                <p>Delete</p>
-            </Link>
-        </Button>
-        {hasWinner && (
+        {hasWinner ? (
           <Button asChild className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-2xl">
             <Link href={`/admin/raffles/${raffle.id}/winner`}>
               <Crown className="mr-2 h-4 w-4" />
               View Winner
             </Link>
           </Button>
+        ) : (
+          <Button
+            asChild
+            disabled
+            className="cursor-not-allowed bg-gray-200 text-gray-900 hover:text-white hover:bg-red-500"
+          >
+            <div>
+              <XCircleIcon className="mr-2 h-4 w-4" />
+              No winner
+            </div>
+          </Button>
         )}
+        <Button asChild variant={"outline"}>
+          <Link href={`/admin/raffles/${raffle.id}/edit`} className="flex space-x-1">
+            <PenIcon />
+            <p>Edit</p>
+          </Link>
+        </Button>
       </div>
 
       {/* Raffle Overview */}
       <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Revenue Calculated */}
+          <Card className="rounded-2xl shadow-lg border-0">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <CreditCard className="mr-2 h-5 w-5 text-green-500" />
+                  <div>
+                    <CardTitle>Revenue Calculated</CardTitle>
+                    <CardDescription>Financial breakdown and profit analysis for this raffle</CardDescription>
+                  </div>
+                </div>
+                <RealVsAproxModal
+                  realData={{
+                    revenue: totalRevenue,
+                    profit: realProfit,
+                    percentage: realPercentage,
+                    entries: totalEntries,
+                  }}
+                  aproxData={{
+                    revenue: aproxRevenue,
+                    profit: aproxProfit,
+                    percentage: aproxPercentage,
+                    entries: raffle.totalEntries,
+                  }}
+                  originalPrice={raffle.realPrice}
+                  pricePerEntry={raffle.price}
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-green-50 p-4 rounded-2xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-green-600 font-medium">Total Revenue</span>
+                    <CreditCard className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="text-xl font-bold text-green-700">{formatCurrency(totalRevenue)}</div>
+                  <div className="text-xs text-green-600 mt-1">From all entries</div>
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-2xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-blue-600 font-medium">Total Profit</span>
+                    <Trophy className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div className="text-xl font-bold text-blue-700">{formatCurrency(realProfit)}</div>
+                  <div className="text-xs text-blue-600 mt-1">After expenses</div>
+                </div>
+
+                <div className="bg-purple-50 p-4 rounded-2xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-purple-600 font-medium">Revenue %age</span>
+                    <Gift className="h-4 w-4 text-purple-500" />
+                  </div>
+                  <div className="text-xl font-bold text-purple-700">{realPercentage}%</div>
+                  <div className="text-xs text-purple-600 mt-1">Profit margin</div>
+                </div>
+
+                <div className="bg-orange-50 p-4 rounded-2xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-orange-600 font-medium">Original</span>
+                    <Calendar className="h-4 w-4 text-orange-500" />
+                  </div>
+                  <div className="text-xl font-bold text-orange-700">{formatCurrency(raffle.realPrice)}</div>
+                  <div className="text-xs text-orange-600 mt-1">Base amount</div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex-col p-3 px-6 w-full items-start justify-start">
+              <div className="bg-gray-100 w-full p-4 rounded-xl">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">Approximation</h2>
+                  <p className="text-gray-500 text-sm">The approx revenue of the raffle will be, </p>
+                </div>
+                <div className="grid lg:grid-cols-4 gap-4 mt-3">
+                  <div className="flex flex-col space-y-1">
+                    <h3 className="text-base font-semibold">Total Revenue</h3>
+                    <p className="text-base text-gray-700">{formatCurrency(aproxRevenue)}</p>
+                  </div>
+                  <div className="flex flex-col space-y-1">
+                    <h3 className="text-base font-semibold">Total Profit</h3>
+                    <p className="text-base text-gray-700">{formatCurrency(aproxProfit)}</p>
+                  </div>
+                  <div className="flex flex-col space-y-1">
+                    <h3 className="text-base font-semibold">Aprox earnings %age</h3>
+                    <p className="text-base text-gray-700">{aproxPercentage}%</p>
+                  </div>
+                </div>
+              </div>
+            </CardFooter>
+          </Card>
           <Card className="rounded-2xl shadow-lg border-0">
             <CardContent className="p-8">
               <div className="flex flex-col md:flex-row gap-6">
@@ -281,124 +404,140 @@ export default async function AdminRaffleDetailPage({ params }: { params: { id: 
         </div>
       </div>
 
-      {/* Payments Table */}
-      <Card className="rounded-2xl shadow-lg border-0">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <CreditCard className="mr-2 h-5 w-5 text-red-500" />
+      {/* Payments and Entries Tabs */}
+      <Tabs defaultValue="payments" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 rounded-2xl">
+          <TabsTrigger value="payments" className="rounded-2xl">
+            <CreditCard className="mr-2 h-4 w-4" />
             Payments ({payments.length})
-          </CardTitle>
-          <CardDescription>All payments for this raffle</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {payments.map((payment) => (
-              <div key={payment.id} className="bg-gray-50 p-4 rounded-2xl">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-gray-900">{payment.user.name}</h4>
-                      <Badge
-                        className={`rounded-2xl ${
-                          payment.status === "COMPLETED"
-                            ? "bg-green-100 text-green-700"
-                            : payment.status === "PENDING"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {payment.status}
-                      </Badge>
-                    </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
-                      <div>
-                        <span className="text-gray-500">Email:</span>
-                        <div className="font-medium">{payment.user.email}</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Amount:</span>
-                        <div className="font-medium text-green-600">{formatCurrency(payment.amount)}</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Method:</span>
-                        <div className="font-medium">{payment.method}</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Date:</span>
-                        <div className="font-medium">{formatDateTime(new Date(payment.createdAt))}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-blue-600">{payment.entries}</div>
-                    <div className="text-sm text-gray-500">entries</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {payments.length === 0 && (
-              <div className="text-center py-8">
-                <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500">No payments yet</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Entries Table */}
-      <Card className="rounded-2xl shadow-lg border-0">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Users className="mr-2 h-5 w-5 text-red-500" />
+          </TabsTrigger>
+          <TabsTrigger value="entries" className="rounded-2xl">
+            <Users className="mr-2 h-4 w-4" />
             Customer Entries ({raffle.entries.length})
-          </CardTitle>
-          <CardDescription>All customers who entered this raffle</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {raffle.entries.map((entry) => (
-              <div key={entry.id} className="bg-gray-50 p-4 rounded-2xl">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-gray-900">{entry.user.name}</h4>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="payments" className="mt-6">
+          <Card className="rounded-2xl shadow-lg border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <CreditCard className="mr-2 h-5 w-5 text-red-500" />
+                Payments ({payments.length})
+              </CardTitle>
+              <CardDescription>All payments for this raffle</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {payments.map((payment) => (
+                  <div key={payment.id} className="bg-gray-50 p-4 rounded-2xl">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-gray-900">{payment.user.name}</h4>
+                          <Badge
+                            className={`rounded-2xl ${
+                              payment.status === "COMPLETED"
+                                ? "bg-green-100 text-green-700"
+                                : payment.status === "PENDING"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {payment.status}
+                          </Badge>
+                        </div>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
+                          <div>
+                            <span className="text-gray-500">Email:</span>
+                            <div className="font-medium">{payment.user.email}</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Amount:</span>
+                            <div className="font-medium text-green-600">{formatCurrency(payment.amount)}</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Method:</span>
+                            <div className="font-medium">{payment.method}</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Date:</span>
+                            <div className="font-medium">{formatDateTime(new Date(payment.createdAt))}</div>
+                          </div>
+                        </div>
+                      </div>
                       <div className="text-right">
-                        <div className="text-lg font-bold text-blue-600">{entry.quantity}</div>
+                        <div className="text-lg font-bold text-blue-600">{payment.entries}</div>
                         <div className="text-sm text-gray-500">entries</div>
                       </div>
                     </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
-                      <div>
-                        <span className="text-gray-500">Email:</span>
-                        <div className="font-medium">{entry.user.email}</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Phone:</span>
-                        <div className="font-medium">{entry.user.phone || "N/A"}</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">City:</span>
-                        <div className="font-medium">{entry.user.city || "N/A"}</div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Entry Date:</span>
-                        <div className="font-medium">{formatDateTime(new Date(entry.createdAt))}</div>
+                  </div>
+                ))}
+                {payments.length === 0 && (
+                  <div className="text-center py-8">
+                    <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-500">No payments yet</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="entries" className="mt-6">
+          <Card className="rounded-2xl shadow-lg border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Users className="mr-2 h-5 w-5 text-red-500" />
+                Customer Entries ({raffle.entries.length})
+              </CardTitle>
+              <CardDescription>All customers who entered this raffle</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {raffle.entries.map((entry) => (
+                  <div key={entry.id} className="bg-gray-50 p-4 rounded-2xl">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-gray-900">{entry.user.name}</h4>
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-blue-600">{entry.quantity}</div>
+                            <div className="text-sm text-gray-500">entries</div>
+                          </div>
+                        </div>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
+                          <div>
+                            <span className="text-gray-500">Email:</span>
+                            <div className="font-medium">{entry.user.email}</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Phone:</span>
+                            <div className="font-medium">{entry.user.phone || "N/A"}</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">City:</span>
+                            <div className="font-medium">{entry.user.city || "N/A"}</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Entry Date:</span>
+                            <div className="font-medium">{formatDateTime(new Date(entry.createdAt))}</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                ))}
+                {raffle.entries.length === 0 && (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-500">No entries yet</p>
+                  </div>
+                )}
               </div>
-            ))}
-            {raffle.entries.length === 0 && (
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500">No entries yet</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -26,9 +28,10 @@ interface ReceiptModalProps {
       city?: string
     }
   }
+  trigger?: React.ReactNode
 }
 
-export function ReceiptModal({ payment }: ReceiptModalProps) {
+export function ReceiptModal({ payment, trigger }: ReceiptModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isSending, setIsSending] = useState(false)
 
@@ -106,13 +109,26 @@ export function ReceiptModal({ payment }: ReceiptModalProps) {
     }
   }
 
+  // Handle click from dropdown menu
+  const handleTriggerClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsOpen(true)
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="rounded-2xl">
-          <Receipt className="h-4 w-4 mr-2" />
-          Send Receipt
-        </Button>
+        {trigger ? (
+          <div onClick={handleTriggerClick} className="flex items-center w-full cursor-pointer">
+            {trigger}
+          </div>
+        ) : (
+          <Button variant="outline" className="rounded-2xl">
+            <Receipt className="h-4 w-4 mr-2" />
+            Send Receipt
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
