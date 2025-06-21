@@ -38,6 +38,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
   const [raffle, setRaffle] = useState<Raffle | null>(null)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
+  const [isUserPurchased,setIsUserPurchased] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const router = useRouter()
 
@@ -48,8 +49,9 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
       try {
         // Fetch raffle data
         const raffleResponse = await fetch(`/api/raffles/${params.id}`)
+        let raffleData;
         if (raffleResponse.ok) {
-          const raffleData = await raffleResponse.json()
+          raffleData = await raffleResponse.json()
           setRaffle(raffleData)
         }
 
@@ -57,8 +59,12 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
         const userResponse = await fetch("/api/auth/me")
         if (userResponse.ok) {
           const userData = await userResponse.json()
-          setUser(userData)
-        }
+          
+          
+          raffleData.entries.map((entry:any)=> entry.userId === userData.id).length > 0 ? setIsUserPurchased(true): setIsUserPurchased(false)
+
+        } 
+        
       } catch (error) {
         console.error("Error fetching data:", error)
       } finally {
@@ -107,7 +113,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
     return timeLeft > 0
   }
 
-  const getActionButton = () => {
+  const   getActionButton = () => {
     if (!raffle) return null
 
     const statusInfo = getStatusInfo()
@@ -119,8 +125,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
           onClick={handleEnterRaffle}
           className="w-full bg-green-500 hover:bg-green-600 text-white rounded-2xl py-6 text-lg font-medium"
         >
-          <Trophy className="mr-2 h-5 w-5" />
-          Enter Raffle - {formatCurrency(raffle.price)}
+          Buy entry {formatCurrency(raffle.price)}
         </Button>
       )
     }
@@ -232,31 +237,41 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
               <h1 className="text-4xl font-bold text-gray-900">{raffle.title}</h1>
               <p className="text-xl text-gray-600">{raffle.description}</p>
 
-
+              <div className="flex-col space-y-1">
+                <p className="text-base text-gray-500">
+                Orignal price
+              </p>
               <div className="text-4xl font-bold text-gray-500 line-through">
                  {formatCurrency(raffle.realPrice)}
               </div>
-              <div className="flex items-center space-x-6">
+              </div>
+              <div className="flex-col  space-y-1">
+                <p className="text-base text-gray-500">
+                Per entry
+              </p>
                 <div className="text-3xl font-bold text-green-500">
-                  {formatCurrency(raffle.price)} <span className="text-lg text-gray-500">per entry</span>
+                  {formatCurrency(raffle.price)} 
                 </div>
-                <div className="flex items-center text-gray-600">
+                {/* <div className="flex items-center text-gray-600">
                   <Clock className="w-4 h-4 mr-2" />
                   {daysLeft > 0 ? `${daysLeft} days left` : "Ended"}
-                </div>
+                </div> */}
               </div>
-                <div className="text-base text-gray-500">Total entries : {raffle.currentEntries}</div>
+                <div className="text-base text-gray-500">{raffle.currentEntries} Participated</div>
             </div>
 
            
               {/* If user hasn't purchased  */}
-              {raffle.entries.filter((entry:any)=>{user.id == entry.userId}) ? 
-                <Button asChild variant="outline" className="w-full rounded-2xl py-6 text-lg font-medium">
+              {isUserPurchased ? 
+                <div className="flex-col space-y-2  text-center">
+                  <Button asChild variant="secondary" className="w-full rounded-2xl py-6 text-lg font-medium">
                     <div >
                       <CheckCircleIcon className="mr-2 h-5 w-5" />
-                      You've purchased
+                      {"You're participated"}
                     </div>
                 </Button>
+                <p className="text-gray-500 text-sm">{`You are participated in this raffle.`} <Link href={"#"} className="text-green-500 font-semibold underline ">View reciept</Link></p>
+                </div>
               :
               <div className="space-y-4">
                 {getActionButton()}
