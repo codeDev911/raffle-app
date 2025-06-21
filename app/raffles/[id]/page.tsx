@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Trophy, Clock, Star, ArrowLeft, Users, Calendar, CheckCircle, XCircle } from "lucide-react"
+import { Trophy, Clock, Star, ArrowLeft, Users, Calendar, CheckCircle, XCircle, CheckCircleIcon } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { formatCurrency } from "@/lib/utils"
 import { EnterRaffleModal } from "@/components/enter-raffle-modal"
+import { getUser } from "@/lib/auth"
 
 interface Raffle {
   id: string
@@ -24,6 +25,7 @@ interface Raffle {
   totalEntries: number
   currentEntries: number
   category: string
+  entries:any[]
   featured: boolean
   endDate: string
   status: "ACTIVE" | "COMPLETED" | "CANCELLED"
@@ -38,6 +40,8 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
   const [user, setUser] = useState<any>(null)
   const [showModal, setShowModal] = useState(false)
   const router = useRouter()
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -244,19 +248,30 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
                 <div className="text-base text-gray-500">Total entries : {raffle.currentEntries}</div>
             </div>
 
-            {/* Action Button */}
-            <div className="space-y-4">
-              {getActionButton()}
-
-              {raffle.status === "COMPLETED" && raffle.winnerId && (
+           
+              {/* If user hasn't purchased  */}
+              {raffle.entries.filter((entry:any)=>{user.id == entry.userId}) ? 
                 <Button asChild variant="outline" className="w-full rounded-2xl py-6 text-lg font-medium">
-                  <Link href={`/raffles/${raffle.id}/winner`}>
-                    <Trophy className="mr-2 h-5 w-5" />
-                    View Winner
-                  </Link>
+                    <div >
+                      <CheckCircleIcon className="mr-2 h-5 w-5" />
+                      You've purchased
+                    </div>
                 </Button>
-              )}
-            </div>
+              :
+              <div className="space-y-4">
+                {getActionButton()}
+
+                {raffle.status === "COMPLETED" && raffle.winnerId && (
+                  <Button asChild variant="outline" className="w-full rounded-2xl py-6 text-lg font-medium">
+                    <Link href={`/raffles/${raffle.id}/winner`}>
+                      <Trophy className="mr-2 h-5 w-5" />
+                      View Winner
+                    </Link>
+                  </Button>
+                )}
+
+              </div>
+              }
 
            
           </div>

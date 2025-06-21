@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Trophy, Shield, CreditCard, Smartphone, Plus, Minus } from "lucide-react"
+import { Trophy, Shield, CreditCard, Smartphone, Plus, Minus, Wallet } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 
 interface Raffle {
@@ -26,7 +26,7 @@ interface EnterRaffleModalProps {
 
 export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalProps) {
   const [entries, setEntries] = useState(1)
-  const [paymentMethod, setPaymentMethod] = useState("EASYPAISA")
+  const [paymentMethod, setPaymentMethod] = useState("CARD")
   const [submitting, setSubmitting] = useState(false)
   const router = useRouter()
 
@@ -40,40 +40,34 @@ export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalPr
 
     setSubmitting(true)
     try {
+      console.log("Sending payment data:", {
+        raffleId: raffle.id,
+        quantity: entries,
+        method: paymentMethod, // Make sure we're sending 'method' not 'paymentMethod'
+      })
+
       const response = await fetch("/api/payments/initiate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           raffleId: raffle.id,
           quantity: entries,
-          method: paymentMethod,
+          method: paymentMethod, // Changed from paymentMethod to method
         }),
       })
 
       const data = await response.json()
+      console.log("Payment response:", data)
 
       if (response.ok) {
-        // Create a form and submit to payment gateway
-        const form = document.createElement("form")
-        form.method = "POST"
-        form.action = data.paymentUrl
-        form.style.display = "none"
-
-        // Add all payment data as hidden inputs
-        Object.entries(data.paymentData).forEach(([key, value]) => {
-          const input = document.createElement("input")
-          input.type = "hidden"
-          input.name = key
-          input.value = value as string
-          form.appendChild(input)
-        })
-
-        document.body.appendChild(form)
-        form.submit()
+        // Redirect to Paymob payment page
+        window.location.href = data.paymentUrl
       } else {
+        console.error("Payment error:", data)
         alert(data.error || "Payment initiation failed")
       }
     } catch (error) {
+      console.error("Network error:", error)
       alert("Network error. Please try again.")
     } finally {
       setSubmitting(false)
@@ -89,19 +83,15 @@ export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalPr
             Enter This Raffle
           </DialogTitle>
           <DialogDescription>
-            Select number of entries and payment method for 
-        
+            Select number of entries and payment method for <strong>{raffle.title}</strong>
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           {/* Entry Count */}
-          <div className="">
+          <div className="space-y-3">
             <Label className="text-base font-medium">Number of Entries</Label>
-            <p className="text-green-600 text-sm">
-                The more entries , the more chance to win
-            </p>
-            <div className="flex my-2 items-center space-x-4">
+            <div className="flex items-center space-x-4">
               <Button
                 variant="outline"
                 size="icon"
@@ -132,28 +122,39 @@ export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalPr
               </Button>
             </div>
             <p className="text-sm text-gray-500">Maximum 10 entries per person</p>
-            
           </div>
 
           {/* Payment Method */}
           <div className="space-y-3">
             <Label className="text-base font-medium">Payment Method</Label>
-            <RadioGroup value={paymentMethod} className="flex space-x-2 items-center" onValueChange={setPaymentMethod}>
+            <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+              <div className="flex items-center space-x-3 p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
+                <RadioGroupItem value="CARD" id="card" />
+                <Label htmlFor="card" className="flex items-center space-x-3 cursor-pointer flex-1">
+                  <CreditCard className="h-5 w-5 text-purple-600" />
+                  <div>
+                    <div className="font-medium">Credit/Debit Card</div>
+                    <div className="text-sm text-gray-500">Visa, Mastercard, and local cards</div>
+                  </div>
+                </Label>
+              </div>
               <div className="flex items-center space-x-3 p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
                 <RadioGroupItem value="EASYPAISA" id="easypaisa" />
                 <Label htmlFor="easypaisa" className="flex items-center space-x-3 cursor-pointer flex-1">
                   <Smartphone className="h-5 w-5 text-blue-600" />
                   <div>
                     <div className="font-medium">EasyPaisa</div>
+                    <div className="text-sm text-gray-500">Instant payment via mobile wallet</div>
                   </div>
                 </Label>
               </div>
               <div className="flex items-center space-x-3 p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
                 <RadioGroupItem value="JAZZCASH" id="jazzcash" />
                 <Label htmlFor="jazzcash" className="flex items-center space-x-3 cursor-pointer flex-1">
-                  <CreditCard className="h-5 w-5 text-orange-600" />
+                  <Wallet className="h-5 w-5 text-orange-600" />
                   <div>
                     <div className="font-medium">JazzCash</div>
+                    <div className="text-sm text-gray-500">Secure mobile wallet payment</div>
                   </div>
                 </Label>
               </div>
@@ -188,7 +189,7 @@ export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalPr
 
           <div className="flex items-center justify-center text-sm text-gray-500">
             <Shield className="w-4 h-4 mr-1" />
-            100% Secure Payment
+            Powered by Paymob - 100% Secure Payment
           </div>
         </div>
       </DialogContent>

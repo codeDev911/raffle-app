@@ -19,6 +19,7 @@ async function getRaffles() {
   return await prisma.raffle.findMany({
     orderBy: { createdAt: "desc" },
     include: {
+      entries:true,
       _count: {
         select: { entries: true },
       },
@@ -69,7 +70,7 @@ export default async function AdminRafflesPage() {
       {/* Raffles Grid */}
       <div className="grid lg:grid-cols-2 gap-6">
         {raffles.map((raffle) => {
-          const revenue = (raffle.price * raffle.currentEntries) / 100
+          const revenue = (raffle.entries.reduce((sum,entry)=> sum + entry.totalCost,0)) 
           return (
             <Card key={raffle.id} className="rounded-2xl shadow-lg border-0 overflow-hidden">
               <div className="flex">
@@ -124,7 +125,7 @@ export default async function AdminRafflesPage() {
                       <Trophy className="h-4 w-4 text-yellow-500" />
                       <div>
                         <p className="text-sm text-gray-600">Revenue</p>
-                        <p className="font-semibold text-green-600">{formatCurrency(revenue * 100)}</p>
+                        <p className="font-semibold text-green-600">{formatCurrency(revenue )}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">

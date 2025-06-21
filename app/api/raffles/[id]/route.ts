@@ -27,6 +27,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const raffle = await prisma.raffle.findUnique({
       where: { id: params.id },
       include: {
+        entries:{
+          select:{
+            userId:true,
+            id:true,
+            totalCost:true
+          }
+        },
         _count: {
           select: { entries: true },
         },

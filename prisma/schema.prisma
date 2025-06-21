@@ -132,6 +132,7 @@ enum RaffleStatus {
 enum PaymentMethod {
   EASYPAISA
   JAZZCASH
+  CARD
 }
 
 enum PaymentStatus {

@@ -62,10 +62,7 @@ async function getRaffleDetails(id: string) {
   }
 
   // Calculate statistics
-  const totalRevenue = raffle.entries
-    .filter((entry) => entry.payment?.status === "COMPLETED")
-    .reduce((sum, entry) => sum + (entry.payment?.amount || 0), 0)
-
+  const totalRevenue = raffle.entries.reduce((sum,entry) => sum+ entry.totalCost,0)
   const totalEntries = raffle.entries.reduce((sum, entry) => sum + entry.quantity, 0)
 
   // Get unique customers

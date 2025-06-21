@@ -10,6 +10,7 @@ import Link from "next/link"
 export default function PaymentCallbackPage() {
   const [status, setStatus] = useState<"loading" | "success" | "failed">("loading")
   const [message, setMessage] = useState("")
+  const [doOnce,setDoOnce] = useState(false)
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -41,9 +42,16 @@ export default function PaymentCallbackPage() {
         setStatus("failed")
         setMessage("An error occurred while processing your payment.")
       }
+      setDoOnce(true)
     }
 
-    processCallback()
+   if(!doOnce){
+     processCallback()
+   }
+
+    return(()=>{
+      null
+    })
   }, [searchParams])
 
   return (

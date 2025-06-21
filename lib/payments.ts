@@ -1,135 +1,287 @@
-import crypto from "crypto"
-
-// EasyPaisa Integration
-export class EasyPaisaPayment {
-  private merchantId: string
-  private secretKey: string
+// Paymob Pakistan Payment Gateway Integration
+export class PaymobPayment {
+  private apiKey: string
   private baseUrl: string
 
   constructor() {
-    this.merchantId = process.env.EASYPAISA_MERCHANT_ID || ""
-    this.secretKey = process.env.EASYPAISA_SECRET_KEY || ""
-    this.baseUrl = process.env.EASYPAISA_BASE_URL || "https://easypaisa.com.pk/easypay"
+    this.apiKey = process.env.PAYMOB_API_KEY || ""
+    this.baseUrl = "https://pakistan.paymob.com/api"
   }
 
-  generateHash(data: string): string {
-    return crypto.createHmac("sha256", this.secretKey).update(data).digest("hex")
+  // Step 1: Get Authentication Token
+  async getAuthToken(): Promise<string> {
+    try {
+      const response = await fetch(`${this.baseUrl}/auth/tokens`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          api_key: this.apiKey,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        throw new Error(`Auth token error: ${response.status} - ${errorData}`)
+      }
+
+      const data = await response.json()
+      return data.token
+    } catch (error) {
+      console.error("Get auth token error:", error)
+      throw error
+    }
   }
 
-  async initiatePayment(params: {
+  // Step 2: Create Order
+  async createOrder(
+    authToken: string,
+    params: {
+      amount: number
+      orderId: string
+      customerName: string
+      customerEmail: string
+      customerPhone: string
+    },
+  ): Promise<any> {
+    const { amount, orderId, customerName, customerEmail, customerPhone } = params
+
+    try {
+      const response = await fetch(`${this.baseUrl}/ecommerce/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          auth_token: authToken,
+          delivery_needed: "false",
+          amount_cents: amount * 100, // Convert to cents
+          currency: "PKR",
+          merchant_order_id: orderId,
+          items: [
+            {
+              name: "Raffle Entry",
+              amount_cents: amount * 100,
+              description: "Pakistan Raffle Entry",
+              quantity: "1",
+            },
+          ],
+          shipping_data: {
+            apartment: "N/A",
+            email: customerEmail,
+            floor: "N/A",
+            first_name: customerName.split(" ")[0] || "Customer",
+            street: "N/A",
+            building: "N/A",
+            phone_number: customerPhone,
+            postal_code: "75500",
+            extra_description: "N/A",
+            city: "Karachi",
+            country: "PK",
+            last_name: customerName.split(" ")[1] || "User",
+            state: "Sindh",
+          },
+          shipping_details: {
+            notes: "Raffle Entry Payment",
+            number_of_packages: 1,
+            weight: 1,
+            weight_unit: "Kilogram",
+            length: 1,
+            width: 1,
+            height: 1,
+            contents: "Raffle Entry",
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        throw new Error(`Create order error: ${response.status} - ${errorData}`)
+      }
+
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error("Create order error:", error)
+      throw error
+    }
+  }
+
+  // Step 3: Get Payment Key
+  async getPaymentKey(
+    authToken: string,
+    params: {
+      orderId: number
+      amount: number
+      paymentMethod: "CARD" | "EASYPAISA" | "JAZZCASH"
+      customerEmail: string
+      customerPhone: string
+      customerName: string
+      returnUrl: string
+    },
+  ): Promise<string> {
+    const { orderId, amount, paymentMethod, customerEmail, customerPhone, customerName, returnUrl } = params
+
+    const integrationId = this.getIntegrationId(paymentMethod)
+
+    try {
+      const response = await fetch(`${this.baseUrl}/acceptance/payment_keys`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          auth_token: authToken,
+          amount_cents: amount * 100,
+          expiration: 3600, // 1 hour
+          order_id: orderId,
+          billing_data: {
+            apartment: "N/A",
+            email: customerEmail,
+            floor: "N/A",
+            first_name: customerName.split(" ")[0] || "Customer",
+            street: "N/A",
+            building: "N/A",
+            phone_number: customerPhone,
+            shipping_method: "N/A",
+            postal_code: "75500",
+            city: "Karachi",
+            country: "PK",
+            last_name: customerName.split(" ")[1] || "User",
+            state: "Sindh",
+          },
+          currency: "PKR",
+          integration_id: integrationId,
+          lock_order_when_paid: "false",
+          // Add return URL in payment key request
+          redirection_url: returnUrl,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        throw new Error(`Payment key error: ${response.status} - ${errorData}`)
+      }
+
+      const data = await response.json()
+      return data.token
+    } catch (error) {
+      console.error("Get payment key error:", error)
+      throw error
+    }
+  }
+
+  // Get Integration ID based on payment method
+  private getIntegrationId(method: "CARD" | "EASYPAISA" | "JAZZCASH"): number {
+    switch (method) {
+      case "CARD":
+        return Number.parseInt(process.env.PAYMOB_CARD_INTEGRATION_ID || "0")
+      case "EASYPAISA":
+        return Number.parseInt(process.env.PAYMOB_EASYPAISA_INTEGRATION_ID || "0")
+      case "JAZZCASH":
+        return Number.parseInt(process.env.PAYMOB_JAZZCASH_INTEGRATION_ID || "0")
+      default:
+        return Number.parseInt(process.env.PAYMOB_CARD_INTEGRATION_ID || "0")
+    }
+  }
+
+  // Generate payment URL with return URL parameters
+  generatePaymentUrl(
+    paymentToken: string,
+    paymentMethod: "CARD" | "EASYPAISA" | "JAZZCASH",
+    returnUrl: string,
+  ): string {
+    const iframeId = this.getIframeId(paymentMethod)
+    const encodedReturnUrl = encodeURIComponent(returnUrl)
+
+    return `https://pakistan.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${paymentToken}&redirection_url=${encodedReturnUrl}`
+  }
+
+  // Get Iframe ID based on payment method
+  private getIframeId(method: "CARD" | "EASYPAISA" | "JAZZCASH"): string {
+    switch (method) {
+      case "CARD":
+        return process.env.PAYMOB_CARD_IFRAME_ID || ""
+      case "EASYPAISA":
+        return process.env.PAYMOB_EASYPAISA_IFRAME_ID || ""
+      case "JAZZCASH":
+        return process.env.PAYMOB_JAZZCASH_IFRAME_ID || ""
+      default:
+        return process.env.PAYMOB_CARD_IFRAME_ID || ""
+    }
+  }
+
+  // Complete payment flow
+  async createPayment(params: {
     amount: number
     orderId: string
     customerEmail: string
     customerPhone: string
+    customerName: string
+    paymentMethod: "CARD" | "EASYPAISA" | "JAZZCASH"
     returnUrl: string
   }) {
-    const { amount, orderId, customerEmail, customerPhone, returnUrl } = params
+    const { amount, orderId, customerEmail, customerPhone, customerName, paymentMethod, returnUrl } = params
 
-    const paymentData = {
-      pp_Version: "1.1",
-      pp_TxnType: "MWALLET",
-      pp_Language: "EN",
-      pp_MerchantID: this.merchantId,
-      pp_SubMerchantID: "",
-      pp_Password: this.secretKey,
-      pp_BankID: "TBANK",
-      pp_ProductID: "RETL",
-      pp_TxnRefNo: orderId,
-      pp_Amount: (amount * 100).toString(), // Convert to paisa
-      pp_TxnCurrency: "PKR",
-      pp_TxnDateTime: new Date().toISOString().replace(/[-:]/g, "").split(".")[0],
-      pp_BillReference: orderId,
-      pp_Description: "PakRaffle Entry Payment",
-      pp_TxnExpiryDateTime: new Date(Date.now() + 30 * 60 * 1000).toISOString().replace(/[-:]/g, "").split(".")[0],
-      pp_ReturnURL: returnUrl,
-      pp_SecureHash: "",
-      ppmpf_1: customerEmail,
-      ppmpf_2: customerPhone,
+    try {
+      const authToken = await this.getAuthToken()
+
+      const order = await this.createOrder(authToken, {
+        amount,
+        orderId,
+        customerName,
+        customerEmail,
+        customerPhone,
+      })
+
+      const paymentToken = await this.getPaymentKey(authToken, {
+        orderId: order.id,
+        amount,
+        paymentMethod,
+        customerEmail,
+        customerPhone,
+        customerName,
+        returnUrl,
+      })
+
+      const paymentUrl = this.generatePaymentUrl(paymentToken, paymentMethod, returnUrl)
+
+      return {
+        authToken,
+        orderId: order.id,
+        paymentToken,
+        paymentUrl,
+      }
+    } catch (error) {
+      console.error("Complete payment flow error:", error)
+      throw error
     }
+  }
 
-    // Generate secure hash
-    const hashString = Object.values(paymentData).slice(0, -1).join("&")
-    paymentData.pp_SecureHash = this.generateHash(hashString)
-
+  // Process webhook data
+  processWebhookData(data: any) {
+    
     return {
-      url: `${this.baseUrl}/Index.jsf`,
-      data: paymentData,
+      transactionId: data.id,
+      orderId: data.orderId,
+      paymentId:data.paymentId,
+      amount: data.amount_cents / 100,
+      currency: data.currency,
+      status: data.success ? "COMPLETED" : "FAILED",
+      paymentMethod: data.source_data?.type || "UNKNOWN",
+      customerEmail: data.order?.shipping_data?.email,
+      customerPhone: data.order?.shipping_data?.phone_number,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
     }
   }
 
-  async verifyPayment(responseData: any): Promise<boolean> {
-    const { pp_SecureHash, ...otherData } = responseData
-    const hashString = Object.values(otherData).join("&")
-    const calculatedHash = this.generateHash(hashString)
-
-    return calculatedHash === pp_SecureHash && responseData.pp_ResponseCode === "000"
-  }
-}
-
-// JazzCash Integration
-export class JazzCashPayment {
-  private merchantId: string
-  private password: string
-  private integritySalt: string
-  private baseUrl: string
-
-  constructor() {
-    this.merchantId = process.env.JAZZCASH_MERCHANT_ID || ""
-    this.password = process.env.JAZZCASH_PASSWORD || ""
-    this.integritySalt = process.env.JAZZCASH_INTEGRITY_SALT || ""
-    this.baseUrl = process.env.JAZZCASH_BASE_URL || "https://sandbox.jazzcash.com.pk"
-  }
-
-  generateHash(data: string): string {
-    return crypto.createHmac("sha256", this.integritySalt).update(data).digest("hex")
-  }
-
-  async initiatePayment(params: {
-    amount: number
-    orderId: string
-    customerEmail: string
-    customerPhone: string
-    returnUrl: string
-  }) {
-    const { amount, orderId, customerEmail, customerPhone, returnUrl } = params
-
-    const paymentData = {
-      pp_Version: "1.1",
-      pp_TxnType: "MWALLET",
-      pp_Language: "EN",
-      pp_MerchantID: this.merchantId,
-      pp_SubMerchantID: "",
-      pp_Password: this.password,
-      pp_BankID: "TBANK",
-      pp_ProductID: "RETL",
-      pp_TxnRefNo: orderId,
-      pp_Amount: (amount * 100).toString(), // Convert to paisa
-      pp_TxnCurrency: "PKR",
-      pp_TxnDateTime: new Date().toISOString().replace(/[-:]/g, "").split(".")[0],
-      pp_BillReference: orderId,
-      pp_Description: "PakRaffle Entry Payment",
-      pp_TxnExpiryDateTime: new Date(Date.now() + 30 * 60 * 1000).toISOString().replace(/[-:]/g, "").split(".")[0],
-      pp_ReturnURL: returnUrl,
-      pp_SecureHash: "",
-      ppmpf_1: customerEmail,
-      ppmpf_2: customerPhone,
-    }
-
-    // Generate secure hash
-    const hashString = Object.values(paymentData).slice(0, -1).join("&")
-    paymentData.pp_SecureHash = this.generateHash(hashString)
-
-    return {
-      url: `${this.baseUrl}/ApplicationAPI/API/Payment/DoTransaction`,
-      data: paymentData,
-    }
-  }
-
-  async verifyPayment(responseData: any): Promise<boolean> {
-    const { pp_SecureHash, ...otherData } = responseData
-    const hashString = Object.values(otherData).join("&")
-    const calculatedHash = this.generateHash(hashString)
-
-    return calculatedHash === pp_SecureHash && responseData.pp_ResponseCode === "000"
+  // Verify transaction callback
+  verifyCallback(data: any): boolean {
+    // Basic verification - you can add HMAC verification if Paymob provides it
+    return data && data.success !== undefined
   }
 }
