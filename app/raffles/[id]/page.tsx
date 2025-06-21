@@ -257,7 +257,12 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
                   {daysLeft > 0 ? `${daysLeft} days left` : "Ended"}
                 </div> */}
               </div>
-                <div className="text-base text-gray-500">{raffle.currentEntries} Participated</div>
+               <div className="flex">
+                 <div className="space-x-2 px-4 pr-5 text-base items-center text-gray-800 p-3 rounded-xl bg-green-100 flex font-semibold">
+                  <Trophy className="w-5 h-5"/>
+                  <p>Participated : {raffle.currentEntries} </p>
+                </div>  
+               </div>
             </div>
 
            
