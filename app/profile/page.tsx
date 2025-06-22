@@ -34,6 +34,7 @@ async function getUserProfile() {
           select: {
             title: true,
             image: true,
+            realPrice:true,
             status: true,
           },
         },
@@ -67,7 +68,7 @@ async function getUserProfile() {
 
   const totalWinnings = await prisma.winner.aggregate({
     where: { userId: user.id },
-    _sum: { prizeValue: true },
+    _sum: { prizeValue:true },
   })
 
   return {

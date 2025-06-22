@@ -59,7 +59,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
         const userResponse = await fetch("/api/auth/me")
         if (userResponse.ok) {
           const userData = await userResponse.json()
-          
+          setUser(userData)
           
           raffleData.entries.map((entry:any)=> entry.userId === userData.id).length > 0 ? setIsUserPurchased(true): setIsUserPurchased(false)
 
@@ -280,6 +280,8 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
               :
               <div className="space-y-4">
                 {getActionButton()}
+              </div>
+              }
 
                 {raffle.status === "COMPLETED" && raffle.winnerId && (
                   <Button asChild variant="outline" className="w-full rounded-2xl py-6 text-lg font-medium">
@@ -289,10 +291,6 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
                     </Link>
                   </Button>
                 )}
-
-              </div>
-              }
-
            
           </div>
         </div>

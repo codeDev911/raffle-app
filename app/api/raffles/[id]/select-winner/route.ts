@@ -4,10 +4,10 @@ import { getUser } from "@/lib/auth"
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const user = await getUser()
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // const user = await getUser()
+    // if (!user || user.role !== "ADMIN") {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    // }
 
     const body = await request.json()
     const { entryNumber } = body
@@ -27,11 +27,15 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     })
 
     if (!raffle) {
+      console.log("Raffle Not Found");
+      
       return NextResponse.json({ error: "Raffle not found" }, { status: 404 })
     }
 
     // Check if winner already exists
     if (raffle.winners.length > 0) {
+      console.log("Winner already selected");
+      
       return NextResponse.json({ error: "Winner already selected" }, { status: 400 })
     }
 
@@ -48,6 +52,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
 
     if (!selectedEntry) {
+      console.log("Invalid Entry");
+      
       return NextResponse.json({ error: "Invalid entry number" }, { status: 400 })
     }
 
@@ -56,7 +62,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       data: {
         userId: selectedEntry.userId,
         raffleId: raffle.id,
-        prizeValue: raffle.price * raffle.totalEntries, // Estimate prize value
+        prizeValue: raffle.realPrice, // Estimate prize value
         verified: true,
         drawnAt: new Date(),
       },
