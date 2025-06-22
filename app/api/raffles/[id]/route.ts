@@ -26,7 +26,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   try {
     const raffle = await prisma.raffle.findUnique({
       where: { id: params.id },
+
       include: {
+        winners:true,
         entries:{
           select:{
             userId:true,

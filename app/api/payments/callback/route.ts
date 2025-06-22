@@ -56,18 +56,39 @@ export async function POST(request: NextRequest) {
     })
 
     
-    var doOnce = false
     // If payment is successful, create raffle entries
-    if (webhookData.status === "COMPLETED" && !doOnce) {
+    if (webhookData.status === "COMPLETED" ) {
       const raffleId = existingMetadata.raffleId as string
       const quantity = existingMetadata.quantity as number
       
 
       if (raffleId && quantity) {
          
+
+        // Find raffle (is the user already participated?)
+        let isParticipated = await prisma.raffle.findFirst({
+          where:{
+            id:raffleId,      
+          },
+          include:{
+            entries:true,
+          }
+        })
+
+        let is = isParticipated?.entries.filter((entry:any)=> entry.id == payment.userId)
+
+
+        if(is && is.length > 0){
+          console.log("Already participated");
+          
+          return NextResponse.json({message:"User already participated"},{status:400})
+        }
+
         // Update raffle current entries and create entry of
         await prisma.raffle.update({
-          where: { id: raffleId },
+          where: {
+            id:raffleId,
+          },
           data: {
             currentEntries: {
               increment: quantity,
@@ -82,7 +103,6 @@ export async function POST(request: NextRequest) {
             }
           },
         })
-        doOnce = true;
 
       } else {
         console.error("Missing raffleId or quantity in payment metadata")

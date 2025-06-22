@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,13 +8,15 @@ import { CheckCircle, XCircle, Clock } from "lucide-react"
 import Link from "next/link"
 
 export default function PaymentCallbackPage() {
+   const hasRun = useRef(false)
   const [status, setStatus] = useState<"loading" | "success" | "failed">("loading")
   const [message, setMessage] = useState("")
-  const [doOnce,setDoOnce] = useState(false)
   const searchParams = useSearchParams()
-  const router = useRouter()
 
   useEffect(() => {
+     if (hasRun.current) return
+      hasRun.current = true
+
     const processCallback = async () => {
       try {
         // Get all search params and convert to object
@@ -23,7 +25,7 @@ export default function PaymentCallbackPage() {
           params[key] = value
         })
 
-        const response = await fetch("/api/payments/callback", {
+        const response = await fetch("/api/payments/callbacks", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(params),
@@ -42,16 +44,10 @@ export default function PaymentCallbackPage() {
         setStatus("failed")
         setMessage("An error occurred while processing your payment.")
       }
-      setDoOnce(true)
     }
 
-   if(!doOnce){
      processCallback()
-   }
-
-    return(()=>{
-      null
-    })
+ 
   }, [searchParams])
 
   return (
