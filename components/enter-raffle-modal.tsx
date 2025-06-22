@@ -127,24 +127,14 @@ export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalPr
           {/* Payment Method */}
           <div className="space-y-3">
             <Label className="text-base font-medium">Payment Method</Label>
-            <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-              <div className="flex items-center space-x-3 p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
-                <RadioGroupItem value="CARD" id="card" />
-                <Label htmlFor="card" className="flex items-center space-x-3 cursor-pointer flex-1">
-                  <CreditCard className="h-5 w-5 text-purple-600" />
-                  <div>
-                    <div className="font-medium">Credit/Debit Card</div>
-                    <div className="text-sm text-gray-500">Visa, Mastercard, and local cards</div>
-                  </div>
-                </Label>
-              </div>
+            <RadioGroup className="grid md:grid-cols-2 grid-cols-2" value={paymentMethod} onValueChange={setPaymentMethod}>
+              
               <div className="flex items-center space-x-3 p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
                 <RadioGroupItem value="EASYPAISA" id="easypaisa" />
                 <Label htmlFor="easypaisa" className="flex items-center space-x-3 cursor-pointer flex-1">
                   <Smartphone className="h-5 w-5 text-blue-600" />
                   <div>
                     <div className="font-medium">EasyPaisa</div>
-                    <div className="text-sm text-gray-500">Instant payment via mobile wallet</div>
                   </div>
                 </Label>
               </div>
@@ -154,7 +144,15 @@ export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalPr
                   <Wallet className="h-5 w-5 text-orange-600" />
                   <div>
                     <div className="font-medium">JazzCash</div>
-                    <div className="text-sm text-gray-500">Secure mobile wallet payment</div>
+                  </div>
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3 p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
+                <RadioGroupItem value="CARD" id="card" />
+                <Label htmlFor="card" className="flex items-center space-x-3 cursor-pointer flex-1">
+                  <CreditCard className="h-5 w-5 text-purple-600" />
+                  <div>
+                    <div className="font-medium">Card</div>
                   </div>
                 </Label>
               </div>

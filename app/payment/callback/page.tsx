@@ -25,7 +25,7 @@ export default function PaymentCallbackPage() {
           params[key] = value
         })
 
-        const response = await fetch("/api/payments/callbacks", {
+        const response = await fetch("/api/payments/callback", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(params),
