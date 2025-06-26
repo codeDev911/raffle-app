@@ -37,13 +37,13 @@ export async function POST(request: NextRequest) {
 
     // Safely handle metadata
     const existingMetadata =
-      payment.metadata && typeof payment.metadata === "object" ? (payment.metadata as Record<string, any>) : {}
+      payment?.metadata && typeof payment?.metadata === "object" ? (payment?.metadata as Record<string, any>) : {}
 
       
     
     // Update payment status
     const updatedPayment = await prisma.payment.update({
-      where: { id: payment.id },
+      where: { id: payment?.id },
       data: {
         status: webhookData.status as PaymentStatus,
         gatewayRef: webhookData.transactionId.toString(),
@@ -75,10 +75,10 @@ export async function POST(request: NextRequest) {
           }
         })
 
-        let is = isParticipated?.entries.filter((entry:any)=> entry.id == payment.userId)
+        let is = isParticipated?.entries.filter((entry:any)=> entry.id == payment?.userId)
 
 
-        if(is && is.length > 0){
+        if(is && is?.length > 0){
           console.log("Already participated");
           
           return NextResponse.json({message:"User already participated"},{status:400})
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
             },
             entries:{
               create:{
-                userId:payment.userId,
+                userId:payment?.userId,
                 totalCost:updatedPayment.amount,
                 paymentId:updatedPayment.id,
                 quantity:quantity                
@@ -119,6 +119,11 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   // Handle GET callback (for return URL)
   const url = new URL(request.url)
+
+
+  return NextResponse.json({url})
+  
+
   const paymentId = url.searchParams.get("paymentId")
   const success = url.searchParams.get("success")
 
