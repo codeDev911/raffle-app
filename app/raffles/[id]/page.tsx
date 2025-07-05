@@ -63,8 +63,9 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
           setUser(userData)
                      
           const py = userData.payments.length>0 && userData.payments.filter((payment:any) => payment.metadata["raffleId"] == raffleData.id)[0]
+          
           setPaymentUnderReview(py)
-           
+          
           
           raffleData.entries.filter((entry:any)=> entry.userId == userData.id).length > 0 ? setIsUserPurchased(true): setIsUserPurchased(false)
 
@@ -129,7 +130,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
 
         <>
         {
-          paymentUnderReview != null ?
+          paymentUnderReview  ?
          <div className="w-full flex justify-center space-y-2 items-center flex-col">
            <Button disabled variant={"default"}>
             <Clock10Icon className="w-5"/>
@@ -286,7 +287,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
 
            
               {/* If user hasn't purchased  */}
-              {isUserPurchased ? 
+              {isUserPurchased && raffle.status=="ACTIVE"  ? 
                 <div className="flex-col space-y-2  text-center">
                   <Button asChild variant="secondary" className="w-full rounded-2xl py-6 text-lg font-medium">
                     <div >
