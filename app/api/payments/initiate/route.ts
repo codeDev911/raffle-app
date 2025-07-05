@@ -12,8 +12,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
 
-    const randomMethod = Math.random() < 0.5 ? "paymob" : "safepay";
-    return await paymentsController[randomMethod](body,user)
+    // const randomMethod = Math.random() < 0.5 ? "paymob" : "safepay";
+    return await paymentsController["ewallets"](body,user)
 
 }
   

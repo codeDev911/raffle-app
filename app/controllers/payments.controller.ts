@@ -1,6 +1,7 @@
-import { PaymobInitiate ,SafepayInitiate} from "./payment-initiate.controller";
+import { PaymobInitiate ,SafepayInitiate, EwalletsInitiate } from "./payment-initiate.controller";
 
 export default {
     "paymob":PaymobInitiate,
-    "safepay": SafepayInitiate
+    "safepay": SafepayInitiate,
+    "ewallets": EwalletsInitiate
 }

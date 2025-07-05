@@ -6,10 +6,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Trophy, Shield, CreditCard, Smartphone, Plus, Minus, Wallet } from "lucide-react"
+import { Trophy, Shield, CreditCard,  Plus, Minus, Wallet } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
-
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
+import EasypaisaIcon  from "@/public/assets/easypaisa-logo.png"
+import NayapayIcon  from "@/public/assets/nayapay.png"
+import JAzzcashIcon  from "@/public/assets/jazzcash-logo.png"
+import Image from "next/image"
 interface Raffle {
   id: string
   title: string
@@ -24,9 +27,30 @@ interface EnterRaffleModalProps {
   onClose: () => void
 }
 
+const paymentMethods = [
+  {
+    id:"EASYPAISA",
+    icon:EasypaisaIcon,
+    title:"Easypaisa",
+    disabled :false
+  },
+  {
+    id:"NAYAPAY",
+    icon:NayapayIcon,
+    title:"Nayapay",
+    disabled :false
+  },
+  {
+    id:"JAZZCASH",
+    icon:JAzzcashIcon,
+    title:"Jazzcash",
+    disabled :false
+  }, 
+]
+
 export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalProps) {
   const [entries, setEntries] = useState(1)
-  const [paymentMethod, setPaymentMethod] = useState("CARD")
+  const [paymentMethod, setPaymentMethod] = useState("EASYPAISA")
   const [submitting, setSubmitting] = useState(false)
   const router = useRouter()
 
@@ -127,36 +151,47 @@ export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalPr
           {/* Payment Method */}
           <div className="space-y-3">
             <Label className="text-base font-medium">Payment Method</Label>
-            <RadioGroup className="grid md:grid-cols-2 grid-cols-2" value={paymentMethod} onValueChange={setPaymentMethod}>
-              
-              <div className="flex items-center space-x-3 p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
-                <RadioGroupItem value="EASYPAISA" id="easypaisa" />
-                <Label htmlFor="easypaisa" className="flex items-center space-x-3 cursor-pointer flex-1">
-                  <Smartphone className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <div className="font-medium">EasyPaisa</div>
-                  </div>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3 p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
-                <RadioGroupItem value="JAZZCASH" id="jazzcash" />
-                <Label htmlFor="jazzcash" className="flex items-center space-x-3 cursor-pointer flex-1">
-                  <Wallet className="h-5 w-5 text-orange-600" />
-                  <div>
-                    <div className="font-medium">JazzCash</div>
-                  </div>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3 p-4 border rounded-2xl hover:bg-gray-50 transition-colors">
-                <RadioGroupItem value="CARD" id="card" />
-                <Label htmlFor="card" className="flex items-center space-x-3 cursor-pointer flex-1">
-                  <CreditCard className="h-5 w-5 text-purple-600" />
-                  <div>
-                    <div className="font-medium">Card</div>
-                  </div>
-                </Label>
-              </div>
-            </RadioGroup>
+            <Select  value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger className="w-full">
+                <Image
+                  src={
+                    typeof paymentMethods.filter((method: any) => method.id == paymentMethod)[0].icon === "string"
+                      ? paymentMethods.filter((method: any) => method.id == paymentMethod)[0].icon
+                      : (paymentMethods.filter((method: any) => method.id == paymentMethod)[0].icon as { src: string }).src
+                  }
+                  alt={
+                    paymentMethods.filter((method: any) => method.id == paymentMethod)[0].title
+                  }
+                  width={24}
+                  height={15}
+                  className="w-24"
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>E-walltes</SelectLabel>
+                  {paymentMethods.map((method:any)=>(
+                    <SelectItem value={method.id}>
+                      <span className="flex items-center gap-2">
+                      {method.icon && (
+                        <img
+                        src={typeof method.icon === "string" ? method.icon : (method.icon.src || "")}
+                        alt={method.title}
+                        className="w-24 h-15 object-contain"
+                        />
+                      )}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                <SelectGroup>
+                  <SelectLabel>Debit/Credit Card</SelectLabel>
+                    <SelectItem disabled value="CARD">Card (not  active right now)</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            
+             
           </div>
 
           {/* Total Cost */}

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Trophy, Clock, Star, ArrowLeft, Users, Calendar, CheckCircle, XCircle, CheckCircleIcon } from "lucide-react"
+import { Trophy, Clock, Star, ArrowLeft, Users, Calendar, CheckCircle, XCircle, CheckCircleIcon, Clock10Icon } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { formatCurrency } from "@/lib/utils"
@@ -40,6 +40,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
   const [user, setUser] = useState<any>(null)
   const [isUserPurchased,setIsUserPurchased] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [paymentUnderReview,setPaymentUnderReview] = useState()
   const router = useRouter()
 
 
@@ -49,7 +50,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
       try {
         // Fetch raffle data
         const raffleResponse = await fetch(`/api/raffles/${params.id}`)
-        let raffleData;
+        let raffleData : any;
         if (raffleResponse.ok) {
           raffleData = await raffleResponse.json()
           setRaffle(raffleData)
@@ -60,9 +61,10 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
         if (userResponse.ok) {
           const userData = await userResponse.json()
           setUser(userData)
-                    
-          console.log(raffleData.status);
-          console.log(raffleData);
+                     
+          const py = userData.payments.length>0 && userData.payments.filter((payment:any) => payment.metadata["raffleId"] == raffleData.id)[0]
+          setPaymentUnderReview(py)
+           
           
           raffleData.entries.filter((entry:any)=> entry.userId == userData.id).length > 0 ? setIsUserPurchased(true): setIsUserPurchased(false)
 
@@ -116,7 +118,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
     return timeLeft > 0
   }
 
-  const   getActionButton = () => {
+  const  getActionButton = () => {
     if (!raffle) return null
 
     const statusInfo = getStatusInfo()
@@ -124,12 +126,26 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
 
     if (canEnterRaffle()) {
       return (
-        <Button
-          onClick={handleEnterRaffle}
-          className="w-full bg-green-500 hover:bg-green-600 text-white rounded-2xl py-6 text-lg font-medium"
-        >
-          Buy entry {formatCurrency(raffle.price)}
-        </Button>
+
+        <>
+        {
+          paymentUnderReview != null ?
+         <div className="w-full flex justify-center space-y-2 items-center flex-col">
+           <Button disabled variant={"default"}>
+            <Clock10Icon className="w-5"/>
+              Your payment under review
+          </Button>
+          <p className="text-center text-gray-500 text-sm">Your payment to this reffle is under processing. Once approved your entry will fulfill</p>
+         </div>
+            :
+          <Button
+            onClick={handleEnterRaffle}
+            className="w-full bg-green-500 hover:bg-green-600 text-white rounded-2xl py-6 text-lg font-medium"
+            >
+            Buy entry {formatCurrency(raffle.price)}
+          </Button>
+          }
+          </>
       )
     }
 
@@ -288,14 +304,14 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
 
            
           </div>
-                {raffle.status === "COMPLETED" && raffle?.winners && raffle.winners.length > 0 && (
-                  <Button asChild variant="outline" className="w-full rounded-2xl py-6 text-lg font-medium">
-                    <Link href={`/raffles/${raffle.id}/winner`}>
-                      <Trophy className="mr-2 h-5 w-5" />
-                      View Winner
-                    </Link>
-                  </Button>
-                )}
+            {raffle.status === "COMPLETED" && raffle?.winners && raffle.winners.length > 0 && (
+              <Button asChild variant="outline" className="w-full rounded-2xl py-6 text-lg font-medium">
+                <Link href={`/raffles/${raffle.id}/winner`}>
+                  <Trophy className="mr-2 h-5 w-5" />
+                  View Winner
+                </Link>
+              </Button>
+            )}
         </div>
 
         {/* Details Tabs */}

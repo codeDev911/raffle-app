@@ -3,6 +3,7 @@ import { PaymobPayment } from "@/lib/payments";
 import { generateOrderId } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getUser } from "@/lib/auth";
 
 const safepay = require('@sfpy/node-core')("78bdd39f4419d6f6061f9984778eaeeb0ba068d6147b321eae60a0a19588e514", {
   authType: 'secret',
@@ -14,6 +15,94 @@ const initiatePaymentSchema = z.object({
   quantity: z.number().min(1).max(10),
   method: z.enum(["CARD", "EASYPAISA", "JAZZCASH"]),
 });
+
+
+const EwalletsInitiate = async (body:any, user: any) => {
+  try {
+    
+    const user = await getUser()
+    if(!user){
+      return NextResponse.json({"Error":"Authentication required"},{status:401})
+    }
+    
+    const orderId = generateOrderId();
+    console.log(body);
+    
+    let raffle = await prisma.raffle.findFirst({
+      where:{
+        AND:[
+          {id:body.raffleId},
+          {status:"ACTIVE"}, 
+        ]
+      },
+      select:{
+        price:true,
+        id:true,
+        status:true,
+        title:true,
+        totalEntries:true,
+        currentEntries:true,
+        endDate:true,
+      }
+    })
+    
+    if (!raffle) {
+      return NextResponse.json(
+        { error: "Raffle not found" },
+        { status: 404 }
+      );
+    }
+    if (raffle.status !== "ACTIVE") {
+      return NextResponse.json(
+        { error: "Raffle not available" },
+        { status: 400 }
+      );
+    }
+    if (raffle.currentEntries + body.quantity > raffle.totalEntries) {
+      return NextResponse.json(
+        { error: "Not enough entries available" },
+        { status: 400 }
+      );
+    }
+
+    // Find raffle (is the user already participated?)
+    let isParticipated = await prisma.raffle.findFirst({
+      where:{
+        id:body.raffleId,      
+      },
+      include:{
+        entries:true,
+      }
+    })
+
+    let is = isParticipated?.entries.filter((entry:any)=> entry.id == user?.id)
+
+
+    if(is && is?.length > 0){
+      console.log("Already participated");
+      
+      return NextResponse.json({message:"User already participated"},{status:400})
+    }
+
+
+    let totalAmount = (raffle.price * body.quantity) / 100 // Convert from paisa to PKR
+
+
+    const returlUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/payment/pay?method=${body.method.toLowerCase()}&orderId=${orderId}&q=${body.quantity}&refId=${body.raffleId}&tam=${totalAmount}&refTit=${raffle.title}&endDate=${raffle.endDate}&procFee=0`;
+    return NextResponse.json({
+      success: true,
+      paymentId: null,
+      paymentUrl: returlUrl,
+      paymobOrderId: null,
+    });
+     
+
+  } catch (error) {
+    console.log(error);
+    
+    return NextResponse.json({"Server error":error},{"status":500})
+  }
+}
 
 const PaymobInitiate = async (request: NextRequest, user: any) => {
   try {
@@ -50,7 +139,6 @@ const PaymobInitiate = async (request: NextRequest, user: any) => {
 
     const totalAmount = (raffle.price * quantity) / 100; // Convert from paisa to PKR
     const orderId = generateOrderId();
-    console.log({ orderId });
 
     // Create payment record
     const payment = await prisma.payment.create({
@@ -121,21 +209,77 @@ const PaymobInitiate = async (request: NextRequest, user: any) => {
 
 const SafepayInitiate = async(body:any,user:any = null)=>{
   // try {
+  const { raffleId, quantity,method} = body;
+
+  const raffle = await prisma.raffle.findUnique({
+    where: { id: raffleId },
+    select:{
+      price:true,
+      id:true,
+      status:true,
+      title:true,
+      totalEntries:true,
+      currentEntries:true
+    }
+  })
+
   
+    if (!raffle || raffle.status !== "ACTIVE") {
+      return NextResponse.json(
+        { error: "Raffle not available" },
+        { status: 400 }
+      );
+    }
+
+    if (raffle.currentEntries + quantity > raffle.totalEntries) {
+      return NextResponse.json(
+        { error: "Not enough entries available" },
+        { status: 400 }
+      );
+    }
+
+    const totalAmount = raffle.price * quantity// Convert from paisa to PKR
+    const orderId = generateOrderId();
+
+    // Create payment record
+    // const payment = await prisma.payment.create({
+    //   data: {
+    //     userId: user.id,
+    //     amount: raffle.price * quantity, // Store in paisa
+    //     method,
+    //     transactionId: orderId,
+    //     status: "PENDING",
+    //     metadata: {
+    //       raffleId,
+    //       quantity,
+    //       raffleName: raffle.title,
+    //     },
+    //   },
+    // });
+
+    const payment = {
+      id:"sad"
+    }
+    // Create return URL with payment ID
+    const returnUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/payment/callback?paymentId=${payment.id}&orderId=${orderId}`;
+
+
+
   const response = safepay.payments.session.setup({
     "merchant_api_key": "sec_4a07010a-c4b6-4f7f-8776-9e377ae97fa3",
     "intent": "CYBERSOURCE",
     "mode": "payment",
     "entry_mode": "raw",
     "currency": "PKR",
-    "amount": 10000,
+    "amount": totalAmount,
     "metadata": {
-      "order_id": "1234567890"
+      "order_id": orderId
     },
     "include_fees": false
   })
   
   const tracker = await response
+  
   const TRACKER_TOKEN = tracker.data.tracker.token
   // Now create authentation to get Auth Token
   var requestOptions: RequestInit = {
@@ -160,13 +304,20 @@ const SafepayInitiate = async(body:any,user:any = null)=>{
     // attach a source, like your website domain or mobile app bundle identifier (or "mobile" for mobile webview)
     source: "Pakraffle.com",
     // the success URL to redirect your customer to after payment complete
-    redirect_url: "http://localhost:3000/api/payments/callback",
+    redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/callback`,
     // the cancel URL to redirect your customer to after the customer cancels the checkout session
-    cancel_url: "http://localhost:3000/api/payments/callback",
+    cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payments/callback`,
 
   })
  
-  return NextResponse.redirect(checkoutURL,{status:301})
+  return NextResponse.json(
+    {
+      success: true,
+      paymentId: payment.id,
+      paymentUrl: checkoutURL,
+      paymobOrderId: "",
+    }
+    ,{status:200})
   }
 )
   .catch(error =>
@@ -185,5 +336,6 @@ const SafepayInitiate = async(body:any,user:any = null)=>{
 
 export  {
     PaymobInitiate,
-    SafepayInitiate
+    SafepayInitiate,
+    EwalletsInitiate
 }

@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { PaymobPayment } from "@/lib/payments"
 import { PaymentStatus } from "@prisma/client"
@@ -116,22 +116,47 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+
+// this call back is only for our e-wallet manually configurations
+export async function PUT(request: NextRequest) {
   // Handle GET callback (for return URL)
-  const url = new URL(request.url)
+  try {
+     const body = await request.json()
+    // Update raffle current entries and create entry of
+    
+    let payment = await prisma.payment.update({
+      where:{
+        id:body.paymentId,
+      },
+      data:{
+        status:body.status as PaymentStatus,
+      }
+    })
 
 
-  return NextResponse.json({url})
-  
+    await prisma.raffle.update({
+      where: {
+        id:body.raffleId,
+      },
+      data: {
+        currentEntries: {
+          increment: body.quantity,
+        },
+        entries:{
+          create:{
+            userId:payment?.userId,
+            totalCost:payment.amount,
+            paymentId:payment.id,
+            quantity:body.quantity                
+          }
+          }
+      },
+    })
 
-  const paymentId = url.searchParams.get("paymentId")
-  const success = url.searchParams.get("success")
-
-  if (paymentId) {
-    // Redirect to payment result page
-    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/payment/result?paymentId=${paymentId}&success=${success}`
-    return NextResponse.redirect(redirectUrl)
+  return NextResponse.json({ success: true, message: "Payment updated successfully" })
+  } catch (error) {
+    
+    return NextResponse.json({ error: "Invalid callback" }, { status: 400 })
   }
 
-  return NextResponse.json({ error: "Invalid callback" }, { status: 400 })
 }

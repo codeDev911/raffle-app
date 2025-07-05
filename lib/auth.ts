@@ -69,6 +69,20 @@ export async function getUser() {
       city: true,
       role: true,
       isActive: true,
+      payments:{
+        where:{
+          OR:[
+            {status:"PENDING"},
+            {status:"PROCESSING"}
+          ]
+        },
+        select:{
+          id:true,
+          amount:true,
+          status:true,
+          metadata:true
+        }
+      }
     },
   })
 }

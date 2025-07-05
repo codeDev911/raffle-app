@@ -20,7 +20,7 @@ import { formatCurrency, formatDateTime } from "@/lib/utils"
 import { notFound } from "next/navigation"
 import { UpdatePaymentStatus } from "@/components/update-payment-status"
 import { ReceiptModal } from "@/components/receipt-modal"
-
+import _Button from "./_Button"
 async function getPaymentDetails(id: string) {
   const payment = await prisma.payment.findUnique({
     where: { id },
@@ -64,6 +64,24 @@ async function getPaymentDetails(id: string) {
 
 export default async function PaymentDetailsPage({ params }: { params: { id: string } }) {
   const payment = await getPaymentDetails(params.id)
+  // Safely access raffleId from metadata if it's an object
+  const raffleId =
+    payment.metadata &&
+    typeof payment.metadata === "object" &&
+    !Array.isArray(payment.metadata) &&
+    "raffleId" in payment.metadata
+      ? (payment.metadata as Record<string, unknown>)["raffleId"]
+      : null;
+      
+  const quantity =
+    payment.metadata &&
+    typeof payment.metadata === "object" &&
+    !Array.isArray(payment.metadata) &&
+    "raffleId" in payment.metadata
+      ? (payment.metadata as Record<string, unknown>)["quantity"]
+      : null;
+
+  
 
   const canUpdateStatus = !["COMPLETED", "REFUNDED"].includes(payment.status)
 
@@ -82,7 +100,7 @@ export default async function PaymentDetailsPage({ params }: { params: { id: str
             <h1 className="text-3xl font-bold text-gray-900">Payment Details</h1>
             <p className="text-gray-600 mt-2">Payment ID: {payment.id}</p>
           </div>
-        </div>
+        </div> 
         <Badge
           className={`rounded-2xl text-lg px-4 py-2 ${
             payment.status === "COMPLETED"
@@ -241,6 +259,7 @@ export default async function PaymentDetailsPage({ params }: { params: { id: str
               <CardTitle>Payment Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+             {payment.status != "FAILED" ?  <_Button paymentId={payment.id} quantity={typeof quantity === "number" ? quantity : quantity !== null && quantity !== undefined ? Number(quantity) : null} raffleId={typeof raffleId === "string" ? raffleId : null} status="COMPLETED"/> :""}
               {canUpdateStatus && (
                 <div>
                   <label className="text-sm font-medium text-gray-600 mb-2 block">Update Payment Status</label>

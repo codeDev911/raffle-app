@@ -15,7 +15,7 @@ export default function ClientLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const isAdminRoute = pathname?.startsWith("/admin")
+  const isAdminRoute = pathname?.startsWith("/admin") || pathname?.startsWith("/payment")
 
   return (
     <html lang="en">
