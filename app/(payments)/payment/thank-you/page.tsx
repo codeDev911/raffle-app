@@ -196,7 +196,7 @@ function ThankYouContent() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 justify-center">
-            <Link href={`/raffle/${raffleId}`}>
+            <Link href={`/raffles/${raffleId}`}>
               <Button
                 className={`w-full sm:w-auto bg-gradient-to-r ${selectedMethod.gradient} hover:opacity-90 text-white px-6 lg:px-8 py-2 lg:py-3 rounded-xl lg:rounded-2xl shadow-lg flex items-center gap-2 text-sm lg:text-base`}
               >
@@ -206,7 +206,7 @@ function ThankYouContent() {
               </Button>
             </Link>
 
-            <Link href="/dashboard">
+            <Link href="/profile">
               <Button
                 variant="outline"
                 className="w-full sm:w-auto border-2 border-gray-300 hover:border-gray-400 px-6 lg:px-8 py-2 lg:py-3 rounded-xl lg:rounded-2xl flex items-center gap-2 bg-transparent text-sm lg:text-base"

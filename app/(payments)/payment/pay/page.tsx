@@ -147,7 +147,7 @@ function PaymentPageContent() {
       }, 200)
 
       // Make API call to submit payment
-      const response = await fetch("/api/submit-payment", {
+      const response = await fetch("/api/payments/make", {
         method: "POST",
         body: formData,
       })
@@ -165,7 +165,7 @@ function PaymentPageContent() {
         setSubmitStatus("success")
         // Redirect to thank you page with order and raffle details
         setTimeout(() => {
-          window.location.href = `/thank-you?orderId=${orderId}&raffleId=${raffleId}&paymentMethod=${paymentMethod}`
+          window.location.href = `/payment/thank-you?orderId=${orderId}&raffleId=${raffleId}&paymentMethod=${paymentMethod}`
         }, 2000)
       } else {
         throw new Error(result.message || "Payment submission failed")
