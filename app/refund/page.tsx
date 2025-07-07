@@ -178,8 +178,7 @@ export default function RefundPage() {
                   While we cannot provide refunds, our support team is here to help with any questions or concerns.
                 </p>
                 <div className="space-y-2 text-green-600">
-                  <p>Email: support@pakraffle.com</p>
-                  <p>Phone: +92 300 1234567</p>
+                  <p>Email: support@pakraffle.com</p> 
                   <p>Hours: 9 AM - 9 PM (Monday to Sunday)</p>
                 </div>
               </div>

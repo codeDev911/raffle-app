@@ -189,7 +189,7 @@ export default function PrivacyPage() {
                 <p className="text-green-700 mb-4">
                   Our privacy team is here to help with any questions about your data.
                 </p>
-                <p className="text-green-600">Email: privacy@pakraffle.com | Phone: +92 300 1234567</p>
+                <p className="text-green-600">Email: privacy@pakraffle.com </p>
               </div>
             </CardContent>
           </Card>

@@ -126,7 +126,7 @@ export default function TermsPage() {
                 <p className="text-green-700 mb-4">
                   Contact our support team for clarification on any terms or conditions.
                 </p>
-                <p className="text-green-600">Email: support@pakraffle.com | Phone: +92 300 1234567</p>
+                <p className="text-green-600">Email: support@pakraffle.com </p>
               </div>
             </CardContent>
           </Card>
