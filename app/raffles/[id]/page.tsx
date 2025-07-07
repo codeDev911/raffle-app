@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -35,15 +35,16 @@ interface Raffle {
 }
 
 export default function RaffleDetailPage({ params }: { params: { id: string } }) {
+  const searchParams = useSearchParams()
+  const openEnModal = searchParams.get("openEnModal") || 0
+
   const [raffle, setRaffle] = useState<Raffle | null>(null)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [isUserPurchased,setIsUserPurchased] = useState(false)
-  const [showModal, setShowModal] = useState(false)
+  const [showModal, setShowModal] = useState(openEnModal === "1")
   const [paymentUnderReview,setPaymentUnderReview] = useState()
   const router = useRouter()
-
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,7 +84,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
 
   const handleEnterRaffle = () => {
     if (!user) {
-      router.push("/auth/login?comback=/raffles/" + params.id)
+      router.push(`/auth/login?comback=/raffles/${params.id}&openEnModal=1`)
       return
     }
     setShowModal(true)

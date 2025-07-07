@@ -130,8 +130,9 @@ export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalPr
                   type="number"
                   value={entries}
                   onChange={(e) => setEntries(Math.max(1, Number.parseInt(e.target.value) || 1))}
-                  className="text-center text-lg font-bold rounded-2xl"
+                  className="text-center  text-lg font-bold rounded-2xl"
                   min="1"
+                  autoFocus={false}
                   max="10"
                 />
               </div>
@@ -222,7 +223,7 @@ export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalPr
 
           <div className="flex items-center justify-center text-sm text-gray-500">
             <Shield className="w-4 h-4 mr-1" />
-            Powered by Paymob - 100% Secure Payment
+            100% Secure Payment
           </div>
         </div>
       </DialogContent>
