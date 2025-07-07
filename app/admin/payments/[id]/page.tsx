@@ -266,7 +266,7 @@ export default async function PaymentDetailsPage({ params }: { params: { id: str
             <CardContent className="space-y-4">
 
               <Button asChild variant="outline" className="w-full rounded-2xl">
-                <Link href={`${existingMetadata.receiptUrl}}`} target="_blank" rel="noopener noreferrer">
+                <Link href={`${existingMetadata.receiptUrl}`} target="_blank" rel="noopener noreferrer">
                   <FileIcon className="h-4 w-4 mr-2" />
                   View receipt
                 </Link>
