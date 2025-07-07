@@ -12,3 +12,4 @@
 ### added some pages 
 ## added favicon and removed progress in raffle card
 ### implement Vercel analytics
+### Bad day 😟
