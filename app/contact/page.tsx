@@ -99,8 +99,8 @@ export default function ContactPage() {
       </section>
 
       {/* Main Contact Section */}
-      <section className="relative py-20 px-6 bg-gray-50">
-        <div className="container mx-auto">
+      <section className="relative  py-20 px-6 bg-gray-50">
+        <div className="container max-w-7xl  mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             {/* Contact Form */}
             <div className="space-y-8">
@@ -197,20 +197,7 @@ export default function ContactPage() {
 
               {/* Contact Methods */}
               <div className="space-y-6">
-                <Card className="bg-white border-gray-200 hover:shadow-lg transition-all duration-300 group">
-                  <CardContent className="p-6">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <Phone className="w-7 h-7 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-gray-900">Phone Support</h3>
-                        <p className="text-gray-600">+92 21 1234 5678</p>
-                        <p className="text-sm text-green-600">Available 24/7</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+               
 
                 <Card className="bg-white border-gray-200 hover:shadow-lg transition-all duration-300 group">
                   <CardContent className="p-6">
@@ -241,21 +228,7 @@ export default function ContactPage() {
                     </div>
                   </CardContent>
                 </Card>
-
-                <Card className="bg-white border-gray-200 hover:shadow-lg transition-all duration-300 group">
-                  <CardContent className="p-6">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <MapPin className="w-7 h-7 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-gray-900">Office Address</h3>
-                        <p className="text-gray-600">Block 5, Clifton, Karachi</p>
-                        <p className="text-sm text-orange-600">Visit us Mon-Fri 9AM-6PM</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+ 
               </div>
 
               {/* Social Media */}
@@ -430,104 +403,8 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Office Hours & Location */}
-      <section className="relative py-20 px-6 bg-white">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  Visit Our Office
-                </h2>
-                <p className="text-xl text-gray-600 leading-relaxed">
-                  Drop by our headquarters in Karachi for in-person support or business inquiries.
-                </p>
-              </div>
-
-              <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center mt-1">
-                    <MapPin className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-gray-900">Address</h3>
-                    <p className="text-gray-600">
-                      PakRaffle Headquarters
-                      <br />
-                      Block 5, Clifton
-                      <br />
-                      Karachi, Sindh 75600
-                      <br />
-                      Pakistan
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center mt-1">
-                    <Clock className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-gray-900">Office Hours</h3>
-                    <div className="text-gray-600 space-y-1">
-                      <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
-                      <p>Saturday: 10:00 AM - 4:00 PM</p>
-                      <p>Sunday: Closed</p>
-                      <p className="text-green-600 font-medium">24/7 Online Support Available</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Map Placeholder */}
-            <Card className="bg-gray-100 border-gray-200 h-96">
-              <CardContent className="p-0 h-full">
-                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="font-bold text-lg text-gray-600 mb-2">Interactive Map</h3>
-                    <p className="text-gray-500">
-                      Block 5, Clifton, Karachi
-                      <br />
-                      Click to view directions
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="relative py-20 px-6 bg-gradient-to-r from-green-500 to-green-600">
-        <div className="container mx-auto text-center">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">Still Have Questions?</h2>
-            <p className="text-xl text-green-100 mb-8 leading-relaxed">
-              Our support team is standing by to help you with any questions or concerns you may have.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-white text-green-600 hover:bg-gray-100 border-0 shadow-xl text-lg px-8 py-4 transition-all duration-300 transform hover:scale-105"
-              >
-                <MessageCircle className="w-5 h-5 mr-2" />
-                Start Live Chat
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white text-white hover:bg-white hover:text-green-600 bg-transparent text-lg px-8 py-4 transition-all duration-300"
-              >
-                <Phone className="w-5 h-5 mr-2" />
-                Call Us Now
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+     
+ 
     </div>
   )
 }

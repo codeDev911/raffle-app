@@ -133,6 +133,7 @@ enum PaymentMethod {
   EASYPAISA
   JAZZCASH
   CARD
+  NAYAPAY
 }
 
 enum PaymentStatus {

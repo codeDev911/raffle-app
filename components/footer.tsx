@@ -94,10 +94,6 @@ export function Footer() {
             <h3 className="text-lg font-bold">Contact Info</h3>
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-green-500" />
-                <span className="text-gray-400">+92 300 1234567</span>
-              </div>
-              <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-green-500" />
                 <span className="text-gray-400">support@pakraffle.com</span>
               </div>

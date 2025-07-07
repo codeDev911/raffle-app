@@ -11,7 +11,6 @@ import {
   ArrowRight,
   Play,
   TrendingUp,
-  Award,
   Clock,
   Target,
   Zap,
@@ -22,6 +21,7 @@ import {
   Heart,
 } from "lucide-react"
 import Video_Mockup from "@/components/Video_Mockup"
+import PinterestRaffleGrid from "@/components/PinterestRaffleGrid"
 
 export default function LandingPage() {
   return (
@@ -33,145 +33,62 @@ export default function LandingPage() {
         <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-gradient-to-tl from-green-600/8 to-lime-500/8 rounded-full blur-2xl"></div>
       </div>
 
-      {/* Hero Section - KEEPING AS IS */}
-      <section className="relative py-20 max-w-7xl mx-auto px-6 min-h-screen flex items-center">
+      {/* Hero Section */}
+      <section className="relative      min-h-screen flex flex-col justify-center">
         <div className="container mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <Badge className="bg-green-500/10 text-green-600 border-green-500/20 hover:bg-green-500/20 transition-colors">
-                🎉 Trusted by 50,000+ Pakistanis
-              </Badge>
+         
 
-              <div className="space-y-6">
-                <h1 className="text-6xl lg:text-7xl font-bold leading-tight">
-                  <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent">
-                    MAKE DREAMS
-                  </span>
-                  <br />
-                  <span className="bg-gradient-to-r from-green-500 to-green-600 bg-clip-text text-transparent">
-                    COME TRUE
-                  </span>
-                </h1>
+          {/* Pinterest Grid at the top */}
+          <div className="mb-16 ">
+            <PinterestRaffleGrid />
+          </div>
 
-                <p className="text-xl text-gray-600 leading-relaxed max-w-lg">
-                  Pakistan's most sophisticated raffle platform. Where every ticket is a chance to transform your life
-                  with instant wins and life-changing prizes.
-                </p>
+          {/* Centered Content Below Pinterest Grid */}
+          <div className="text-center px-6 space-y-8">
+            <div className="space-y-6">
+              <h1 className="text-6xl lg:text-7xl font-bold leading-tight">
+                <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent">
+                  MAKE DREAMS
+                </span>
+                <br />
+                <span className="bg-gradient-to-r from-green-500 to-green-600 bg-clip-text text-transparent">
+                  COME TRUE
+                </span>
+              </h1>
+
+              <p className="text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto">
+                Pakistan's most sophisticated raffle platform. Where every ticket is a chance to transform your life
+                with instant wins and life-changing prizes.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-0 shadow-xl shadow-green-500/25 text-lg px-8 py-4 transition-all duration-300 transform hover:scale-105"
+              >
+                Start Playing Now
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button> 
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-8 pt-8 max-w-2xl mx-auto">
+              <div>
+                <div className="text-3xl font-bold text-green-500 mb-1">₨2M+</div>
+                <div className="text-sm text-gray-500">Prizes Won</div>
               </div>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-0 shadow-xl shadow-green-500/25 text-lg px-8 py-4 transition-all duration-300 transform hover:scale-105"
-                >
-                  Start Playing Now
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent text-lg px-8 py-4 transition-all duration-300"
-                >
-                  <Play className="w-5 h-5 mr-2" />
-                  Watch Live Draw
-                </Button>
+              <div>
+                <div className="text-3xl font-bold text-green-500 mb-1">50K+</div>
+                <div className="text-sm text-gray-500">Active Players</div>
               </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-8 pt-8">
-                <div>
-                  <div className="text-3xl font-bold text-green-500 mb-1">₨2M+</div>
-                  <div className="text-sm text-gray-500">Prizes Won</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-green-500 mb-1">50K+</div>
-                  <div className="text-sm text-gray-500">Active Players</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-green-500 mb-1">24/7</div>
-                  <div className="text-sm text-gray-500">Live Draws</div>
-                </div>
+              <div>
+                <div className="text-3xl font-bold text-green-500 mb-1">24/7</div>
+                <div className="text-sm text-gray-500">Live Draws</div>
               </div>
             </div>
 
-            {/* Phone Mockup */}
-            <div className="relative flex justify-center lg:justify-end">
-              <div className="relative">
-                {/* Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-green-600/10 rounded-[3rem] blur-2xl scale-110"></div>
-
-                {/* Phone Container */}
-                <div className="relative bg-gradient-to-br from-gray-100 to-gray-200 rounded-[3rem] p-2 shadow-2xl">
-                  <div className="bg-gradient-to-br from-white to-gray-50 rounded-[2.5rem] p-6 w-80 h-[600px]">
-                    {/* Status Bar */}
-                    <div className="flex justify-between items-center mb-8 text-gray-900 text-sm">
-                      <span>9:41</span>
-                      <div className="flex space-x-1">
-                        <div className="w-4 h-2 bg-gray-900 rounded-sm"></div>
-                        <div className="w-1 h-2 bg-gray-400 rounded-sm"></div>
-                        <div className="w-6 h-2 bg-gray-900 rounded-sm"></div>
-                      </div>
-                    </div>
-
-                    {/* App Content */}
-                    <div className="space-y-6">
-                      <div className="text-center">
-                        <div className="text-gray-500 text-sm mb-2">Hi Ahmed 👋</div>
-                        <div className="text-3xl font-bold text-gray-900 mb-1">₨ 125,450.00</div>
-                        <div className="text-green-500 text-sm">+₨50,000 from last win 🎉</div>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="bg-green-500/10 rounded-2xl p-4 text-center border border-green-500/20">
-                          <div className="w-8 h-8 bg-green-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                            <Trophy className="w-4 h-4 text-white" />
-                          </div>
-                          <div className="text-xs text-gray-600">Buy Tickets</div>
-                        </div>
-                        <div className="bg-gray-100 rounded-2xl p-4 text-center border border-gray-200">
-                          <div className="w-8 h-8 bg-gray-400 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                            <Clock className="w-4 h-4 text-white" />
-                          </div>
-                          <div className="text-xs text-gray-600">Live Draws</div>
-                        </div>
-                        <div className="bg-gray-100 rounded-2xl p-4 text-center border border-gray-200">
-                          <div className="w-8 h-8 bg-gray-400 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                            <Award className="w-4 h-4 text-white" />
-                          </div>
-                          <div className="text-xs text-gray-600">My Wins</div>
-                        </div>
-                      </div>
-
-                      {/* Current Raffles */}
-                      <div className="space-y-3">
-                        <div className="text-gray-900 font-semibold text-sm">Live Raffles</div>
-                        <div className="bg-gradient-to-r from-green-500/10 to-green-600/10 rounded-2xl p-4 border border-green-500/20">
-                          <div className="flex justify-between items-center mb-2">
-                            <div className="text-gray-900 font-medium">iPhone 15 Pro</div>
-                            <div className="text-green-500 text-sm">₨500</div>
-                          </div>
-                          <div className="text-gray-500 text-xs mb-3">Draw in 2h 45m</div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div className="bg-green-500 h-2 rounded-full w-3/4"></div>
-                          </div>
-                        </div>
-                        <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
-                          <div className="flex justify-between items-center mb-2">
-                            <div className="text-gray-900 font-medium">Cash Prize ₨100K</div>
-                            <div className="text-gray-500 text-sm">₨200</div>
-                          </div>
-                          <div className="text-gray-500 text-xs mb-3">Draw in 5h 12m</div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div className="bg-gray-400 h-2 rounded-full w-1/2"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+           
           </div>
         </div>
       </section>
@@ -332,7 +249,11 @@ export default function LandingPage() {
               <div className="grid grid-cols-3 gap-4">
                 <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg hover:scale-105 transition-all duration-300 group">
                   <CardContent className="p-6 text-center">
-                  <img className="w-24 mx-auto" src="    https://crystalpng.com/wp-content/uploads/2024/10/Easypaisa-logo.png" alt="Easypaisa" />
+                    <img
+                      className="w-24 mx-auto"
+                      src="    https://crystalpng.com/wp-content/uploads/2024/10/Easypaisa-logo.png"
+                      alt="Easypaisa"
+                    />
                     <h3 className="font-bold text-sm text-gray-900">EasyPaisa</h3>
                     <p className="text-xs text-gray-600 mt-1">Instant</p>
                   </CardContent>
@@ -340,7 +261,11 @@ export default function LandingPage() {
 
                 <Card className="bg-gradient-to-br from-orange-50 to-red-100 border-orange-200 hover:shadow-lg hover:scale-105 transition-all duration-300 group">
                   <CardContent className="p-6 text-center">
-                     <img className="w-24 mx-auto" src="https://crystalpng.com/wp-content/uploads/2024/12/new-Jazzcash-logo.png" alt="Jazzcash" />
+                    <img
+                      className="w-24 mx-auto"
+                      src="https://crystalpng.com/wp-content/uploads/2024/12/new-Jazzcash-logo.png"
+                      alt="Jazzcash"
+                    />
                     <h3 className="font-bold text-sm text-gray-900">JazzCash</h3>
                     <p className="text-xs text-gray-600 mt-1">Reliable</p>
                   </CardContent>
@@ -348,7 +273,11 @@ export default function LandingPage() {
 
                 <Card className="bg-gradient-to-br from-purple-50 to-pink-100 border-purple-200 hover:shadow-lg hover:scale-105 transition-all duration-300 group">
                   <CardContent className="p-6 text-center">
-                  <img className="w-24 mx-auto" src=" https://vectorseek.com/wp-content/uploads/2023/09/NayaPay-Icon-Logo-Vector.svg-.png" alt="Nayapay" />
+                    <img
+                      className="w-24 mx-auto"
+                      src=" https://vectorseek.com/wp-content/uploads/2023/09/NayaPay-Icon-Logo-Vector.svg-.png"
+                      alt="Nayapay"
+                    />
                     <h3 className="font-bold text-sm text-gray-900">NayaPay</h3>
                     <p className="text-xs text-gray-600 mt-1">Modern</p>
                   </CardContent>
@@ -389,8 +318,186 @@ export default function LandingPage() {
 
             {/* Mockup Side */}
             <div className="relative">
-             <Video_Mockup/>
+              <Video_Mockup />
+            </div>
           </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section id="how-it-works" className="relative py-32 px-6 bg-white">
+        <div className="container max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500/10 to-blue-500/10 text-green-600 px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <Target className="w-4 h-4" />
+              Simple Process
+            </div>
+            <h2 className="text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent">
+              How It Works
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Getting started with PakRaffle is incredibly simple. Follow these three easy steps to join thousands of
+              winners.
+            </p>
+          </div>
+
+          {/* Steps Container */}
+          <div className="relative max-w-6xl mx-auto">
+            {/* Connection Lines */}
+            <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-green-200 via-blue-200 to-purple-200 transform -translate-y-1/2 z-0"></div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 relative z-10">
+              {/* Step 1 - Buy Entry */}
+              <div className="group">
+                <Card className="bg-white border-gray-200 hover:shadow-2xl hover:-translate-y-4 transition-all duration-500 overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <CardContent className="p-8 text-center relative">
+                    {/* Step Number */}
+                    <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold shadow-lg shadow-green-500/25 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 relative">
+                      1
+                      <div className="absolute -inset-2 bg-green-500/20 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    </div>
+
+                    {/* Icon */}
+                    <div className="w-20 h-20 bg-gradient-to-br from-green-50 to-green-100 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform duration-300">
+                      <div className="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center">
+                        <Trophy className="w-7 h-7 text-white" />
+                      </div>
+                    </div>
+
+                    <h3 className="text-2xl font-bold mb-4 text-gray-900">Click Buy Entry</h3>
+                    <p className="text-gray-600 leading-relaxed mb-6">
+                      Browse our exciting raffles and choose your favorite prize. Click "Buy Entry" to select the number
+                      of tickets you want to purchase.
+                    </p>
+
+                    {/* Features */}
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-center gap-2 text-green-600">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Multiple raffles available</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 text-green-600">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Choose ticket quantity</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Step 2 - Payment */}
+              <div className="group">
+                <Card className="bg-white border-gray-200 hover:shadow-2xl hover:-translate-y-4 transition-all duration-500 overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <CardContent className="p-8 text-center relative">
+                    {/* Step Number */}
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold shadow-lg shadow-blue-500/25 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 relative">
+                      2
+                      <div className="absolute -inset-2 bg-blue-500/20 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    </div>
+
+                    {/* Icon */}
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform duration-300">
+                      <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center">
+                        <CreditCard className="w-7 h-7 text-white" />
+                      </div>
+                    </div>
+
+                    <h3 className="text-2xl font-bold mb-4 text-gray-900">Make Payment</h3>
+                    <p className="text-gray-600 leading-relaxed mb-6">
+                      Choose your preferred payment method from EasyPaisa, JazzCash, or NayaPay. Complete the secure
+                      payment process in seconds.
+                    </p>
+
+                    {/* Payment Methods */}
+                    <div className="flex justify-center gap-3 mb-4">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">EP</span>
+                      </div>
+                      <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">JC</span>
+                      </div>
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">NP</span>
+                      </div>
+                    </div>
+
+                    {/* Features */}
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-center gap-2 text-blue-600">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Secure encryption</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 text-blue-600">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Instant processing</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Step 3 - Wait for Approval */}
+              <div className="group">
+                <Card className="bg-white border-gray-200 hover:shadow-2xl hover:-translate-y-4 transition-all duration-500 overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <CardContent className="p-8 text-center relative">
+                    {/* Step Number */}
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold shadow-lg shadow-purple-500/25 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 relative">
+                      3
+                      <div className="absolute -inset-2 bg-purple-500/20 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    </div>
+
+                    {/* Icon */}
+                    <div className="w-20 h-20 bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform duration-300">
+                      <div className="w-12 h-12 bg-purple-500 rounded-2xl flex items-center justify-center">
+                        <Clock className="w-7 h-7 text-white" />
+                      </div>
+                    </div>
+
+                    <h3 className="text-2xl font-bold mb-4 text-gray-900">Payment Approval</h3>
+                    <p className="text-gray-600 leading-relaxed mb-6">
+                      Wait for payment confirmation and approval. You'll receive instant notification once your entry is
+                      confirmed and you're in the draw!
+                    </p>
+
+                    {/* Status Indicator */}
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-green-600 font-medium">Usually under 30 seconds</span>
+                    </div>
+
+                    {/* Features */}
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-center gap-2 text-purple-600">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>SMS & Email alerts</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 text-purple-600">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Entry confirmation</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Bottom CTA */}
+            <div className="text-center mt-16">
+              <div className="inline-flex items-center gap-4 bg-gradient-to-r from-gray-50 to-green-50 px-8 py-4 rounded-2xl border border-gray-200">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-green-600" />
+                  <span className="text-gray-700 font-medium">Average completion time: 2 minutes</span>
+                </div>
+                <div className="w-px h-6 bg-gray-300"></div>
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-blue-600" />
+                  <span className="text-gray-700 font-medium">100% secure process</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
