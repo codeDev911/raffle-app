@@ -9,3 +9,4 @@
 #### - Fixed some issue with payment initiate
 #### - asgain a small bug
 #### - updated home page and contact page
+### added some pages 
