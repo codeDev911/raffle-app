@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -24,6 +24,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get("comback") || "/raffles"
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -56,7 +58,7 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (response.ok) {
-        router.push("/")
+        router.push(returnUrl)
         router.refresh()
       } else {
         setError(data.error || "Registration failed")
@@ -193,7 +195,7 @@ export default function RegisterPage() {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Already have an account?{" "}
-              <Link href="/auth/login" className="text-green-500 hover:text-green-600 font-medium">
+              <Link href={`/auth/login?comback=${returnUrl}`} className="text-green-500 hover:text-green-600 font-medium">
                 Sign in
               </Link>
             </p>

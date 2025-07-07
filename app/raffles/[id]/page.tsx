@@ -83,7 +83,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
 
   const handleEnterRaffle = () => {
     if (!user) {
-      router.push("/auth/login")
+      router.push("/auth/login?comback=/raffles/" + params.id)
       return
     }
     setShowModal(true)

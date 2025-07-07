@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LogIn, Eye, EyeOff } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -18,6 +19,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get("comback") || "/raffles"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,7 +37,7 @@ export default function LoginPage() {
       const data = await response.json()
 
       if (response.ok) {
-        router.push("/")
+        router.push(returnUrl)
         router.refresh()
       } else {
         setError(data.error || "Login failed")
@@ -114,7 +117,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Don't have an account?{" "}
-              <Link href="/auth/register" className="text-green-500 hover:text-green-600 font-medium">
+              <Link href={`/auth/register?comback=${returnUrl}`} className="text-green-500 hover:text-green-600 font-medium">
                 Sign up
               </Link>
             </p>
