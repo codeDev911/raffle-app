@@ -11,3 +11,4 @@
 #### - updated home page and contact page
 ### added some pages 
 ## added favicon and removed progress in raffle card
+### implement Vercel analytics
