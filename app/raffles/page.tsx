@@ -152,21 +152,6 @@ export default async function RafflesPage({
                     <div className="text-2xl font-bold text-green-500">{formatCurrency(raffle.price)}</div>
                     <div className="text-sm text-gray-500">per entry</div>
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Progress</span>
-                      <span className="font-medium">
-                        {raffle._count.entries}/{raffle.totalEntries}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${(raffle._count.entries / raffle.totalEntries) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
                 </CardContent>
 
                 <CardFooter>
