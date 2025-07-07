@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -52,7 +51,6 @@ export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalPr
   const [entries, setEntries] = useState(1)
   const [paymentMethod, setPaymentMethod] = useState("EASYPAISA")
   const [submitting, setSubmitting] = useState(false)
-  const router = useRouter()
 
   const totalCost = (raffle.price * entries) / 100
 
@@ -81,7 +79,6 @@ export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalPr
       })
 
       const data = await response.json()
-      console.log("Payment response:", data)
 
       if (response.ok) {
         // Redirect to Paymob payment page

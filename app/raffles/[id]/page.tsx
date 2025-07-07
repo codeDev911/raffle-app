@@ -11,7 +11,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { formatCurrency } from "@/lib/utils"
 import { EnterRaffleModal } from "@/components/enter-raffle-modal"
-import { getUser } from "@/lib/auth"
 
 interface Raffle {
   id: string
