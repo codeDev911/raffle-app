@@ -13,4 +13,4 @@
 ## added favicon and removed progress in raffle card
 ### implement Vercel analytics
 ### Bad day 😟
-### added return URL
+### added return URLs
