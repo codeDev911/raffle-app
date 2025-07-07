@@ -11,11 +11,11 @@ cloudinary.config({
 })
 
 export async function POST(request: NextRequest) {
+  const user = await getUser()
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+  }
   try {
-     const user = await getUser()
-        if (!user) {
-          return NextResponse.json({ error: "Authentication required" }, { status: 401 })
-        }
     const formData = await request.formData()
 
     const receipt = formData.get("receipt") as File
