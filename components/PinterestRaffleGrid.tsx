@@ -403,13 +403,7 @@ const PinterestRaffleGrid = () => {
                   </div>
                 </div>
 
-                {/* Days left with clock icon - Bottom right */}
-                <div className="absolute bottom-3 right-3">
-                  <div className="bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    <span>{raffle.days}d</span>
-                  </div>
-                </div>
+               
               </div>
             ))}
           </ResponsiveMasonryGrid>

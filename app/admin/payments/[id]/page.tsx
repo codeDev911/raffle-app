@@ -13,6 +13,7 @@ import {
   Smartphone,
   Mail,
   Phone,
+  FileIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
@@ -84,7 +85,11 @@ export default async function PaymentDetailsPage({ params }: { params: { id: str
   
 
   const canUpdateStatus = !["COMPLETED", "REFUNDED"].includes(payment.status)
+    const existingMetadata =
+      payment?.metadata && typeof payment?.metadata === "object" ? (payment?.metadata as Record<string, any>) : {}
 
+      
+    
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -259,6 +264,15 @@ export default async function PaymentDetailsPage({ params }: { params: { id: str
               <CardTitle>Payment Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+
+              <Button asChild variant="outline" className="w-full rounded-2xl">
+                <Link href={`${existingMetadata.receiptUrl}}`} target="_blank" rel="noopener noreferrer">
+                  <FileIcon className="h-4 w-4 mr-2" />
+                  View receipt
+                </Link>
+              </Button>
+
+              
              {payment.status != "FAILED" ?  <_Button paymentId={payment.id} quantity={typeof quantity === "number" ? quantity : quantity !== null && quantity !== undefined ? Number(quantity) : null} raffleId={typeof raffleId === "string" ? raffleId : null} status="COMPLETED"/> :""}
               {canUpdateStatus && (
                 <div>
@@ -266,6 +280,9 @@ export default async function PaymentDetailsPage({ params }: { params: { id: str
                   <UpdatePaymentStatus paymentId={payment.id} currentStatus={payment.status} />
                 </div>
               )}
+
+              
+              
 
               {!canUpdateStatus && (
                 <div className="bg-gray-50 p-4 rounded-lg">

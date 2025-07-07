@@ -134,12 +134,7 @@ export default async function RafflesPage({
                   <Badge className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-700 rounded-2xl">
                     {raffle.category}
                   </Badge>
-                  <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm rounded-2xl px-3 py-1">
-                    <div className="flex items-center text-sm font-medium">
-                      <Clock className="w-3 h-3 mr-1 text-green-500" />
-                      {daysLeft > 0 ? `${daysLeft} days` : "Ending soon"}
-                    </div>
-                  </div>
+                   
                 </div>
 
                 <CardHeader className="pb-2">
@@ -147,7 +142,8 @@ export default async function RafflesPage({
                   <CardDescription className="text-gray-600">{raffle.description}</CardDescription>
                 </CardHeader>
 
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-0">
+                  <h2 className="text-base font-semibold text-gray-500 line-through">{formatCurrency(raffle.realPrice)}</h2>
                   <div className="flex justify-between items-center">
                     <div className="text-2xl font-bold text-green-500">{formatCurrency(raffle.price)}</div>
                     <div className="text-sm text-gray-500">per entry</div>

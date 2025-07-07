@@ -263,7 +263,7 @@ export function ReceiptModal({ payment, trigger }: ReceiptModalProps) {
             {/* Footer */}
             <div className="text-center text-sm text-gray-600 pt-4 border-t border-gray-200">
               <p>This is an official receipt for your raffle entry purchase.</p>
-              <p className="mt-1">For support, contact us at support@pakistanraffle.com</p>
+              <p className="mt-1">For support, contact us at support@pakraffle.com</p>
             </div>
           </div>
         </div>
