@@ -16,3 +16,4 @@
 ### added return URLs
 ### mrakho nu 
 ### It's Okay
+#### - added /become-a-partner pages
