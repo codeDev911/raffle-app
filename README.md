@@ -17,3 +17,4 @@
 ### mrakho nu 
 ### It's Okay
 #### - added /become-a-partner pages
+#### added partner api
