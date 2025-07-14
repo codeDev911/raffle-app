@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
 
-    const { status } = await request.json()
+    const { status,transactionId,referralLinkId } = await request.json()
 
     // Validate status
     const validStatuses = ["PENDING", "PROCESSING", "COMPLETED", "FAILED", "REFUNDED"]
@@ -30,7 +30,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const updatedPayment = await prisma.payment.update({
       where: { id: params.id },
       data: { status },
+      include:{
+        user:true
+      }
     })
+
+ 
 
     return NextResponse.json(updatedPayment)
   } catch (error) {

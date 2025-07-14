@@ -6,10 +6,11 @@ interface buttonProps {
   paymentId : string | null
   quantity: Number | null
   raffleId: string |null
-  status : string |null
+  status : string |null,
+  referralLinkId : any 
 }
 
-const _Button = ({paymentId,quantity,raffleId,status}:buttonProps) => {
+const _Button = ({paymentId,quantity,raffleId,status,referralLinkId}:buttonProps) => {
   const [isLoading,setIsLoading] = useState(false)
     const verifyPayment = async()=>{
       setIsLoading(true)
@@ -20,7 +21,8 @@ const _Button = ({paymentId,quantity,raffleId,status}:buttonProps) => {
             paymentId,
             status:"COMPLETED",
             quantity,
-            raffleId
+            raffleId,
+            referralLinkId
         })
         })
         if((await res).status == 200){

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -36,6 +37,7 @@ interface Raffle {
 export default function RaffleDetailPage({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams()
   const openEnModal = searchParams.get("openEnModal") || 0
+  const referralLinkId = searchParams.get("lnk") || false
 
   const [raffle, setRaffle] = useState<Raffle | null>(null)
   const [loading, setLoading] = useState(true)
@@ -45,7 +47,13 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
   const [paymentUnderReview,setPaymentUnderReview] = useState()
   const router = useRouter()
 
+
+  const effectRan = useRef(false)
+
   useEffect(() => {
+    if (effectRan.current) return
+    effectRan.current = true
+
     const fetchData = async () => {
       try {
         // Fetch raffle data
@@ -54,6 +62,27 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
         if (raffleResponse.ok) {
           raffleData = await raffleResponse.json()
           setRaffle(raffleData)
+
+          
+          if(referralLinkId){
+            // Add click event
+            // Get user's IP address before sending the click event
+            let ipAddress = "none"            
+            const userAgent = typeof window !== "undefined" ? window.navigator.userAgent : "Other"
+            fetch(`${process.env.NEXT_PUBLIC_PARTNER_APP_URL}/api/partner/links/click-event`, {
+              method: "POST",
+              headers: {
+              "api-key": process.env.NEXT_PUBLIC_API_KEY_TO_PARTNER || ""
+              },
+              body: JSON.stringify({
+              ipAddress,
+              referralLinkId,
+              userAgent
+              })
+            }).then(res => res).then(data => console.log(data)).finally(() => {})
+
+          }
+
         }
 
         // Check if user is authenticated
@@ -68,8 +97,10 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
           
           
           raffleData.entries.filter((entry:any)=> entry.userId == userData.id).length > 0 ? setIsUserPurchased(true): setIsUserPurchased(false)
-
+         
         } 
+
+
         
       } catch (error) {
         console.error("Error fetching data:", error)
@@ -83,7 +114,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
 
   const handleEnterRaffle = () => {
     if (!user) {
-      router.push(`/auth/login?comback=/raffles/${params.id}&openEnModal=1`)
+      router.push(`/auth/login?comback=/raffles/${params.id}&openEnModal=1&lnk=${referralLinkId}`)
       return
     }
     setShowModal(true)
@@ -377,7 +408,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
       </div>
 
       {/* Enter Raffle Modal */}
-      {raffle && <EnterRaffleModal raffle={raffle} isOpen={showModal} onClose={() => setShowModal(false)} />}
+      {raffle && <EnterRaffleModal raffle={raffle} referralLinkId={referralLinkId} isOpen={showModal} onClose={() => setShowModal(false)} />}
     </div>
   )
 }

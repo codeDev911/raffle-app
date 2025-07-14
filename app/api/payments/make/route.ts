@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
     const totalAmount = formData.get("totalAmount") as string
     const quantity = formData.get("quantity") as string
     const raffleName = formData.get("raffleName") as string
+    const referralLinkId = formData.get("referralLinkId") as string
 
     // Validate required fields
     if (!receipt || !orderId || !raffleId || !paymentMethod) {
@@ -88,7 +89,8 @@ export async function POST(request: NextRequest) {
           receiptUrl: cloudinaryResult.secure_url,
           receiptPublicId: cloudinaryResult.public_id,
           folder: folderPath,
-          raffleName
+          raffleName,
+          referralLinkId : referralLinkId || null, // Store referral link ID if provided
         },
         
       },

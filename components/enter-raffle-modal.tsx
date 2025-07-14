@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +22,7 @@ interface Raffle {
 
 interface EnterRaffleModalProps {
   raffle: Raffle
+  referralLinkId:string | boolean,
   isOpen: boolean
   onClose: () => void
 }
@@ -47,7 +48,7 @@ const paymentMethods = [
   }, 
 ]
 
-export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalProps) {
+export function EnterRaffleModal({ raffle, isOpen, onClose,referralLinkId }: EnterRaffleModalProps) {
   const [entries, setEntries] = useState(1)
   const [paymentMethod, setPaymentMethod] = useState("EASYPAISA")
   const [submitting, setSubmitting] = useState(false)
@@ -68,12 +69,13 @@ export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalPr
         method: paymentMethod, // Make sure we're sending 'method' not 'paymentMethod'
       })
 
-      const response = await fetch("/api/payments/initiate", {
+      const response = await fetch(`/api/payments/initiate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           raffleId: raffle.id,
           quantity: entries,
+          referralLinkId:referralLinkId,
           method: paymentMethod, // Changed from paymentMethod to method
         }),
       })
@@ -168,8 +170,8 @@ export function EnterRaffleModal({ raffle, isOpen, onClose }: EnterRaffleModalPr
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>E-walltes</SelectLabel>
-                  {paymentMethods.map((method:any)=>(
-                    <SelectItem value={method.id}>
+                  {paymentMethods.map((method:any,index:React.Key)=>(
+                    <SelectItem key={index} value={method.id}>
                       <span className="flex items-center gap-2">
                       {method.icon && (
                         <img

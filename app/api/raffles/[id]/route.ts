@@ -56,10 +56,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // const user = await getUser()
-    // if (!user || user.role !== "ADMIN") {
+    // if (!user || user.role !== "ADMIN") { 
     //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     // }
-
+ 
     const body = await request.json()
     const data = updateRaffleSchema.parse(body)
     

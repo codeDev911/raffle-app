@@ -22,6 +22,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams()
   const returnUrl = searchParams.get("comback") || "/raffles"
   const openEnModal = searchParams.get("openEnModal") || 0
+  const referralLinkId = searchParams.get("lnk") || false
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,7 +39,7 @@ export default function LoginPage() {
       const data = await response.json()
 
       if (response.ok) {
-        router.push(returnUrl+`?openEnModal=${openEnModal}`)
+        router.push(returnUrl+`?openEnModal=${openEnModal}${referralLinkId ? `&lnk=${referralLinkId}` : ""}`)
         router.refresh()
       } else {
         setError(data.error || "Login failed")
@@ -118,7 +119,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Don't have an account?{" "}
-              <Link href={`/auth/register?comback=${returnUrl}&openEnModal=${openEnModal}`} className="text-green-500 hover:text-green-600 font-medium">
+              <Link href={`/auth/register?comback=${returnUrl}&openEnModal=${openEnModal}${referralLinkId ? `&lnk=${referralLinkId}`:""}`} className="text-green-500 hover:text-green-600 font-medium">
                 Sign up
               </Link>
             </p>

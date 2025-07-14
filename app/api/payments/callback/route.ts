@@ -131,7 +131,17 @@ export async function PUT(request: NextRequest) {
       data:{
         status:body.status as PaymentStatus,
       }
+      ,include:{
+        user:{
+          select:{
+            name:true,
+            email:true,
+          }
+        }
+      }
     })
+
+    
 
 
     await prisma.raffle.update({
@@ -151,6 +161,22 @@ export async function PUT(request: NextRequest) {
           }
           }
       },
+    })
+
+      await fetch(`${process.env.NEXT_PUBLIC_PARTNER_APP_URL}/api/partner/commissions`,{
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": process.env.NEXT_PUBLIC_API_KEY_TO_PARTNER || "",
+        },
+        body: JSON.stringify({
+          customerName : payment.user.name,
+          ticketPrice : payment.amount / 100, // convert from paisa to currency unit
+          customerEmail : payment.user.email,
+          referralLinkId : body.referralLinkId,
+          transactionId : payment.transactionId,
+          status :"PAID",
+        }),
     })
 
   return NextResponse.json({ success: true, message: "Payment updated successfully" })

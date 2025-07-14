@@ -52,7 +52,7 @@ function PaymentPageContent() {
   const raffleTitle = searchParams.get("refTit") || "Premium Electronics Giveaway"
   const endDate = searchParams.get("endDate") || ""
   const processingFee = Number.parseFloat(searchParams.get("procFee") || "0")
-
+  const referralLinkId = searchParams.get("refLinkId") || false
   const selectedMethod = paymentMethods[paymentMethod as keyof typeof paymentMethods] || paymentMethods.easypaisa
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -132,6 +132,7 @@ function PaymentPageContent() {
       formData.append("orderId", orderId)
       formData.append("raffleId", raffleId)
       formData.append("paymentMethod", paymentMethod)
+      referralLinkId ?  formData.append("referralLinkId", referralLinkId) : ""
       formData.append("totalAmount", totalAmount.toString())
       formData.append("quantity", quantity.toString())
 

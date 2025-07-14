@@ -22,6 +22,7 @@ import { notFound } from "next/navigation"
 import { UpdatePaymentStatus } from "@/components/update-payment-status"
 import { ReceiptModal } from "@/components/receipt-modal"
 import _Button from "./_Button"
+import { JsonObject } from "@prisma/client/runtime/library"
 async function getPaymentDetails(id: string) {
   const payment = await prisma.payment.findUnique({
     where: { id },
@@ -273,7 +274,21 @@ export default async function PaymentDetailsPage({ params }: { params: { id: str
               </Button>
 
               
-             {payment.status != "FAILED" ?  <_Button paymentId={payment.id} quantity={typeof quantity === "number" ? quantity : quantity !== null && quantity !== undefined ? Number(quantity) : null} raffleId={typeof raffleId === "string" ? raffleId : null} status="COMPLETED"/> :""}
+             {payment.status != "FAILED" && payment.metadata ? (
+                <_Button
+                  referralLinkId={(payment?.metadata as JsonObject)?.referralLinkId ?? null}
+                  paymentId={payment.id}
+                  quantity={
+                    typeof quantity === "number"
+                      ? quantity
+                      : quantity !== null && quantity !== undefined
+                      ? Number(quantity)
+                      : null
+                  }
+                  raffleId={typeof raffleId === "string" ? raffleId : null}
+                  status="COMPLETED"
+                />
+              ) : ""}
               {canUpdateStatus && (
                 <div>
                   <label className="text-sm font-medium text-gray-600 mb-2 block">Update Payment Status</label>

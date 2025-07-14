@@ -88,7 +88,7 @@ const EwalletsInitiate = async (body:any, user: any) => {
     let totalAmount = (raffle.price * body.quantity) / 100 // Convert from paisa to PKR
 
 
-    const returlUrl = `/payment/pay?method=${body.method.toLowerCase()}&orderId=${orderId}&q=${body.quantity}&refId=${body.raffleId}&tam=${totalAmount}&refTit=${raffle.title}&endDate=${raffle.endDate}&procFee=0`;
+    const returlUrl = `/payment/pay?method=${body.method.toLowerCase()}&orderId=${orderId}&q=${body.quantity}&refId=${body.raffleId}&tam=${totalAmount}&refTit=${raffle.title}&endDate=${raffle.endDate}&procFee=0${body.referralLinkId ? `&refLinkId=${body.referralLinkId}` : ""}`;
     return NextResponse.json({
       success: true,
       paymentId: null,
