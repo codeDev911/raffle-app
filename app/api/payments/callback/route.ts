@@ -163,6 +163,9 @@ export async function PUT(request: NextRequest) {
       },
     })
 
+
+    // Add commission via the refferral link
+    if(body.referralLinkId){
       await fetch(`${process.env.NEXT_PUBLIC_PARTNER_APP_URL}/api/partner/commissions`,{
         method: "POST",
         headers: {
@@ -178,6 +181,23 @@ export async function PUT(request: NextRequest) {
           status :"PAID",
         }),
     })
+  }else{
+      // check if user is the referral of the partner  create a commission, otherwise leave it free.
+       await fetch(`${process.env.NEXT_PUBLIC_PARTNER_APP_URL}/api/partner/commissions`,{
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": process.env.NEXT_PUBLIC_API_KEY_TO_PARTNER || "",
+        },
+        body: JSON.stringify({
+          userId: payment.userId,
+          customerName : payment.user.name,
+          ticketPrice : payment.amount / 100, // convert from paisa to currency unit
+          customerEmail : payment.user.email, 
+          transactionId : payment.transactionId,
+        }),
+    })
+    }
 
   return NextResponse.json({ success: true, message: "Payment updated successfully" })
   } catch (error) {

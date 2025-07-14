@@ -28,6 +28,7 @@ export default function RegisterPage() {
   const returnUrl = searchParams.get("comback") || "/raffles"
   const openEnModal = searchParams.get("openEnModal") || 0
   const referralLinkId = searchParams.get("lnk") || 0
+  const partnerId = searchParams.get("prt") || 0
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -54,6 +55,8 @@ export default function RegisterPage() {
           phone: formData.phone,
           city: formData.city,
           password: formData.password,
+          referralLinkId,
+          partnerId
         }),
       })
 

@@ -9,12 +9,14 @@ const registerSchema = z.object({
   phone: z.string().optional(),
   city: z.string().optional(),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  referralLinkId:z.any().optional(),
+  partnerId: z.any().optional(),
 })
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, phone, city, password } = registerSchema.parse(body)
+    const { name, email, phone, city, password,partnerId,referralLinkId  } = registerSchema.parse(body)
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -42,6 +44,22 @@ export async function POST(request: NextRequest) {
         role: true,
       },
     })
+
+    // If someone reffers a friend, assign to a crossponding partner
+    if(partnerId || referralLinkId) {
+      await fetch(`${process.env.NEXT_PUBLIC_PARTNER_APP_URL}/api/partner/referr-user`,{
+        method:"POST",
+        headers:{ 
+          "api-key":process.env.NEXT_PUBLIC_API_KEY_TO_PARTNER || "",
+        },
+        body:JSON.stringify({
+          raferralLinkId:referralLinkId,
+          partnerId:partnerId,
+          userId:user.id
+        })
+      })
+    }
+
 
     // Create session
     await createSession(user.id, user.role)
