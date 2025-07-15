@@ -95,6 +95,30 @@ export async function POST(request: NextRequest) {
         
       },
     })
+
+
+
+    // Sending email addres to the user
+    
+    fetch(`${process.env.EMAIL_API_URL}/send-template-email`,{
+      method:"POST",
+      body:JSON.stringify({
+          to: user.email,
+          subject: "Payment status - Pakraffle",
+          senderType: "payments" ,
+          templateType: "payment" ,
+          templateData: {
+            userName:user.name,
+            transactionId:orderId,
+            amount:totalAmount, 
+            paymentMethod:paymentMethod,
+            status:"underreview",
+            raffleTitle:raffleName,
+          }
+      })
+    }).then(res=>res)
+    .then(data=>data)
+    .catch(e=>console.log(e))
  
     // Return success response with receipt URL
     return NextResponse.json({

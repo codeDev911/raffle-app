@@ -32,9 +32,31 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       data: { status },
       include:{
         user:true
-      }
+      },
+      
     })
 
+
+      fetch(`${process.env.EMAIL_API_URL}/send-template-email`,{
+      method:"POST",
+      body:JSON.stringify({
+          to: updatedPayment.user.email,
+          subject: "Payment status - Pakraffle",
+          senderType: "payments" ,
+          templateType: "payment" ,
+          templateData: {
+            userName:updatedPayment.user.name,
+            transactionId:updatedPayment.transactionId,
+            amount:updatedPayment.amount / 100, // From paisa to PKR 
+            paymentMethod:updatedPayment.method,
+            status:status.toLowerCase(),
+            raffleTitle:"Raffle title",
+        }
+      })
+    })
+    .then(res=>res)
+    .then(async(data)=>console.log(await data.json()))
+    .catch(e=>console.log(e))
  
 
     return NextResponse.json(updatedPayment)

@@ -144,7 +144,7 @@ export async function PUT(request: NextRequest) {
     
 
 
-    await prisma.raffle.update({
+    let raffle=await prisma.raffle.update({
       where: {
         id:body.raffleId,
       },
@@ -161,6 +161,10 @@ export async function PUT(request: NextRequest) {
           }
           }
       },
+      select:{
+        title:true,
+        price:true
+      }
     })
 
 
@@ -174,7 +178,7 @@ export async function PUT(request: NextRequest) {
         },
         body: JSON.stringify({
           customerName : payment.user.name,
-          ticketPrice : payment.amount / 100, // convert from paisa to currency unit
+          ticketPrice : raffle.price / 100, // convert from paisa to currency unit
           customerEmail : payment.user.email,
           referralLinkId : body.referralLinkId,
           transactionId : payment.transactionId,
@@ -192,12 +196,33 @@ export async function PUT(request: NextRequest) {
         body: JSON.stringify({
           userId: payment.userId,
           customerName : payment.user.name,
-          ticketPrice : payment.amount / 100, // convert from paisa to currency unit
+          ticketPrice : raffle.price / 100, // convert from paisa to currency unit
           customerEmail : payment.user.email, 
           transactionId : payment.transactionId,
         }),
     })
     }
+
+
+    // Send email to update user 
+    
+     fetch(`${process.env.EMAIL_API_URL}/send-template-email`,{
+      method:"POST",
+      body:JSON.stringify({
+          to: payment.user.email,
+          subject: "Payment initiated - Pakraffle",
+          senderType: "payments" ,
+          templateType: "payment" ,
+          templateData: {
+            userName:payment.user.name,
+            transactionId:payment.transactionId,
+            amount:payment.amount / 100, // From paisa to PKR 
+            paymentMethod:payment.method,
+            status:"confirmed",
+            raffleTitle:raffle.title,
+          }
+      })
+    }).then(res=>res).then(data=>data).catch(e=>console.log(e))
 
   return NextResponse.json({ success: true, message: "Payment updated successfully" })
   } catch (error) {
