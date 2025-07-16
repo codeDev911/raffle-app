@@ -20,6 +20,36 @@ import {
   Building,
 } from "lucide-react"
 
+
+export const metadata = {
+  title: 'About Us - PakRaffle',
+  description: 'Learn about PakRaffle — Pakistan’s trusted platform for online lucky draws and giveaways.',
+  keywords: ['about PakRaffle', 'raffle Pakistan', 'online giveaways', 'PakRaffle story', 'win prizes Pakistan'],
+  robots: 'index, follow',
+  openGraph: {
+    title: 'About Us - PakRaffle',
+    description: 'Discover the vision, mission, and story behind PakRaffle — your trusted lucky draw platform.',
+    url: 'https://pakraffle.com/about',
+    siteName: 'PakRaffle',
+    images: [
+      {
+        url: 'https://pakraffle.com/images/about-og.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'About PakRaffle',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'About Us - PakRaffle',
+    description: 'Meet the team and mission behind Pakistan’s most exciting lucky draw platform.',
+    images: ['https://pakraffle.com/images/about-og.jpg'],
+  }, 
+}
+
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white text-gray-900 overflow-hidden">

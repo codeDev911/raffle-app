@@ -12,6 +12,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { formatCurrency } from "@/lib/utils"
 import { EnterRaffleModal } from "@/components/enter-raffle-modal"
+import Head from "next/head"
 
 interface Raffle {
   id: string
@@ -216,6 +217,21 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
   const StatusIcon = statusInfo.icon
 
   return (
+    <>
+    <Head>
+      <title>{raffle.title}</title>
+      <meta name="description" content={raffle.description} />
+      <meta name="keywords" content={"raffles, new raffle, lucky draw, win amazing prizes"}/>
+      <meta name="robots" content="index, follow" />
+      <meta property="og:title" content={raffle.title} />
+      <meta property="og:image" content={raffle.image} />
+      <meta property="og:description" content={raffle.description} />
+      <meta property="og:type" content="website" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={raffle.title} />
+      <meta name="twitter:description" content={raffle.description} /> 
+        <meta name="twitter:image" content={raffle.image} />
+    </Head>
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
         {/* Back Button */}
@@ -410,5 +426,6 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
       {/* Enter Raffle Modal */}
       {raffle && <EnterRaffleModal raffle={raffle} referralLinkId={referralLinkId} isOpen={showModal} onClose={() => setShowModal(false)} />}
     </div>
+    </>
   )
 }

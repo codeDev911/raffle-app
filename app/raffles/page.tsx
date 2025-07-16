@@ -51,6 +51,36 @@ async function getCategories() {
   return categories.map((c) => c.category)
 }
 
+export const metadata = {
+  title: 'View Ongoing Raffles - PakRaffle',
+  description: 'Join the latest raffles on PakRaffle and win exciting prizes like iPhones, gadgets, and more!',
+  keywords: ['PakRaffle', 'raffles', 'win prizes', 'iPhone draw', 'online lucky draw Pakistan'],
+  robots: 'index, follow',
+  openGraph: {
+    title: 'View Ongoing Raffles - PakRaffle',
+    description: 'Don’t miss out on our ongoing raffles with huge rewards!',
+    url: 'https://pakraffle.com/raffles',
+    siteName: 'PakRaffle',
+    images: [
+      {
+        url: 'https://pakraffle.com/og-image-raffles.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Ongoing Raffles at PakRaffle',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'View Ongoing Raffles - PakRaffle',
+    description: 'Join exciting raffles and win big only on PakRaffle.',
+    images: ['https://pakraffle.com/og-image-raffles.jpg'],
+    creator: '@pakraffle',
+  },
+}
+
+
 export default async function RafflesPage({
   searchParams,
 }: {

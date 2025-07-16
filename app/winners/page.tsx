@@ -193,6 +193,37 @@ function formatDate(dateString: string) {
   })
 }
 
+
+export const metadata = {
+  title: 'Winners - PakRaffle',
+  description: 'Meet the lucky winners of PakRaffle! See who won iPhones, gadgets, and more in our recent draws.',
+  keywords: ['PakRaffle winners', 'raffle results', 'iPhone winner', 'Pakistan lucky draw winners'],
+  robots: 'index, follow',
+  openGraph: {
+    title: 'Winners - PakRaffle',
+    description: 'Congratulations to our latest raffle winners! View names and prizes here.',
+    url: 'https://pakraffle.com/winners',
+    siteName: 'PakRaffle',
+    images: [
+      {
+        url: 'https://pakraffle.com/images/winners-og.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'PakRaffle Winners',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Winners - PakRaffle',
+    description: 'See who won big in the latest PakRaffle draws!',
+    images: ['https://pakraffle.com/images/winners-og.jpg'],
+  },
+  themeColor: '#10B981',
+}
+
+
 export default function WinnersPage() {
   const featuredWinners = winnersData.filter((winner) => winner.featured)
   const recentWinners = winnersData.filter((winner) => !winner.featured)

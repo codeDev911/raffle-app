@@ -21,6 +21,35 @@ import {
   Star,
 } from "lucide-react"
 
+export const metadata = {
+  title: 'Contact Us - PakRaffle',
+  description: 'Get in touch with PakRaffle for support, queries, or collaboration. We’re here to help.',
+  keywords: ['contact PakRaffle', 'support', 'PakRaffle help', 'email PakRaffle'],
+  robots: 'index, follow',
+  openGraph: {
+    title: 'Contact Us - PakRaffle',
+    description: 'Need help or have a question? Contact the PakRaffle support team.',
+    url: 'https://pakraffle.com/contact',
+    siteName: 'PakRaffle',
+    images: [
+      {
+        url: 'https://pakraffle.com/images/contact-og.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Contact PakRaffle',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Contact Us - PakRaffle',
+    description: 'Get support or send us a message — PakRaffle support team is ready to help.',
+    images: ['https://pakraffle.com/images/contact-og.jpg'],
+  },
+}
+
+
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-white text-gray-900 overflow-hidden">

@@ -1,6 +1,23 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileText, Shield, Users, AlertTriangle } from "lucide-react"
-
+export const metadata = {
+  title: 'Terms & Conditions - PakRaffle',
+  description: 'Review the terms and conditions of using PakRaffle’s platform.',
+  keywords: ['PakRaffle terms', 'conditions', 'user agreement', 'raffle rules'],
+  robots: 'index, follow',
+  openGraph: {
+    title: 'Terms & Conditions - PakRaffle',
+    description: 'Understand your rights and responsibilities while using PakRaffle.',
+    url: 'https://pakraffle.com/terms',
+    siteName: 'PakRaffle',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Terms & Conditions - PakRaffle',
+    description: 'Read the official terms and policies of PakRaffle.',
+  },
+}
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">

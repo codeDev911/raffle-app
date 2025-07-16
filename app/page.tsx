@@ -23,6 +23,35 @@ import {
 import Video_Mockup from "@/components/Video_Mockup"
 import PinterestRaffleGrid from "@/components/PinterestRaffleGrid"
 
+export const metadata = {
+  title: 'PakRaffle - Win Big with Just a Few Coins!',
+  description: 'Join Pakistan’s most exciting online lucky draw platform. Win iPhones, gadgets, and other amazing prizes by entering with just a few coins!',
+  keywords: ['PakRaffle', 'lucky draw Pakistan', 'online raffle', 'win iPhone', 'Pak raffle coins'],
+  robots: 'index, follow',
+  openGraph: {
+    title: 'PakRaffle - Win Big with Just a Few Coins!',
+    description: 'Enter lucky draws using coins and win exciting prizes daily — powered by transparency and fairness.',
+    url: 'https://pakraffle.com',
+    siteName: 'PakRaffle',
+    images: [
+      {
+        url: 'https://pakraffle.com/images/og-home.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'PakRaffle Home Banner',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PakRaffle - Win Big with Just a Few Coins!',
+    description: 'Join exciting lucky draws and win prizes like iPhones, AirPods, and more!',
+    images: ['https://pakraffle.com/images/og-home.jpg'],
+  },
+  themeColor: '#10B981',
+}
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white text-gray-900 overflow-hidden">

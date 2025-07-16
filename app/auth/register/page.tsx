@@ -10,6 +10,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { UserPlus, Eye, EyeOff } from "lucide-react"
+import Head from "next/head"
+
+
+const SEO = {
+  title:"Create Pakraffle account for Free!",
+  description:"Hey it's free to create an account pakistani most trusted raffles platform to achieve lucky draws, raffles and much more",
+  tags:"pakraffle.com, create account, pakraffle registration, raffle, draws, new draws, raffle"
+}
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -76,6 +84,19 @@ export default function RegisterPage() {
   }
 
   return (
+    <>
+     <Head>
+        <title>{SEO.title}</title>
+        <meta name="description" content={SEO.description} />
+        <meta name="keywords" content={SEO.tags}/>
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content={SEO.title} />
+        <meta property="og:description" content={SEO.description} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={SEO.title} />
+        <meta name="twitter:description" content={SEO.description} /> 
+    </Head>
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
       <Card className="w-full max-w-md rounded-2xl shadow-lg border-0">
         <CardHeader className="text-center">
@@ -208,5 +229,6 @@ export default function RegisterPage() {
         </CardContent>
       </Card>
     </div>
+    </>
   )
 }

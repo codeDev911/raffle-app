@@ -1,8 +1,28 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { XCircle, AlertTriangle, Shield, Phone } from "lucide-react"
+ export const metadata = {
+  title: 'Refund Policy - PakRaffle',
+  description: 'Read PakRaffle’s refund policy to understand eligibility, process, and conditions.',
+  keywords: ['refund policy', 'PakRaffle refund', 'return', 'cancel payment', 'raffle refund'],
+  robots: 'index, follow',
+  openGraph: {
+    title: 'Refund Policy - PakRaffle',
+    description: 'Clear refund policy for participants of PakRaffle lucky draws.',
+    url: 'https://pakraffle.com/refund',
+    siteName: 'PakRaffle',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Refund Policy - PakRaffle',
+    description: 'Understand when and how refunds can be processed at PakRaffle.',
+  },
+}
 
 export default function RefundPage() {
   return (
+    <>
+     
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4">
         <div className="text-center mb-12">
@@ -192,5 +212,6 @@ export default function RefundPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

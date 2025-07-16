@@ -11,6 +11,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LogIn, Eye, EyeOff } from "lucide-react"
 import { useSearchParams } from "next/navigation"
+import Head from "next/head"
+
+
+const SEO = {
+  title:"Login to your account",
+  description:"Welcome back! login to your account to keep updated about our incoming draws and new raffles",
+  tags:"pakraffle.com, login, raffle, draws, new draws, raffle"
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -52,6 +60,19 @@ export default function LoginPage() {
   }
 
   return (
+    <>
+    <Head>
+        <title>{SEO.title}</title>
+        <meta name="description" content={SEO.description} />
+        <meta name="keywords" content={SEO.tags}/>
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content={SEO.title} />
+        <meta property="og:description" content={SEO.description} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={SEO.title} />
+        <meta name="twitter:description" content={SEO.description} /> 
+    </Head>
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <Card className="w-full max-w-md rounded-2xl shadow-lg border-0">
         <CardHeader className="text-center">
@@ -127,5 +148,6 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
+    </>
   )
 }

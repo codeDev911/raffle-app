@@ -1,8 +1,28 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Shield, Eye, Lock, Database, UserCheck } from "lucide-react"
+import Head from "next/head"
+
+const SEO={
+  title:"Privacy polices - Pakraffle",
+  description:"Your privacy is important to us. Learn how we protect your information. learn more.",
+  tags:"pakraffle privacy,privacy policy, privacy polices, privacy , pakraffle.com, raffles, lucky draws, earn money"
+}
 
 export default function PrivacyPage() {
   return (
+    <>
+     <Head>
+        <title>{SEO.title}</title>
+        <meta name="description" content={SEO.description} />
+        <meta name="keywords" content={SEO.tags}/>
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content={SEO.title} />
+        <meta property="og:description" content={SEO.description} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={SEO.title} />
+        <meta name="twitter:description" content={SEO.description} /> 
+    </Head>
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4">
         <div className="text-center mb-12">
@@ -200,5 +220,6 @@ export default function PrivacyPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

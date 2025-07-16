@@ -23,9 +23,31 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import Link from "next/link"
+import Head from "next/head"
+
+const SEO={
+  title:"Join Partner Program and earn upto 25% in commissions",
+  description:"Join our partner program and earn upto 25% in commissions with our with our generous revenue sharing model. This is big opportunity for content creators to take advantage of their audience",
+  tags:"PakRaffle, lucky draw, win, raffle, iPhone 16 Pro" ,
+}
 
 export default function PartnerPage() {
+
   return (
+    <>
+      <Head>
+        <title>{SEO.title}</title>
+        <meta name="description" content={SEO.description} />
+        <meta name="keywords" content={SEO.tags}/>
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content={SEO.title} />
+        <meta property="og:description" content={SEO.description} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={SEO.title} />
+        <meta name="twitter:description" content={SEO.description} /> 
+      </Head>
     <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
@@ -186,11 +208,13 @@ export default function PartnerPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Button size="lg" className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl shadow-lg">
-                <Handshake className="h-5 w-5 mr-2" />
-                Become a Partner
-                <ArrowRight className="h-5 w-5 ml-2" />
-              </Button>
+              <Link href={`${process.env.NEXT_PUBLIC_PARTNER_APP_URL}/auth/register?utm_source=hero-section&medium=pakraffle.com&comp=become-a-partner`}>
+                <Button size="lg" className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl shadow-lg">
+                  <Handshake className="h-5 w-5 mr-2" />
+                  Become a Partner
+                  <ArrowRight className="h-5 w-5 ml-2" />
+                </Button>
+              </Link>
               <Button
                 variant="outline"
                 size="lg"
@@ -713,5 +737,6 @@ export default function PartnerPage() {
 
      
     </div>
+    </>
   )
 }

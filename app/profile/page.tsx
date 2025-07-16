@@ -9,6 +9,9 @@ import { prisma } from "@/lib/prisma"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { redirect } from "next/navigation"
 
+
+
+
 async function getUserProfile() {
   const user = await getUser()
   if (!user) {
@@ -79,6 +82,27 @@ async function getUserProfile() {
     totalSpent: totalSpent._sum.amount || 0,
     totalWinnings: totalWinnings._sum.prizeValue || 0,
   }
+}
+
+
+export const metadata = {
+  title: 'Your Profile - PakRaffle',
+  description: 'Manage your profile, view your entries, and update your information on PakRaffle.',
+  keywords: ['PakRaffle profile', 'user dashboard', 'my account', 'raffle entries'],
+  robots: 'noindex, nofollow', // Optional: Hide profile pages from search engines
+  openGraph: {
+    title: 'Your Profile - PakRaffle',
+    description: 'View and manage your PakRaffle account.',
+    url: 'https://pakraffle.com/profile',
+    siteName: 'PakRaffle',
+    type: 'profile',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Your Profile - PakRaffle',
+    description: 'View and manage your PakRaffle account.',
+  },
+  themeColor: '#10B981',
 }
 
 export default async function ProfilePage() {
