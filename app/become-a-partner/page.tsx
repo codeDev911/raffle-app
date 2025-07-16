@@ -385,14 +385,16 @@ export default function PartnerPage() {
             <p className="text-green-100 mb-6">
               Our top 4 partners alone earned over 1.2 million rupees last month. Join them today!
             </p>
-            <Button
-              size="lg"
-              className="bg-white text-green-600 hover:bg-gray-100 px-8 py-3 rounded-xl shadow-lg font-semibold"
-            >
-              <Handshake className="h-5 w-5 mr-2" />
-              Start Earning Like Them
-              <ArrowRight className="h-5 w-5 ml-2" />
-            </Button>
+            <Link href={`${process.env.NEXT_PUBLIC_PARTNER_APP_URL}/auth/register?utm_source=combined-money-earning&medium=pakraffle.com&comp=become-a-partner`}>
+                  <Button
+                    size="lg"
+                    className="bg-white text-green-600 hover:bg-gray-100 px-8 py-3 rounded-xl shadow-lg font-semibold"
+                    >
+                    <Handshake className="h-5 w-5 mr-2" />
+                    Start Earning Like Them
+                    <ArrowRight className="h-5 w-5 ml-2" />
+                  </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -653,6 +655,7 @@ export default function PartnerPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <Link href={`${process.env.NEXT_PUBLIC_PARTNER_APP_URL}/auth/register?utm_source=ready-to-start-earning&medium=pakraffle.com&comp=become-a-partner`}>
             <Button
               size="lg"
               className="bg-white text-green-600 hover:bg-gray-100 px-8 py-4 rounded-xl shadow-lg font-semibold"
@@ -661,6 +664,7 @@ export default function PartnerPage() {
               Apply Now - It's Free!
               <ArrowRight className="h-5 w-5 ml-2" />
             </Button>
+            </Link>
             <Button
               variant="outline"
               size="lg"
