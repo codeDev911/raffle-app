@@ -21,3 +21,4 @@
 ### - implement referral invitation system
 ## Added sending mail API ony on payment actions
 ##### added seo properties
+## Added winner page to the public
