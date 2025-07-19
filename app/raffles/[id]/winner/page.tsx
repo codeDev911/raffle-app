@@ -181,13 +181,13 @@ export default async function WinnerDetailPage({ params }: { params: { id: strin
                 </div>
               </div>
             )}
-            <div className="flex items-center space-x-3">
+            {/* <div className="flex items-center space-x-3">
               <Calendar className="h-5 w-5 text-gray-400" />
               <div>
                 <p className="text-sm text-gray-500">Member Since</p>
                 <p className="font-medium">{formatDate(new Date(winner.user.createdAt))}</p>
               </div>
-            </div>
+            </div> */}
 
             {isVIP && (
               <div className="bg-yellow-50 p-3 rounded-2xl border border-yellow-200">
