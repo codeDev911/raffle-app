@@ -20,3 +20,4 @@
 #### added partner api
 ### - implement referral invitation system
 ## Added sending mail API ony on payment actions
+##### added seo properties
