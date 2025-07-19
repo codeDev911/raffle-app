@@ -349,10 +349,7 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
                 {getActionButton()}
               </div>
               }
-
-           
-          </div>
-            {raffle.status === "COMPLETED" && raffle?.winners && raffle.winners.length > 0 && (
+                {raffle.status === "COMPLETED" && raffle?.winners && raffle.winners.length > 0 && (
               <Button asChild variant="outline" className="w-full rounded-2xl py-6 text-lg font-medium">
                 <Link href={`/raffles/${raffle.id}/winner`}>
                   <Trophy className="mr-2 h-5 w-5" />
@@ -360,6 +357,10 @@ export default function RaffleDetailPage({ params }: { params: { id: string } })
                 </Link>
               </Button>
             )}
+
+           
+          </div>
+          
         </div>
 
         {/* Details Tabs */}
