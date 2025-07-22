@@ -22,3 +22,4 @@
 ## Added sending mail API ony on payment actions
 ##### added seo properties
 ## Added winner page to the public
+## removed member since from the winner page
