@@ -24,3 +24,4 @@
 ## Added winner page to the public
 ## removed member since from the winner page
 ### added ai chat using codebase 22-07-2025 , 2nd paper 2nd sem (final)
+#### Fuck off
