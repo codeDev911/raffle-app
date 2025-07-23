@@ -19,6 +19,10 @@ export default function ClientLayout({
 
   return (
     <html lang="en">
+      <head>
+        <meta name="monetag" content="78091832d51a3d2d1cd351e318c806b9"></meta>
+        <meta name="google-adsense-account" content="ca-pub-8516478537168335"></meta>
+      </head>
       <body className={inter.className}>
         {!isAdminRoute && <Header />}
         <main>{children}</main>
