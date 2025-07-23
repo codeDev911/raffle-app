@@ -4,10 +4,6 @@ import ClientLayout from "./ClientLayout"
 import { Analytics } from "@vercel/analytics/next"
 import Script from 'next/script';
 import crypto from "crypto"
-export const metadata: Metadata = {
-  title: "PakRaffle - Pakistan's #1 Raffle Platform",
-  description: "Win amazing prizes through Pakistan's most trusted raffle platform. Fair, transparent, and secure.",
-}
 
 // Ai chat bot
 const Scripts = () => {
