@@ -45,13 +45,10 @@ export function Footer() {
                 <Link href="/winners" className="text-gray-400 hover:text-green-500 transition-colors duration-200">
                   Recent Winners
                 </Link>
-              </li>
+              </li> 
               <li>
-                <Link
-                  href="/#how-it-works"
-                  className="text-gray-400 hover:text-green-500 transition-colors duration-200"
-                >
-                  How It Works
+                <Link href="https://blog.pakraffle.com?utm=pakraffle&medium=footer" className="text-gray-400 hover:text-green-500 transition-colors duration-200">
+                  Blogs
                 </Link>
               </li>
               <li>
@@ -67,6 +64,7 @@ export function Footer() {
                   About Us
                 </Link>
               </li>
+              
             </ul>
           </div>
 

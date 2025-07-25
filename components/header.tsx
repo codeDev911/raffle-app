@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Menu, Trophy, Gift, Users, FileText, LogOut, Settings } from "lucide-react"
+import { Menu, Trophy, Gift, Users, FileText, LogOut, Settings, HomeIcon, TrendingUp } from "lucide-react"
 import { LucideUser } from "lucide-react"
 
 interface UserType {
@@ -30,9 +30,10 @@ export function Header() {
   const router = useRouter()
 
   const navigation = [
-    { name: "Home", href: "/", icon: Trophy },
+    { name: "Home", href: "/", icon: HomeIcon },
     { name: "Raffles", href: "/raffles", icon: Gift },
     { name: "Winners", href: "/winners", icon: Users },
+    { name: "Blogs", href: "https://blog.pakraffle.com?utm=pakraffle&medium=header", icon: TrendingUp  },
     { name: "How It Works", href: "/#how-it-works", icon: FileText },
   ]
 
