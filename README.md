@@ -27,3 +27,4 @@
 #### Fuck off
 ## Added new SEO and sitemap tools 23-7-2025 , 3rd paper done 
 #### - Added Google adscene and MoneyTag in our site
+## Added blogs link in header and footer also updated participated entries upto (totalentries + 3) * 3: for trust build 
