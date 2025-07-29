@@ -4,6 +4,8 @@ import ClientLayout from "./ClientLayout"
 import { Analytics } from "@vercel/analytics/next"
 import Script from 'next/script';
 import crypto from "crypto"
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 
 // Ai chat bot
 const Scripts = () => {
@@ -72,6 +74,7 @@ const hash = crypto
   return <ClientLayout>
     <Scripts/>
     <Analytics/>
+    <SpeedInsights/>
     {children}
   </ClientLayout>
 }
