@@ -6,6 +6,7 @@ import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { usePathname } from "next/navigation"
+import { useEffect } from "react"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -16,7 +17,15 @@ export default function ClientLayout({
 }) {
   const pathname = usePathname()
   const isAdminRoute = pathname?.startsWith("/admin") || pathname?.startsWith("/payment")
-
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const key = "client_browse_id"
+      if (!localStorage.getItem(key)) {
+        const uniqueId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        localStorage.setItem(key, uniqueId)
+      }
+    }
+  }, [])
   return (
     <html lang="en">
       <head>

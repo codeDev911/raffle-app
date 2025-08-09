@@ -33,7 +33,7 @@ interface Raffle {
 }
 
 const ClientSide = ({raffle}:{raffle:Raffle}) => {
-    const searchParams = useSearchParams()
+  const searchParams = useSearchParams()
   const openEnModal = searchParams.get("openEnModal") || 0
   const referralLinkId = searchParams.get("lnk") || false
  
@@ -61,6 +61,18 @@ const ClientSide = ({raffle}:{raffle:Raffle}) => {
   }
 
   useEffect(()=>{
+    if(referralLinkId){ 
+       let client_browse_id = localStorage.getItem("client_browse_id")
+        fetch(`${process.env.NEXT_PUBLIC_PARTNER_APP_URL}/api/partner/links/click-event`, {
+        method:"POST",
+        headers:{
+          "Content-Type": "application/json",
+          "api-key": process.env.NEXT_PUBLIC_API_KEY_TO_PARTNER || ""
+        },
+        body:JSON.stringify({referralLinkId,client_browse_id})
+      }).then(res=>res).then(data=>data).catch(err=>console.log(err))
+
+    }
        getMe()
   })
 
