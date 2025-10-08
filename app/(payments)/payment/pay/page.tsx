@@ -280,27 +280,7 @@ function PaymentPageContent() {
                   </div>
                 </div>
 
-                {/* Account Name */}
-                <div className="group">
-                  <label className="block text-xs lg:text-sm font-semibold text-gray-700 mb-2 lg:mb-3">
-                    Account Name
-                  </label>
-                  <div className="flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors p-3 lg:p-5 rounded-xl lg:rounded-2xl">
-                    <span className="text-sm lg:text-lg font-semibold text-gray-900">{selectedMethod.accountName}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleCopy(selectedMethod.accountName, "accountName")}
-                      className="text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg lg:rounded-xl p-2"
-                    >
-                      {copiedField === "accountName" ? (
-                        <CheckCircle className="h-4 w-4 lg:h-5 lg:w-5" />
-                      ) : (
-                        <Copy className="h-4 w-4 lg:h-5 lg:w-5" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
+               
 
                 {/* IBAN */}
                 <div className="group">
