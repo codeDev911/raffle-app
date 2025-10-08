@@ -31,6 +31,8 @@ export default function ClientLayout({
       <head>
         <meta name="monetag" content="78091832d51a3d2d1cd351e318c806b9"></meta>
         <meta name="google-adsense-account" content="ca-pub-8516478537168335"></meta>
+     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8516478537168335"
+     crossorigin="anonymous"></script>
       </head>
       <body className={inter.className}>
         {!isAdminRoute && <Header />}
