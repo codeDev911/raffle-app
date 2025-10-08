@@ -30,3 +30,4 @@
 ## Added blogs link in header and footer also updated participated entries upto (totalentries + 3) * 3: for trust build 
 ## Added vercel insights
 ## Implemented cliend browse id for click events
+## removed account name from payments pay page ```10/8/2025```
