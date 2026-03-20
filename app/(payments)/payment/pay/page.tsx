@@ -13,9 +13,9 @@ import Link from "next/link"
 const paymentMethods = {
   sadapay: {
     name: "SadaPay",
-    icon: "https://cdn.prod.website-files.com/64fb2014abe05eccc8b38932/68f91ef8c57316e2b5183865_SP%20LOGO%20COLOR.png",
-    gradient: "from-orange-500 to-orange-600",
-    bgGradient: "from-orange-50 to-orange-100",
+    icon: "https://crystalpng.com/wp-content/uploads/2025/09/Sadapay-Logo-768x768.png",
+    gradient: "from-teal-500 to-teal-600",
+    bgGradient: "from-teal-50 to-teal-100",
     accountNumber: process.env.NEXT_PUBLIC_EASYPAISA_ACCOUNT_NUMBER || "1234567890",
     accountName: process.env.NEXT_PUBLIC_EASYPAISA_ACCOUNT_NAME || "1234567890",
     iban: process.env.NEXT_PUBLIC_EASYPAISA_ACCOUNT_IBN || "1234567890",
@@ -31,7 +31,7 @@ const paymentMethods = {
   },
   mezan: {
     name: "Mezan Bank",
-    icon: "https://vectorseek.com/wp-content/uploads/2020/12/Meezan-Bank-Logo-Vector.png",
+    icon: "https://crystalpng.com/wp-content/uploads/2025/01/meezan-bank-logo-768x768.png",
     gradient: "from-purple-800 to-purple-600",
     bgGradient: "from-purple-50 to-purple-100",
     accountNumber: process.env.NEXT_PUBLIC_JAZZCASH_ACCOUNT_NUMBER || "1234567890",
@@ -208,7 +208,7 @@ function PaymentPageContent() {
   }
 
   const getButtonClassName = () => {
-    const baseClass = "w-full mt-4 font-semibold py-3 rounded-2xl shadow-lg transition-all duration-200"
+    const baseClass = "w-full mt-4 font-semibold py-3  rounded-2xl shadow-lg transition-all duration-200"
 
     if (submitStatus === "success") {
       return `${baseClass} bg-green-600 hover:bg-green-700 text-white`
