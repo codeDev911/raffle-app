@@ -12,8 +12,8 @@ import Link from "next/link"
 // Payment methods data
 const paymentMethods = {
   easypaisa: {
-    name: "EasyPaisa",
-    icon: "https://crystalpng.com/wp-content/uploads/2024/10/Easypaisa-logo.png",
+    name: "SadaPay",
+    icon: "https://cdn.prod.website-files.com/64fb2014abe05eccc8b38932/68f91ef8c57316e2b5183865_SP%20LOGO%20COLOR.png",
     gradient: "from-green-500 to-green-600",
     bgGradient: "from-green-50 to-green-100",
     accountNumber: process.env.NEXT_PUBLIC_EASYPAISA_ACCOUNT_NUMBER || "1234567890",
@@ -30,8 +30,8 @@ const paymentMethods = {
     iban: process.env.NEXT_PUBLIC_NAYAPAY_ACCOUNT_IBN || "1234567890",
   },
   jazzcash: {
-    name: "JazzCash",
-    icon: "https://crystalpng.com/wp-content/uploads/2024/12/new-Jazzcash-logo.png",
+    name: "Mezan Bank",
+    icon: "https://vectorseek.com/wp-content/uploads/2020/12/Meezan-Bank-Logo-Vector.png",
     gradient: "from-red-800 to-red-600",
     bgGradient: "from-red-50 to-red-100",
     accountNumber: process.env.NEXT_PUBLIC_JAZZCASH_ACCOUNT_NUMBER || "1234567890",

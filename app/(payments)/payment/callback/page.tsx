@@ -31,7 +31,7 @@ export default function PaymentCallbackPage() {
           body: JSON.stringify(params),
         })
 
-        const data = await response.json()
+        const data = await response.json();
 
         if (data.success) {
           setStatus("success")
@@ -42,7 +42,8 @@ export default function PaymentCallbackPage() {
         }
       } catch (error) {
         setStatus("failed")
-        setMessage("An error occurred while processing your payment.")
+        setMessage("An error occurred while processing you payments.");
+        
       }
     }
 
