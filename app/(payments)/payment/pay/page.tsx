@@ -14,8 +14,8 @@ const paymentMethods = {
   easypaisa: {
     name: "SadaPay",
     icon: "https://cdn.prod.website-files.com/64fb2014abe05eccc8b38932/68f91ef8c57316e2b5183865_SP%20LOGO%20COLOR.png",
-    gradient: "from-green-500 to-green-600",
-    bgGradient: "from-green-50 to-green-100",
+    gradient: "from-orange-500 to-orange-600",
+    bgGradient: "from-orange-50 to-orange-100",
     accountNumber: process.env.NEXT_PUBLIC_EASYPAISA_ACCOUNT_NUMBER || "1234567890",
     accountName: process.env.NEXT_PUBLIC_EASYPAISA_ACCOUNT_NAME || "1234567890",
     iban: process.env.NEXT_PUBLIC_EASYPAISA_ACCOUNT_IBN || "1234567890",
@@ -32,8 +32,8 @@ const paymentMethods = {
   jazzcash: {
     name: "Mezan Bank",
     icon: "https://vectorseek.com/wp-content/uploads/2020/12/Meezan-Bank-Logo-Vector.png",
-    gradient: "from-red-800 to-red-600",
-    bgGradient: "from-red-50 to-red-100",
+    gradient: "from-purple-800 to-purple-600",
+    bgGradient: "from-purple-50 to-purple-100",
     accountNumber: process.env.NEXT_PUBLIC_JAZZCASH_ACCOUNT_NUMBER || "1234567890",
     accountName: process.env.NEXT_PUBLIC_JAZZCASH_ACCOUNT_NAME || "1234567890",
     iban: process.env.NEXT_PUBLIC_JAZZCASH_ACCOUNT_IBN || "1234567890",
@@ -231,7 +231,7 @@ function PaymentPageContent() {
           </div>
           <h1 className="text-2xl lg:text-4xl font-bold text-white mb-2 lg:mb-4">Almost There!</h1>
           <p className="text-lg lg:text-xl text-white/90 mb-2">Complete your payment with {selectedMethod.name}</p>
-          <Badge variant="secondary" className="bg-white/20 text-white border-white/30 px-3 py-1 lg:px-4 lg:py-2">
+          <Badge variant="secondary" className="bg-white/20  text-white border-white/30 px-3 py-1 lg:px-4 lg:py-2">
             Order #{orderId}
           </Badge>
         </div>
