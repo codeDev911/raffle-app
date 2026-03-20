@@ -32,4 +32,4 @@
 ## Added vercel insights
 ## Implemented cliend browse id for click events
 ## removed account name from payments pay page ```10/8/2025```
-## Updated payment methods and fixed www.pakraffle.com domain DNS ```20/3/2026- last ramazan```
+## Updated payment methods and fixed www.pakraffle.com domain DNS ```20/3/2026- last ramazan``` 
