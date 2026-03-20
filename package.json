@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "postbuild": "next-sitemap",
-    "postinstall": "prisma db push --accept-data-loss",
+    "postinstall": "prisma generate && prisma db push --accept-data-loss",
     "lint": "next lint"
   },
   "dependencies": {
