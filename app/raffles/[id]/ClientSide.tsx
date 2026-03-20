@@ -132,7 +132,7 @@ const ClientSide = ({raffle}:{raffle:Raffle}) => {
             <Clock10Icon className="w-5"/>
               Your payment under review
           </Button>
-          <p className="text-center text-gray-500 text-sm">Your payment to this reffle is under processing. Once approved your entry will fulfill</p>
+          <p className="text-c  ext-gray-500 text-sm">Your payment to this reffle is under processing. Once approved your entry will fulfill</p>
          </div>
             :
           <Button

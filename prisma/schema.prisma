@@ -134,6 +134,8 @@ enum PaymentMethod {
   JAZZCASH
   CARD
   NAYAPAY
+  SAYAPAY
+  MEZAN
 }
 
 enum PaymentStatus {

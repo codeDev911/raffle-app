@@ -11,7 +11,7 @@ import Link from "next/link"
 
 // Payment methods data
 const paymentMethods = {
-  easypaisa: {
+  sadapay: {
     name: "SadaPay",
     icon: "https://cdn.prod.website-files.com/64fb2014abe05eccc8b38932/68f91ef8c57316e2b5183865_SP%20LOGO%20COLOR.png",
     gradient: "from-orange-500 to-orange-600",
@@ -29,7 +29,7 @@ const paymentMethods = {
     accountName: process.env.NEXT_PUBLIC_NAYAPAY_ACCOUNT_NAME || "1234567890",
     iban: process.env.NEXT_PUBLIC_NAYAPAY_ACCOUNT_IBN || "1234567890",
   },
-  jazzcash: {
+  mezan: {
     name: "Mezan Bank",
     icon: "https://vectorseek.com/wp-content/uploads/2020/12/Meezan-Bank-Logo-Vector.png",
     gradient: "from-purple-800 to-purple-600",
@@ -53,7 +53,7 @@ function PaymentPageContent() {
   const endDate = searchParams.get("endDate") || ""
   const processingFee = Number.parseFloat(searchParams.get("procFee") || "0")
   const referralLinkId = searchParams.get("refLinkId") || false
-  const selectedMethod = paymentMethods[paymentMethod as keyof typeof paymentMethods] || paymentMethods.easypaisa
+  const selectedMethod = paymentMethods[paymentMethod as keyof typeof paymentMethods] || paymentMethods.nayapay
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)

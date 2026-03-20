@@ -8,9 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Trophy, Shield, CreditCard,  Plus, Minus, Wallet } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select"
-import EasypaisaIcon  from "@/public/assets/easypaisa-logo.png"
 import NayapayIcon  from "@/public/assets/nayapay.png"
-import JAzzcashIcon  from "@/public/assets/jazzcash-logo.png"
 import Image from "next/image"
 interface Raffle {
   id: string
@@ -29,9 +27,9 @@ interface EnterRaffleModalProps {
 
 const paymentMethods = [
   {
-    id:"EASYPAISA",
-    icon:EasypaisaIcon,
-    title:"Easypaisa",
+    id:"SADAPAY",
+    icon:"https://cdn.prod.website-files.com/64fb2014abe05eccc8b38932/68f91ef8c57316e2b5183865_SP%20LOGO%20COLOR.png",
+    title:"SadaPay",
     disabled :false
   },
   {
@@ -41,16 +39,16 @@ const paymentMethods = [
     disabled :false
   },
   {
-    id:"JAZZCASH",
-    icon:JAzzcashIcon,
-    title:"Jazzcash",
+    id:"MEZAN",
+    icon:"https://vectorseek.com/wp-content/uploads/2020/12/Meezan-Bank-Logo-Vector.png",
+    title:"Mezan Bank",
     disabled :false
   }, 
 ]
 
 export function EnterRaffleModal({ raffle, isOpen, onClose,referralLinkId }: EnterRaffleModalProps) {
   const [entries, setEntries] = useState(1)
-  const [paymentMethod, setPaymentMethod] = useState("EASYPAISA")
+  const [paymentMethod, setPaymentMethod] = useState("NAYAPAY")
   const [submitting, setSubmitting] = useState(false)
 
   const totalCost = (raffle.price * entries) / 100
