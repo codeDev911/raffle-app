@@ -8,7 +8,7 @@
     "start": "next start",
     "postbuild": "next-sitemap",
    "lint": "next lint",
-    "postinstall":"prisma generate"
+    "postinstall":"pnpm exec prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
