@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "postbuild": "next-sitemap",
-    "postinstall": "prisma generate && prisma db push --accept-data-loss",
-    "lint": "next lint"
+   "lint": "next lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
