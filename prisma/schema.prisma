@@ -47,6 +47,7 @@ model Raffle {
   endDate         DateTime
   specifications  String[]
   rules           String[]
+  expenses        Json?       @default("[]")
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 

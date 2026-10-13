@@ -25,8 +25,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
-const WHATSAPP_SUPPORT_NUMBER = "+92 321 0000000"
-const WHATSAPP_PHONE_CLEAN = "923210000000"
+const WHATSAPP_SUPPORT_NUMBER = "+92 337 7155722"
+const WHATSAPP_PHONE_CLEAN = "923377155722"
 
 // Pakistani Payment Methods Config
 const paymentMethodsConfig: Record<
@@ -252,7 +252,15 @@ function PaymentPageContent() {
       if (response.ok && result.success) {
         setSubmitStatus("success")
         setTimeout(() => {
-          window.location.href = `/payment/thank-you?orderId=${orderId}&raffleId=${raffleId}&paymentMethod=${rawMethod}`
+          const params = new URLSearchParams({
+            orderId,
+            raffleId,
+            paymentMethod: rawMethod,
+            amount: totalAmount.toString(),
+            quantity: quantity.toString(),
+            raffleTitle: raffleTitle || "",
+          })
+          window.location.href = `/payment/thank-you?${params.toString()}`
         }, 1500)
       } else {
         throw new Error(result.message || "Failed to submit receipt. Please try again.")
@@ -563,7 +571,7 @@ function PaymentPageContent() {
             </div>
 
             {/* Direct WhatsApp Help Banner */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-3">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-[#25D366] text-white flex items-center justify-center shrink-0 shadow-xs">
                   <WhatsAppIcon className="w-5 h-5" />
@@ -573,7 +581,7 @@ function PaymentPageContent() {
                     Facing any issue during transfer?
                   </h4>
                   <p className="text-[11px] text-gray-600 mt-0.5">
-                    Our Pakistani support team is available 24/7 on WhatsApp
+                    Pakistani Support 24/7 on WhatsApp: <span className="font-bold text-emerald-800 font-mono">0337 7155722</span>
                   </p>
                 </div>
               </div>
@@ -582,10 +590,11 @@ function PaymentPageContent() {
                 href={waHelpUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs py-2 px-3 rounded-xl transition-colors flex items-center gap-1.5"
+                className="shrink-0 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs py-2.5 px-3.5 rounded-xl transition-colors flex items-center justify-center gap-1.5 shadow-xs"
               >
-                <span>Chat Help</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <WhatsAppIcon className="w-3.5 h-3.5" />
+                <span>Chat 0337 7155722</span>
+                <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
               </a>
             </div>
           </div>

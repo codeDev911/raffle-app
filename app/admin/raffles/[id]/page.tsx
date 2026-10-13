@@ -81,14 +81,33 @@ async function getRaffleDetails(id: string) {
       entries: entry.quantity,
     }))
 
+  // Calculate expenses (stored in PKR in expenses array, so convert to paisa for calculation with price/realPrice/totalCost)
+  const expensesList: { id?: string; description: string; amount: number }[] = Array.isArray(
+    (raffle as any).expenses
+  )
+    ? (raffle as any).expenses
+    : []
+  const totalExpensesPKR = expensesList.reduce(
+    (sum, item) => sum + (Number(item.amount) || 0),
+    0
+  )
+  const totalExpensesPaisa = totalExpensesPKR * 100
+  const totalCostPaisa = raffle.realPrice + totalExpensesPaisa
+
   // Calculate approximation data
   const aproxRevenue = raffle.price * raffle.totalEntries
-  const aproxProfit = aproxRevenue - raffle.realPrice
-  const aproxPercentage = Math.ceil((aproxRevenue / raffle.realPrice) * 100)
+  const aproxProfit = aproxRevenue - totalCostPaisa
+  const aproxPercentage =
+    totalCostPaisa > 0
+      ? Math.ceil(((aproxRevenue - totalCostPaisa) / totalCostPaisa) * 100)
+      : 0
 
   // Calculate real data
-  const realProfit = totalRevenue - raffle.realPrice > 0 ? totalRevenue - raffle.realPrice : 0
-  const realPercentage = Math.ceil((totalRevenue / raffle.realPrice) * 100)
+  const realProfit = totalRevenue - totalCostPaisa
+  const realPercentage =
+    totalCostPaisa > 0
+      ? Math.ceil(((totalRevenue - totalCostPaisa) / totalCostPaisa) * 100)
+      : 0
 
   return {
     raffle,
@@ -96,6 +115,9 @@ async function getRaffleDetails(id: string) {
     totalEntries,
     uniqueCustomers,
     payments,
+    expensesList,
+    totalExpensesPKR,
+    totalCostPaisa,
     aproxRevenue,
     aproxProfit,
     aproxPercentage,
@@ -111,6 +133,9 @@ export default async function AdminRaffleDetailPage({ params }: { params: { id: 
     totalEntries,
     uniqueCustomers,
     payments,
+    expensesList,
+    totalExpensesPKR,
+    totalCostPaisa,
     aproxRevenue,
     aproxProfit,
     aproxPercentage,
@@ -202,57 +227,93 @@ export default async function AdminRaffleDetailPage({ params }: { params: { id: 
                     <CreditCard className="h-4 w-4 text-green-500" />
                   </div>
                   <div className="text-xl font-bold text-green-700">{formatCurrency(totalRevenue)}</div>
-                  <div className="text-xs text-green-600 mt-1">From all entries</div>
+                  <div className="text-xs text-green-600 mt-1">From all actual entries</div>
                 </div>
 
                 <div className="bg-blue-50 p-4 rounded-2xl">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-blue-600 font-medium">Total Profit</span>
+                    <span className="text-sm text-blue-600 font-medium">Net Real Profit</span>
                     <Trophy className="h-4 w-4 text-blue-500" />
                   </div>
                   <div className="text-xl font-bold text-blue-700">{formatCurrency(realProfit)}</div>
-                  <div className="text-xs text-blue-600 mt-1">After expenses</div>
+                  <div className="text-xs text-blue-600 mt-1">After prize & expenses</div>
                 </div>
 
-                <div className="bg-purple-50 p-4 rounded-2xl">
+                <div className="bg-amber-50 p-4 rounded-2xl">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-purple-600 font-medium">Revenue %age</span>
-                    <Gift className="h-4 w-4 text-purple-500" />
+                    <span className="text-sm text-amber-600 font-medium">Total Expenses</span>
+                    <Gift className="h-4 w-4 text-amber-500" />
                   </div>
-                  <div className="text-xl font-bold text-purple-700">{realPercentage}%</div>
-                  <div className="text-xs text-purple-600 mt-1">Profit margin</div>
+                  <div className="text-xl font-bold text-amber-700">{formatCurrency(totalExpensesPaisa)}</div>
+                  <div className="text-xs text-amber-600 mt-1">
+                    {expensesList.length} expense item{expensesList.length === 1 ? "" : "s"} deducted
+                  </div>
                 </div>
 
                 <div className="bg-orange-50 p-4 rounded-2xl">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-orange-600 font-medium">Original</span>
+                    <span className="text-sm text-orange-600 font-medium">Total Outflow (Costs)</span>
                     <Calendar className="h-4 w-4 text-orange-500" />
                   </div>
-                  <div className="text-xl font-bold text-orange-700">{formatCurrency(raffle.realPrice)}</div>
-                  <div className="text-xs text-orange-600 mt-1">Base amount</div>
+                  <div className="text-xl font-bold text-orange-700">{formatCurrency(totalCostPaisa)}</div>
+                  <div className="text-xs text-orange-600 mt-1">Prize ({formatCurrency(raffle.realPrice)}) + Expenses</div>
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex-col p-3 px-6 w-full items-start justify-start">
-              <div className="bg-gray-100 w-full p-4 rounded-xl">
+            <CardFooter className="flex-col p-3 px-6 w-full items-start justify-start gap-4">
+              <div className="bg-gray-100 w-full p-4 rounded-2xl">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-800">Approximation</h2>
-                  <p className="text-gray-500 text-sm">The approx revenue of the raffle will be, </p>
+                  <h2 className="text-lg font-bold text-gray-800">Projections & Approximation Analysis</h2>
+                  <p className="text-gray-500 text-xs">Projected revenue, prize cost, campaign expenses, and calculated net profit:</p>
                 </div>
-                <div className="grid lg:grid-cols-4 gap-4 mt-3">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-3">
                   <div className="flex flex-col space-y-1">
-                    <h3 className="text-base font-semibold">Total Revenue</h3>
-                    <p className="text-base text-gray-700">{formatCurrency(aproxRevenue)}</p>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase">Gross Projected Revenue</h3>
+                    <p className="text-base font-bold text-gray-900">{formatCurrency(aproxRevenue)}</p>
                   </div>
                   <div className="flex flex-col space-y-1">
-                    <h3 className="text-base font-semibold">Total Profit</h3>
-                    <p className="text-base text-gray-700">{formatCurrency(aproxProfit)}</p>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase">Prize Base Cost</h3>
+                    <p className="text-base font-bold text-gray-700">{formatCurrency(raffle.realPrice)}</p>
                   </div>
                   <div className="flex flex-col space-y-1">
-                    <h3 className="text-base font-semibold">Aprox earnings %age</h3>
-                    <p className="text-base text-gray-700">{aproxPercentage}%</p>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase">Campaign Expenses</h3>
+                    <p className="text-base font-bold text-amber-700">{formatCurrency(totalExpensesPaisa)}</p>
+                  </div>
+                  <div className="flex flex-col space-y-1">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase">Net Projected Profit</h3>
+                    <p className={`text-base font-black ${aproxProfit >= 0 ? "text-emerald-700" : "text-red-700"}`}>
+                      {formatCurrency(aproxProfit)}
+                    </p>
+                  </div>
+                  <div className="flex flex-col space-y-1">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase">Earning / ROI %</h3>
+                    <p className={`text-base font-bold ${aproxPercentage >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                      {aproxPercentage >= 0 ? "+" : ""}{aproxPercentage}%
+                    </p>
                   </div>
                 </div>
+
+                {expensesList.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-gray-200">
+                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                      Itemized Expenses Deducted ({expensesList.length}):
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {expensesList.map((exp, idx) => (
+                        <div
+                          key={exp.id || idx}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-800 shadow-2xs"
+                        >
+                          <span className="text-amber-600 font-bold">•</span>
+                          <span>{exp.description}:</span>
+                          <span className="font-mono font-bold text-amber-900">
+                            Rs. {Number(exp.amount).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardFooter>
           </Card>

@@ -35,6 +35,7 @@ export interface Raffle {
   endDate: Date
   specifications: string[]
   rules: string[]
+  expenses?: any
   createdAt: Date
   updatedAt: Date
 }

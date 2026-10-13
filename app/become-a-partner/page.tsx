@@ -1,746 +1,818 @@
 "use client"
 
+import React, { useState } from "react"
 import {
-  Users,
   TrendingUp,
   DollarSign,
   Handshake,
-  Target,
-  Award,
-  CheckCircle,
   ArrowRight,
-  Star,
   Zap,
-  Shield,
+  Wallet,
+  Clock,
+  Flame,
+  MessageCircle,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle,
+  ExternalLink,
+  Calculator,
+  ShieldCheck,
   BarChart3,
-  Gift,
-  Phone,
-  Mail,
-  MapPin,
-  Crown,
-  Trophy,
+  Sparkles,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import Link from "next/link"
-import Head from "next/head"
+import { Label } from "@/components/ui/label"
 
-const SEO={
-  title:"Join Partner Program and earn upto 25% in commissions",
-  description:"Join our partner program and earn upto 25% in commissions with our with our generous revenue sharing model. This is big opportunity for content creators to take advantage of their audience",
-  tags:"PakRaffle, lucky draw, win, raffle, iPhone 16 Pro" ,
-}
+const WHATSAPP_NUMBER = "03377155722"
+const WHATSAPP_INTL = "923377155722"
 
 export default function PartnerPage() {
+  // Partner app URL from environment
+  const partnerAppUrl = process.env.NEXT_PUBLIC_PARTNER_APP_URL || ""
+
+  // Calculator states
+  const [dailyTickets, setDailyTickets] = useState<number>(25)
+  const [ticketPrice, setTicketPrice] = useState<number>(300)
+
+  // FAQ open item
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
+
+  // Calculations
+  const monthlyTickets = dailyTickets * 30
+  const grossMonthlyVolume = monthlyTickets * ticketPrice
+  
+  // Commission calculation based on volume
+  let commissionRate = 0.15
+  let tierName = "Starter Partner"
+  let milestoneBonus = 0
+
+  if (monthlyTickets >= 250) {
+    commissionRate = 0.25
+    tierName = "Elite VIP Partner"
+    milestoneBonus = 50000
+  } else if (monthlyTickets >= 75) {
+    commissionRate = 0.20
+    tierName = "Pro Growth Partner"
+    milestoneBonus = 15000
+  }
+
+  const commissionEarnings = Math.round(grossMonthlyVolume * commissionRate)
+  const totalEstimatedMonthly = commissionEarnings + milestoneBonus
+
+  // Fallback target for partner platform redirect
+  const redirectHref = partnerAppUrl || `https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20am%20ready%20to%20access%20the%20Partner%20Platform.`
 
   return (
-    <>
-      <Head>
-        <title>{SEO.title}</title>
-        <meta name="description" content={SEO.description} />
-        <meta name="keywords" content={SEO.tags}/>
-        <meta name="robots" content="index, follow" />
-        <meta property="og:title" content={SEO.title} />
-        <meta property="og:description" content={SEO.description} />
-        <meta property="og:type" content="website" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={SEO.title} />
-        <meta name="twitter:description" content={SEO.description} /> 
-      </Head>
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-emerald-500 selection:text-white">
+      {/* Top Urgency / Ticker Banner */}
+      <div className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-950 text-white text-xs sm:text-sm py-2.5 px-4 border-b border-emerald-800/40">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+            <span className="font-semibold text-emerald-400">PAKRAFFLE AFFILIATE NETWORK:</span>
+            <span className="text-slate-300 hidden sm:inline">2,410+ Pakistani Affiliates Earning Daily</span>
+          </div>
+          <div className="flex items-center gap-4 text-xs">
+            <span className="text-amber-300 font-medium flex items-center gap-1">
+              <Zap className="h-3 w-3 fill-amber-300" />
+              Min. Payout: Only Rs. 500
+            </span>
+            <span className="text-slate-300 hidden md:inline">|</span>
+            <span className="text-emerald-300 hidden md:inline">Instant JazzCash / Easypaisa Transfers</span>
+          </div>
+        </div>
+      </div>
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-green-50 via-white to-emerald-50 py-20 lg:py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-emerald-50/30 to-slate-50 pt-12 pb-20 lg:pt-16 lg:pb-28">
+        {/* Glow ambient background elements */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-tr from-emerald-300/20 to-teal-200/20 rounded-full blur-3xl pointer-events-none" />
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          {/* Laptop Mockup Dashboard - Centered Above Text */}
-          <div className="flex justify-center mb-16">
-            <div className="relative">
-              {/* Laptop Frame */}
-              <div className="relative bg-gray-800 rounded-t-2xl p-4 shadow-2xl" style={{ width: "800px" }}>
-                {/* Laptop Screen Bezel */}
-                <div className="bg-black rounded-lg p-3">
-                  {/* Dashboard Content */}
-                  <div className="bg-white rounded-lg p-6 h-96 overflow-hidden">
-                    {/* Dashboard Header */}
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                          <Gift className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900">Partner Dashboard</h3>
-                          <p className="text-sm text-gray-600">Real-time earnings overview</p>
-                        </div>
-                      </div>
-                      <Badge className="bg-green-100 text-green-700">Live Demo</Badge>
-                    </div>
+          <div className="text-center max-w-4xl mx-auto">
+            {/* Pill Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs sm:text-sm font-semibold mb-6 shadow-xs animate-fade-in">
+              <Flame className="h-4 w-4 text-emerald-600 fill-emerald-500" />
+              <span>Highest Paying Pakistani Raffle Affiliate Program</span>
+              <span className="bg-emerald-600 text-white text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full">Zero Cost</span>
+            </div>
 
-                    {/* Earnings Overview */}
-                    <div className="grid grid-cols-3 gap-4 mb-6">
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-6 h-6 bg-green-500 rounded-lg flex items-center justify-center">
-                            <DollarSign className="h-3 w-3 text-white" />
-                          </div>
-                          <span className="text-xs font-medium text-gray-700">Today's Earnings</span>
-                        </div>
-                        <div className="text-xl font-bold text-green-600">Rs. 12,450</div>
-                        <div className="text-xs text-green-600 flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3" />
-                          +24% from yesterday
-                        </div>
-                      </div>
+            {/* Main Headline */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15] mb-6">
+              Turn Your WhatsApp & Socials Into A{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600">
+                Daily Income Machine
+              </span>
+            </h1>
 
-                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center">
-                            <Users className="h-3 w-3 text-white" />
-                          </div>
-                          <span className="text-xs font-medium text-gray-700">Referrals</span>
-                        </div>
-                        <div className="text-xl font-bold text-blue-600">847</div>
-                        <div className="text-xs text-blue-600 flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3" />
-                          +12 today
-                        </div>
-                      </div>
+            {/* Sub-headline */}
+            <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed mb-8">
+              Earn <span className="font-bold text-slate-900">generous lifetime commissions</span> promoting luxury raffles (iPhones, Cars, Gold, Cash). 
+              No investment, no inventory, and zero headache. Get instant daily payouts directly to your <span className="font-semibold text-emerald-700">JazzCash, Easypaisa, or Pakistani Bank</span>.
+            </p>
 
-                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-6 h-6 bg-purple-500 rounded-lg flex items-center justify-center">
-                            <BarChart3 className="h-3 w-3 text-white" />
-                          </div>
-                          <span className="text-xs font-medium text-gray-700">This Month</span>
-                        </div>
-                        <div className="text-xl font-bold text-purple-600">Rs. 285,750</div>
-                        <div className="text-xs text-purple-600">1,247 successful referrals</div>
-                      </div>
-                    </div>
+            {/* CTA Group with Partner Platform Redirect */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+              <a
+                href={redirectHref}
+                target={partnerAppUrl ? "_blank" : undefined}
+                rel={partnerAppUrl ? "noopener noreferrer" : undefined}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-base px-8 py-4 rounded-2xl shadow-lg shadow-emerald-600/25 hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+              >
+                <Handshake className="h-5 w-5" />
+                <span>Go to Partner Platform</span>
+                {partnerAppUrl ? (
+                  <ExternalLink className="h-4 w-4 ml-0.5" />
+                ) : (
+                  <ArrowRight className="h-5 w-5 ml-0.5" />
+                )}
+              </a>
 
-                    {/* Recent Purchases */}
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-orange-500" />
-                        Recent Purchases via Your Links
-                      </h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                          <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                            <Gift className="h-4 w-4 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900">iPhone 15 Pro Max</div>
-                            <div className="text-xs text-gray-600">Entry purchased • 2 min ago</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-bold text-green-600">+Rs. 150</div>
-                            <div className="text-xs text-gray-500">20% comm.</div>
-                          </div>
-                        </div>
+              <a
+                href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle%20Team!%20I%20want%20to%20join%20the%20Affiliate%20Program%20and%20start%20earning%20commissions.`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold text-base px-7 py-4 rounded-2xl border-2 border-emerald-300 transition-all duration-200"
+              >
+                <MessageCircle className="h-5 w-5 text-emerald-600 fill-emerald-600/20" />
+                <span>Chat on WhatsApp ({WHATSAPP_NUMBER})</span>
+              </a>
+            </div>
 
-                        <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                            <Gift className="h-4 w-4 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900">MacBook Pro M3</div>
-                            <div className="text-xs text-gray-600">Entry purchased • 5 min ago</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-bold text-green-600">+Rs. 200</div>
-                            <div className="text-xs text-gray-500">20% comm.</div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                          <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                            <Gift className="h-4 w-4 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900">Honda Civic 2024</div>
-                            <div className="text-xs text-gray-600">Entry purchased • 8 min ago</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-bold text-green-600">+Rs. 500</div>
-                            <div className="text-xs text-gray-500">25% comm.</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+            {/* 4 Core Zero-Headache Pillars */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto text-left pt-4">
+              <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-xs flex items-start gap-3">
+                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700 shrink-0">
+                  <Zap className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">Zero Investment</h4>
+                  <p className="text-[11px] text-slate-500">Free forever. Start with Rs. 0</p>
                 </div>
               </div>
 
-              {/* Laptop Base */}
-              <div className="bg-gray-700 h-4 rounded-b-2xl relative">
-                <div className="absolute inset-x-0 top-0 h-2 bg-gray-600 rounded-b-xl"></div>
+              <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-xs flex items-start gap-3">
+                <div className="p-2 rounded-xl bg-teal-100 text-teal-700 shrink-0">
+                  <Wallet className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">Daily Payouts</h4>
+                  <p className="text-[11px] text-slate-500">JazzCash & Easypaisa</p>
+                </div>
               </div>
 
-              {/* Floating Stats */}
-              <div className="absolute -top-6 -left-6 bg-white rounded-xl shadow-lg p-3 animate-bounce">
-                <div className="text-xs text-gray-600">Live Earnings</div>
-                <div className="text-lg font-bold text-green-600">Rs. 12,450</div>
+              <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-xs flex items-start gap-3">
+                <div className="p-2 rounded-xl bg-blue-100 text-blue-700 shrink-0">
+                  <Clock className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">30-Day Cookie</h4>
+                  <p className="text-[11px] text-slate-500">Tag user once, earn forever</p>
+                </div>
               </div>
 
-              <div className="absolute -bottom-6 -right-6 bg-white rounded-xl shadow-lg p-3 animate-pulse">
-                <div className="text-xs text-gray-600">Active Referrals</div>
-                <div className="text-lg font-bold text-blue-600">847</div>
-              </div>
-
-              {/* Background Blobs */}
-              <div className="absolute -top-8 -right-8 w-32 h-32 bg-green-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-              <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-emerald-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-            </div>
-          </div>
-
-          {/* Hero Text Content */}
-          <div className="text-center max-w-4xl mx-auto">
-            <Badge className="bg-green-100 text-green-700 hover:bg-green-100 mb-6">🚀 Partner Program</Badge>
-            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
-              Partner with Pakistan's
-              <span className="text-green-500 block">Leading Raffle Platform</span>
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto">
-              Join PakRaffle.com and earn substantial commissions by promoting exciting raffles. Get paid for every
-              successful purchase through your referrals with our generous revenue sharing model.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Link href={`${process.env.NEXT_PUBLIC_PARTNER_APP_URL}/auth/register?utm_source=hero-section&medium=pakraffle.com&comp=become-a-partner`}>
-                <Button size="lg" className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl shadow-lg">
-                  <Handshake className="h-5 w-5 mr-2" />
-                  Become a Partner
-                  <ArrowRight className="h-5 w-5 ml-2" />
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-2 border-gray-300 hover:border-gray-400 px-8 py-4 rounded-xl bg-transparent"
-              >
-                Learn More
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-3 gap-6 max-w-md mx-auto">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">15-25%</div>
-                <div className="text-sm text-gray-600">Commission Rate</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">50K+</div>
-                <div className="text-sm text-gray-600">Active Users</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">24/7</div>
-                <div className="text-sm text-gray-600">Support</div>
+              <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-xs flex items-start gap-3">
+                <div className="p-2 rounded-xl bg-amber-100 text-amber-700 shrink-0">
+                  <BarChart3 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">Live Portal</h4>
+                  <p className="text-[11px] text-slate-500">Real-time stats & tracking</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Top Partners Showcase */}
-      <section className="py-20 bg-white">
+      {/* Live Social Proof Payout Ticker */}
+      <section className="bg-white border-y border-slate-200 py-4">
+        <div className="max-w-7xl mx-auto px-4 overflow-hidden">
+          <div className="flex items-center gap-3 mb-2 sm:mb-0">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-md shrink-0 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              Live Activity
+            </span>
+            <div className="flex items-center gap-6 overflow-x-auto no-scrollbar py-1 text-xs text-slate-600">
+              <span className="whitespace-nowrap font-medium flex items-center gap-1.5">
+                <span className="font-bold text-slate-900">Usman A. (Lahore)</span> withdrew{" "}
+                <span className="text-emerald-600 font-bold">Rs. 18,500</span> via JazzCash{" "}
+                <span className="text-slate-400 text-[10px]">(3 mins ago)</span>
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="whitespace-nowrap font-medium flex items-center gap-1.5">
+                <span className="font-bold text-slate-900">Zubair K. (Karachi)</span> made{" "}
+                <span className="text-emerald-600 font-bold">Rs. 4,200</span> commission on iPhone 16 draw{" "}
+                <span className="text-slate-400 text-[10px]">(7 mins ago)</span>
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="whitespace-nowrap font-medium flex items-center gap-1.5">
+                <span className="font-bold text-slate-900">Ayesha M. (Islamabad)</span> reached{" "}
+                <span className="text-purple-600 font-bold">Pro Partner Status</span>{" "}
+                <span className="text-slate-400 text-[10px]">(14 mins ago)</span>
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="whitespace-nowrap font-medium flex items-center gap-1.5">
+                <span className="font-bold text-slate-900">Hamza R. (Faisalabad)</span> withdrew{" "}
+                <span className="text-emerald-600 font-bold">Rs. 32,400</span> via Raast{" "}
+                <span className="text-slate-400 text-[10px]">(22 mins ago)</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive Live Earnings Calculator */}
+      <section id="calculator" className="py-16 lg:py-24 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Meet Our Top Earning Partners</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Real partners, real earnings. See how much our top performers are making with PakRaffle
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-3">
+              <Calculator className="h-3.5 w-3.5" />
+              Live Income Estimator
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
+              Calculate Your Potential Earnings
+            </h2>
+            <p className="text-slate-600 text-base sm:text-lg mt-3">
+              See what sharing just a few raffle tickets per day can bring to your bank account. No guesswork.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+            <div className="grid md:grid-cols-12">
+              {/* Sliders Input Column */}
+              <div className="md:col-span-7 p-6 sm:p-8 space-y-8 border-b md:border-b-0 md:border-r border-slate-100">
+                {/* Slider 1: Daily Tickets */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="daily-tickets" className="text-sm font-bold text-slate-800">
+                      Raffle Tickets Sold Via Your Link
+                    </Label>
+                    <span className="text-emerald-700 font-mono font-bold text-base px-2.5 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200">
+                      {dailyTickets} tickets / day
+                    </span>
+                  </div>
+                  <input
+                    id="daily-tickets"
+                    type="range"
+                    min="2"
+                    max="100"
+                    step="1"
+                    value={dailyTickets}
+                    onChange={(e) => setDailyTickets(Number(e.target.value))}
+                    className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                  />
+                  <div className="flex justify-between text-[11px] text-slate-400 font-medium">
+                    <span>2 tickets (Just WhatsApp status)</span>
+                    <span>50 tickets</span>
+                    <span>100+ (TikTok / Reels)</span>
+                  </div>
+                </div>
+
+                {/* Slider 2: Average Ticket Price */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="ticket-price" className="text-sm font-bold text-slate-800">
+                      Average Ticket Price (PKR)
+                    </Label>
+                    <span className="text-slate-900 font-mono font-bold text-base px-2.5 py-0.5 rounded-lg bg-slate-100 border border-slate-200">
+                      Rs. {ticketPrice}
+                    </span>
+                  </div>
+                  <input
+                    id="ticket-price"
+                    type="range"
+                    min="100"
+                    max="1000"
+                    step="50"
+                    value={ticketPrice}
+                    onChange={(e) => setTicketPrice(Number(e.target.value))}
+                    className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                  />
+                  <div className="flex justify-between text-[11px] text-slate-400 font-medium">
+                    <span>Rs. 100 (Budget Raffles)</span>
+                    <span>Rs. 500 (iPhone Raffles)</span>
+                    <span>Rs. 1,000 (Cars & Bikes)</span>
+                  </div>
+                </div>
+
+                {/* Monthly Volume Preview */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+                  <div className="flex justify-between text-xs text-slate-600">
+                    <span>Estimated Monthly Ticket Sales:</span>
+                    <span className="font-bold text-slate-900">{monthlyTickets.toLocaleString()} tickets</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-600">
+                    <span>Total Ticket Volume:</span>
+                    <span className="font-bold text-slate-900">Rs. {grossMonthlyVolume.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-600 items-center pt-1 border-t border-slate-200">
+                    <span>Projected Commission Rate:</span>
+                    <Badge className="bg-emerald-600 text-white font-bold">{tierName} ({(commissionRate * 100)}%)</Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dynamic Earnings Display Column */}
+              <div className="md:col-span-5 p-6 sm:p-8 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 text-white flex flex-col justify-between">
+                <div>
+                  <span className="text-xs uppercase tracking-wider text-emerald-400 font-bold block mb-1">
+                    Your Projected Monthly Income
+                  </span>
+                  <div className="text-4xl sm:text-5xl font-extrabold text-white font-mono tracking-tight my-2">
+                    Rs. {totalEstimatedMonthly.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-slate-300">
+                    Paid directly to your JazzCash / Easypaisa on your schedule.
+                  </p>
+
+                  <div className="mt-6 pt-6 border-t border-slate-800 space-y-2.5 text-xs">
+                    <div className="flex justify-between text-slate-300">
+                      <span>Base Commission ({(commissionRate * 100)}%):</span>
+                      <span className="font-bold text-emerald-400 font-mono">Rs. {commissionEarnings.toLocaleString()}</span>
+                    </div>
+                    {milestoneBonus > 0 && (
+                      <div className="flex justify-between text-amber-300">
+                        <span className="flex items-center gap-1">
+                          <Sparkles className="h-3.5 w-3.5" /> Growth Milestone Bonus:
+                        </span>
+                        <span className="font-bold font-mono">+Rs. {milestoneBonus.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-slate-300">
+                      <span>Daily Passive Average:</span>
+                      <span className="font-bold text-white font-mono">
+                        Rs. {Math.round(totalEstimatedMonthly / 30).toLocaleString()} / day
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <a
+                    href={redirectHref}
+                    target={partnerAppUrl ? "_blank" : undefined}
+                    rel={partnerAppUrl ? "noopener noreferrer" : undefined}
+                    className="w-full inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm py-3.5 px-4 rounded-xl shadow-md transition-colors"
+                  >
+                    <span>Go to Partner Platform</span>
+                    {partnerAppUrl ? (
+                      <ExternalLink className="h-4 w-4" />
+                    ) : (
+                      <ArrowRight className="h-4 w-4" />
+                    )}
+                  </a>
+                  <p className="text-[11px] text-center text-slate-400 mt-2">
+                    Quick Access • Real-Time Portal
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Dedicated Partner Platform Redirection Callout Section */}
+      <section className="py-16 lg:py-20 bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
+        
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="bg-white/5 border border-emerald-500/30 backdrop-blur-md rounded-3xl p-8 sm:p-12 shadow-2xl">
+            <div className="text-center max-w-3xl mx-auto space-y-6">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold border border-emerald-400/30">
+                <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Official PakRaffle Partner Portal</span>
+              </div>
+
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
+                Ready to Join? Access The Partner Platform
+              </h2>
+
+              <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
+                Manage your affiliate links, monitor clicks in real-time, view live ticket purchase commissions, and withdraw directly to your Pakistani bank account or mobile wallet.
+              </p>
+
+              {/* 3 Portal Features */}
+              <div className="grid sm:grid-cols-3 gap-4 pt-4 text-left">
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                  <BarChart3 className="h-5 w-5 text-emerald-400 mb-2" />
+                  <h4 className="font-bold text-sm text-white">Live Tracking</h4>
+                  <p className="text-xs text-slate-300 mt-1">Instant view of referral link clicks & ticket sales.</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                  <Wallet className="h-5 w-5 text-teal-400 mb-2" />
+                  <h4 className="font-bold text-sm text-white">Instant Withdrawals</h4>
+                  <p className="text-xs text-slate-300 mt-1">Cash out directly to JazzCash, Easypaisa, or Raast.</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                  <ShieldCheck className="h-5 w-5 text-blue-400 mb-2" />
+                  <h4 className="font-bold text-sm text-white">30-Day Attribution</h4>
+                  <p className="text-xs text-slate-300 mt-1">Never lose a commission with smart cookie tracking.</p>
+                </div>
+              </div>
+
+              {/* Direct Redirect Button */}
+              <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a
+                  href={redirectHref}
+                  target={partnerAppUrl ? "_blank" : undefined}
+                  rel={partnerAppUrl ? "noopener noreferrer" : undefined}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-base px-8 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all transform hover:-translate-y-0.5"
+                >
+                  <Handshake className="h-5 w-5" />
+                  <span>Launch Partner Platform</span>
+                  {partnerAppUrl ? (
+                    <ExternalLink className="h-4 w-4" />
+                  ) : (
+                    <ArrowRight className="h-4 w-4" />
+                  )}
+                </a>
+
+                <a
+                  href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20have%20questions%20about%20the%20Partner%20Platform.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-base px-7 py-4 rounded-2xl border border-white/20 transition-all"
+                >
+                  <MessageCircle className="h-5 w-5 text-emerald-400" />
+                  <span>VIP WhatsApp Support</span>
+                </a>
+              </div>
+
+              {partnerAppUrl && (
+                <p className="text-xs text-emerald-400/80 font-mono">
+                  Destination: {partnerAppUrl}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Headaches Comparison Section */}
+      <section className="py-16 lg:py-24 bg-white border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
+              Why PakRaffle Is 100% Headache-Free
+            </h2>
+            <p className="text-slate-600 text-base sm:text-lg mt-3">
+              Traditional ways of earning online in Pakistan are full of roadblocks. Here is how PakRaffle fixes everything.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* The Old Headache Way */}
+            <div className="bg-red-50/50 border-2 border-red-200/80 rounded-3xl p-6 sm:p-8 space-y-5">
+              <div className="flex items-center gap-3 pb-3 border-b border-red-200">
+                <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold">
+                  ✕
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-red-950">Other Methods (Dropshipping, Amazon, Freelancing)</h3>
+                  <p className="text-xs text-red-700">Massive headaches and delayed payments</p>
+                </div>
+              </div>
+
+              <ul className="space-y-3.5 text-sm text-red-900">
+                <li className="flex items-start gap-2.5">
+                  <span className="text-red-500 font-bold mt-0.5">✕</span>
+                  <span><strong>Heavy upfront money:</strong> Needs Rs. 50,000 to 200,000+ for ad spend or inventory.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="text-red-500 font-bold mt-0.5">✕</span>
+                  <span><strong>Customer complaints & returns:</strong> Angry buyers messaging you at 2:00 AM about delayed courier delivery.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="text-red-500 font-bold mt-0.5">✕</span>
+                  <span><strong>Account bans & PayPal issues:</strong> Blocked accounts, high foreign fees, and complex verifications.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="text-red-500 font-bold mt-0.5">✕</span>
+                  <span><strong>High technical skills required:</strong> You have to build websites, configure pixels, and write ad copy.</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* The PakRaffle Zero-Headache Way */}
+            <div className="bg-emerald-50/70 border-2 border-emerald-300 rounded-3xl p-6 sm:p-8 space-y-5 relative shadow-sm">
+              <div className="absolute -top-3.5 right-6">
+                <Badge className="bg-emerald-600 text-white font-bold px-3 py-1 shadow-xs">The Easy Way</Badge>
+              </div>
+
+              <div className="flex items-center gap-3 pb-3 border-b border-emerald-200">
+                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
+                  ✓
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-emerald-950">PakRaffle Affiliate Program</h3>
+                  <p className="text-xs text-emerald-700">Pure profit with zero operational stress</p>
+                </div>
+              </div>
+
+              <ul className="space-y-3.5 text-sm text-emerald-950">
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <span><strong>Rs. 0 Required:</strong> 100% free to join forever. No registration fee, no renewal costs.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <span><strong>Zero Customer Handling:</strong> PakRaffle manages tickets, live draws, prize verification, and courier delivery.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <span><strong>Direct Pakistani Payouts:</strong> Get money straight in your JazzCash, Easypaisa, or bank account whenever you want.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <span><strong>Instant Platform Access:</strong> Direct link to partner portal with live metrics and automated payouts.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Top Earning Pakistani Affiliates (Social Proof) */}
+      <section className="py-16 lg:py-24 bg-slate-50 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
+              Meet Top Pakistani Affiliates Earning Weekly
+            </h2>
+            <p className="text-slate-600 text-base sm:text-lg mt-3">
+              From university students to full-time creators, see how real affiliates make money with PakRaffle.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Partner 1 */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
-              <div className="absolute top-4 right-4">
-                <Badge className="bg-yellow-100 text-yellow-700 flex items-center gap-1">
-                  <Crown className="h-3 w-3" />
-                  Elite
-                </Badge>
-              </div>
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-xl">
+            {/* Story 1 */}
+            <Card className="rounded-3xl border border-slate-200 bg-white shadow-xs hover:shadow-md transition-shadow relative overflow-hidden">
+              <div className="h-2 bg-emerald-500 w-full" />
+              <CardContent className="p-6 text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xl flex items-center justify-center mx-auto shadow-inner">
                   AH
                 </div>
-                <h3 className="font-bold text-gray-900 mb-1">Ahmed Hassan</h3>
-                <p className="text-sm text-gray-600 mb-4">Social Media Influencer</p>
-                <div className="bg-green-50 rounded-xl p-4 mb-4">
-                  <div className="text-2xl font-bold text-green-600 mb-1">Rs. 485,750</div>
-                  <div className="text-xs text-green-600">Monthly Earnings</div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-lg">Ahmed Hassan</h3>
+                  <p className="text-xs text-slate-500">Tech Reviewer • Islamabad</p>
                 </div>
-                <div className="flex items-center justify-center gap-4 text-sm text-gray-600">
-                  <div className="text-center">
-                    <div className="font-bold text-gray-900">2,847</div>
-                    <div className="text-xs">Referrals</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-bold text-gray-900">25%</div>
-                    <div className="text-xs">Commission</div>
-                  </div>
+                <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
+                  <span className="text-xs text-emerald-700 block font-medium">Last Month's Earnings</span>
+                  <span className="text-2xl font-extrabold text-emerald-700 font-mono">Rs. 485,750</span>
+                </div>
+                <p className="text-xs text-slate-600 italic">
+                  "I just post 2 Instagram stories whenever an iPhone or bike draw opens. The commission comes automatically to my Meezan bank."
+                </p>
+                <div className="text-[11px] font-semibold text-emerald-600 flex items-center justify-center gap-1">
+                  <CheckCircle className="h-3.5 w-3.5" /> Payout verified via Meezan Bank
                 </div>
               </CardContent>
             </Card>
 
-            {/* Partner 2 */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
-              <div className="absolute top-4 right-4">
-                <Badge className="bg-purple-100 text-purple-700 flex items-center gap-1">
-                  <Trophy className="h-3 w-3" />
-                  Pro
-                </Badge>
-              </div>
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-xl">
+            {/* Story 2 */}
+            <Card className="rounded-3xl border border-slate-200 bg-white shadow-xs hover:shadow-md transition-shadow relative overflow-hidden">
+              <div className="h-2 bg-blue-500 w-full" />
+              <CardContent className="p-6 text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-800 font-extrabold text-xl flex items-center justify-center mx-auto shadow-inner">
                   SF
                 </div>
-                <h3 className="font-bold text-gray-900 mb-1">Sarah Fatima</h3>
-                <p className="text-sm text-gray-600 mb-4">YouTube Creator</p>
-                <div className="bg-blue-50 rounded-xl p-4 mb-4">
-                  <div className="text-2xl font-bold text-blue-600 mb-1">Rs. 325,200</div>
-                  <div className="text-xs text-blue-600">Monthly Earnings</div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-lg">Sarah Fatima</h3>
+                  <p className="text-xs text-slate-500">University Student • Karachi</p>
                 </div>
-                <div className="flex items-center justify-center gap-4 text-sm text-gray-600">
-                  <div className="text-center">
-                    <div className="font-bold text-gray-900">1,626</div>
-                    <div className="text-xs">Referrals</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-bold text-gray-900">20%</div>
-                    <div className="text-xs">Commission</div>
-                  </div>
+                <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100">
+                  <span className="text-xs text-blue-700 block font-medium">Last Month's Earnings</span>
+                  <span className="text-2xl font-extrabold text-blue-700 font-mono">Rs. 184,200</span>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Partner 3 */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
-              <div className="absolute top-4 right-4">
-                <Badge className="bg-orange-100 text-orange-700 flex items-center gap-1">
-                  <Star className="h-3 w-3" />
-                  Pro
-                </Badge>
-              </div>
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-xl">
-                  MK
-                </div>
-                <h3 className="font-bold text-gray-900 mb-1">Muhammad Khan</h3>
-                <p className="text-sm text-gray-600 mb-4">Website Owner</p>
-                <div className="bg-purple-50 rounded-xl p-4 mb-4">
-                  <div className="text-2xl font-bold text-purple-600 mb-1">Rs. 275,850</div>
-                  <div className="text-xs text-purple-600">Monthly Earnings</div>
-                </div>
-                <div className="flex items-center justify-center gap-4 text-sm text-gray-600">
-                  <div className="text-center">
-                    <div className="font-bold text-gray-900">1,379</div>
-                    <div className="text-xs">Referrals</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-bold text-gray-900">20%</div>
-                    <div className="text-xs">Commission</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Partner 4 */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
-              <div className="absolute top-4 right-4">
-                <Badge className="bg-green-100 text-green-700 flex items-center gap-1">
-                  <Award className="h-3 w-3" />
-                  Starter
-                </Badge>
-              </div>
-              <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-xl">
-                  ZA
-                </div>
-                <h3 className="font-bold text-gray-900 mb-1">Zara Ali</h3>
-                <p className="text-sm text-gray-600 mb-4">TikTok Influencer</p>
-                <div className="bg-orange-50 rounded-xl p-4 mb-4">
-                  <div className="text-2xl font-bold text-orange-600 mb-1">Rs. 125,400</div>
-                  <div className="text-xs text-orange-600">Monthly Earnings</div>
-                </div>
-                <div className="flex items-center justify-center gap-4 text-sm text-gray-600">
-                  <div className="text-center">
-                    <div className="font-bold text-gray-900">836</div>
-                    <div className="text-xs">Referrals</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-bold text-gray-900">15%</div>
-                    <div className="text-xs">Commission</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Total Earnings Banner */}
-          <div className="mt-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-8 text-center text-white">
-            <h3 className="text-2xl font-bold mb-2">Combined Monthly Earnings</h3>
-            <div className="text-5xl font-bold mb-4">Rs. 1,212,200</div>
-            <p className="text-green-100 mb-6">
-              Our top 4 partners alone earned over 1.2 million rupees last month. Join them today!
-            </p>
-            <Link href={`${process.env.NEXT_PUBLIC_PARTNER_APP_URL}/auth/register?utm_source=combined-money-earning&medium=pakraffle.com&comp=become-a-partner`}>
-                  <Button
-                    size="lg"
-                    className="bg-white text-green-600 hover:bg-gray-100 px-8 py-3 rounded-xl shadow-lg font-semibold"
-                    >
-                    <Handshake className="h-5 w-5 mr-2" />
-                    Start Earning Like Them
-                    <ArrowRight className="h-5 w-5 ml-2" />
-                  </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Why Partner With Us */}
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Why Partner with PakRaffle?</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Join Pakistan's most trusted raffle platform and unlock unlimited earning potential
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <DollarSign className="h-8 w-8 text-green-500" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">High Commission Rates</h3>
-                <p className="text-gray-600 mb-4">
-                  Earn 15-25% commission on every successful purchase through your referrals. Higher volume = Higher
-                  rates!
+                <p className="text-xs text-slate-600 italic">
+                  "I pay my entire semester university fee just by sharing raffle links in my university hostel WhatsApp groups. Zero stress!"
                 </p>
-                <Badge className="bg-green-100 text-green-700">Up to 25% Commission</Badge>
+                <div className="text-[11px] font-semibold text-blue-600 flex items-center justify-center gap-1">
+                  <CheckCircle className="h-3.5 w-3.5" /> Payout verified via JazzCash
+                </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <TrendingUp className="h-8 w-8 text-blue-500" />
+            {/* Story 3 */}
+            <Card className="rounded-3xl border border-slate-200 bg-white shadow-xs hover:shadow-md transition-shadow relative overflow-hidden">
+              <div className="h-2 bg-purple-500 w-full" />
+              <CardContent className="p-6 text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-purple-100 text-purple-800 font-extrabold text-xl flex items-center justify-center mx-auto shadow-inner">
+                  BT
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Growing Market</h3>
-                <p className="text-gray-600 mb-4">
-                  Tap into Pakistan's rapidly growing online raffle market with premium products and engaged customers.
+                <div>
+                  <h3 className="font-bold text-slate-900 text-lg">Bilal Tariq</h3>
+                  <p className="text-xs text-slate-500">TikTok Creator • Lahore</p>
+                </div>
+                <div className="bg-purple-50 p-3 rounded-2xl border border-purple-100">
+                  <span className="text-xs text-purple-700 block font-medium">Last Month's Earnings</span>
+                  <span className="text-2xl font-extrabold text-purple-700 font-mono">Rs. 342,000</span>
+                </div>
+                <p className="text-xs text-slate-600 italic">
+                  "TikTok reels get huge organic views in Pakistan. PakRaffle converts like crazy because tickets are only Rs. 100."
                 </p>
-                <Badge className="bg-blue-100 text-blue-700">50K+ Active Users</Badge>
+                <div className="text-[11px] font-semibold text-purple-600 flex items-center justify-center gap-1">
+                  <CheckCircle className="h-3.5 w-3.5" /> Payout verified via Raast
+                </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Shield className="h-8 w-8 text-purple-500" />
+            {/* Story 4 */}
+            <Card className="rounded-3xl border border-slate-200 bg-white shadow-xs hover:shadow-md transition-shadow relative overflow-hidden">
+              <div className="h-2 bg-amber-500 w-full" />
+              <CardContent className="p-6 text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-800 font-extrabold text-xl flex items-center justify-center mx-auto shadow-inner">
+                  AN
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Trusted Platform</h3>
-                <p className="text-gray-600 mb-4">
-                  Partner with a platform that customers trust. Our transparent processes and verified winners build
-                  confidence.
-                </p>
-                <Badge className="bg-purple-100 text-purple-700">100% Transparent</Badge>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Zap className="h-8 w-8 text-orange-500" />
+                <div>
+                  <h3 className="font-bold text-slate-900 text-lg">Ayesha Noor</h3>
+                  <p className="text-xs text-slate-500">Stay-at-home Mom • Rawalpindi</p>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Easy Integration</h3>
-                <p className="text-gray-600 mb-4">
-                  Get started in minutes with our simple referral links, banners, and marketing materials.
-                </p>
-                <Badge className="bg-orange-100 text-orange-700">Quick Setup</Badge>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <BarChart3 className="h-8 w-8 text-red-500" />
+                <div className="bg-amber-50 p-3 rounded-2xl border border-amber-100">
+                  <span className="text-xs text-amber-700 block font-medium">Last Month's Earnings</span>
+                  <span className="text-2xl font-extrabold text-amber-700 font-mono">Rs. 92,500</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Real-time Analytics</h3>
-                <p className="text-gray-600 mb-4">
-                  Track your performance with detailed analytics, conversion rates, and earnings in real-time.
+                <p className="text-xs text-slate-600 italic">
+                  "I don't have many followers, just family WhatsApp groups. Whenever relatives buy entries, I get commission directly on Easypaisa."
                 </p>
-                <Badge className="bg-red-100 text-red-700">Live Dashboard</Badge>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Users className="h-8 w-8 text-green-500" />
+                <div className="text-[11px] font-semibold text-amber-600 flex items-center justify-center gap-1">
+                  <CheckCircle className="h-3.5 w-3.5" /> Payout verified via Easypaisa
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Dedicated Support</h3>
-                <p className="text-gray-600 mb-4">
-                  Get 24/7 support from our dedicated partner success team to maximize your earnings.
-                </p>
-                <Badge className="bg-green-100 text-green-700">24/7 Support</Badge>
               </CardContent>
             </Card>
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">How Partnership Works</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Simple 4-step process to start earning with PakRaffle
+      {/* Payout Methods Supported */}
+      <section className="py-14 bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+              Direct & Instant Pakistani Payouts
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
+              Receive Your Hard-Earned Rupees Exactly How You Want
+            </h3>
+            <p className="text-slate-400 text-sm max-w-2xl mx-auto mt-2">
+              No overseas fees, no complex currency conversions. Withdraw anytime once your balance reaches Rs. 500.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 text-white font-bold text-xl">
-                1
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 max-w-4xl mx-auto">
+            {["JazzCash", "Easypaisa", "Raast (Instant)", "Meezan Bank", "HBL", "Bank Alfalah"].map((method) => (
+              <div
+                key={method}
+                className="bg-slate-800/80 border border-slate-700 px-5 py-3 rounded-2xl flex items-center gap-2.5 text-sm font-bold text-slate-200 shadow-sm"
+              >
+                <CheckCircle className="h-4 w-4 text-emerald-400" />
+                <span>{method}</span>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Sign Up</h3>
-              <p className="text-gray-600">
-                Register as a partner and get approved within 24 hours. No fees or hidden costs.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 text-white font-bold text-xl">
-                2
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Get Your Links</h3>
-              <p className="text-gray-600">
-                Receive unique referral links and marketing materials to promote our raffles.
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 text-white font-bold text-xl">
-                3
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Promote & Share</h3>
-              <p className="text-gray-600">Share raffles on social media, websites, or directly with your network.</p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 text-white font-bold text-xl">
-                4
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Earn Commission</h3>
-              <p className="text-gray-600">
-                Get paid 15-25% commission for every successful purchase through your referrals.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Commission Structure */}
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Commission Structure</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Earn more as you grow - our tiered commission system rewards top performers
+      {/* Frequently Asked Questions */}
+      <section className="py-16 lg:py-24 bg-white border-t border-slate-200">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-slate-600 text-sm sm:text-base mt-2">
+              Everything you need to know to start earning without doubts.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="border-2 border-gray-200 hover:border-green-300 transition-colors duration-300">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Star className="h-8 w-8 text-gray-500" />
+          <div className="space-y-4">
+            {[
+              {
+                q: "Do I need a large following or expensive camera to start?",
+                a: "Absolutely not! Over 60% of our successful affiliates are students, housewives, and everyday individuals who simply share links on their personal WhatsApp status or family groups. Even referring 3-5 ticket buyers a day earns you a solid passive monthly income.",
+              },
+              {
+                q: "How and when do I get paid?",
+                a: "You can request a withdrawal directly through your partner platform dashboard or via WhatsApp to our Affiliate Manager. Payouts are sent within 2 to 6 hours directly to your JazzCash, Easypaisa, Raast, or any Pakistani Bank Account.",
+              },
+              {
+                q: "Is there any cost, deposit, or subscription fee to join?",
+                a: "No! PakRaffle Affiliate Program is 100% completely free to join and will always remain free. You never have to pay a single rupee to earn commissions.",
+              },
+              {
+                q: "What if someone clicks my link today but buys a ticket 2 weeks later?",
+                a: "We use a 30-day tracking cookie! If someone clicks your link today and decides to purchase tickets anytime within the next 30 days, you will automatically receive full commission credit for that sale.",
+              },
+              {
+                q: "What is the minimum amount I can withdraw?",
+                a: "The minimum payout threshold is just Rs. 500! As soon as you earn Rs. 500 from your first few referrals, you can immediately transfer it to your mobile wallet.",
+              },
+              {
+                q: "Who handles customer support, ticket delivery, and winner verification?",
+                a: "PakRaffle handles 100% of the customer support, ticket issuance, random draw transparency, and winner prize courier delivery. You only share your link and collect your profits.",
+              },
+            ].map((faq, idx) => {
+              const isOpen = openFaq === idx
+              return (
+                <div
+                  key={idx}
+                  className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50 transition-colors"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-slate-900 text-sm sm:text-base hover:bg-slate-100/60"
+                  >
+                    <span>{faq.q}</span>
+                    {isOpen ? (
+                      <ChevronUp className="h-5 w-5 text-emerald-600 shrink-0" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-slate-400 shrink-0" />
+                    )}
+                  </button>
+                  {isOpen && (
+                    <div className="px-5 pb-5 pt-1 text-sm text-slate-600 leading-relaxed border-t border-slate-200/60 bg-white">
+                      {faq.a}
+                    </div>
+                  )}
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Starter</h3>
-                <div className="text-4xl font-bold text-green-500 mb-4">15%</div>
-                <p className="text-gray-600 mb-6">Perfect for new partners getting started</p>
-                <ul className="space-y-3 text-left">
-                  <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-600">0-50 referrals/month</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-600">Basic marketing materials</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-600">Email support</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-green-300 bg-green-50 relative">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-green-500 text-white px-4 py-1">Most Popular</Badge>
-              </div>
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Award className="h-8 w-8 text-green-500" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Professional</h3>
-                <div className="text-4xl font-bold text-green-500 mb-4">20%</div>
-                <p className="text-gray-600 mb-6">For established partners with consistent sales</p>
-                <ul className="space-y-3 text-left">
-                  <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-600">51-200 referrals/month</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-600">Premium marketing kit</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-600">Priority support</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-600">Monthly performance bonus</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-gray-200 hover:border-green-300 transition-colors duration-300">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Target className="h-8 w-8 text-yellow-500" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Elite</h3>
-                <div className="text-4xl font-bold text-green-500 mb-4">25%</div>
-                <p className="text-gray-600 mb-6">For top-tier partners driving high volume</p>
-                <ul className="space-y-3 text-left">
-                  <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-600">200+ referrals/month</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-600">Custom marketing materials</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-600">Dedicated account manager</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-gray-600">Quarterly performance bonus</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
+              )
+            })}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-green-500 to-emerald-600">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">Ready to Start Earning?</h2>
-          <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of partners already earning with PakRaffle. Start your partnership journey today and unlock
-            unlimited earning potential.
+      {/* Final Irresistible CTA */}
+      <section className="py-20 bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 text-white text-center relative overflow-hidden">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
+          <Badge className="bg-white/20 text-white font-bold border-0 px-4 py-1 text-xs">
+            Start Today • Get Paid Tomorrow
+          </Badge>
+
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-white leading-tight">
+            Ready to Build Your Passive Income Stream?
+          </h2>
+
+          <p className="text-emerald-100 text-base sm:text-lg max-w-2xl mx-auto">
+            Join thousands of smart Pakistanis who turned their idle WhatsApp and phone screen time into real cash every single week.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <Link href={`${process.env.NEXT_PUBLIC_PARTNER_APP_URL}/auth/register?utm_source=ready-to-start-earning&medium=pakraffle.com&comp=become-a-partner`}>
-            <Button
-              size="lg"
-              className="bg-white text-green-600 hover:bg-gray-100 px-8 py-4 rounded-xl shadow-lg font-semibold"
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <a
+              href={redirectHref}
+              target={partnerAppUrl ? "_blank" : undefined}
+              rel={partnerAppUrl ? "noopener noreferrer" : undefined}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-emerald-900 hover:bg-slate-100 font-extrabold text-base px-8 py-4 rounded-2xl shadow-xl transition-all"
             >
-              <Handshake className="h-5 w-5 mr-2" />
-              Apply Now - It's Free!
-              <ArrowRight className="h-5 w-5 ml-2" />
-            </Button>
-            </Link>
-            <Button
-              variant="outline"
-              size="lg"
-              className="border-2 border-white text-white hover:bg-white hover:text-green-600 px-8 py-4 rounded-xl bg-transparent"
+              <Handshake className="h-5 w-5 text-emerald-600" />
+              <span>Go to Partner Platform</span>
+              {partnerAppUrl ? (
+                <ExternalLink className="h-4 w-4" />
+              ) : (
+                <ArrowRight className="h-5 w-5" />
+              )}
+            </a>
+
+            <a
+              href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20am%20ready%20to%20start%20as%20an%20affiliate%20partner.`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-800/80 hover:bg-emerald-800 text-white font-bold text-base px-7 py-4 rounded-2xl border border-emerald-400/40"
             >
-              <Phone className="h-5 w-5 mr-2" />
-              Schedule a Call
-            </Button>
+              <MessageCircle className="h-5 w-5 text-emerald-300" />
+              <span>Talk to Affiliate VIP Manager ({WHATSAPP_NUMBER})</span>
+            </a>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-3xl font-bold text-white mb-2">No Setup Fees</div>
-              <div className="text-green-100">100% Free to Join</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-white mb-2">Quick Approval</div>
-              <div className="text-green-100">Get Started in 24 Hours</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-white mb-2">Weekly Payouts</div>
-              <div className="text-green-100">Fast & Reliable Payments</div>
-            </div>
+          <div className="pt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-emerald-200">
+            <span className="flex items-center gap-1.5">
+              <CheckCircle className="h-4 w-4 text-emerald-300" /> No Registration Fees
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CheckCircle className="h-4 w-4 text-emerald-300" /> Instant Platform Access
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CheckCircle className="h-4 w-4 text-emerald-300" /> WhatsApp Payout Support
+            </span>
           </div>
         </div>
       </section>
 
-      {/* Contact Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Get in Touch</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Have questions about our partnership program? We're here to help!
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="border-0 shadow-lg text-center">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Phone className="h-8 w-8 text-green-500" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Call Us</h3>
-                <p className="text-gray-600 mb-4">Speak directly with our partnership team</p>
-                <p className="text-green-600 font-semibold">+92 300 1234567</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg text-center">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Mail className="h-8 w-8 text-blue-500" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Email Us</h3>
-                <p className="text-gray-600 mb-4">Get detailed information via email</p>
-                <p className="text-blue-600 font-semibold">partners@pakraffle.com</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg text-center">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <MapPin className="h-8 w-8 text-purple-500" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Visit Us</h3>
-                <p className="text-gray-600 mb-4">Meet us at our office</p>
-                <p className="text-purple-600 font-semibold">Lahore, Pakistan</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-     
+      {/* Floating WhatsApp Quick Action Button */}
+      <a
+        href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20have%20a%20question%20about%20the%20affiliate%20partner%20program.`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-full shadow-2xl border-2 border-white transition-all transform hover:scale-105"
+        title="Chat with Affiliate VIP Support on WhatsApp"
+      >
+        <MessageCircle className="h-5 w-5 fill-white text-emerald-600" />
+        <span className="text-xs sm:text-sm font-bold hidden sm:inline">Affiliate Help ({WHATSAPP_NUMBER})</span>
+      </a>
     </div>
-    </>
   )
 }
