@@ -100,13 +100,24 @@ export function Footer() {
             <h3 className="text-lg font-bold">Contact Info</h3>
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
+                <Phone className="h-5 w-5 text-green-500" />
+                <a
+                  href="https://wa.me/923377155722"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-green-400 font-mono text-sm"
+                >
+                  +92 337 7155722 (WhatsApp)
+                </a>
+              </div>
+              <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-green-500" />
                 <span className="text-gray-400">support@pakraffle.com</span>
               </div>
               <div className="flex items-start space-x-3">
                 <MapPin className="h-5 w-5 text-green-500 mt-1" />
                 <span className="text-gray-400">
-                  Lahore, Punjab
+                  Lahore & Islamabad
                   <br />
                   Pakistan
                 </span>

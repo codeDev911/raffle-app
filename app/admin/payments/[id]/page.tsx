@@ -22,7 +22,6 @@ import { notFound } from "next/navigation"
 import { UpdatePaymentStatus } from "@/components/update-payment-status"
 import { ReceiptModal } from "@/components/receipt-modal"
 import _Button from "./_Button"
-import { JsonObject } from "@prisma/client/runtime/library"
 async function getPaymentDetails(id: string) {
   const payment = await prisma.payment.findUnique({
     where: { id },

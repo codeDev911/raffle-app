@@ -1,10 +1,12 @@
+import "./globals.css"
 import type React from "react"
 import type { Metadata } from "next"
 import ClientLayout from "./ClientLayout"
-import { Analytics } from "@vercel/analytics/next"
-import Script from 'next/script';
+import Script from 'next/script'
 import crypto from "crypto"
-import { SpeedInsights } from "@vercel/speed-insights/next"
+
+const Analytics = () => null
+const SpeedInsights = () => null
 
 
 // Ai chat bot
@@ -78,6 +80,3 @@ const hash = crypto
     {children}
   </ClientLayout>
 }
-
-
-import './globals.css'
