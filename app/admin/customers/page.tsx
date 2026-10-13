@@ -457,39 +457,63 @@ export default function AdminCustomersPage() {
         </div>
 
         {/* LOADING SKELETON */}
+        {/* LOADING SKELETON STATE */}
         {isLoading ? (
-          <div className="p-4 space-y-3">
-            <div className="hidden md:block space-y-2">
-              {[...Array(6)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-14 bg-slate-100/80 animate-pulse rounded-xl flex items-center px-4 gap-4"
-                >
-                  <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0" />
-                  <div className="w-1/4 h-4 bg-slate-200 rounded-md" />
-                  <div className="w-1/4 h-4 bg-slate-200 rounded-md" />
-                  <div className="w-1/6 h-4 bg-slate-200 rounded-md" />
-                  <div className="w-1/12 h-4 bg-slate-200 rounded-md ml-auto" />
-                </div>
-              ))}
-            </div>
-            <div className="md:hidden space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="p-4 rounded-xl border border-slate-200 bg-white space-y-3 animate-pulse"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-200" />
-                    <div className="space-y-1.5 flex-1">
-                      <div className="w-28 h-4 bg-slate-200 rounded-md" />
-                      <div className="w-40 h-3 bg-slate-100 rounded-md" />
-                    </div>
-                  </div>
-                  <div className="h-10 bg-slate-100 rounded-lg" />
-                </div>
-              ))}
-            </div>
+          <div className="overflow-x-auto w-full">
+            <Table className="w-full min-w-[850px]">
+              <TableHeader className="bg-slate-50/75">
+                <TableRow className="border-slate-200">
+                  <TableHead className="font-semibold text-xs text-slate-600">Customer</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Contact</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Location</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Entries</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Total Spent</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Wins</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Status</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Joined</TableHead>
+                  <TableHead className="text-right font-semibold text-xs text-slate-600">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...Array(6)].map((_, i) => (
+                  <TableRow key={i} className="border-slate-100">
+                    <TableCell className="py-3.5">
+                      <div className="flex items-center gap-3 animate-pulse">
+                        <div className="w-9 h-9 rounded-full bg-slate-200 shrink-0" />
+                        <div className="space-y-1.5 flex-1">
+                          <div className="w-28 h-4 bg-slate-200 rounded" />
+                          <div className="w-36 h-3 bg-slate-100 rounded" />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="w-24 h-4 bg-slate-200 rounded animate-pulse" />
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="w-16 h-4 bg-slate-200 rounded animate-pulse" />
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="w-10 h-5 bg-slate-200 rounded animate-pulse" />
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="w-20 h-4 bg-slate-200 rounded animate-pulse" />
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="w-8 h-4 bg-slate-200 rounded animate-pulse" />
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="w-16 h-6 bg-slate-200 rounded-full animate-pulse" />
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="w-20 h-4 bg-slate-100 rounded animate-pulse" />
+                    </TableCell>
+                    <TableCell className="py-3.5 text-right">
+                      <div className="w-8 h-8 bg-slate-100 rounded ml-auto animate-pulse" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         ) : customers.length === 0 ? (
           /* EMPTY STATE */
@@ -516,269 +540,177 @@ export default function AdminCustomersPage() {
             )}
           </div>
         ) : (
-          <>
-            {/* DESKTOP TABLE VIEW */}
-            <div className="hidden md:block overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-slate-50/75">
-                  <TableRow className="border-slate-200">
-                    <TableHead className="font-semibold text-xs text-slate-600">Customer</TableHead>
-                    <TableHead className="font-semibold text-xs text-slate-600">Contact</TableHead>
-                    <TableHead className="font-semibold text-xs text-slate-600">Location</TableHead>
-                    <TableHead className="font-semibold text-xs text-slate-600">Entries</TableHead>
-                    <TableHead className="font-semibold text-xs text-slate-600">Total Spent</TableHead>
-                    <TableHead className="font-semibold text-xs text-slate-600">Wins</TableHead>
-                    <TableHead className="font-semibold text-xs text-slate-600">Status</TableHead>
-                    <TableHead className="font-semibold text-xs text-slate-600">Joined</TableHead>
-                    <TableHead className="text-right font-semibold text-xs text-slate-600">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {customers.map((customer) => {
-                    const isVIP = customer.totalSpent >= 500000
+          /* RESPONSIVE TABLE VIEW FOR ALL SCREEN SIZES */
+          <div className="overflow-x-auto w-full">
+            <Table className="w-full min-w-[850px]">
+              <TableHeader className="bg-slate-50/75">
+                <TableRow className="border-slate-200">
+                  <TableHead className="font-semibold text-xs text-slate-600">Customer</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Contact</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Location</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Entries</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Total Spent</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Wins</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Status</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Joined</TableHead>
+                  <TableHead className="text-right font-semibold text-xs text-slate-600">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {customers.map((customer) => {
+                  const isVIP = customer.totalSpent >= 500000
 
-                    return (
-                      <TableRow
-                        key={customer.id}
-                        className="border-slate-100 hover:bg-slate-50/80 transition-colors"
-                      >
-                        {/* Customer Avatar & Name */}
-                        <TableCell className="py-3.5">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center font-bold text-xs shrink-0">
-                              {getInitials(customer.name)}
-                            </div>
-                            <div className="flex flex-col min-w-0">
-                              <span className="font-semibold text-slate-900 text-sm truncate max-w-[150px]">
-                                {customer.name}
-                              </span>
-                              <span className="text-xs text-slate-500 truncate max-w-[180px]">
-                                {customer.email}
-                              </span>
-                            </div>
+                  return (
+                    <TableRow
+                      key={customer.id}
+                      className="border-slate-100 hover:bg-slate-50/80 transition-colors"
+                    >
+                      {/* Customer Avatar & Name */}
+                      <TableCell className="py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center font-bold text-xs shrink-0">
+                            {getInitials(customer.name)}
                           </div>
-                        </TableCell>
-
-                        {/* Contact details */}
-                        <TableCell className="py-3.5">
-                          <div className="space-y-0.5 text-xs text-slate-600">
-                            {customer.phone ? (
-                              <div className="flex items-center gap-1.5 font-medium text-slate-800">
-                                <Phone className="h-3 w-3 text-slate-400" />
-                                <span>{customer.phone}</span>
-                              </div>
-                            ) : (
-                              <span className="text-slate-400">No phone</span>
-                            )}
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-semibold text-slate-900 text-sm truncate max-w-[150px]">
+                              {customer.name}
+                            </span>
+                            <span className="text-xs text-slate-500 truncate max-w-[180px]">
+                              {customer.email}
+                            </span>
                           </div>
-                        </TableCell>
+                        </div>
+                      </TableCell>
 
-                        {/* City */}
-                        <TableCell className="py-3.5">
-                          {customer.city ? (
-                            <div className="flex items-center gap-1 text-xs text-slate-700 font-medium">
-                              <MapPin className="h-3 w-3 text-slate-400" />
-                              <span>{customer.city}</span>
+                      {/* Contact details */}
+                      <TableCell className="py-3.5">
+                        <div className="space-y-0.5 text-xs text-slate-600">
+                          {customer.phone ? (
+                            <div className="flex items-center gap-1.5 font-medium text-slate-800">
+                              <Phone className="h-3 w-3 text-slate-400" />
+                              <span>{customer.phone}</span>
                             </div>
                           ) : (
-                            <span className="text-xs text-slate-400">—</span>
+                            <span className="text-slate-400">No phone</span>
                           )}
-                        </TableCell>
+                        </div>
+                      </TableCell>
 
-                        {/* Entries count */}
-                        <TableCell className="py-3.5">
-                          <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-700">
-                            {customer._count.entries}
-                          </span>
-                        </TableCell>
-
-                        {/* Spent */}
-                        <TableCell className="py-3.5">
-                          <span className="font-mono font-bold text-slate-900 text-sm">
-                            {formatCurrency(customer.totalSpent)}
-                          </span>
-                        </TableCell>
-
-                        {/* Wins */}
-                        <TableCell className="py-3.5">
-                          <div className="flex items-center gap-1 text-xs font-semibold text-amber-700">
-                            <Trophy className="h-3.5 w-3.5 text-amber-500" />
-                            <span>{customer._count.winners}</span>
+                      {/* City */}
+                      <TableCell className="py-3.5">
+                        {customer.city ? (
+                          <div className="flex items-center gap-1 text-xs text-slate-700 font-medium">
+                            <MapPin className="h-3 w-3 text-slate-400" />
+                            <span>{customer.city}</span>
                           </div>
-                        </TableCell>
+                        ) : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
+                      </TableCell>
 
-                        {/* Status */}
-                        <TableCell className="py-3.5">
-                          {isVIP ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200/60">
-                              <Sparkles className="w-3 h-3 text-amber-600" />
-                              VIP
-                            </span>
-                          ) : customer.isActive ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                              Active
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                              Inactive
-                            </span>
-                          )}
-                        </TableCell>
-
-                        {/* Joined Date */}
-                        <TableCell className="py-3.5">
-                          <span className="text-xs text-slate-600">
-                            {formatDate(new Date(customer.createdAt))}
-                          </span>
-                        </TableCell>
-
-                        {/* Actions */}
-                        <TableCell className="py-3.5 text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-lg hover:bg-slate-100"
-                              >
-                                <MoreHorizontal className="h-4 w-4 text-slate-600" />
-                                <span className="sr-only">Actions</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44 rounded-xl">
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  href={`/admin/customers/${customer.id}`}
-                                  className="flex items-center cursor-pointer"
-                                >
-                                  <Eye className="mr-2 h-4 w-4 text-slate-500" />
-                                  View Profile
-                                </Link>
-                              </DropdownMenuItem>
-                              {customer.email && (
-                                <DropdownMenuItem asChild>
-                                  <a
-                                    href={`mailto:${customer.email}`}
-                                    className="flex items-center cursor-pointer"
-                                  >
-                                    <Mail className="mr-2 h-4 w-4 text-slate-500" />
-                                    Email User
-                                  </a>
-                                </DropdownMenuItem>
-                              )}
-                              {customer.phone && (
-                                <DropdownMenuItem asChild>
-                                  <a
-                                    href={`tel:${customer.phone}`}
-                                    className="flex items-center cursor-pointer"
-                                  >
-                                    <Phone className="mr-2 h-4 w-4 text-slate-500" />
-                                    Call User
-                                  </a>
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* MOBILE CARDS VIEW (Clean responsive stacking) */}
-            <div className="md:hidden divide-y divide-slate-100">
-              {customers.map((customer) => {
-                const isVIP = customer.totalSpent >= 500000
-
-                return (
-                  <div key={customer.id} className="p-4 space-y-3 hover:bg-slate-50/50">
-                    {/* Top Row: Avatar, Name, Status */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 text-slate-800 flex items-center justify-center font-bold text-xs shrink-0">
-                          {getInitials(customer.name)}
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-bold text-slate-900 text-sm truncate">
-                            {customer.name}
-                          </h3>
-                          <p className="text-xs text-slate-500 truncate">{customer.email}</p>
-                        </div>
-                      </div>
-
-                      {isVIP ? (
-                        <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200/60">
-                          <Sparkles className="w-3 h-3 text-amber-600" />
-                          VIP
-                        </span>
-                      ) : (
-                        <span
-                          className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                            customer.isActive
-                              ? "bg-emerald-50 text-emerald-700"
-                              : "bg-slate-100 text-slate-600"
-                          }`}
-                        >
-                          {customer.isActive ? "Active" : "Inactive"}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Stats summary bar */}
-                    <div className="grid grid-cols-3 gap-2 bg-slate-50 rounded-xl p-2.5 text-center">
-                      <div>
-                        <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-                          Total Spent
-                        </span>
-                        <span className="font-mono font-bold text-slate-900 text-xs">
-                          {formatCurrency(customer.totalSpent)}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-                          Entries
-                        </span>
-                        <span className="font-semibold text-slate-800 text-xs">
+                      {/* Entries count */}
+                      <TableCell className="py-3.5">
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-700">
                           {customer._count.entries}
                         </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-                          Wins
-                        </span>
-                        <span className="font-semibold text-amber-700 text-xs">
-                          {customer._count.winners}
-                        </span>
-                      </div>
-                    </div>
+                      </TableCell>
 
-                    {/* Bottom row: Contact & Action */}
-                    <div className="flex items-center justify-between text-xs pt-1">
-                      <div className="text-slate-500 truncate max-w-[180px]">
-                        {customer.city ? `📍 ${customer.city}` : `Joined ${formatDate(new Date(customer.createdAt))}`}
-                      </div>
+                      {/* Spent */}
+                      <TableCell className="py-3.5">
+                        <span className="font-mono font-bold text-slate-900 text-sm">
+                          {formatCurrency(customer.totalSpent)}
+                        </span>
+                      </TableCell>
 
-                      <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        className="rounded-xl text-xs min-h-[38px] px-3 font-semibold"
-                      >
-                        <Link href={`/admin/customers/${customer.id}`}>
-                          <Eye className="mr-1.5 h-3.5 w-3.5" />
-                          Profile
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </>
+                      {/* Wins */}
+                      <TableCell className="py-3.5">
+                        <div className="flex items-center gap-1 text-xs font-semibold text-amber-700">
+                          <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                          <span>{customer._count.winners}</span>
+                        </div>
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell className="py-3.5">
+                        {isVIP ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200/60">
+                            <Sparkles className="w-3 h-3 text-amber-600" />
+                            VIP
+                          </span>
+                        ) : customer.isActive ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                            Inactive
+                          </span>
+                        )}
+                      </TableCell>
+
+                      {/* Joined Date */}
+                      <TableCell className="py-3.5">
+                        <span className="text-xs text-slate-600 whitespace-nowrap">
+                          {formatDate(new Date(customer.createdAt))}
+                        </span>
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell className="py-3.5 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-lg hover:bg-slate-100"
+                            >
+                              <MoreHorizontal className="h-4 w-4 text-slate-600" />
+                              <span className="sr-only">Actions</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44 rounded-xl">
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href={`/admin/customers/${customer.id}`}
+                                className="flex items-center cursor-pointer"
+                              >
+                                <Eye className="mr-2 h-4 w-4 text-slate-500" />
+                                View Profile
+                              </Link>
+                            </DropdownMenuItem>
+                            {customer.email && (
+                              <DropdownMenuItem asChild>
+                                <a
+                                  href={`mailto:${customer.email}`}
+                                  className="flex items-center cursor-pointer"
+                                >
+                                  <Mail className="mr-2 h-4 w-4 text-slate-500" />
+                                  Email User
+                                </a>
+                              </DropdownMenuItem>
+                            )}
+                            {customer.phone && (
+                              <DropdownMenuItem asChild>
+                                <a
+                                  href={`tel:${customer.phone}`}
+                                  className="flex items-center cursor-pointer"
+                                >
+                                  <Phone className="mr-2 h-4 w-4 text-slate-500" />
+                                  Call User
+                                </a>
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
         )}
 
         {/* PAGINATION CONTROLS */}

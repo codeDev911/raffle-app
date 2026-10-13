@@ -1,7 +1,36 @@
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Users, CreditCard, Trophy, Calendar, Gift, Crown, PenIcon, XCircleIcon } from "lucide-react"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  ArrowLeft,
+  Users,
+  CreditCard,
+  Trophy,
+  Calendar,
+  Gift,
+  Crown,
+  PenIcon,
+  ExternalLink,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  TrendingUp,
+  Coins,
+  Ticket,
+  DollarSign,
+  Smartphone,
+  Receipt,
+  Eye,
+  Percent,
+} from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { prisma } from "@/lib/prisma"
@@ -28,9 +57,11 @@ async function getRaffleDetails(id: string) {
           },
           payment: {
             select: {
+              id: true,
               status: true,
               method: true,
               amount: true,
+              transactionId: true,
               createdAt: true,
             },
           },
@@ -41,8 +72,10 @@ async function getRaffleDetails(id: string) {
         include: {
           user: {
             select: {
+              id: true,
               name: true,
               email: true,
+              phone: true,
               city: true,
             },
           },
@@ -62,31 +95,34 @@ async function getRaffleDetails(id: string) {
   }
 
   // Calculate statistics
-  const totalRevenue = raffle.entries.reduce((sum,entry) => sum+ entry.totalCost,0)
+  const totalRevenue = raffle.entries.reduce((sum, entry) => sum + entry.totalCost, 0)
   const totalEntries = raffle.entries.reduce((sum, entry) => sum + entry.quantity, 0)
 
-  // Get unique customers
+  // Get unique customers count
   const uniqueCustomers = new Set(raffle.entries.map((entry) => entry.userId)).size
 
-  // Get payments data
+  // Get payments list
   const payments = raffle.entries
     .filter((entry) => entry.payment)
     .map((entry) => ({
-      id: entry.id,
+      id: entry.payment!.id || entry.id,
+      entryId: entry.id,
       user: entry.user,
       amount: entry.payment!.amount,
       status: entry.payment!.status,
       method: entry.payment!.method,
+      transactionId: entry.payment!.transactionId,
       createdAt: entry.payment!.createdAt,
       entries: entry.quantity,
     }))
 
-  // Calculate expenses (stored in PKR in expenses array, so convert to paisa for calculation with price/realPrice/totalCost)
+  // Calculate expenses (stored in PKR in expenses array, so convert to paisa for calculation)
   const expensesList: { id?: string; description: string; amount: number }[] = Array.isArray(
     (raffle as any).expenses
   )
     ? (raffle as any).expenses
     : []
+
   const totalExpensesPKR = expensesList.reduce(
     (sum, item) => sum + (Number(item.amount) || 0),
     0
@@ -94,7 +130,7 @@ async function getRaffleDetails(id: string) {
   const totalExpensesPaisa = totalExpensesPKR * 100
   const totalCostPaisa = raffle.realPrice + totalExpensesPaisa
 
-  // Calculate approximation data
+  // Calculate projected approximation data
   const aproxRevenue = raffle.price * raffle.totalEntries
   const aproxProfit = aproxRevenue - totalCostPaisa
   const aproxPercentage =
@@ -102,7 +138,7 @@ async function getRaffleDetails(id: string) {
       ? Math.ceil(((aproxRevenue - totalCostPaisa) / totalCostPaisa) * 100)
       : 0
 
-  // Calculate real data
+  // Calculate real performance data
   const realProfit = totalRevenue - totalCostPaisa
   const realPercentage =
     totalCostPaisa > 0
@@ -152,461 +188,676 @@ export default async function AdminRaffleDetailPage({
 
   const hasWinner = raffle.winners.length > 0
   const canSelectWinner = raffle.status === "ACTIVE" && totalEntries > 0 && !hasWinner
+  const progressPercent = Math.min(
+    100,
+    Math.round((totalEntries / Math.max(1, raffle.totalEntries)) * 100)
+  )
+  const ticketsRemaining = Math.max(0, raffle.totalEntries - totalEntries)
 
   return (
-    <div className="space-y-6 sm:space-y-8">
-      {/* Header */}
-      <Button asChild variant="outline" size="sm" className="rounded-xl min-h-[38px]">
-        <Link href="/admin/raffles">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Raffles
-        </Link>
-      </Button>
-
+    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto pb-12">
+      {/* Top Navigation & Status Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight truncate">{raffle.title}</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">Detailed raffle information and financial analytics</p>
-        </div>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="rounded-xl min-h-[38px] w-fit border-slate-200 hover:bg-slate-50 text-slate-700 shadow-2xs"
+        >
+          <Link href="/admin/raffles">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Raffles
+          </Link>
+        </Button>
 
+        {/* Quick action buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          {hasWinner ? (
-            <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-xs min-h-[38px]">
-              <Link href={`/admin/raffles/${raffle.id}/winner`}>
-                <Crown className="mr-1.5 h-4 w-4" />
-                View Winner
-              </Link>
-            </Button>
-          ) : (
-            <Button
-              asChild
-              disabled
-              className="cursor-not-allowed bg-slate-100 text-slate-400 rounded-xl min-h-[38px]"
-            >
-              <div>
-                <XCircleIcon className="mr-1.5 h-4 w-4" />
-                No Winner Yet
-              </div>
-            </Button>
-          )}
-
-          <Button asChild variant="outline" className="rounded-xl min-h-[38px]">
-            <Link href={`/admin/raffles/${raffle.id}/edit`} className="flex items-center gap-1.5">
-              <PenIcon className="h-4 w-4" />
-              <span>Edit</span>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="rounded-xl min-h-[38px] border-slate-200 text-slate-700 hover:bg-slate-50"
+          >
+            <Link href={`/raffles/${raffle.id}`} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+              Public Page
             </Link>
           </Button>
+
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="rounded-xl min-h-[38px] border-slate-200 text-slate-700 hover:bg-slate-50"
+          >
+            <Link href={`/admin/raffles/${raffle.id}/edit`}>
+              <PenIcon className="mr-1.5 h-3.5 w-3.5" />
+              Edit Raffle
+            </Link>
+          </Button>
+
+          {hasWinner ? (
+            <Button
+              asChild
+              size="sm"
+              className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl min-h-[38px] shadow-xs font-semibold"
+            >
+              <Link href={`/admin/raffles/${raffle.id}/winner`}>
+                <Crown className="mr-1.5 h-4 w-4" />
+                View Winner Details
+              </Link>
+            </Button>
+          ) : canSelectWinner ? (
+            <div className="inline-block">
+              <WinnerSelectionDialog raffleId={raffle.id} totalEntries={totalEntries} />
+            </div>
+          ) : (
+            <Badge className="rounded-xl bg-slate-100 text-slate-600 px-3 py-2 text-xs font-medium border border-slate-200">
+              {totalEntries === 0 ? "No Entries Yet" : "Draw Inactive"}
+            </Badge>
+          )}
         </div>
       </div>
 
-      {/* Raffle Overview */}
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Revenue Calculated */}
-          <Card className="rounded-2xl shadow-lg border-0">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <CreditCard className="mr-2 h-5 w-5 text-green-500" />
-                  <div>
-                    <CardTitle>Revenue Calculated</CardTitle>
-                    <CardDescription>Financial breakdown and profit analysis for this raffle</CardDescription>
-                  </div>
-                </div>
-                <RealVsAproxModal
-                  realData={{
-                    revenue: totalRevenue,
-                    profit: realProfit,
-                    percentage: realPercentage,
-                    entries: totalEntries,
-                  }}
-                  aproxData={{
-                    revenue: aproxRevenue,
-                    profit: aproxProfit,
-                    percentage: aproxPercentage,
-                    entries: raffle.totalEntries,
-                  }}
-                  originalPrice={raffle.realPrice}
-                  pricePerEntry={raffle.price}
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-green-50 p-4 rounded-2xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-green-600 font-medium">Total Revenue</span>
-                    <CreditCard className="h-4 w-4 text-green-500" />
-                  </div>
-                  <div className="text-xl font-bold text-green-700">{formatCurrency(totalRevenue)}</div>
-                  <div className="text-xs text-green-600 mt-1">From all actual entries</div>
-                </div>
-
-                <div className="bg-blue-50 p-4 rounded-2xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-blue-600 font-medium">Net Real Profit</span>
-                    <Trophy className="h-4 w-4 text-blue-500" />
-                  </div>
-                  <div className="text-xl font-bold text-blue-700">{formatCurrency(realProfit)}</div>
-                  <div className="text-xs text-blue-600 mt-1">After prize & expenses</div>
-                </div>
-
-                <div className="bg-amber-50 p-4 rounded-2xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-amber-600 font-medium">Total Expenses</span>
-                    <Gift className="h-4 w-4 text-amber-500" />
-                  </div>
-                  <div className="text-xl font-bold text-amber-700">{formatCurrency(totalExpensesPaisa)}</div>
-                  <div className="text-xs text-amber-600 mt-1">
-                    {expensesList.length} expense item{expensesList.length === 1 ? "" : "s"} deducted
-                  </div>
-                </div>
-
-                <div className="bg-orange-50 p-4 rounded-2xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-orange-600 font-medium">Total Outflow (Costs)</span>
-                    <Calendar className="h-4 w-4 text-orange-500" />
-                  </div>
-                  <div className="text-xl font-bold text-orange-700">{formatCurrency(totalCostPaisa)}</div>
-                  <div className="text-xs text-orange-600 mt-1">Prize ({formatCurrency(raffle.realPrice)}) + Expenses</div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex-col p-3 px-6 w-full items-start justify-start gap-4">
-              <div className="bg-gray-100 w-full p-4 rounded-2xl">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-800">Projections & Approximation Analysis</h2>
-                  <p className="text-gray-500 text-xs">Projected revenue, prize cost, campaign expenses, and calculated net profit:</p>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-3">
-                  <div className="flex flex-col space-y-1">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase">Gross Projected Revenue</h3>
-                    <p className="text-base font-bold text-gray-900">{formatCurrency(aproxRevenue)}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase">Prize Base Cost</h3>
-                    <p className="text-base font-bold text-gray-700">{formatCurrency(raffle.realPrice)}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase">Campaign Expenses</h3>
-                    <p className="text-base font-bold text-amber-700">{formatCurrency(totalExpensesPaisa)}</p>
-                  </div>
-                  <div className="flex flex-col space-y-1">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase">Net Projected Profit</h3>
-                    <p className={`text-base font-black ${aproxProfit >= 0 ? "text-emerald-700" : "text-red-700"}`}>
-                      {formatCurrency(aproxProfit)}
-                    </p>
-                  </div>
-                  <div className="flex flex-col space-y-1">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase">Earning / ROI %</h3>
-                    <p className={`text-base font-bold ${aproxPercentage >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                      {aproxPercentage >= 0 ? "+" : ""}{aproxPercentage}%
-                    </p>
-                  </div>
-                </div>
-
-                {expensesList.length > 0 && (
-                  <div className="mt-4 pt-3 border-t border-gray-200">
-                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                      Itemized Expenses Deducted ({expensesList.length}):
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {expensesList.map((exp, idx) => (
-                        <div
-                          key={exp.id || idx}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-800 shadow-2xs"
-                        >
-                          <span className="text-amber-600 font-bold">•</span>
-                          <span>{exp.description}:</span>
-                          <span className="font-mono font-bold text-amber-900">
-                            Rs. {Number(exp.amount).toLocaleString()}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+      {/* Hero Overview Header */}
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs p-5 sm:p-7">
+        <div className="flex flex-col lg:flex-row gap-6 lg:items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2.5 mb-2.5">
+              <Badge
+                className={`rounded-xl text-xs font-semibold px-2.5 py-1 ${
+                  raffle.status === "ACTIVE"
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : raffle.status === "COMPLETED"
+                      ? "bg-blue-50 text-blue-700 border border-blue-200"
+                      : "bg-slate-100 text-slate-700 border border-slate-200"
+                }`}
+              >
+                {raffle.status === "ACTIVE" && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
                 )}
-              </div>
-            </CardFooter>
-          </Card>
-          <Card className="rounded-2xl shadow-lg border-0">
-            <CardContent className="p-8">
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="md:w-1/3">
-                  <Image
-                    src={raffle.image || "/placeholder.svg?height=300&width=400"}
-                    alt={raffle.title}
-                    width={400}
-                    height={300}
-                    className="w-full rounded-2xl shadow-md"
-                  />
-                </div>
-                <div className="md:w-2/3 space-y-4">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{raffle.title}</h2>
-                    <p className="text-gray-600 mb-4">{raffle.description}</p>
-                    {raffle.longDescription && <p className="text-gray-600 text-sm">{raffle.longDescription}</p>}
-                  </div>
+                {raffle.status}
+              </Badge>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Category</p>
-                      <p className="font-semibold">{raffle.category}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Status</p>
-                      <Badge
-                        className={`rounded-2xl ${
-                          raffle.status === "ACTIVE"
-                            ? "bg-green-100 text-green-700"
-                            : raffle.status === "COMPLETED"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {raffle.status}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Price per Entry</p>
-                      <p className="font-semibold text-green-600">{formatCurrency(raffle.price)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">End Date</p>
-                      <p className="font-semibold">{formatDate(new Date(raffle.endDate))}</p>
-                    </div>
-                  </div>
+              <Badge variant="outline" className="rounded-xl text-xs font-medium text-slate-600 border-slate-200">
+                {raffle.category}
+              </Badge>
 
-                  {raffle.featured && (
-                    <Badge className="bg-yellow-100 text-yellow-700 rounded-2xl">Featured Raffle</Badge>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Stats & Actions */}
-        <div className="space-y-6">
-          {/* Statistics */}
-          <Card className="rounded-2xl shadow-lg border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Trophy className="mr-2 h-5 w-5 text-red-500" />
-                Statistics
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Total Entries</span>
-                <span className="text-2xl font-bold text-blue-600">{totalEntries}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Max Entries</span>
-                <span className="text-xl font-semibold">{raffle.totalEntries}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Unique Customers</span>
-                <span className="text-xl font-semibold">{uniqueCustomers}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Total Revenue</span>
-                <span className="text-xl font-bold text-green-600">{formatCurrency(totalRevenue)}</span>
-              </div>
-
-              <div className="pt-4">
-                <div className="flex justify-between text-sm mb-2">
-                  <span>Progress</span>
-                  <span>{Math.round((totalEntries / raffle.totalEntries) * 100)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div
-                    className="bg-green-500 h-3 rounded-full transition-all duration-300"
-                    style={{ width: `${(totalEntries / raffle.totalEntries) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Winner Selection */}
-          <Card className="rounded-2xl shadow-lg border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Crown className="mr-2 h-5 w-5 text-yellow-500" />
-                Winner Selection
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {hasWinner ? (
-                <div className="text-center space-y-4">
-                  <div className="bg-yellow-50 p-4 rounded-2xl">
-                    <Trophy className="h-12 w-12 text-yellow-500 mx-auto mb-2" />
-                    <p className="font-semibold text-yellow-800">Winner Selected!</p>
-                    <p className="text-sm text-yellow-600">{raffle.winners[0].user.name}</p>
-                  </div>
-                  <Button asChild className="w-full bg-yellow-500 hover:bg-yellow-600 text-white rounded-2xl">
-                    <Link href={`/admin/raffles/${raffle.id}/winner`}>View Winner Details</Link>
-                  </Button>
-                </div>
-              ) : canSelectWinner ? (
-                <div className="text-center space-y-4">
-                  <div className="bg-green-50 p-4 rounded-2xl">
-                    <Gift className="h-12 w-12 text-green-500 mx-auto mb-2" />
-                    <p className="font-semibold text-green-800">Ready to Draw!</p>
-                    <p className="text-sm text-green-600">{totalEntries} entries available</p>
-                  </div>
-                  <WinnerSelectionDialog raffleId={raffle.id} totalEntries={totalEntries} />
-                </div>
-              ) : (
-                <div className="text-center space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-2xl">
-                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                    <p className="font-semibold text-gray-600">Not Ready</p>
-                    <p className="text-sm text-gray-500">
-                      {totalEntries === 0 ? "No entries yet" : "Raffle not active"}
-                    </p>
-                  </div>
-                </div>
+              {raffle.featured && (
+                <Badge className="rounded-xl text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                  <Crown className="w-3 h-3 mr-1 text-amber-600" />
+                  Featured Campaign
+                </Badge>
               )}
-            </CardContent>
-          </Card>
+
+              {hasWinner && (
+                <Badge className="rounded-xl text-xs font-semibold bg-purple-50 text-purple-800 border border-purple-200">
+                  <Trophy className="w-3 h-3 mr-1 text-purple-600" />
+                  Winner Chosen
+                </Badge>
+              )}
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight break-words">
+              {raffle.title}
+            </h1>
+
+            <p className="text-sm text-slate-600 mt-2 line-clamp-2 leading-relaxed">
+              {raffle.description}
+            </p>
+
+            <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-slate-500 mt-4 pt-4 border-t border-slate-100">
+              <div className="flex items-center gap-1.5">
+                <Ticket className="w-4 h-4 text-slate-400" />
+                <span>
+                  Price / Entry:{" "}
+                  <strong className="text-slate-900 font-bold">{formatCurrency(raffle.price)}</strong>
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-slate-400" />
+                <span>
+                  Ends: <strong className="text-slate-900 font-semibold">{formatDate(new Date(raffle.endDate))}</strong>
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Coins className="w-4 h-4 text-slate-400" />
+                <span>
+                  Base Prize Cost:{" "}
+                  <strong className="text-slate-900 font-semibold">{formatCurrency(raffle.realPrice)}</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Progress Callout Card */}
+          <div className="lg:w-80 w-full bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-slate-200/60 shrink-0 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Ticket Sales
+              </span>
+              <span className="font-mono font-bold text-slate-900 text-sm">{progressPercent}%</span>
+            </div>
+
+            <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  progressPercent >= 100
+                    ? "bg-emerald-500"
+                    : progressPercent > 50
+                      ? "bg-blue-600"
+                      : "bg-red-500"
+                }`}
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+              <div>
+                <span className="text-slate-400 block text-[11px]">Sold</span>
+                <span className="font-bold text-slate-900">{totalEntries} tickets</span>
+              </div>
+              <div className="text-right">
+                <span className="text-slate-400 block text-[11px]">Remaining</span>
+                <span className="font-bold text-slate-700">{ticketsRemaining} tickets</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Payments and Entries Tabs */}
-      <Tabs defaultValue="payments" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 rounded-2xl">
-          <TabsTrigger value="payments" className="rounded-2xl">
-            <CreditCard className="mr-2 h-4 w-4" />
-            Payments ({payments.length})
-          </TabsTrigger>
-          <TabsTrigger value="entries" className="rounded-2xl">
-            <Users className="mr-2 h-4 w-4" />
-            Customer Entries ({raffle.entries.length})
-          </TabsTrigger>
-        </TabsList>
+      {/* Financial Performance KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Revenue */}
+        <Card className="rounded-2xl border border-slate-200/80 shadow-xs bg-white">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Collected Revenue
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <CreditCard className="w-4 h-4" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold font-mono text-emerald-700 mt-2">
+              {formatCurrency(totalRevenue)}
+            </p>
+            <span className="inline-block text-[11px] text-slate-400 mt-1">
+              From {totalEntries} confirmed entries
+            </span>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="payments" className="mt-6">
-          <Card className="rounded-2xl shadow-lg border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <CreditCard className="mr-2 h-5 w-5 text-red-500" />
-                Payments ({payments.length})
-              </CardTitle>
-              <CardDescription>All payments for this raffle</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {payments.map((payment) => (
-                  <div key={payment.id} className="bg-gray-50 p-4 rounded-2xl">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-gray-900">{payment.user.name}</h4>
+        {/* Net Real Profit */}
+        <Card className="rounded-2xl border border-slate-200/80 shadow-xs bg-white">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Net Real Profit
+              </span>
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  realProfit >= 0
+                    ? "bg-blue-50 text-blue-600"
+                    : "bg-rose-50 text-rose-600"
+                }`}
+              >
+                <TrendingUp className="w-4 h-4" />
+              </div>
+            </div>
+            <p
+              className={`text-2xl font-bold font-mono mt-2 ${
+                realProfit >= 0 ? "text-blue-700" : "text-rose-600"
+              }`}
+            >
+              {formatCurrency(realProfit)}
+            </p>
+            <span className="inline-block text-[11px] text-slate-400 mt-1">
+              ROI: {realPercentage >= 0 ? `+${realPercentage}%` : `${realPercentage}%`}
+            </span>
+          </CardContent>
+        </Card>
+
+        {/* Campaign Expenses */}
+        <Card className="rounded-2xl border border-slate-200/80 shadow-xs bg-white">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Campaign Expenses
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Gift className="w-4 h-4" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold font-mono text-amber-700 mt-2">
+              {formatCurrency(totalExpensesPaisa)}
+            </p>
+            <span className="inline-block text-[11px] text-slate-400 mt-1">
+              {expensesList.length} itemized expense{expensesList.length === 1 ? "" : "s"}
+            </span>
+          </CardContent>
+        </Card>
+
+        {/* Total Outflow */}
+        <Card className="rounded-2xl border border-slate-200/80 shadow-xs bg-white">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Total Outflow
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+                <Coins className="w-4 h-4" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold font-mono text-slate-900 mt-2">
+              {formatCurrency(totalCostPaisa)}
+            </p>
+            <span className="inline-block text-[11px] text-slate-400 mt-1">
+              Prize + marketing & platform fees
+            </span>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Projection Analysis & Comparison Card */}
+      <Card className="rounded-2xl border border-slate-200/80 shadow-xs bg-white overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+          <div>
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Percent className="w-4 h-4 text-red-500" />
+              Projections vs Real Financial Breakdown
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Compare actual revenue & margins against 100% capacity target approximations
+            </p>
+          </div>
+
+          <RealVsAproxModal
+            realData={{
+              revenue: totalRevenue,
+              profit: realProfit,
+              percentage: realPercentage,
+              entries: totalEntries,
+            }}
+            aproxData={{
+              revenue: aproxRevenue,
+              profit: aproxProfit,
+              percentage: aproxPercentage,
+              entries: raffle.totalEntries,
+            }}
+            originalPrice={raffle.realPrice}
+            pricePerEntry={raffle.price}
+          />
+        </div>
+
+        <CardContent className="p-4 sm:p-6 space-y-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase block">
+                Target Gross Revenue
+              </span>
+              <p className="text-lg font-bold font-mono text-slate-900 mt-1">
+                {formatCurrency(aproxRevenue)}
+              </p>
+              <span className="text-[11px] text-slate-400">At {raffle.totalEntries} entries</span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase block">
+                Prize Cost
+              </span>
+              <p className="text-lg font-bold font-mono text-slate-700 mt-1">
+                {formatCurrency(raffle.realPrice)}
+              </p>
+              <span className="text-[11px] text-slate-400">Asset acquisition</span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase block">
+                Total Expenses
+              </span>
+              <p className="text-lg font-bold font-mono text-amber-700 mt-1">
+                {formatCurrency(totalExpensesPaisa)}
+              </p>
+              <span className="text-[11px] text-slate-400">Campaign operations</span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase block">
+                Target Profit
+              </span>
+              <p
+                className={`text-lg font-bold font-mono mt-1 ${
+                  aproxProfit >= 0 ? "text-emerald-700" : "text-rose-600"
+                }`}
+              >
+                {formatCurrency(aproxProfit)}
+              </p>
+              <span className="text-[11px] text-slate-400">Projected net</span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 col-span-2 sm:col-span-1">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase block">
+                Target Margin ROI
+              </span>
+              <p
+                className={`text-lg font-bold font-mono mt-1 ${
+                  aproxPercentage >= 0 ? "text-emerald-600" : "text-rose-600"
+                }`}
+              >
+                {aproxPercentage >= 0 ? "+" : ""}
+                {aproxPercentage}%
+              </p>
+              <span className="text-[11px] text-slate-400">At max capacity</span>
+            </div>
+          </div>
+
+          {/* Itemized Expenses Tagging */}
+          {expensesList.length > 0 && (
+            <div className="pt-4 border-t border-slate-100">
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                <Gift className="w-3.5 h-3.5 text-amber-500" />
+                Itemized Campaign Expenses ({expensesList.length}):
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {expensesList.map((exp, idx) => (
+                  <div
+                    key={exp.id || idx}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50/60 border border-amber-200/60 rounded-xl text-xs text-amber-900"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    <span className="font-medium">{exp.description}:</span>
+                    <span className="font-mono font-bold">
+                      Rs. {Number(exp.amount).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Main Content: Tabs for Payments & Entries with TABLES (never raw divs) */}
+      <Tabs defaultValue="payments" className="w-full">
+        <div className="flex items-center justify-between mb-4">
+          <TabsList className="bg-slate-100 p-1 rounded-xl h-auto">
+            <TabsTrigger
+              value="payments"
+              className="rounded-lg px-4 py-2 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-2xs"
+            >
+              <CreditCard className="mr-1.5 h-3.5 w-3.5" />
+              Payments ({payments.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="entries"
+              className="rounded-lg px-4 py-2 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-2xs"
+            >
+              <Users className="mr-1.5 h-3.5 w-3.5" />
+              Customer Entries ({raffle.entries.length})
+            </TabsTrigger>
+            {hasWinner && (
+              <TabsTrigger
+                value="winner"
+                className="rounded-lg px-4 py-2 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-2xs"
+              >
+                <Crown className="mr-1.5 h-3.5 w-3.5 text-amber-500" />
+                Winner Details
+              </TabsTrigger>
+            )}
+          </TabsList>
+        </div>
+
+        {/* PAYMENTS TAB (RENDERED WITH CLEAN RESPONSIVE TABLE) */}
+        <TabsContent value="payments" className="mt-0">
+          <Card className="rounded-2xl border border-slate-200/80 shadow-xs bg-white overflow-hidden">
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Raffle Payment Records</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Transactions received specifically for this raffle draw
+                </p>
+              </div>
+              <Badge variant="outline" className="text-xs font-mono">
+                {payments.length} Records
+              </Badge>
+            </div>
+
+            {payments.length === 0 ? (
+              <div className="p-12 text-center">
+                <CreditCard className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+                <p className="text-sm font-bold text-slate-800">No payments yet</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Transactions will appear here once participants buy tickets.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto w-full">
+                <Table className="w-full min-w-[700px]">
+                  <TableHeader className="bg-slate-50/75">
+                    <TableRow className="border-slate-200">
+                      <TableHead className="font-semibold text-xs text-slate-600">Customer</TableHead>
+                      <TableHead className="font-semibold text-xs text-slate-600">Amount (PKR)</TableHead>
+                      <TableHead className="font-semibold text-xs text-slate-600">Entries</TableHead>
+                      <TableHead className="font-semibold text-xs text-slate-600">Method</TableHead>
+                      <TableHead className="font-semibold text-xs text-slate-600">Status</TableHead>
+                      <TableHead className="font-semibold text-xs text-slate-600">Trx ID</TableHead>
+                      <TableHead className="font-semibold text-xs text-slate-600">Date</TableHead>
+                      <TableHead className="text-right font-semibold text-xs text-slate-600">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payments.map((p) => (
+                      <TableRow key={p.id} className="border-slate-100 hover:bg-slate-50/60">
+                        <TableCell className="py-3.5">
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-slate-900 text-sm">{p.user.name}</span>
+                            <span className="text-xs text-slate-500 truncate max-w-[180px]">
+                              {p.user.email}
+                            </span>
+                          </div>
+                        </TableCell>
+
+                        <TableCell className="py-3.5 font-mono font-bold text-slate-900 text-sm">
+                          {formatCurrency(p.amount)}
+                        </TableCell>
+
+                        <TableCell className="py-3.5">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-700">
+                            {p.entries} tickets
+                          </span>
+                        </TableCell>
+
+                        <TableCell className="py-3.5">
+                          <div className="flex items-center gap-1.5 text-xs text-slate-700 font-medium">
+                            <Smartphone className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{p.method}</span>
+                          </div>
+                        </TableCell>
+
+                        <TableCell className="py-3.5">
                           <Badge
-                            className={`rounded-2xl ${
-                              payment.status === "COMPLETED"
-                                ? "bg-green-100 text-green-700"
-                                : payment.status === "PENDING"
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-red-100 text-red-700"
+                            className={`rounded-xl text-xs font-semibold px-2.5 py-0.5 ${
+                              p.status === "COMPLETED"
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : p.status === "PENDING"
+                                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                  : "bg-rose-50 text-rose-700 border border-rose-200"
                             }`}
                           >
-                            {payment.status}
+                            {p.status}
                           </Badge>
-                        </div>
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
-                          <div>
-                            <span className="text-gray-500">Email:</span>
-                            <div className="font-medium">{payment.user.email}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Amount:</span>
-                            <div className="font-medium text-green-600">{formatCurrency(payment.amount)}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Method:</span>
-                            <div className="font-medium">{payment.method}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Date:</span>
-                            <div className="font-medium">{formatDateTime(new Date(payment.createdAt))}</div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-blue-600">{payment.entries}</div>
-                        <div className="text-sm text-gray-500">entries</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {payments.length === 0 && (
-                  <div className="text-center py-8">
-                    <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-500">No payments yet</p>
-                  </div>
-                )}
+                        </TableCell>
+
+                        <TableCell className="py-3.5 text-xs font-mono text-slate-500 truncate max-w-[140px]">
+                          {p.transactionId || "—"}
+                        </TableCell>
+
+                        <TableCell className="py-3.5 text-xs text-slate-600 whitespace-nowrap">
+                          {formatDateTime(new Date(p.createdAt))}
+                        </TableCell>
+
+                        <TableCell className="py-3.5 text-right">
+                          <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="rounded-xl text-xs h-8 px-2.5 font-semibold"
+                          >
+                            <Link href={`/admin/payments/${p.id}`}>
+                              <Eye className="w-3.5 h-3.5 mr-1 text-slate-500" />
+                              View
+                            </Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            </CardContent>
+            )}
           </Card>
         </TabsContent>
 
-        <TabsContent value="entries" className="mt-6">
-          <Card className="rounded-2xl shadow-lg border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Users className="mr-2 h-5 w-5 text-red-500" />
-                Customer Entries ({raffle.entries.length})
-              </CardTitle>
-              <CardDescription>All customers who entered this raffle</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {raffle.entries.map((entry) => (
-                  <div key={entry.id} className="bg-gray-50 p-4 rounded-2xl">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-gray-900">{entry.user.name}</h4>
-                          <div className="text-right">
-                            <div className="text-lg font-bold text-blue-600">{entry.quantity}</div>
-                            <div className="text-sm text-gray-500">entries</div>
-                          </div>
-                        </div>
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
-                          <div>
-                            <span className="text-gray-500">Email:</span>
-                            <div className="font-medium">{entry.user.email}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Phone:</span>
-                            <div className="font-medium">{entry.user.phone || "N/A"}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">City:</span>
-                            <div className="font-medium">{entry.user.city || "N/A"}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Entry Date:</span>
-                            <div className="font-medium">{formatDateTime(new Date(entry.createdAt))}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {raffle.entries.length === 0 && (
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-500">No entries yet</p>
-                  </div>
-                )}
+        {/* CUSTOMER ENTRIES TAB (RENDERED WITH CLEAN RESPONSIVE TABLE) */}
+        <TabsContent value="entries" className="mt-0">
+          <Card className="rounded-2xl border border-slate-200/80 shadow-xs bg-white overflow-hidden">
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Customer Ticket Allocations</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Participants who purchased entries into this raffle
+                </p>
               </div>
-            </CardContent>
+              <Badge variant="outline" className="text-xs font-mono">
+                {raffle.entries.length} Entries
+              </Badge>
+            </div>
+
+            {raffle.entries.length === 0 ? (
+              <div className="p-12 text-center">
+                <Ticket className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+                <p className="text-sm font-bold text-slate-800">No participant entries yet</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Customer ticket batches will appear here as orders complete.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto w-full">
+                <Table className="w-full min-w-[700px]">
+                  <TableHeader className="bg-slate-50/75">
+                    <TableRow className="border-slate-200">
+                      <TableHead className="font-semibold text-xs text-slate-600">Participant</TableHead>
+                      <TableHead className="font-semibold text-xs text-slate-600">Contact / City</TableHead>
+                      <TableHead className="font-semibold text-xs text-slate-600">Tickets Bought</TableHead>
+                      <TableHead className="font-semibold text-xs text-slate-600">Total Cost (PKR)</TableHead>
+                      <TableHead className="font-semibold text-xs text-slate-600">Payment Status</TableHead>
+                      <TableHead className="font-semibold text-xs text-slate-600">Date</TableHead>
+                      <TableHead className="text-right font-semibold text-xs text-slate-600">Profile</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {raffle.entries.map((entry) => (
+                      <TableRow key={entry.id} className="border-slate-100 hover:bg-slate-50/60">
+                        <TableCell className="py-3.5">
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-slate-900 text-sm">
+                              {entry.user.name}
+                            </span>
+                            <span className="text-xs text-slate-500 truncate max-w-[180px]">
+                              {entry.user.email}
+                            </span>
+                          </div>
+                        </TableCell>
+
+                        <TableCell className="py-3.5 text-xs text-slate-600">
+                          <div>{entry.user.phone || "No phone"}</div>
+                          <span className="text-slate-400 text-[11px]">{entry.user.city || "—"}</span>
+                        </TableCell>
+
+                        <TableCell className="py-3.5">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                            {entry.quantity} tickets
+                          </span>
+                        </TableCell>
+
+                        <TableCell className="py-3.5 font-mono font-bold text-slate-900 text-sm">
+                          {formatCurrency(entry.totalCost)}
+                        </TableCell>
+
+                        <TableCell className="py-3.5">
+                          <Badge
+                            className={`rounded-xl text-xs font-semibold px-2.5 py-0.5 ${
+                              entry.payment?.status === "COMPLETED"
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : entry.payment?.status === "PENDING"
+                                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                  : "bg-slate-100 text-slate-700 border border-slate-200"
+                            }`}
+                          >
+                            {entry.payment?.status || "PENDING"}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell className="py-3.5 text-xs text-slate-600 whitespace-nowrap">
+                          {formatDate(new Date(entry.createdAt))}
+                        </TableCell>
+
+                        <TableCell className="py-3.5 text-right">
+                          <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="rounded-xl text-xs h-8 px-2.5 font-semibold"
+                          >
+                            <Link href={`/admin/customers/${entry.user.id}`}>
+                              <Eye className="w-3.5 h-3.5 mr-1 text-slate-500" />
+                              Customer
+                            </Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </Card>
         </TabsContent>
+
+        {/* WINNER TAB */}
+        {hasWinner && (
+          <TabsContent value="winner" className="mt-0">
+            <Card className="rounded-2xl border border-amber-200/80 shadow-xs bg-linear-to-b from-amber-50/50 to-white overflow-hidden p-6">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="w-20 h-20 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-600 shrink-0 shadow-xs">
+                  <Crown className="w-10 h-10" />
+                </div>
+                <div className="space-y-1 text-center sm:text-left flex-1">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-200/60 text-amber-900 mb-1">
+                    <Trophy className="w-3.5 h-3.5 text-amber-700" />
+                    Official Drawn Winner
+                  </div>
+                  <h3 className="text-xl font-extrabold text-slate-900">
+                    {raffle.winners[0].user.name}
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    Email: <span className="font-medium text-slate-800">{raffle.winners[0].user.email}</span>
+                    {raffle.winners[0].user.city && ` · City: ${raffle.winners[0].user.city}`}
+                  </p>
+                </div>
+                <Button
+                  asChild
+                  className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold px-5"
+                >
+                  <Link href={`/admin/raffles/${raffle.id}/winner`}>
+                    Full Winner Profile
+                  </Link>
+                </Button>
+              </div>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   )

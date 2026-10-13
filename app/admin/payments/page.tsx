@@ -495,42 +495,57 @@ export default function AdminPaymentsPage() {
 
         {/* LOADING SKELETON STATE */}
         {isLoading ? (
-          <div className="p-4 space-y-3">
-            {/* Desktop Table Skeletons */}
-            <div className="hidden md:block space-y-2">
-              {[...Array(6)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-14 bg-slate-100/80 animate-pulse rounded-xl flex items-center px-4 gap-4"
-                >
-                  <div className="w-1/4 h-4 bg-slate-200 rounded-md" />
-                  <div className="w-1/4 h-4 bg-slate-200 rounded-md" />
-                  <div className="w-1/6 h-4 bg-slate-200 rounded-md" />
-                  <div className="w-1/6 h-4 bg-slate-200 rounded-md" />
-                  <div className="w-1/12 h-4 bg-slate-200 rounded-md ml-auto" />
-                </div>
-              ))}
-            </div>
-
-            {/* Mobile Cards Skeletons */}
-            <div className="md:hidden space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="p-4 rounded-xl border border-slate-200 bg-white space-y-3 animate-pulse"
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="w-32 h-4 bg-slate-200 rounded-md" />
-                    <div className="w-20 h-5 bg-slate-200 rounded-full" />
-                  </div>
-                  <div className="w-48 h-3 bg-slate-100 rounded-md" />
-                  <div className="flex justify-between pt-2 border-t border-slate-100">
-                    <div className="w-24 h-4 bg-slate-200 rounded-md" />
-                    <div className="w-16 h-4 bg-slate-200 rounded-md" />
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="overflow-x-auto w-full">
+            <Table className="w-full min-w-[760px]">
+              <TableHeader className="bg-slate-50/75">
+                <TableRow className="border-slate-200">
+                  <TableHead className="font-semibold text-xs text-slate-600">Customer</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Raffle Item</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Amount (PKR)</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Entries</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Method</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Status</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Date & Time</TableHead>
+                  <TableHead className="text-right font-semibold text-xs text-slate-600">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...Array(6)].map((_, i) => (
+                  <TableRow key={i} className="border-slate-100">
+                    <TableCell className="py-3.5">
+                      <div className="space-y-1.5 animate-pulse">
+                        <div className="w-28 h-4 bg-slate-200 rounded" />
+                        <div className="w-36 h-3 bg-slate-100 rounded" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="space-y-1.5 animate-pulse">
+                        <div className="w-32 h-4 bg-slate-200 rounded" />
+                        <div className="w-20 h-3 bg-slate-100 rounded" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="w-20 h-4 bg-slate-200 rounded animate-pulse" />
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="w-10 h-5 bg-slate-200 rounded animate-pulse" />
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="w-16 h-4 bg-slate-200 rounded animate-pulse" />
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="w-20 h-6 bg-slate-200 rounded-full animate-pulse" />
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="w-24 h-4 bg-slate-100 rounded animate-pulse" />
+                    </TableCell>
+                    <TableCell className="py-3.5 text-right">
+                      <div className="w-8 h-8 bg-slate-100 rounded ml-auto animate-pulse" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         ) : payments.length === 0 ? (
           /* EMPTY STATE */
@@ -557,185 +572,119 @@ export default function AdminPaymentsPage() {
             )}
           </div>
         ) : (
-          <>
-            {/* DESKTOP TABLE VIEW (hidden on mobile) */}
-            <div className="hidden md:block overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-slate-50/75">
-                  <TableRow className="border-slate-200">
-                    <TableHead className="font-semibold text-xs text-slate-600">Customer</TableHead>
-                    <TableHead className="font-semibold text-xs text-slate-600">Raffle Item</TableHead>
-                    <TableHead className="font-semibold text-xs text-slate-600">Amount (PKR)</TableHead>
-                    <TableHead className="font-semibold text-xs text-slate-600">Entries</TableHead>
-                    <TableHead className="font-semibold text-xs text-slate-600">Method</TableHead>
-                    <TableHead className="font-semibold text-xs text-slate-600">Status</TableHead>
-                    <TableHead className="font-semibold text-xs text-slate-600">Date & Time</TableHead>
-                    <TableHead className="text-right font-semibold text-xs text-slate-600">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {payments.map((payment) => (
-                    <TableRow
-                      key={payment.id}
-                      className="border-slate-100 hover:bg-slate-50/80 transition-colors"
-                    >
-                      <TableCell className="py-3.5">
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-slate-900 text-sm">
-                            {payment.user?.name || "Customer"}
-                          </span>
-                          <span className="text-xs text-slate-500 truncate max-w-[200px]">
-                            {payment.user?.email}
-                          </span>
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="py-3.5">
-                        <div className="flex flex-col max-w-[220px]">
-                          <span className="font-medium text-slate-800 text-sm truncate">
-                            {payment.raffleName}
-                          </span>
-                          <span className="text-[11px] text-slate-400 font-mono truncate">
-                            ID: {payment.id.slice(0, 8)}...
-                          </span>
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="py-3.5">
-                        <span className="font-mono font-bold text-slate-900 text-sm">
-                          {formatCurrency(payment.amount)}
+          /* RESPONSIVE TABLE VIEW FOR ALL SCREEN SIZES */
+          <div className="overflow-x-auto w-full">
+            <Table className="w-full min-w-[760px]">
+              <TableHeader className="bg-slate-50/75">
+                <TableRow className="border-slate-200">
+                  <TableHead className="font-semibold text-xs text-slate-600">Customer</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Raffle Item</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Amount (PKR)</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Entries</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Method</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Status</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600">Date & Time</TableHead>
+                  <TableHead className="text-right font-semibold text-xs text-slate-600">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {payments.map((payment) => (
+                  <TableRow
+                    key={payment.id}
+                    className="border-slate-100 hover:bg-slate-50/80 transition-colors"
+                  >
+                    <TableCell className="py-3.5">
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-slate-900 text-sm">
+                          {payment.user?.name || "Customer"}
                         </span>
-                      </TableCell>
-
-                      <TableCell className="py-3.5">
-                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-700">
-                          {payment.entries}
+                        <span className="text-xs text-slate-500 truncate max-w-[200px]">
+                          {payment.user?.email}
                         </span>
-                      </TableCell>
+                      </div>
+                    </TableCell>
 
-                      <TableCell className="py-3.5">
-                        <div className="flex items-center gap-1.5 text-xs text-slate-700 font-medium">
-                          <Smartphone className="h-3.5 w-3.5 text-slate-400" />
-                          <span>{payment.method}</span>
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="py-3.5">{getStatusBadge(payment.status)}</TableCell>
-
-                      <TableCell className="py-3.5">
-                        <span className="text-xs text-slate-600">
-                          {formatDateTime(new Date(payment.createdAt))}
+                    <TableCell className="py-3.5">
+                      <div className="flex flex-col max-w-[220px]">
+                        <span className="font-medium text-slate-800 text-sm truncate">
+                          {payment.raffleName}
                         </span>
-                      </TableCell>
+                        <span className="text-[11px] text-slate-400 font-mono truncate">
+                          ID: {payment.id.slice(0, 8)}...
+                        </span>
+                      </div>
+                    </TableCell>
 
-                      <TableCell className="py-3.5 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 rounded-lg hover:bg-slate-100"
-                            >
-                              <MoreHorizontal className="h-4 w-4 text-slate-600" />
-                              <span className="sr-only">Actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-44 rounded-xl">
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href={`/admin/payments/${payment.id}`}
-                                className="flex items-center cursor-pointer"
-                              >
-                                <Eye className="mr-2 h-4 w-4 text-slate-500" />
-                                View Details
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <ReceiptModal
-                                payment={payment}
-                                trigger={
-                                  <div className="flex items-center w-full cursor-pointer">
-                                    <Receipt className="mr-2 h-4 w-4 text-slate-500" />
-                                    Send Receipt
-                                  </div>
-                                }
-                              />
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* MOBILE CARD VIEW (hidden on desktop) */}
-            <div className="md:hidden divide-y divide-slate-100">
-              {payments.map((payment) => (
-                <div key={payment.id} className="p-4 space-y-3 hover:bg-slate-50/50">
-                  {/* Card top: Name and Status */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-slate-900 text-sm truncate">
-                        {payment.user?.name || "Customer"}
-                      </h3>
-                      <p className="text-xs text-slate-500 truncate">{payment.user?.email}</p>
-                    </div>
-                    <div>{getStatusBadge(payment.status)}</div>
-                  </div>
-
-                  {/* Raffle & Amount details */}
-                  <div className="bg-slate-50 rounded-xl p-3 space-y-1.5 text-xs">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">Raffle:</span>
-                      <span className="font-semibold text-slate-900 truncate max-w-[180px]">
-                        {payment.raffleName}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">Amount:</span>
+                    <TableCell className="py-3.5">
                       <span className="font-mono font-bold text-slate-900 text-sm">
                         {formatCurrency(payment.amount)}
                       </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500">Entries / Method:</span>
-                      <span className="text-slate-700 font-medium">
-                        {payment.entries} entries · {payment.method}
-                      </span>
-                    </div>
-                    {payment.transactionId && (
-                      <div className="flex justify-between items-center pt-1 border-t border-slate-200/60 font-mono text-[11px] text-slate-500">
-                        <span>Trx ID:</span>
-                        <span className="truncate max-w-[160px]">{payment.transactionId}</span>
-                      </div>
-                    )}
-                  </div>
+                    </TableCell>
 
-                  {/* Card footer: Date & Action button */}
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-[11px] text-slate-400">
-                      {formatDateTime(new Date(payment.createdAt))}
-                    </span>
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="rounded-xl text-xs min-h-[38px] px-3 font-semibold"
-                    >
-                      <Link href={`/admin/payments/${payment.id}`}>
-                        <Eye className="mr-1.5 h-3.5 w-3.5" />
-                        Details
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
+                    <TableCell className="py-3.5">
+                      <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-700">
+                        {payment.entries}
+                      </span>
+                    </TableCell>
+
+                    <TableCell className="py-3.5">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-700 font-medium">
+                        <Smartphone className="h-3.5 w-3.5 text-slate-400" />
+                        <span>{payment.method}</span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="py-3.5">{getStatusBadge(payment.status)}</TableCell>
+
+                    <TableCell className="py-3.5">
+                      <span className="text-xs text-slate-600 whitespace-nowrap">
+                        {formatDateTime(new Date(payment.createdAt))}
+                      </span>
+                    </TableCell>
+
+                    <TableCell className="py-3.5 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-lg hover:bg-slate-100"
+                          >
+                            <MoreHorizontal className="h-4 w-4 text-slate-600" />
+                            <span className="sr-only">Actions</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44 rounded-xl">
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={`/admin/payments/${payment.id}`}
+                              className="flex items-center cursor-pointer"
+                            >
+                              <Eye className="mr-2 h-4 w-4 text-slate-500" />
+                              View Details
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <ReceiptModal
+                              payment={payment}
+                              trigger={
+                                <div className="flex items-center w-full cursor-pointer">
+                                  <Receipt className="mr-2 h-4 w-4 text-slate-500" />
+                                  Send Receipt
+                                </div>
+                              }
+                            />
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
 
         {/* PAGINATION TOOLBAR */}
