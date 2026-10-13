@@ -74,8 +74,13 @@ async function getWinnerDetails(raffleId: string) {
   }
 }
 
-export default async function WinnerDetailPage({ params }: { params: { id: string } }) {
-  const { winner, totalUserEntries, totalSpent, userWins } = await getWinnerDetails(params.id)
+export default async function WinnerDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }> | { id: string }
+}) {
+  const resolvedParams = await Promise.resolve(params)
+  const { winner, totalUserEntries, totalSpent, userWins } = await getWinnerDetails(resolvedParams.id)
 
   const getInitials = (name: string) => {
     return name
@@ -93,7 +98,7 @@ export default async function WinnerDetailPage({ params }: { params: { id: strin
       {/* Header */}
       <div className="flex items-center space-x-4">
         <Button asChild variant="ghost" className="rounded-2xl">
-          <Link href={`/admin/raffles/${params.id}`}>
+          <Link href={`/admin/raffles/${resolvedParams.id}`}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Raffle Details
           </Link>

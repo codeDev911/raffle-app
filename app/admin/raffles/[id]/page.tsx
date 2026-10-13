@@ -117,6 +117,7 @@ async function getRaffleDetails(id: string) {
     payments,
     expensesList,
     totalExpensesPKR,
+    totalExpensesPaisa,
     totalCostPaisa,
     aproxRevenue,
     aproxProfit,
@@ -126,7 +127,12 @@ async function getRaffleDetails(id: string) {
   }
 }
 
-export default async function AdminRaffleDetailPage({ params }: { params: { id: string } }) {
+export default async function AdminRaffleDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }> | { id: string }
+}) {
+  const resolvedParams = await Promise.resolve(params)
   const {
     raffle,
     totalRevenue,
@@ -135,13 +141,14 @@ export default async function AdminRaffleDetailPage({ params }: { params: { id: 
     payments,
     expensesList,
     totalExpensesPKR,
+    totalExpensesPaisa,
     totalCostPaisa,
     aproxRevenue,
     aproxProfit,
     aproxPercentage,
     realProfit,
     realPercentage,
-  } = await getRaffleDetails(params.id)
+  } = await getRaffleDetails(resolvedParams.id)
 
   const hasWinner = raffle.winners.length > 0
   const canSelectWinner = raffle.status === "ACTIVE" && totalEntries > 0 && !hasWinner
