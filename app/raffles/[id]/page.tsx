@@ -13,7 +13,17 @@ async function getRaffle(id: string) {
     let raffle = await prisma.raffle.findUnique({
       where: { id },
       include: {
-        winners: true,
+        winners: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                city: true,
+              },
+            },
+          },
+        },
         entries: {
           select: {
             userId: true,
@@ -32,7 +42,17 @@ async function getRaffle(id: string) {
       raffle = await prisma.raffle.findUnique({
         where: { id: `raffle-${id}` },
         include: {
-          winners: true,
+          winners: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  city: true,
+                },
+              },
+            },
+          },
           entries: {
             select: {
               userId: true,
@@ -51,7 +71,17 @@ async function getRaffle(id: string) {
     if (!raffle) {
       raffle = await prisma.raffle.findFirst({
         include: {
-          winners: true,
+          winners: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  city: true,
+                },
+              },
+            },
+          },
           entries: {
             select: {
               userId: true,

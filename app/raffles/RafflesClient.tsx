@@ -65,7 +65,10 @@ function WhatsAppIcon({ className = "w-4 h-4" }: { className?: string }) {
 export function RafflesClient({ initialRaffles, categories }: RafflesClientProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedStatus, setSelectedStatus] = useState<"ACTIVE" | "COMPLETED" | "ALL">("ACTIVE")
+  const hasActiveRaffles = initialRaffles.some((r) => r.status === "ACTIVE")
+  const [selectedStatus, setSelectedStatus] = useState<"ACTIVE" | "COMPLETED" | "ALL">(
+    hasActiveRaffles ? "ACTIVE" : "ALL"
+  )
   const [sortBy, setSortBy] = useState("ending")
 
   // Filter & sort logic

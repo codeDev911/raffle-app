@@ -74,14 +74,19 @@ export async function POST(request: NextRequest) {
 
     const cloudinaryResult = uploadResult as any
 
+    let normalizedMethod = paymentMethod.toUpperCase()
+    if (normalizedMethod === "SADAPAY") {
+      normalizedMethod = "SAYAPAY"
+    }
+
     await prisma.payment.create({
       data: {
-        userId:user.id,
+        userId: user.id,
         amount: Number(totalAmount) * 100, // Convert from PKR to paisa
-        method: paymentMethod.toUpperCase() as any, // Cast to PaymentMethod enum type
+        method: normalizedMethod as any, // Cast to PaymentMethod enum type
         transactionId: orderId,
-        currency:"PKR",
-        status:"PENDING",
+        currency: "PKR",
+        status: "PENDING",
 
         metadata: {
           raffleId,

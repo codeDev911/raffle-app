@@ -46,10 +46,49 @@ interface Raffle {
   entries: any[]
   featured: boolean
   endDate: string
-  status: "ACTIVE" | "COMPLETED" | "CANCELLED"
+  status: "ACTIVE" | "COMPLETED" | "CANCELLED" | "DRAFT" | string
   specifications: string[]
   rules: string[]
   winners?: any[]
+}
+
+const renderStatusBadge = (status: string) => {
+  switch (status) {
+    case "ACTIVE":
+      return (
+        <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          Active Draw
+        </span>
+      )
+    case "COMPLETED":
+      return (
+        <span className="inline-flex items-center gap-1 text-sky-700 font-semibold">
+          <CheckCircle className="w-3.5 h-3.5 text-sky-600" />
+          Draw Completed
+        </span>
+      )
+    case "CANCELLED":
+      return (
+        <span className="inline-flex items-center gap-1 text-rose-600 font-semibold">
+          <span className="w-2 h-2 rounded-full bg-rose-500" />
+          Draw Cancelled
+        </span>
+      )
+    case "DRAFT":
+      return (
+        <span className="inline-flex items-center gap-1 text-amber-600 font-semibold">
+          <Clock className="w-3.5 h-3.5 text-amber-600" />
+          Coming Soon
+        </span>
+      )
+    default:
+      return (
+        <span className="inline-flex items-center gap-1 text-gray-600 font-semibold capitalize">
+          {status.toLowerCase().replace("_", " ")}
+        </span>
+      )
+  }
 }
 
 const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/invite/pakraffle-official"
@@ -214,7 +253,7 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
   )}`
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-28 lg:pb-16 text-gray-900">
+    <div className="min-h-screen bg-gray-50 pb-16 text-gray-900">
       <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-8">
         {/* Navigation Bar */}
         <div className="flex items-center justify-between gap-2 mb-4 sm:mb-6">
@@ -259,8 +298,25 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
                     Featured
                   </div>
                 )}
-                <div className="absolute top-2.5 right-2.5 bg-white/95 backdrop-blur-xs text-gray-800 text-[11px] sm:text-xs font-medium px-2.5 py-1 rounded-md shadow-xs border border-gray-200">
-                  {raffle.category}
+                <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                  <div className="bg-white/95 backdrop-blur-xs text-gray-800 text-[11px] sm:text-xs font-medium px-2.5 py-1 rounded-md shadow-xs border border-gray-200">
+                    {raffle.category}
+                  </div>
+                  {raffle.status === "COMPLETED" ? (
+                    <div className="bg-sky-100/95 backdrop-blur-xs text-sky-800 text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md shadow-xs border border-sky-300 flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3 text-sky-600" />
+                      Completed
+                    </div>
+                  ) : raffle.status === "ACTIVE" ? (
+                    <div className="bg-emerald-600/95 backdrop-blur-xs text-white text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md shadow-xs flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      Active
+                    </div>
+                  ) : (
+                    <div className="bg-gray-800/95 backdrop-blur-xs text-white text-[11px] sm:text-xs font-medium px-2.5 py-1 rounded-md shadow-xs capitalize">
+                      {raffle.status.toLowerCase()}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -288,7 +344,7 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
                 <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
                   <span>{raffle.category}</span>
                   <span>·</span>
-                  <span className="text-green-600 font-medium">Draw Active</span>
+                  {renderStatusBadge(raffle.status)}
                 </div>
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-snug">
                   {raffle.title}
@@ -324,35 +380,96 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
                 <Progress value={percentFilled} className="h-2 bg-gray-100" />
               </div>
 
-              {/* Mobile Direct Action Button */}
+              {/* Mobile Direct Action Button - Status Based */}
               <div>
-                {isUserPurchased && raffle.status === "ACTIVE" ? (
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
-                    <span className="text-xs font-semibold text-emerald-800 flex items-center justify-center gap-1.5">
-                      <CheckCircleIcon className="w-4 h-4 text-emerald-600" />
-                      You Are In This Draw!
-                    </span>
-                    <button
+                {raffle.status === "ACTIVE" ? (
+                  isUserPurchased ? (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
+                      <span className="text-xs font-semibold text-emerald-800 flex items-center justify-center gap-1.5">
+                        <CheckCircleIcon className="w-4 h-4 text-emerald-600" />
+                        You Are In This Draw!
+                      </span>
+                      <button
+                        onClick={handleEnterRaffle}
+                        className="text-xs text-emerald-700 underline font-semibold mt-1"
+                      >
+                        Buy More Tickets
+                      </button>
+                    </div>
+                  ) : paymentUnderReview ? (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
+                      <span className="text-xs font-semibold text-amber-800 flex items-center justify-center gap-1.5">
+                        <Clock10Icon className="w-4 h-4 text-amber-600" />
+                        Receipt Under Review
+                      </span>
+                    </div>
+                  ) : (
+                    <Button
                       onClick={handleEnterRaffle}
-                      className="text-xs text-emerald-700 underline font-semibold mt-1"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 text-base rounded-xl shadow-sm"
                     >
-                      Buy More Tickets
-                    </button>
+                      <Gift className="w-5 h-5 mr-2" />
+                      Buy Now · {formatCurrency(raffle.price)}
+                    </Button>
+                  )
+                ) : raffle.status === "COMPLETED" ? (
+                  <div className="space-y-2.5">
+                    <Button
+                      asChild
+                      className="w-full bg-sky-100 hover:bg-sky-200 text-sky-800 border border-sky-300 font-bold py-6 text-base rounded-xl shadow-xs transition-colors"
+                    >
+                      <Link href="/winners" className="flex items-center justify-center gap-2">
+                        <CheckCircle className="w-5 h-5 text-sky-600" />
+                        <span>Completed</span>
+                        <ChevronRight className="w-4 h-4 text-sky-500 ml-1" />
+                      </Link>
+                    </Button>
+                    {raffle.winners && raffle.winners.length > 0 && (
+                      <div className="p-3 rounded-xl bg-sky-50 border border-sky-200 text-sky-950 space-y-1">
+                        <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-sky-800">
+                          <Trophy className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          Verified Winner
+                        </div>
+                        <p className="text-xs font-bold text-gray-900">
+                          🎉 {raffle.winners[0].user?.name || "Verified Winner"}
+                          {raffle.winners[0].user?.city ? ` (${raffle.winners[0].user.city})` : ""}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                ) : paymentUnderReview ? (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
-                    <span className="text-xs font-semibold text-amber-800 flex items-center justify-center gap-1.5">
-                      <Clock10Icon className="w-4 h-4 text-amber-600" />
-                      Receipt Under Review
-                    </span>
+                ) : raffle.status === "CANCELLED" ? (
+                  <div className="space-y-1.5">
+                    <Button
+                      disabled
+                      className="w-full bg-rose-100 text-rose-800 border border-rose-300 font-bold py-6 text-base rounded-xl cursor-not-allowed opacity-90"
+                    >
+                      <Clock className="w-5 h-5 mr-2 text-rose-600" />
+                      Draw Cancelled
+                    </Button>
+                    <p className="text-[11px] text-rose-600 text-center">
+                      This draw was cancelled by administration.
+                    </p>
+                  </div>
+                ) : raffle.status === "DRAFT" ? (
+                  <div className="space-y-1.5">
+                    <Button
+                      disabled
+                      className="w-full bg-amber-100 text-amber-800 border border-amber-300 font-bold py-6 text-base rounded-xl cursor-not-allowed opacity-90"
+                    >
+                      <Clock className="w-5 h-5 mr-2 text-amber-600" />
+                      Coming Soon
+                    </Button>
+                    <p className="text-[11px] text-amber-700 text-center">
+                      Entries will open soon.
+                    </p>
                   </div>
                 ) : (
                   <Button
-                    onClick={handleEnterRaffle}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-6 text-base rounded-xl shadow-sm"
+                    disabled
+                    className="w-full bg-slate-100 text-slate-800 border border-slate-300 font-bold py-6 text-base rounded-xl cursor-not-allowed opacity-90 capitalize"
                   >
-                    <Gift className="w-5 h-5 mr-2" />
-                    Buy Ticket for {formatCurrency(raffle.price)}
+                    <Info className="w-5 h-5 mr-2 text-slate-600" />
+                    {raffle.status.toLowerCase().replace("_", " ")}
                   </Button>
                 )}
               </div>
@@ -531,7 +648,7 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
                   <span>·</span>
                   <span>Raffle #{raffle.id}</span>
                   <span>·</span>
-                  <span className="text-green-600 font-medium">Draw Active</span>
+                  {renderStatusBadge(raffle.status)}
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900 leading-snug">
                   {raffle.title}
@@ -560,45 +677,87 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
                 </div>
               </div>
 
-              {/* Countdown Timer */}
-              <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-amber-600" />
-                    Draw Closes In:
-                  </span>
-                  <span className="text-[11px] text-amber-700">
-                    {new Date(raffle.endDate).toLocaleDateString()}
-                  </span>
+              {/* Countdown Timer or Status Box */}
+              {raffle.status === "COMPLETED" ? (
+                <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-4 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-sky-900 flex items-center gap-1.5 uppercase tracking-wide">
+                      <Trophy className="w-4 h-4 text-sky-600" />
+                      Draw Concluded
+                    </span>
+                    <span className="text-[11px] font-bold text-sky-800 bg-sky-100 px-2.5 py-0.5 rounded-full border border-sky-300">
+                      Completed
+                    </span>
+                  </div>
+                  <p className="text-xs text-sky-800 leading-relaxed">
+                    Ticket entries have closed. The winner draw was carried out live with public verification.
+                  </p>
                 </div>
+              ) : raffle.status === "CANCELLED" ? (
+                <div className="rounded-xl border border-rose-200 bg-rose-50/70 p-3.5 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-rose-900 flex items-center gap-1.5">
+                      Draw Status:
+                    </span>
+                    <span className="text-[11px] font-bold text-rose-800 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-200">
+                      Cancelled
+                    </span>
+                  </div>
+                  <p className="text-xs text-rose-700">This draw has been cancelled.</p>
+                </div>
+              ) : raffle.status === "DRAFT" ? (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-amber-600" />
+                      Draw Status:
+                    </span>
+                    <span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
+                      Coming Soon
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-700">Entries will open soon.</p>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-amber-600" />
+                      Draw Closes In:
+                    </span>
+                    <span className="text-[11px] text-amber-700">
+                      {new Date(raffle.endDate).toLocaleDateString()}
+                    </span>
+                  </div>
 
-                <div className="grid grid-cols-4 gap-1.5 text-center">
-                  <div className="bg-white rounded-lg py-1.5 border border-amber-100">
-                    <div className="text-base font-bold text-gray-900 font-mono">
-                      {String(timeLeft.days).padStart(2, "0")}
+                  <div className="grid grid-cols-4 gap-1.5 text-center">
+                    <div className="bg-white rounded-lg py-1.5 border border-amber-100">
+                      <div className="text-base font-bold text-gray-900 font-mono">
+                        {String(timeLeft.days).padStart(2, "0")}
+                      </div>
+                      <div className="text-[9px] uppercase tracking-wider text-gray-500">Days</div>
                     </div>
-                    <div className="text-[9px] uppercase tracking-wider text-gray-500">Days</div>
-                  </div>
-                  <div className="bg-white rounded-lg py-1.5 border border-amber-100">
-                    <div className="text-base font-bold text-gray-900 font-mono">
-                      {String(timeLeft.hours).padStart(2, "0")}
+                    <div className="bg-white rounded-lg py-1.5 border border-amber-100">
+                      <div className="text-base font-bold text-gray-900 font-mono">
+                        {String(timeLeft.hours).padStart(2, "0")}
+                      </div>
+                      <div className="text-[9px] uppercase tracking-wider text-gray-500">Hours</div>
                     </div>
-                    <div className="text-[9px] uppercase tracking-wider text-gray-500">Hours</div>
-                  </div>
-                  <div className="bg-white rounded-lg py-1.5 border border-amber-100">
-                    <div className="text-base font-bold text-gray-900 font-mono">
-                      {String(timeLeft.minutes).padStart(2, "0")}
+                    <div className="bg-white rounded-lg py-1.5 border border-amber-100">
+                      <div className="text-base font-bold text-gray-900 font-mono">
+                        {String(timeLeft.minutes).padStart(2, "0")}
+                      </div>
+                      <div className="text-[9px] uppercase tracking-wider text-gray-500">Mins</div>
                     </div>
-                    <div className="text-[9px] uppercase tracking-wider text-gray-500">Mins</div>
-                  </div>
-                  <div className="bg-white rounded-lg py-1.5 border border-amber-100">
-                    <div className="text-base font-bold text-gray-900 font-mono">
-                      {String(timeLeft.seconds).padStart(2, "0")}
+                    <div className="bg-white rounded-lg py-1.5 border border-amber-100">
+                      <div className="text-base font-bold text-gray-900 font-mono">
+                        {String(timeLeft.seconds).padStart(2, "0")}
+                      </div>
+                      <div className="text-[9px] uppercase tracking-wider text-gray-500">Secs</div>
                     </div>
-                    <div className="text-[9px] uppercase tracking-wider text-gray-500">Secs</div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Progress */}
               <div className="space-y-1.5">
@@ -613,32 +772,117 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
                 <Progress value={percentFilled} className="h-2 bg-gray-100" />
               </div>
 
-              {/* Buy Actions */}
+              {/* Buy Actions - Status Based */}
               <div>
-                {isUserPurchased && raffle.status === "ACTIVE" ? (
-                  <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-center space-y-1.5">
-                    <div className="text-xs font-semibold text-emerald-800 flex items-center justify-center gap-1.5">
-                      <CheckCircleIcon className="w-4 h-4 text-emerald-600" />
-                      You Are In This Draw!
+                {raffle.status === "ACTIVE" ? (
+                  isUserPurchased ? (
+                    <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-center space-y-1.5">
+                      <div className="text-xs font-semibold text-emerald-800 flex items-center justify-center gap-1.5">
+                        <CheckCircleIcon className="w-4 h-4 text-emerald-600" />
+                        You Are In This Draw!
+                      </div>
+                      <button onClick={handleEnterRaffle} className="text-xs text-emerald-700 underline font-semibold">
+                        Buy Additional Tickets
+                      </button>
                     </div>
-                    <button onClick={handleEnterRaffle} className="text-xs text-emerald-700 underline font-semibold">
-                      Buy Additional Tickets
-                    </button>
+                  ) : paymentUnderReview ? (
+                    <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-center">
+                      <span className="text-xs font-semibold text-amber-800 flex items-center justify-center gap-1.5">
+                        <Clock10Icon className="w-4 h-4 text-amber-600" />
+                        Receipt Under Review
+                      </span>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={handleEnterRaffle}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-6 text-base rounded-xl shadow-xs"
+                    >
+                      <Gift className="w-5 h-5 mr-2" />
+                      Buy Now · {formatCurrency(raffle.price)}
+                    </Button>
+                  )
+                ) : raffle.status === "COMPLETED" ? (
+                  <div className="space-y-3">
+                    <Button
+                      asChild
+                      className="w-full bg-sky-100 hover:bg-sky-200 text-sky-800 border border-sky-300 font-bold py-6 text-base rounded-xl shadow-xs transition-colors"
+                    >
+                      <Link href="/winners" className="flex items-center justify-center gap-2">
+                        <CheckCircle className="w-5 h-5 text-sky-600" />
+                        <span>Completed</span>
+                        <ChevronRight className="w-4 h-4 text-sky-500 ml-1" />
+                      </Link>
+                    </Button>
+
+                    {raffle.winners && raffle.winners.length > 0 ? (
+                      <div className="p-4 rounded-xl bg-sky-50/90 border border-sky-200 text-sky-950 space-y-1.5">
+                        <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-sky-800">
+                          <Trophy className="w-4 h-4 text-amber-500 shrink-0" />
+                          Official Verified Winner
+                        </div>
+                        <p className="text-sm font-bold text-gray-900">
+                          🎉 {raffle.winners[0].user?.name || "Verified Winner"}
+                          {raffle.winners[0].user?.city ? ` (${raffle.winners[0].user.city})` : ""}
+                        </p>
+                        {raffle.winners[0].testimonial && (
+                          <p className="text-xs text-gray-600 italic line-clamp-2">
+                            "{raffle.winners[0].testimonial}"
+                          </p>
+                        )}
+                        <Link
+                          href="/winners"
+                          className="inline-flex items-center text-xs font-semibold text-sky-700 hover:text-sky-900 underline gap-1 pt-1"
+                        >
+                          View draw interview & parcel proof <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="p-3.5 rounded-xl bg-sky-50 border border-sky-200 text-center">
+                        <p className="text-xs font-medium text-sky-800">
+                          Entries for this draw have concluded.
+                        </p>
+                        <Link
+                          href="/winners"
+                          className="inline-flex items-center text-xs font-semibold text-sky-700 hover:text-sky-900 underline gap-1 mt-1"
+                        >
+                          Browse Recent Winners <ChevronRight className="w-3 h-3" />
+                        </Link>
+                      </div>
+                    )}
                   </div>
-                ) : paymentUnderReview ? (
-                  <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-center">
-                    <span className="text-xs font-semibold text-amber-800 flex items-center justify-center gap-1.5">
-                      <Clock10Icon className="w-4 h-4 text-amber-600" />
-                      Receipt Under Review
-                    </span>
+                ) : raffle.status === "CANCELLED" ? (
+                  <div className="space-y-1.5">
+                    <Button
+                      disabled
+                      className="w-full bg-rose-100 text-rose-800 border border-rose-300 font-bold py-6 text-base rounded-xl cursor-not-allowed opacity-90"
+                    >
+                      <Clock className="w-5 h-5 mr-2 text-rose-600" />
+                      Draw Cancelled
+                    </Button>
+                    <p className="text-xs text-rose-600 text-center">
+                      This draw was cancelled by administration.
+                    </p>
+                  </div>
+                ) : raffle.status === "DRAFT" ? (
+                  <div className="space-y-1.5">
+                    <Button
+                      disabled
+                      className="w-full bg-amber-100 text-amber-800 border border-amber-300 font-bold py-6 text-base rounded-xl cursor-not-allowed opacity-90"
+                    >
+                      <Clock className="w-5 h-5 mr-2 text-amber-600" />
+                      Coming Soon
+                    </Button>
+                    <p className="text-xs text-amber-700 text-center">
+                      Draw ticket sales will open soon.
+                    </p>
                   </div>
                 ) : (
                   <Button
-                    onClick={handleEnterRaffle}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-6 text-base rounded-xl shadow-xs"
+                    disabled
+                    className="w-full bg-slate-100 text-slate-800 border border-slate-300 font-bold py-6 text-base rounded-xl cursor-not-allowed opacity-90 capitalize"
                   >
-                    <Gift className="w-5 h-5 mr-2" />
-                    Buy Ticket for {formatCurrency(raffle.price)}
+                    <Info className="w-5 h-5 mr-2 text-slate-600" />
+                    {raffle.status.toLowerCase().replace("_", " ")}
                   </Button>
                 )}
               </div>
@@ -737,41 +981,6 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* ======================================================== */}
-      {/* MOBILE STICKY BOTTOM ACTION BAR (Touch-First UX)          */}
-      {/* ======================================================== */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3.5 py-2.5 shadow-lg flex items-center justify-between gap-3">
-        <div className="flex flex-col">
-          <span className="text-[11px] text-gray-500 font-medium">Ticket Price</span>
-          <div className="text-lg font-bold text-green-600 font-mono leading-none">
-            {formatCurrency(raffle.price)}
-          </div>
-          <span className="text-[10px] text-emerald-600 font-medium mt-0.5">
-            {remainingEntries} tickets left
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <a
-            href={waInquiryUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-11 h-11 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white flex items-center justify-center shadow-xs shrink-0"
-            title="Chat on WhatsApp"
-          >
-            <WhatsAppIcon className="w-5 h-5" />
-          </a>
-
-          <Button
-            onClick={handleEnterRaffle}
-            className="h-11 px-5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm shadow-xs flex items-center gap-1.5"
-          >
-            <Gift className="w-4 h-4" />
-            Buy Ticket
-          </Button>
         </div>
       </div>
 

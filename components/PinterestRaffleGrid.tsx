@@ -1,14 +1,10 @@
 "use client"
 
-import React from "react"
-
+import React, { useState, useEffect, useRef } from "react"
+import Link from "next/link"
 import { Clock } from "lucide-react"
-import { useEffect, useRef } from "react"
 
-const PinterestRaffleGrid = () => {
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  const raffles = [
+const fallbackRaffles = [
     {
       id: 1,
       price: "₨700",
@@ -112,8 +108,31 @@ const PinterestRaffleGrid = () => {
     },
   ]
 
+const PinterestRaffleGrid = () => {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [dbRaffles, setDbRaffles] = useState<any[]>([])
+
+  useEffect(() => {
+    fetch("/api/raffles")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const formatted = data.map((r: any) => ({
+            id: r.id,
+            price: `₨${r.price.toLocaleString()}`,
+            image: r.image || r.gallery?.[0] || "/placeholder.jpg",
+            title: r.title,
+          }))
+          setDbRaffles(formatted)
+        }
+      })
+      .catch((err) => console.error("Error fetching raffles for grid:", err))
+  }, [])
+
+  const currentRaffles = dbRaffles.length > 0 ? dbRaffles : fallbackRaffles
+
   // Fisher-Yates shuffle algorithm for proper randomization
-  const shuffleArray = (array: typeof raffles) => {
+  const shuffleArray = (array: any[]) => {
     const shuffled = [...array]
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
@@ -125,8 +144,9 @@ const PinterestRaffleGrid = () => {
   // Create multiple unique sets
   const createExtendedRaffles = () => {
     const sets = []
-    for (let i = 0; i < 4; i++) {
-      sets.push(...shuffleArray(raffles))
+    const multiplier = currentRaffles.length < 8 ? 6 : 3
+    for (let i = 0; i < multiplier; i++) {
+      sets.push(...shuffleArray(currentRaffles))
     }
     return sets
   }
@@ -385,26 +405,25 @@ const PinterestRaffleGrid = () => {
         <div className="p-4" style={{ minHeight: "200%" }}>
           <ResponsiveMasonryGrid>
             {allRaffles.map((raffle, index) => (
-              <div
+              <Link
                 key={`${raffle.id}-${index}`}
-                className="relative cursor-pointer overflow-hidden rounded-2xl shadow-lg bg-white mb-4"
+                href={`/raffles/${raffle.id}`}
+                className="block relative cursor-pointer overflow-hidden rounded-2xl shadow-lg bg-white mb-4 hover:opacity-95 transition-all hover:scale-[1.02]"
               >
                 <img
                   src={raffle.image || "/placeholder.svg"}
-                  alt="Raffle prize"
+                  alt={raffle.title || "Raffle prize"}
                   className="w-full h-auto object-contain"
                   loading="lazy"
                 />
 
                 {/* Price badge - Bottom left */}
                 <div className="absolute bottom-3 left-3">
-                  <div className="bg-green-500 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                  <div className="bg-green-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
                     {raffle.price}
                   </div>
                 </div>
-
-               
-              </div>
+              </Link>
             ))}
           </ResponsiveMasonryGrid>
         </div>

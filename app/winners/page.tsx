@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { prisma } from "@/lib/prisma"
 
 const WHATSAPP_NUMBER = "+92 337 7155722"
 const WHATSAPP_CLEAN = "923377155722"
@@ -152,9 +153,66 @@ export const metadata = {
   description: "Meet the verified lucky winners of PakRaffle across Pakistan! See proof of prize delivery, video draw recordings, and official draw certificates.",
 }
 
-export default function WinnersPage() {
-  const featuredWinners = winnersData.filter((winner) => winner.featured)
-  const recentWinners = winnersData.filter((winner) => !winner.featured)
+export default async function WinnersPage() {
+  let dbWinners: any[] = []
+  try {
+    dbWinners = await prisma.winner.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+          },
+        },
+        raffle: {
+          select: {
+            id: true,
+            title: true,
+            image: true,
+            realPrice: true,
+            price: true,
+          },
+        },
+      },
+      orderBy: {
+        drawnAt: "desc",
+      },
+    })
+  } catch (err) {
+    console.error("Failed to load winners from DB:", err)
+  }
+
+  const formattedDbWinners = dbWinners.map((w) => ({
+    id: w.id,
+    raffleId: w.raffleId,
+    name: w.user?.name || "Verified Winner",
+    city: w.user?.city || "Pakistan",
+    prizeTitle: w.raffle?.title || "Exclusive Lucky Draw Prize",
+    prizeValue: w.prizeValue || w.raffle?.realPrice || w.raffle?.price || 100000,
+    drawnAt: w.drawnAt ? new Date(w.drawnAt).toISOString().split("T")[0] : "2025-01-20",
+    testimonial:
+      w.testimonial ||
+      "Alhamdulillah! I couldn't believe it when I received the call from PakRaffle. Delivered safely to my doorstep with full PTA registration and warranty!",
+    proofImage:
+      w.proofImage ||
+      w.raffle?.image ||
+      "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800&auto=format&fit=crop&q=80",
+    profileImage: "/placeholder.svg?height=80&width=80",
+    featured: true,
+    verified: true,
+  }))
+
+  const allWinners =
+    formattedDbWinners.length > 0
+      ? [
+          ...formattedDbWinners,
+          ...winnersData.filter((d) => !formattedDbWinners.some((db) => db.raffleId === d.raffleId)),
+        ]
+      : winnersData
+
+  const featuredWinners = allWinners.filter((winner) => winner.featured)
+  const recentWinners = allWinners.filter((winner) => !winner.featured)
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-3 sm:px-6 lg:px-8 text-gray-900">
