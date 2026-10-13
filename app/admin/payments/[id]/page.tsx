@@ -63,8 +63,13 @@ async function getPaymentDetails(id: string) {
   }
 }
 
-export default async function PaymentDetailsPage({ params }: { params: { id: string } }) {
-  const payment = await getPaymentDetails(params.id)
+export default async function PaymentDetailsPage({
+  params,
+}: {
+  params: Promise<{ id: string }> | { id: string }
+}) {
+  const resolvedParams = await Promise.resolve(params)
+  const payment = await getPaymentDetails(resolvedParams.id)
   // Safely access raffleId from metadata if it's an object
   const raffleId =
     payment.metadata &&
@@ -72,60 +77,62 @@ export default async function PaymentDetailsPage({ params }: { params: { id: str
     !Array.isArray(payment.metadata) &&
     "raffleId" in payment.metadata
       ? (payment.metadata as Record<string, unknown>)["raffleId"]
-      : null;
-      
+      : null
+
   const quantity =
     payment.metadata &&
     typeof payment.metadata === "object" &&
     !Array.isArray(payment.metadata) &&
     "raffleId" in payment.metadata
       ? (payment.metadata as Record<string, unknown>)["quantity"]
-      : null;
-
-  
+      : null
 
   const canUpdateStatus = !["COMPLETED", "REFUNDED"].includes(payment.status)
-    const existingMetadata =
-      payment?.metadata && typeof payment?.metadata === "object" ? (payment?.metadata as Record<string, any>) : {}
+  const existingMetadata =
+    payment?.metadata && typeof payment?.metadata === "object"
+      ? (payment?.metadata as Record<string, any>)
+      : {}
 
-      
-    
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
-      <Button asChild variant="outline" size="sm" className="rounded-2xl">
+      <Button asChild variant="outline" size="sm" className="rounded-xl min-h-[38px]">
         <Link href="/admin/payments">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Payments
         </Link>
       </Button>
-      <div className="md:flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Payment Details</h1>
-            <p className="text-gray-600 mt-2">Payment ID: {payment.id}</p>
-          </div>
-        </div> 
-        <Badge
-          className={`rounded-2xl text-lg px-4 py-2 ${
-            payment.status === "COMPLETED"
-              ? "bg-green-100 text-green-700"
-              : payment.status === "PENDING"
-                ? "bg-yellow-100 text-yellow-700"
-                : payment.status === "PROCESSING"
-                  ? "bg-blue-100 text-blue-700" 
-                    : "bg-red-100 text-red-700"
-          }`}
-        >
-          {payment.status === "COMPLETED" && <CheckCircle className="w-4 h-4 mr-2" />}
-          {payment.status === "PENDING" && <Clock className="w-4 h-4 mr-2" />}
-          {payment.status === "PROCESSING" && <AlertTriangle className="w-4 h-4 mr-2" />}
-          {payment.status === "FAILED" && <XCircle className="w-4 h-4 mr-2" />}
-          {payment.status}
-        </Badge>
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Payment Details</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 break-all font-mono">
+            ID: {payment.id}
+          </p>
+        </div>
+
+        <div className="self-start sm:self-auto">
+          <Badge
+            className={`rounded-xl text-sm px-3.5 py-1.5 font-semibold ${
+              payment.status === "COMPLETED"
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+                : payment.status === "PENDING"
+                  ? "bg-amber-50 text-amber-700 border border-amber-200/60"
+                  : payment.status === "PROCESSING"
+                    ? "bg-blue-50 text-blue-700 border border-blue-200/60"
+                    : "bg-rose-50 text-rose-700 border border-rose-200/60"
+            }`}
+          >
+            {payment.status === "COMPLETED" && <CheckCircle className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />}
+            {payment.status === "PENDING" && <Clock className="w-3.5 h-3.5 mr-1.5 text-amber-600" />}
+            {payment.status === "PROCESSING" && <AlertTriangle className="w-3.5 h-3.5 mr-1.5 text-blue-600" />}
+            {payment.status === "FAILED" && <XCircle className="w-3.5 h-3.5 mr-1.5 text-rose-600" />}
+            {payment.status}
+          </Badge>
+        </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Payment Information */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="rounded-2xl shadow-lg border-0">

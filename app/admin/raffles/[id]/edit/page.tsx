@@ -455,7 +455,7 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
             </div>
 
             {/* Expense Inputs */}
-            <div className="grid md:grid-cols-12 gap-3 items-end p-4 bg-gray-50/80 rounded-2xl border border-gray-100">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end p-4 bg-gray-50/80 rounded-2xl border border-gray-100">
               <div className="md:col-span-6 space-y-1.5">
                 <Label htmlFor="expense_desc" className="text-xs font-medium text-gray-700">
                   Expense Description *

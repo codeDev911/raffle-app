@@ -49,28 +49,34 @@ async function getCustomerDetails(id: string) {
   return { ...customer, totalSpent }
 }
 
-export default async function CustomerDetailPage({ params }: { params: { id: string } }) {
-  const customer = await getCustomerDetails(params.id)
+export default async function CustomerDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }> | { id: string }
+}) {
+  const resolvedParams = await Promise.resolve(params)
+  const customer = await getCustomerDetails(resolvedParams.id)
   const isVIP = customer.totalSpent >= 500000 // 5000 PKR threshold
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button asChild variant="ghost" className="rounded-2xl">
-          <Link href="/admin/customers">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Customers
-          </Link>
-        </Button>
+      <Button asChild variant="outline" size="sm" className="rounded-xl min-h-[38px]">
+        <Link href="/admin/customers">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Customers
+        </Link>
+      </Button>
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{customer.name}</h1>
-          <p className="text-gray-600 mt-2">Customer details and activity history</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{customer.name}</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">Customer details and activity history</p>
         </div>
       </div>
 
       {/* Customer Overview */}
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <Card className="rounded-2xl shadow-lg border-0">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">

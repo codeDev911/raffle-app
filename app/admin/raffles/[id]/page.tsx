@@ -154,44 +154,49 @@ export default async function AdminRaffleDetailPage({
   const canSelectWinner = raffle.status === "ACTIVE" && totalEntries > 0 && !hasWinner
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
-      <Button asChild variant="ghost" className="rounded-2xl">
+      <Button asChild variant="outline" size="sm" className="rounded-xl min-h-[38px]">
         <Link href="/admin/raffles">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Raffles
         </Link>
       </Button>
-      <div className="flex -mt-6 items-center space-x-4">
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold text-gray-900">{raffle.title}</h1>
-          <p className="text-gray-600 mt-2">Detailed raffle information and management</p>
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight truncate">{raffle.title}</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">Detailed raffle information and financial analytics</p>
         </div>
-        {hasWinner ? (
-          <Button asChild className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-2xl">
-            <Link href={`/admin/raffles/${raffle.id}/winner`}>
-              <Crown className="mr-2 h-4 w-4" />
-              View Winner
+
+        <div className="flex flex-wrap items-center gap-2">
+          {hasWinner ? (
+            <Button asChild className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-xs min-h-[38px]">
+              <Link href={`/admin/raffles/${raffle.id}/winner`}>
+                <Crown className="mr-1.5 h-4 w-4" />
+                View Winner
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              asChild
+              disabled
+              className="cursor-not-allowed bg-slate-100 text-slate-400 rounded-xl min-h-[38px]"
+            >
+              <div>
+                <XCircleIcon className="mr-1.5 h-4 w-4" />
+                No Winner Yet
+              </div>
+            </Button>
+          )}
+
+          <Button asChild variant="outline" className="rounded-xl min-h-[38px]">
+            <Link href={`/admin/raffles/${raffle.id}/edit`} className="flex items-center gap-1.5">
+              <PenIcon className="h-4 w-4" />
+              <span>Edit</span>
             </Link>
           </Button>
-        ) : (
-          <Button
-            asChild
-            disabled
-            className="cursor-not-allowed bg-gray-200 text-gray-900 hover:text-white hover:bg-red-500"
-          >
-            <div>
-              <XCircleIcon className="mr-2 h-4 w-4" />
-              No winner
-            </div>
-          </Button>
-        )}
-        <Button asChild variant={"outline"}>
-          <Link href={`/admin/raffles/${raffle.id}/edit`} className="flex space-x-1">
-            <PenIcon />
-            <p>Edit</p>
-          </Link>
-        </Button>
+        </div>
       </div>
 
       {/* Raffle Overview */}
