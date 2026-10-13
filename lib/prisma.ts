@@ -1,5 +1,8 @@
-// In-memory Prisma mock for AI Studio environment
-// Persists in memory during server lifetime with realistic seed data
+// Dual-mode Prisma client:
+// Automatically uses real PostgreSQL database when DATABASE_URL is configured,
+// and gracefully falls back to in-memory mock store if DATABASE_URL is not set.
+import { PrismaClient } from "@prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg"
 
 export interface User {
   id: string
@@ -605,7 +608,7 @@ function resolveWinnerRelations(winner: Winner, include?: any, select?: any) {
   return result
 }
 
-export const prisma = {
+const mockPrisma = {
   user: {
     findUnique: async (args: { where: any; include?: any; select?: any }) => {
       const user = usersStore.find((u) => matchesWhere(u, args.where))
@@ -853,3 +856,48 @@ export const prisma = {
     return arg
   },
 }
+
+// Global singleton for Next.js hot reload / serverless connection reuse
+const globalForPrisma = globalThis as unknown as {
+  prismaClientInstance?: PrismaClient
+}
+
+export function isUsingRealDatabase(): boolean {
+  const dbUrl = process.env.DATABASE_URL
+  return Boolean(
+    dbUrl &&
+    !dbUrl.includes("localhost") &&
+    !dbUrl.includes("user:password") &&
+    !dbUrl.includes("placeholder")
+  )
+}
+
+function getRealPrismaClient(): PrismaClient | null {
+  if (!isUsingRealDatabase()) {
+    return null
+  }
+  try {
+    if (!globalForPrisma.prismaClientInstance) {
+      const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+      globalForPrisma.prismaClientInstance = new PrismaClient({ adapter })
+    }
+    return globalForPrisma.prismaClientInstance
+  } catch (err) {
+    console.warn("[Prisma] Failed to initialize real client, falling back to in-memory store:", err)
+    return null
+  }
+}
+
+export const prisma: any = new Proxy(mockPrisma, {
+  get(target, prop, receiver) {
+    const realClient = getRealPrismaClient()
+    if (realClient && prop in realClient) {
+      const val = (realClient as any)[prop]
+      if (typeof val === "function") {
+        return val.bind(realClient)
+      }
+      return val
+    }
+    return Reflect.get(target, prop, receiver)
+  },
+})
