@@ -17,15 +17,7 @@ const createRaffleSchema = z.object({
   endDate: z.string().transform((str) => new Date(str)),
   specifications: z.array(z.string()).optional(),
   rules: z.array(z.string()).optional(),
-  expenses: z
-    .array(
-      z.object({
-        id: z.string().optional(),
-        description: z.string(),
-        amount: z.number(),
-      })
-    )
-    .optional(),
+  expenses: z.any().optional(),
 })
 
 export async function GET(request: NextRequest) {

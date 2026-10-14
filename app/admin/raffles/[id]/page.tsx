@@ -39,6 +39,7 @@ import { notFound } from "next/navigation"
 import { WinnerSelectionDialog } from "@/components/winner-selection-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RealVsAproxModal } from "@/components/real-vs-aprox-modal"
+import { RaffleImageCarousel } from "@/components/RaffleImageCarousel"
 
 async function getRaffleDetails(id: string) {
   const raffle = await prisma.raffle.findUnique({
@@ -117,11 +118,20 @@ async function getRaffleDetails(id: string) {
     }))
 
   // Calculate expenses (stored in PKR in expenses array, so convert to paisa for calculation)
-  const expensesList: { id?: string; description: string; amount: number }[] = Array.isArray(
-    (raffle as any).expenses
-  )
-    ? (raffle as any).expenses
-    : []
+  const rawExpenses = (raffle as any).expenses
+  const expensesList: { id?: string; description: string; amount: number; category?: string }[] =
+    Array.isArray(rawExpenses)
+      ? rawExpenses.filter((item: any) => !item.isBudget)
+      : Array.isArray(rawExpenses?.items)
+        ? rawExpenses.items
+        : []
+
+  const budgetPKR: number =
+    typeof rawExpenses?.budget === "number"
+      ? rawExpenses.budget
+      : Array.isArray(rawExpenses)
+        ? rawExpenses.find((item: any) => item.isBudget)?.amount || 0
+        : 0
 
   const totalExpensesPKR = expensesList.reduce(
     (sum, item) => sum + (Number(item.amount) || 0),
@@ -129,6 +139,8 @@ async function getRaffleDetails(id: string) {
   )
   const totalExpensesPaisa = totalExpensesPKR * 100
   const totalCostPaisa = raffle.realPrice + totalExpensesPaisa
+  const remainingBudgetPKR = budgetPKR > 0 ? budgetPKR - totalExpensesPKR : 0
+  const isOverBudget = budgetPKR > 0 && totalExpensesPKR > budgetPKR
 
   // Calculate projected approximation data
   const aproxRevenue = raffle.price * raffle.totalEntries
@@ -155,6 +167,9 @@ async function getRaffleDetails(id: string) {
     totalExpensesPKR,
     totalExpensesPaisa,
     totalCostPaisa,
+    budgetPKR,
+    remainingBudgetPKR,
+    isOverBudget,
     aproxRevenue,
     aproxProfit,
     aproxPercentage,
@@ -179,6 +194,9 @@ export default async function AdminRaffleDetailPage({
     totalExpensesPKR,
     totalExpensesPaisa,
     totalCostPaisa,
+    budgetPKR,
+    remainingBudgetPKR,
+    isOverBudget,
     aproxRevenue,
     aproxProfit,
     aproxPercentage,
@@ -261,105 +279,126 @@ export default async function AdminRaffleDetailPage({
 
       {/* Hero Overview Header */}
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs p-5 sm:p-7">
-        <div className="flex flex-col lg:flex-row gap-6 lg:items-start justify-between">
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2.5 mb-2.5">
-              <Badge
-                className={`rounded-xl text-xs font-semibold px-2.5 py-1 ${
-                  raffle.status === "ACTIVE"
-                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                    : raffle.status === "COMPLETED"
-                      ? "bg-blue-50 text-blue-700 border border-blue-200"
-                      : "bg-slate-100 text-slate-700 border border-slate-200"
-                }`}
-              >
-                {raffle.status === "ACTIVE" && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
-                )}
-                {raffle.status}
-              </Badge>
-
-              <Badge variant="outline" className="rounded-xl text-xs font-medium text-slate-600 border-slate-200">
-                {raffle.category}
-              </Badge>
-
-              {raffle.featured && (
-                <Badge className="rounded-xl text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                  <Crown className="w-3 h-3 mr-1 text-amber-600" />
-                  Featured Campaign
-                </Badge>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          {/* Left: Interactive Carousel / Photos */}
+          <div className="lg:col-span-5">
+            <RaffleImageCarousel
+              images={Array.from(
+                new Set([
+                  ...(raffle.image ? [raffle.image] : []),
+                  ...(raffle.gallery || []),
+                ])
               )}
-
-              {hasWinner && (
-                <Badge className="rounded-xl text-xs font-semibold bg-purple-50 text-purple-800 border border-purple-200">
-                  <Trophy className="w-3 h-3 mr-1 text-purple-600" />
-                  Winner Chosen
-                </Badge>
-              )}
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight break-words">
-              {raffle.title}
-            </h1>
-
-            <p className="text-sm text-slate-600 mt-2 line-clamp-2 leading-relaxed">
-              {raffle.description}
-            </p>
-
-            <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-xs text-slate-500 mt-4 pt-4 border-t border-slate-100">
-              <div className="flex items-center gap-1.5">
-                <Ticket className="w-4 h-4 text-slate-400" />
-                <span>
-                  Price / Entry:{" "}
-                  <strong className="text-slate-900 font-bold">{formatCurrency(raffle.price)}</strong>
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-slate-400" />
-                <span>
-                  Ends: <strong className="text-slate-900 font-semibold">{formatDate(new Date(raffle.endDate))}</strong>
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Coins className="w-4 h-4 text-slate-400" />
-                <span>
-                  Base Prize Cost:{" "}
-                  <strong className="text-slate-900 font-semibold">{formatCurrency(raffle.realPrice)}</strong>
-                </span>
-              </div>
-            </div>
+              title={raffle.title}
+              category={raffle.category}
+              status={raffle.status}
+              featured={raffle.featured}
+              aspectRatioClass="aspect-[4/3]"
+            />
           </div>
 
-          {/* Quick Progress Callout Card */}
-          <div className="lg:w-80 w-full bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-slate-200/60 shrink-0 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Ticket Sales
-              </span>
-              <span className="font-mono font-bold text-slate-900 text-sm">{progressPercent}%</span>
-            </div>
+          {/* Right: Details & Status & Progress */}
+          <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
+            <div>
+              <div className="flex flex-wrap items-center gap-2.5 mb-2.5">
+                <Badge
+                  className={`rounded-xl text-xs font-semibold px-2.5 py-1 ${
+                    raffle.status === "ACTIVE"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : raffle.status === "COMPLETED"
+                        ? "bg-blue-50 text-blue-700 border border-blue-200"
+                        : "bg-slate-100 text-slate-700 border border-slate-200"
+                  }`}
+                >
+                  {raffle.status === "ACTIVE" && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
+                  )}
+                  {raffle.status}
+                </Badge>
 
-            <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  progressPercent >= 100
-                    ? "bg-emerald-500"
-                    : progressPercent > 50
-                      ? "bg-blue-600"
-                      : "bg-red-500"
-                }`}
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
+                <Badge variant="outline" className="rounded-xl text-xs font-medium text-slate-600 border-slate-200">
+                  {raffle.category}
+                </Badge>
 
-            <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-              <div>
-                <span className="text-slate-400 block text-[11px]">Sold</span>
-                <span className="font-bold text-slate-900">{totalEntries} tickets</span>
+                {raffle.featured && (
+                  <Badge className="rounded-xl text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                    <Crown className="w-3 h-3 mr-1 text-amber-600" />
+                    Featured Campaign
+                  </Badge>
+                )}
+
+                {hasWinner && (
+                  <Badge className="rounded-xl text-xs font-semibold bg-purple-50 text-purple-800 border border-purple-200">
+                    <Trophy className="w-3 h-3 mr-1 text-purple-600" />
+                    Winner Chosen
+                  </Badge>
+                )}
               </div>
-              <div className="text-right">
-                <span className="text-slate-400 block text-[11px]">Remaining</span>
-                <span className="font-bold text-slate-700">{ticketsRemaining} tickets</span>
+
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight break-words">
+                {raffle.title}
+              </h1>
+
+              <p className="text-sm text-slate-600 mt-2 line-clamp-3 leading-relaxed">
+                {raffle.description}
+              </p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-slate-500 mt-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-1.5">
+                  <Ticket className="w-4 h-4 text-slate-400" />
+                  <span>
+                    Price / Entry:{" "}
+                    <strong className="text-slate-900 font-bold block sm:inline">{formatCurrency(raffle.price)}</strong>
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-slate-400" />
+                  <span>
+                    Ends:{" "}
+                    <strong className="text-slate-900 font-semibold block sm:inline">{formatDate(new Date(raffle.endDate))}</strong>
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Coins className="w-4 h-4 text-slate-400" />
+                  <span>
+                    Base Prize:{" "}
+                    <strong className="text-slate-900 font-semibold block sm:inline">{formatCurrency(raffle.realPrice)}</strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Progress Callout Card */}
+            <div className="bg-slate-50/90 rounded-2xl p-4 sm:p-5 border border-slate-200/60 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Ticket Sales Progress
+                </span>
+                <span className="font-mono font-bold text-slate-900 text-sm">{progressPercent}%</span>
+              </div>
+
+              <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    progressPercent >= 100
+                      ? "bg-emerald-500"
+                      : progressPercent > 50
+                        ? "bg-blue-600"
+                        : "bg-red-500"
+                  }`}
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                <div>
+                  <span className="text-slate-400 block text-[11px]">Confirmed Sold</span>
+                  <span className="font-bold text-slate-900 font-mono">{totalEntries} tickets</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-slate-400 block text-[11px]">Available Left</span>
+                  <span className="font-bold text-slate-700 font-mono">{ticketsRemaining} tickets</span>
+                </div>
               </div>
             </div>
           </div>
@@ -432,9 +471,22 @@ export default async function AdminRaffleDetailPage({
             <p className="text-2xl font-bold font-mono text-amber-700 mt-2">
               {formatCurrency(totalExpensesPaisa)}
             </p>
-            <span className="inline-block text-[11px] text-slate-400 mt-1">
-              {expensesList.length} itemized expense{expensesList.length === 1 ? "" : "s"}
-            </span>
+            <div className="text-[11px] mt-1 space-y-0.5">
+              <span className="text-slate-400 block">
+                {expensesList.length} itemized expense{expensesList.length === 1 ? "" : "s"}
+              </span>
+              {budgetPKR > 0 && (
+                <span
+                  className={`font-semibold block ${
+                    isOverBudget ? "text-rose-600" : "text-emerald-700"
+                  }`}
+                >
+                  {isOverBudget
+                    ? `Over Budget (Cap: Rs. ${budgetPKR.toLocaleString()})`
+                    : `Rs. ${remainingBudgetPKR.toLocaleString()} buffer left (Cap: Rs. ${budgetPKR.toLocaleString()})`}
+                </span>
+              )}
+            </div>
           </CardContent>
         </Card>
 

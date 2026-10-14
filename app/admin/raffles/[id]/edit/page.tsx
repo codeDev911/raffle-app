@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Plus, X, Receipt, TrendingUp, TrendingDown, Trash2, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { roundUpTwoDecimals } from "../../create/page"
+import { RaffleImageUploader } from "@/components/admin/RaffleImageUploader"
 
 export interface RaffleExpenseItem {
   id: string
@@ -52,6 +53,7 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
     gallery: [] as string[],
     price: "",
     realPrice: "",
+    budget: "",
     totalEntries: "",
     category: "",
     featured: false,
@@ -77,6 +79,21 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
         if (response.ok) {
           const raffleData = await response.json()
           setRaffle(raffleData)
+
+          const rawExpenses = raffleData.expenses
+          const parsedExpenses = Array.isArray(rawExpenses)
+            ? rawExpenses.filter((e: any) => !e.isBudget)
+            : Array.isArray(rawExpenses?.items)
+              ? rawExpenses.items
+              : []
+
+          const parsedBudget =
+            typeof rawExpenses?.budget === "number"
+              ? rawExpenses.budget.toString()
+              : Array.isArray(rawExpenses)
+                ? (rawExpenses.find((e: any) => e.isBudget)?.amount || "").toString()
+                : ""
+
           setFormData({
             title: raffleData.title,
             description: raffleData.description,
@@ -85,6 +102,7 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
             gallery: raffleData.gallery || [],
             price: (raffleData.price / 100).toString(),
             realPrice: (raffleData.realPrice / 100).toString(),
+            budget: parsedBudget,
             totalEntries: raffleData.totalEntries.toString(),
             category: raffleData.category,
             featured: raffleData.featured,
@@ -92,7 +110,7 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
             endDate: new Date(raffleData.endDate).toISOString().slice(0, 16),
             specifications: raffleData.specifications || [],
             rules: raffleData.rules || [],
-            expenses: Array.isArray(raffleData.expenses) ? raffleData.expenses : [],
+            expenses: parsedExpenses,
           })
         }
       } catch (error) {
@@ -140,20 +158,36 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
     setError("")
 
     try {
+      const coverImage =
+        formData.image.trim() ||
+        (formData.gallery && formData.gallery.length > 0 ? formData.gallery[0] : undefined)
+
+      const fullGallery = Array.from(
+        new Set([
+          ...(coverImage ? [coverImage] : []),
+          ...(formData.gallery || []),
+        ])
+      )
+
       const response = await fetch(`/api/raffles/${params.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          image: coverImage,
+          gallery: fullGallery,
           price: Number.parseInt(formData.price) * 100,
           realPrice: Number.parseInt(formData.realPrice),
           totalEntries: Number.parseInt(formData.totalEntries),
           endDate: new Date(formData.endDate).toISOString(),
-          expenses: formData.expenses.map((exp) => ({
-            id: exp.id,
-            description: exp.description,
-            amount: Number(exp.amount),
-          })),
+          expenses: {
+            budget: Number(formData.budget) || 0,
+            items: formData.expenses.map((exp) => ({
+              id: exp.id,
+              description: exp.description,
+              amount: Number(exp.amount),
+            })),
+          },
         }),
       })
 
@@ -302,13 +336,18 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="image">Main Image URL</Label>
-              <Input
-                id="image"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                className="rounded-2xl"
+            <div className="space-y-2 pt-2">
+              <Label className="text-sm font-bold text-slate-800">Campaign Photos & Gallery</Label>
+              <RaffleImageUploader
+                mainImage={formData.image}
+                gallery={formData.gallery}
+                onChange={({ image, gallery }) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    image,
+                    gallery,
+                  }))
+                }
               />
             </div>
           </CardContent>
@@ -423,6 +462,40 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
             </div>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
+            {/* Campaign Budget Input */}
+            <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/70 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="budget" className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                  Allocated Campaign Budget (PKR)
+                </Label>
+                {formData.budget && Number(formData.budget) > 0 && (
+                  <Badge variant="outline" className="text-[11px] bg-white text-amber-900 border-amber-300">
+                    Remaining: Rs. {(
+                      Number(formData.budget) -
+                      formData.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0)
+                    ).toLocaleString()}
+                  </Badge>
+                )}
+              </div>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-600">
+                  Rs.
+                </span>
+                <Input
+                  id="budget"
+                  type="number"
+                  min="0"
+                  value={formData.budget}
+                  onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                  className="rounded-xl pl-10 border-amber-200 text-sm font-mono font-bold bg-white"
+                  placeholder="25000"
+                />
+              </div>
+              <span className="text-[11px] text-amber-900 block">
+                Target marketing & operations ceiling for this raffle campaign
+              </span>
+            </div>
+
             {/* Quick Presets */}
             <div className="space-y-2">
               <Label className="text-xs font-semibold uppercase tracking-wider text-gray-500">

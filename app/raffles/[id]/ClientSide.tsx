@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { formatCurrency } from "@/lib/utils"
+import { RaffleImageCarousel } from "@/components/RaffleImageCarousel"
 import {
   ArrowLeft,
   CheckCircle,
@@ -281,61 +282,16 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
           {/* LEFT COLUMN: IMAGES + PRODUCT DETAILS RIGHT BELOW THEM   */}
           {/* ======================================================== */}
           <div className="lg:col-span-7 space-y-6">
-            {/* Image Gallery Card */}
+            {/* Image Gallery Carousel Card */}
             <div className="bg-white rounded-2xl border border-gray-200 p-2.5 sm:p-4 shadow-xs">
-              <div className="relative aspect-square sm:aspect-[4/3] w-full rounded-xl overflow-hidden bg-gray-100">
-                <Image
-                  src={currentImage}
-                  alt={raffle.title}
-                  fill
-                  priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 700px"
-                  className="object-cover"
-                />
-                {raffle.featured && (
-                  <div className="absolute top-2.5 left-2.5 bg-green-600 text-white text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-md shadow-xs flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
-                    Featured
-                  </div>
-                )}
-                <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
-                  <div className="bg-white/95 backdrop-blur-xs text-gray-800 text-[11px] sm:text-xs font-medium px-2.5 py-1 rounded-md shadow-xs border border-gray-200">
-                    {raffle.category}
-                  </div>
-                  {raffle.status === "COMPLETED" ? (
-                    <div className="bg-sky-100/95 backdrop-blur-xs text-sky-800 text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md shadow-xs border border-sky-300 flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3 text-sky-600" />
-                      Completed
-                    </div>
-                  ) : raffle.status === "ACTIVE" ? (
-                    <div className="bg-emerald-600/95 backdrop-blur-xs text-white text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-md shadow-xs flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                      Active
-                    </div>
-                  ) : (
-                    <div className="bg-gray-800/95 backdrop-blur-xs text-white text-[11px] sm:text-xs font-medium px-2.5 py-1 rounded-md shadow-xs capitalize">
-                      {raffle.status.toLowerCase()}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Thumbnails row */}
-              {allImages.length > 1 && (
-                <div className="flex gap-2 sm:gap-3 mt-3 overflow-x-auto pb-1 no-scrollbar touch-pan-x">
-                  {allImages.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedImage(img)}
-                      className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all shrink-0 ${
-                        currentImage === img ? "border-green-600 ring-2 ring-green-100" : "border-gray-200 hover:border-gray-400"
-                      }`}
-                    >
-                      <Image src={img} alt={`Thumb ${idx + 1}`} fill className="object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
+              <RaffleImageCarousel
+                images={allImages}
+                title={raffle.title}
+                category={raffle.category}
+                status={raffle.status}
+                featured={raffle.featured}
+                aspectRatioClass="aspect-square sm:aspect-[4/3]"
+              />
             </div>
 
             {/* Mobile-Only Summary Block Inserted for immediate pricing visibility */}

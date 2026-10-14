@@ -16,22 +16,29 @@ import {
 import {
   Users,
   Search,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  DollarSign,
-  Trophy,
+  CheckCircle2,
+  XCircle,
+  TrendingUp,
+  Download,
   Eye,
   MoreHorizontal,
+  Mail,
+  Phone,
+  Sparkles,
   RefreshCw,
-  Download,
+  Trophy,
+  MapPin,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  Shield,
-  Sparkles,
+  Filter,
+  DollarSign,
+  Calendar,
+  ArrowUpDown,
+  RotateCcw,
+  SlidersHorizontal,
+  X,
 } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import Link from "next/link"
@@ -41,22 +48,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { toast } from "sonner"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface Customer {
   id: string
   name: string
   email: string
-  phone?: string
-  city?: string
-  createdAt: string
+  phone: string | null
+  city: string | null
+  role: string
   isActive: boolean
+  createdAt: string
+  totalSpent: number
   _count: {
     entries: number
     winners: number
   }
-  totalSpent: number
-  lastActivity: string
 }
 
 interface CustomerStats {
@@ -92,9 +105,19 @@ export default function AdminCustomersPage() {
     hasPrev: false,
   })
 
+  // Filters State
   const [searchTerm, setSearchTerm] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
+  const [amountPreset, setAmountPreset] = useState("all")
+  const [minAmount, setMinAmount] = useState("")
+  const [maxAmount, setMaxAmount] = useState("")
+  const [datePreset, setDatePreset] = useState("all")
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
+  const [sortBy, setSortBy] = useState("newest")
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [isLoading, setIsLoading] = useState(true)
@@ -122,8 +145,32 @@ export default function AdminCustomersPage() {
           limit: limit.toString(),
           status: statusFilter,
           search: debouncedSearch,
+          sortBy,
           t: Date.now().toString(),
         })
+
+        // Amount filters
+        if (amountPreset === "gt10k") {
+          params.append("minAmount", "10000")
+        } else if (amountPreset === "gt5k") {
+          params.append("minAmount", "5000")
+        } else if (amountPreset === "1k_5k") {
+          params.append("minAmount", "1000")
+          params.append("maxAmount", "5000")
+        } else if (amountPreset === "lt1k") {
+          params.append("maxAmount", "1000")
+        } else if (amountPreset === "custom") {
+          if (minAmount && !isNaN(Number(minAmount))) params.append("minAmount", minAmount)
+          if (maxAmount && !isNaN(Number(maxAmount))) params.append("maxAmount", maxAmount)
+        }
+
+        // Date filters
+        if (datePreset !== "all" && datePreset !== "custom") {
+          params.append("datePreset", datePreset)
+        } else if (datePreset === "custom") {
+          if (startDate) params.append("startDate", startDate)
+          if (endDate) params.append("endDate", endDate)
+        }
 
         const res = await fetch(`/api/admin/customers?${params.toString()}`, {
           headers: { "Cache-Control": "no-cache" },
@@ -144,7 +191,19 @@ export default function AdminCustomersPage() {
         if (showLoading) setIsLoading(false)
       }
     },
-    [page, limit, statusFilter, debouncedSearch]
+    [
+      page,
+      limit,
+      statusFilter,
+      debouncedSearch,
+      amountPreset,
+      minAmount,
+      maxAmount,
+      datePreset,
+      startDate,
+      endDate,
+      sortBy,
+    ]
   )
 
   useEffect(() => {
@@ -161,6 +220,45 @@ export default function AdminCustomersPage() {
     setPage(1)
   }
 
+  const handleAmountPresetChange = (preset: string) => {
+    setAmountPreset(preset)
+    if (preset !== "custom") {
+      setMinAmount("")
+      setMaxAmount("")
+    }
+    setPage(1)
+  }
+
+  const handleDatePresetChange = (preset: string) => {
+    setDatePreset(preset)
+    if (preset !== "custom") {
+      setStartDate("")
+      setEndDate("")
+    }
+    setPage(1)
+  }
+
+  const handleResetFilters = () => {
+    setSearchTerm("")
+    setDebouncedSearch("")
+    setStatusFilter("All")
+    setAmountPreset("all")
+    setMinAmount("")
+    setMaxAmount("")
+    setDatePreset("all")
+    setStartDate("")
+    setEndDate("")
+    setSortBy("newest")
+    setPage(1)
+  }
+
+  const activeFilterCount =
+    (statusFilter !== "All" ? 1 : 0) +
+    (amountPreset !== "all" ? 1 : 0) +
+    (datePreset !== "all" ? 1 : 0) +
+    (searchTerm ? 1 : 0) +
+    (sortBy !== "newest" ? 1 : 0)
+
   // Export CSV
   const handleExportCSV = async () => {
     setIsExporting(true)
@@ -169,7 +267,27 @@ export default function AdminCustomersPage() {
         all: "true",
         status: statusFilter,
         search: debouncedSearch,
+        sortBy,
       })
+
+      if (amountPreset === "gt10k") params.append("minAmount", "10000")
+      else if (amountPreset === "gt5k") params.append("minAmount", "5000")
+      else if (amountPreset === "1k_5k") {
+        params.append("minAmount", "1000")
+        params.append("maxAmount", "5000")
+      } else if (amountPreset === "lt1k") params.append("maxAmount", "1000")
+      else if (amountPreset === "custom") {
+        if (minAmount) params.append("minAmount", minAmount)
+        if (maxAmount) params.append("maxAmount", maxAmount)
+      }
+
+      if (datePreset !== "all" && datePreset !== "custom") {
+        params.append("datePreset", datePreset)
+      } else if (datePreset === "custom") {
+        if (startDate) params.append("startDate", startDate)
+        if (endDate) params.append("endDate", endDate)
+      }
+
       const res = await fetch(`/api/admin/customers?${params.toString()}`)
       const data = await res.json()
       const exportList: Customer[] = data.customers || customers
@@ -200,100 +318,86 @@ export default function AdminCustomersPage() {
         c.isActive ? "Active" : "Inactive",
       ])
 
-      const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n")
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const url = URL.createObjectURL(blob)
+      const csvContent =
+        "data:text/csv;charset=utf-8," +
+        [headers.join(","), ...rows.map((e) => e.join(","))].join("\n")
+
+      const encodedUri = encodeURI(csvContent)
       const link = document.createElement("a")
-      link.href = url
-      link.download = `pakraffle-customers-${new Date().toISOString().split("T")[0]}.csv`
+      link.setAttribute("href", encodedUri)
+      link.setAttribute(
+        "download",
+        `customers_filtered_${new Date().toISOString().split("T")[0]}.csv`
+      )
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-
-      toast.success(`Exported ${exportList.length} customer records`)
     } catch (err) {
-      console.error("CSV Export failed", err)
-      toast.error("Failed to export customers")
+      console.error("Export failed:", err)
     } finally {
       setIsExporting(false)
     }
   }
 
   const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .filter(Boolean)
-      .slice(0, 2)
-      .join("")
-      .toUpperCase()
-  }
-
-  const getPaginationPages = () => {
-    const totalPages = pagination.totalPages
-    const current = pagination.page
-    const delta = 1
-    const pages: (number | string)[] = []
-
-    for (let i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || (i >= current - delta && i <= current + delta)) {
-        pages.push(i)
-      } else if (pages[pages.length - 1] !== "...") {
-        pages.push("...")
-      }
-    }
-    return pages
+    return (
+      name
+        ?.split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2) || "U"
+    )
   }
 
   const startRecord = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1
   const endRecord = Math.min(pagination.page * pagination.limit, pagination.total)
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-            Customer Directory
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Customer Directory & Analysis
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Registered participants, engagement metrics, total spend & winners
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Analyze customer spending patterns, registration timelines, and activity metrics
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <Button
-            onClick={() => fetchCustomers(true)}
             variant="outline"
             size="sm"
+            onClick={() => fetchCustomers(true)}
             disabled={isLoading}
-            className="rounded-xl border-slate-200 text-slate-700 hover:bg-slate-100 min-h-[40px]"
+            className="rounded-xl border-slate-200 text-slate-700 min-h-[38px]"
           >
-            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin text-red-600" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
 
           <Button
-            onClick={handleExportCSV}
             variant="outline"
             size="sm"
+            onClick={handleExportCSV}
             disabled={isExporting || pagination.total === 0}
-            className="rounded-xl border-slate-200 text-slate-700 hover:bg-slate-100 min-h-[40px]"
+            className="rounded-xl border-slate-200 text-slate-700 min-h-[38px] font-semibold"
           >
-            <Download className={`mr-2 h-4 w-4 ${isExporting ? "animate-spin" : ""}`} />
+            <Download className="w-3.5 h-3.5 mr-1.5" />
             {isExporting ? "Exporting..." : "Export CSV"}
           </Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="rounded-2xl border border-slate-200/80 shadow-xs bg-white">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                Total Customers
+                Total Users
               </span>
               <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                 <Users className="w-4 h-4" />
@@ -303,7 +407,7 @@ export default function AdminCustomersPage() {
               {stats.totalCustomers.toLocaleString()}
             </p>
             <span className="inline-block text-[11px] text-slate-400 mt-1">
-              Registered platform users
+              Registered participants
             </span>
           </CardContent>
         </Card>
@@ -315,14 +419,14 @@ export default function AdminCustomersPage() {
                 New This Month
               </span>
               <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <Calendar className="w-4 h-4" />
+                <CheckCircle2 className="w-4 h-4" />
               </div>
             </div>
             <p className="text-xl sm:text-2xl font-bold text-emerald-600 mt-2">
-              +{stats.activeThisMonth.toLocaleString()}
+              {stats.activeThisMonth.toLocaleString()}
             </p>
             <span className="inline-block text-[11px] text-slate-400 mt-1">
-              Joined during current month
+              Recent sign-ups
             </span>
           </CardContent>
         </Card>
@@ -331,17 +435,17 @@ export default function AdminCustomersPage() {
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                Customer LTV Volume
+                Gross Revenue
               </span>
-              <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
-                <DollarSign className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4" />
               </div>
             </div>
-            <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-2 truncate">
+            <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-2 font-mono">
               {formatCurrency(stats.totalRevenue)}
             </p>
             <span className="inline-block text-[11px] text-slate-400 mt-1">
-              Cumulative completed spend
+              All completed payments
             </span>
           </CardContent>
         </Card>
@@ -366,9 +470,10 @@ export default function AdminCustomersPage() {
         </Card>
       </div>
 
-      {/* Filter and Search Bar */}
-      <Card className="rounded-2xl border border-slate-200/80 shadow-xs bg-white">
+      {/* Main Search, Status & Advanced Filter Bar */}
+      <Card className="rounded-2xl border border-slate-200/80 shadow-xs bg-white overflow-hidden">
         <CardContent className="p-4 sm:p-5 space-y-4">
+          {/* Top Bar: Search, Status, and Toggle Advanced Filters */}
           <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
             {/* Search Input */}
             <div className="relative flex-1 min-w-0">
@@ -390,7 +495,7 @@ export default function AdminCustomersPage() {
               )}
             </div>
 
-            {/* Filter Buttons */}
+            {/* Status Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
               {["All", "Active", "VIP", "Inactive"].map((status) => {
                 const isActive = statusFilter === status
@@ -405,12 +510,301 @@ export default function AdminCustomersPage() {
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900"
                     }`}
                   >
-                    {status === "All" ? "All Customers" : status}
+                    {status === "All" ? "All Statuses" : status}
                   </button>
                 )
               })}
+
+              {/* Advanced Filter Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border transition-colors min-h-[40px] ${
+                  showAdvancedFilters || activeFilterCount > 0
+                    ? "bg-red-50 text-red-700 border-red-200"
+                    : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                }`}
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span>Filters & Analysis</span>
+                {activeFilterCount > 0 && (
+                  <span className="w-5 h-5 rounded-full bg-red-600 text-white text-[11px] font-bold flex items-center justify-center ml-0.5">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
+
+          {/* ADVANCED FILTER PANEL (AMOUNT & DATE REGISTERED) */}
+          {showAdvancedFilters && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4 pt-4 mt-2 transition-all">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* 1. AMOUNT SPENT FILTER */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                      Amount Spent (PKR)
+                    </label>
+                    {amountPreset !== "all" && (
+                      <button
+                        type="button"
+                        onClick={() => handleAmountPresetChange("all")}
+                        className="text-[11px] text-red-600 hover:underline"
+                      >
+                        Reset Amount
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Preset Pills */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { id: "all", label: "Any Amount" },
+                      { id: "gt10k", label: "> Rs. 10,000" },
+                      { id: "gt5k", label: "> Rs. 5,000 (VIP)" },
+                      { id: "1k_5k", label: "Rs. 1k – 5k" },
+                      { id: "lt1k", label: "< Rs. 1,000" },
+                      { id: "custom", label: "Custom Range" },
+                    ].map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handleAmountPresetChange(p.id)}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                          amountPreset === p.id
+                            ? "bg-emerald-600 text-white shadow-2xs font-semibold"
+                            : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom Min / Max inputs */}
+                  {amountPreset === "custom" && (
+                    <div className="grid grid-cols-2 gap-2 pt-1.5">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block mb-0.5">Min Spent (Rs)</span>
+                        <Input
+                          type="number"
+                          placeholder="Min PKR"
+                          min="0"
+                          value={minAmount}
+                          onChange={(e) => {
+                            setMinAmount(e.target.value)
+                            setPage(1)
+                          }}
+                          className="h-9 text-xs rounded-lg bg-white"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block mb-0.5">Max Spent (Rs)</span>
+                        <Input
+                          type="number"
+                          placeholder="Max PKR"
+                          min="0"
+                          value={maxAmount}
+                          onChange={(e) => {
+                            setMaxAmount(e.target.value)
+                            setPage(1)
+                          }}
+                          className="h-9 text-xs rounded-lg bg-white"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. REGISTRATION DATE FILTER */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                      Registration Date
+                    </label>
+                    {datePreset !== "all" && (
+                      <button
+                        type="button"
+                        onClick={() => handleDatePresetChange("all")}
+                        className="text-[11px] text-red-600 hover:underline"
+                      >
+                        Reset Date
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Date Preset Pills */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { id: "all", label: "All Time" },
+                      { id: "today", label: "Today" },
+                      { id: "last7days", label: "Last 7 Days" },
+                      { id: "last30days", label: "Last 30 Days" },
+                      { id: "thisMonth", label: "This Month" },
+                      { id: "custom", label: "Custom Dates" },
+                    ].map((d) => (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => handleDatePresetChange(d.id)}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                          datePreset === d.id
+                            ? "bg-blue-600 text-white shadow-2xs font-semibold"
+                            : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom Date Inputs */}
+                  {datePreset === "custom" && (
+                    <div className="grid grid-cols-2 gap-2 pt-1.5">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block mb-0.5">Joined From</span>
+                        <Input
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => {
+                            setStartDate(e.target.value)
+                            setPage(1)
+                          }}
+                          className="h-9 text-xs rounded-lg bg-white"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block mb-0.5">Joined To</span>
+                        <Input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => {
+                            setEndDate(e.target.value)
+                            setPage(1)
+                          }}
+                          className="h-9 text-xs rounded-lg bg-white"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. SORTING & ACTIONS */}
+                <div className="space-y-2.5">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <ArrowUpDown className="w-3.5 h-3.5 text-purple-600" />
+                    Sort Analysis By
+                  </label>
+
+                  <Select
+                    value={sortBy}
+                    onValueChange={(val) => {
+                      setSortBy(val)
+                      setPage(1)
+                    }}
+                  >
+                    <SelectTrigger className="h-9 rounded-xl bg-white text-xs border-slate-200">
+                      <SelectValue placeholder="Sort customers" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl text-xs">
+                      <SelectItem value="newest">Newest Registered</SelectItem>
+                      <SelectItem value="oldest">Oldest Registered</SelectItem>
+                      <SelectItem value="spent_desc">Highest Amount Spent</SelectItem>
+                      <SelectItem value="spent_asc">Lowest Amount Spent</SelectItem>
+                      <SelectItem value="entries_desc">Most Raffle Entries</SelectItem>
+                      <SelectItem value="name_asc">Name (A–Z)</SelectItem>
+                      <SelectItem value="name_desc">Name (Z–A)</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <div className="pt-2 flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleResetFilters}
+                      className="w-full rounded-xl text-xs h-9 border-slate-200 text-slate-600 hover:text-slate-900"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                      Clear All Filters
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ACTIVE FILTER BADGES STRIP */}
+          {activeFilterCount > 0 && (
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 text-xs">
+              <span className="text-slate-400 font-medium">Applied:</span>
+
+              {statusFilter !== "All" && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 text-[11px] font-semibold">
+                  Status: {statusFilter}
+                  <button onClick={() => setStatusFilter("All")} className="hover:text-red-600">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              {amountPreset !== "all" && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold">
+                  Spent:{" "}
+                  {amountPreset === "gt10k"
+                    ? "> Rs. 10k"
+                    : amountPreset === "gt5k"
+                      ? "> Rs. 5k"
+                      : amountPreset === "1k_5k"
+                        ? "Rs. 1k – 5k"
+                        : amountPreset === "lt1k"
+                          ? "< Rs. 1k"
+                          : `Rs. ${minAmount || "0"} – ${maxAmount || "∞"}`}
+                  <button onClick={() => handleAmountPresetChange("all")} className="hover:text-red-600">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              {datePreset !== "all" && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 text-blue-800 border border-blue-200 text-[11px] font-semibold">
+                  Date:{" "}
+                  {datePreset === "today"
+                    ? "Today"
+                    : datePreset === "last7days"
+                      ? "Last 7 Days"
+                      : datePreset === "last30days"
+                        ? "Last 30 Days"
+                        : datePreset === "thisMonth"
+                          ? "This Month"
+                          : `${startDate || "Start"} to ${endDate || "End"}`}
+                  <button onClick={() => handleDatePresetChange("all")} className="hover:text-red-600">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              {sortBy !== "newest" && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-50 text-purple-800 border border-purple-200 text-[11px] font-semibold">
+                  Sorted: {sortBy.replace("_", " ")}
+                  <button onClick={() => setSortBy("newest")} className="hover:text-red-600">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="text-red-600 hover:underline text-[11px] font-semibold ml-auto"
+              >
+                Reset All
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -456,7 +850,6 @@ export default function AdminCustomersPage() {
           </div>
         </div>
 
-        {/* LOADING SKELETON */}
         {/* LOADING SKELETON STATE */}
         {isLoading ? (
           <div className="overflow-x-auto w-full">
@@ -521,21 +914,18 @@ export default function AdminCustomersPage() {
             <Users className="h-12 w-12 text-slate-300 mx-auto mb-3" />
             <h3 className="text-base font-bold text-slate-900">No customers found</h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-              {searchTerm || statusFilter !== "All"
-                ? "No customer matches your search or filter. Try clearing your filters."
+              {activeFilterCount > 0
+                ? "No customer matches your specified amount, date, or status filter. Try clearing your filters."
                 : "Customers will automatically be listed here as users register on your platform."}
             </p>
-            {(searchTerm || statusFilter !== "All") && (
+            {activeFilterCount > 0 && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  setSearchTerm("")
-                  setStatusFilter("All")
-                }}
+                onClick={handleResetFilters}
                 className="mt-4 rounded-xl text-xs"
               >
-                Reset Filters
+                Reset All Filters
               </Button>
             )}
           </div>
@@ -723,78 +1113,51 @@ export default function AdminCustomersPage() {
             </div>
 
             <div className="flex items-center gap-1.5">
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-lg"
                 onClick={() => setPage(1)}
-                disabled={pagination.page <= 1 || isLoading}
-                className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                aria-label="First page"
+                disabled={!pagination.hasPrev || isLoading}
               >
                 <ChevronsLeft className="h-4 w-4" />
-              </button>
-
-              <button
-                type="button"
+                <span className="sr-only">First page</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-lg"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={!pagination.hasPrev || isLoading}
-                className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                aria-label="Previous page"
               >
                 <ChevronLeft className="h-4 w-4" />
-              </button>
+                <span className="sr-only">Previous page</span>
+              </Button>
 
-              <div className="hidden sm:flex items-center gap-1">
-                {getPaginationPages().map((p, idx) => {
-                  if (p === "...") {
-                    return (
-                      <span key={`dots-${idx}`} className="px-2 text-xs text-slate-400">
-                        ...
-                      </span>
-                    )
-                  }
-                  const pageNum = Number(p)
-                  const isActive = pageNum === pagination.page
-                  return (
-                    <button
-                      key={pageNum}
-                      type="button"
-                      onClick={() => setPage(pageNum)}
-                      disabled={isLoading}
-                      className={`min-h-[38px] min-w-[38px] text-xs font-semibold rounded-xl transition-colors ${
-                        isActive
-                          ? "bg-slate-900 text-white shadow-2xs"
-                          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  )
-                })}
+              <div className="px-3 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-lg text-slate-800">
+                Page {pagination.page} of {pagination.totalPages}
               </div>
 
-              <span className="sm:hidden text-xs font-semibold text-slate-700 px-2">
-                Page {pagination.page} of {pagination.totalPages}
-              </span>
-
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-lg"
                 onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
                 disabled={!pagination.hasNext || isLoading}
-                className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                aria-label="Next page"
               >
                 <ChevronRight className="h-4 w-4" />
-              </button>
-
-              <button
-                type="button"
+                <span className="sr-only">Next page</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-lg"
                 onClick={() => setPage(pagination.totalPages)}
-                disabled={pagination.page >= pagination.totalPages || isLoading}
-                className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                aria-label="Last page"
+                disabled={!pagination.hasNext || isLoading}
               >
                 <ChevronsRight className="h-4 w-4" />
-              </button>
+                <span className="sr-only">Last page</span>
+              </Button>
             </div>
           </div>
         )}
