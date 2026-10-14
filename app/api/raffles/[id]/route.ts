@@ -10,6 +10,7 @@ const updateRaffleSchema = z.object({
   image: z.string().optional(),
   gallery: z.array(z.string()).optional(),
   price: z.number().min(1, "Price must be greater than 0").optional(),
+  realPrice: z.number().min(1, "Real Price must be greater than 0").optional(),
   totalEntries: z.number().min(1, "Total entries must be greater than 0").optional(),
   category: z.string().min(1, "Category is required").optional(),
   featured: z.boolean().optional(),
@@ -68,7 +69,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       where: { id: params.id },
       data: {
         ...data,
-        realPrice:Number.parseInt(body.realPrice ) * 100, // conver to paisa,
+        ...(body.realPrice !== undefined
+          ? { realPrice: Number.parseInt(body.realPrice) * 100 }
+          : {}),
         gallery: data.gallery || [],
         specifications: data.specifications || [],
         rules: data.rules || [],

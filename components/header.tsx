@@ -634,22 +634,15 @@ export function Header() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 mt-3">
+                      <div className="mt-3">
                         <a
                           href={waInquiryUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl bg-[#25D366] active:bg-[#1caa52] text-white text-xs font-bold shadow-2xs text-center"
+                          className="flex items-center justify-center gap-2 w-full py-2.5 px-3 rounded-xl bg-[#25D366] hover:bg-[#20ba59] active:bg-[#1caa52] text-white text-xs font-bold shadow-2xs text-center transition-colors"
                         >
-                          <WhatsAppIcon className="w-3.5 h-3.5" />
-                          Chat WhatsApp
-                        </a>
-                        <a
-                          href={`tel:${WHATSAPP_CLEAN}`}
-                          className="flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl border border-emerald-300 bg-white text-emerald-900 text-xs font-bold text-center"
-                        >
-                          <Phone className="w-3.5 h-3.5 text-emerald-700" />
-                          Call Direct
+                          <WhatsAppIcon className="w-4 h-4" />
+                          Chat on WhatsApp
                         </a>
                       </div>
                     </div>

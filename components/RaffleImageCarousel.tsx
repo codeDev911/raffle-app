@@ -101,9 +101,9 @@ export function RaffleImageCarousel({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      {/* Main Carousel Viewport */}
+      {/* Main Carousel Viewport - flush to edges with zero outer padding */}
       <div
-        className={`relative w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-200/80 shadow-xs select-none group ${aspectRatioClass}`}
+        className={`relative w-full overflow-hidden bg-slate-900 select-none group ${hasMultiple ? "rounded-t-2xl" : "rounded-2xl"} ${aspectRatioClass}`}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -220,7 +220,7 @@ export function RaffleImageCarousel({
 
       {/* Thumbnails Row */}
       {hasMultiple && (
-        <div className="flex gap-2 sm:gap-2.5 overflow-x-auto pb-1 no-scrollbar touch-pan-x">
+        <div className="flex gap-2 sm:gap-2.5 overflow-x-auto px-3 pb-3 pt-1 no-scrollbar touch-pan-x">
           {cleanImages.map((img, idx) => (
             <button
               key={idx}

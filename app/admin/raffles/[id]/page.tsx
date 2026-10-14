@@ -40,6 +40,8 @@ import { WinnerSelectionDialog } from "@/components/winner-selection-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RealVsAproxModal } from "@/components/real-vs-aprox-modal"
 import { RaffleImageCarousel } from "@/components/RaffleImageCarousel"
+import { AddExpenseModal } from "@/components/admin/AddExpenseModal"
+import { DeleteExpenseButton } from "@/components/admin/DeleteExpenseButton"
 
 async function getRaffleDetails(id: string) {
   const raffle = await prisma.raffle.findUnique({
@@ -253,6 +255,14 @@ export default async function AdminRaffleDetailPage({
               Edit Raffle
             </Link>
           </Button>
+
+          <AddExpenseModal
+            raffleId={raffle.id}
+            currentExpensesPKR={totalExpensesPKR}
+            currentRevenuePKR={totalRevenue / 100}
+            prizeCostPKR={raffle.realPrice / 100}
+            ticketPricePKR={raffle.price / 100}
+          />
 
           {hasWinner ? (
             <Button
@@ -524,22 +534,31 @@ export default async function AdminRaffleDetailPage({
             </p>
           </div>
 
-          <RealVsAproxModal
-            realData={{
-              revenue: totalRevenue,
-              profit: realProfit,
-              percentage: realPercentage,
-              entries: totalEntries,
-            }}
-            aproxData={{
-              revenue: aproxRevenue,
-              profit: aproxProfit,
-              percentage: aproxPercentage,
-              entries: raffle.totalEntries,
-            }}
-            originalPrice={raffle.realPrice}
-            pricePerEntry={raffle.price}
-          />
+          <div className="flex items-center gap-2">
+            <AddExpenseModal
+              raffleId={raffle.id}
+              currentExpensesPKR={totalExpensesPKR}
+              currentRevenuePKR={totalRevenue / 100}
+              prizeCostPKR={raffle.realPrice / 100}
+              ticketPricePKR={raffle.price / 100}
+            />
+            <RealVsAproxModal
+              realData={{
+                revenue: totalRevenue,
+                profit: realProfit,
+                percentage: realPercentage,
+                entries: totalEntries,
+              }}
+              aproxData={{
+                revenue: aproxRevenue,
+                profit: aproxProfit,
+                percentage: aproxPercentage,
+                entries: raffle.totalEntries,
+              }}
+              originalPrice={raffle.realPrice}
+              pricePerEntry={raffle.price}
+            />
+          </div>
         </div>
 
         <CardContent className="p-4 sm:p-6 space-y-6">
@@ -605,28 +624,77 @@ export default async function AdminRaffleDetailPage({
           </div>
 
           {/* Itemized Expenses Tagging */}
-          {expensesList.length > 0 && (
-            <div className="pt-4 border-t border-slate-100">
-              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+          <div className="pt-4 border-t border-slate-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                 <Gift className="w-3.5 h-3.5 text-amber-500" />
-                Itemized Campaign Expenses ({expensesList.length}):
+                Itemized Campaign Expenses ({expensesList.length})
               </h4>
+              <AddExpenseModal
+                raffleId={raffle.id}
+                currentExpensesPKR={totalExpensesPKR}
+                currentRevenuePKR={totalRevenue / 100}
+                prizeCostPKR={raffle.realPrice / 100}
+                ticketPricePKR={raffle.price / 100}
+                triggerButton={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-amber-700 hover:text-amber-800 hover:bg-amber-50 font-semibold h-7 px-2"
+                  >
+                    + Add Expense
+                  </Button>
+                }
+              />
+            </div>
+
+            {expensesList.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {expensesList.map((exp, idx) => (
                   <div
                     key={exp.id || idx}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50/60 border border-amber-200/60 rounded-xl text-xs text-amber-900"
+                    className="inline-flex items-center gap-2 pl-3 pr-2 py-1.5 bg-amber-50/70 border border-amber-200/70 rounded-xl text-xs text-amber-950 shadow-2xs group"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    <span className="font-medium">{exp.description}:</span>
-                    <span className="font-mono font-bold">
+                    {exp.category && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-200/50 text-amber-800 uppercase tracking-wider">
+                        {exp.category}
+                      </span>
+                    )}
+                    <span className="font-medium text-slate-800">{exp.description}:</span>
+                    <span className="font-mono font-bold text-amber-900">
                       Rs. {Number(exp.amount).toLocaleString()}
                     </span>
+                    <DeleteExpenseButton
+                      raffleId={raffle.id}
+                      expenseId={exp.id || `exp-${idx}`}
+                      expenseDesc={exp.description}
+                    />
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 flex items-center justify-between text-xs text-slate-500">
+                <span>No itemized expenses recorded yet for this campaign.</span>
+                <AddExpenseModal
+                  raffleId={raffle.id}
+                  currentExpensesPKR={totalExpensesPKR}
+                  currentRevenuePKR={totalRevenue / 100}
+                  prizeCostPKR={raffle.realPrice / 100}
+                  ticketPricePKR={raffle.price / 100}
+                  triggerButton={
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs border-amber-300 text-amber-800 hover:bg-amber-50 h-7 rounded-lg"
+                    >
+                      + Record First Expense
+                    </Button>
+                  }
+                />
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

@@ -1,26 +1,64 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Plus, X, Receipt, TrendingUp, TrendingDown, Trash2, Sparkles } from "lucide-react"
-import Link from "next/link"
-import { roundUpTwoDecimals } from "../../create/page"
+import {
+  ArrowLeft,
+  Save,
+  Loader2,
+  Sparkles,
+  Receipt,
+  Calendar,
+  Ticket,
+  Coins,
+  Tag,
+  Percent,
+  AlertCircle,
+  Plus,
+  X,
+  Trash2,
+  ExternalLink,
+  CheckCircle2,
+  Crown,
+  Layers,
+  ShieldCheck,
+  Scale,
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+  Info,
+} from "lucide-react"
 import { RaffleImageUploader } from "@/components/admin/RaffleImageUploader"
+import { formatCurrency } from "@/lib/utils"
+import { toast } from "sonner"
 
 export interface RaffleExpenseItem {
   id: string
   description: string
   amount: number
+  category?: string
 }
 
 interface Raffle {
@@ -40,11 +78,20 @@ interface Raffle {
   endDate: string
   specifications: string[]
   rules: string[]
-  expenses?: RaffleExpenseItem[]
+  expenses?: any
+}
+
+export function roundUpTwoDecimals(num: number) {
+  return Math.ceil(num * 100) / 100
 }
 
 export default function EditRafflePage({ params }: { params: { id: string } }) {
+  const router = useRouter()
   const [raffle, setRaffle] = useState<Raffle | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState("")
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -57,31 +104,39 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
     totalEntries: "",
     category: "",
     featured: false,
-    status: "",
+    status: "ACTIVE",
     endDate: "",
     specifications: [] as string[],
     rules: [] as string[],
     expenses: [] as RaffleExpenseItem[],
   })
+
   const [newSpec, setNewSpec] = useState("")
   const [newRule, setNewRule] = useState("")
   const [expenseDesc, setExpenseDesc] = useState("")
   const [expenseAmount, setExpenseAmount] = useState("")
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState("")
-  const router = useRouter()
+  const [expenseCategory, setExpenseCategory] = useState("Marketing")
+
+  // Quick Pakistani expense presets
+  const expensePresets = [
+    { label: "TikTok Ads Boost", amount: "1500", category: "Ads" },
+    { label: "Meta / Instagram Ads", amount: "3000", category: "Ads" },
+    { label: "WhatsApp SMS Broadcast", amount: "1000", category: "Marketing" },
+    { label: "Influencer Shoutout", amount: "5000", category: "Influencer" },
+    { label: "TCS / Leopards Courier", amount: "800", category: "Shipping" },
+    { label: "Prize Gift Packaging", amount: "500", category: "Operations" },
+  ]
 
   useEffect(() => {
     const fetchRaffle = async () => {
       try {
         const response = await fetch(`/api/raffles/${params.id}`)
         if (response.ok) {
-          const raffleData = await response.json()
-          setRaffle(raffleData)
+          const data: Raffle = await response.json()
+          setRaffle(data)
 
-          const rawExpenses = raffleData.expenses
-          const parsedExpenses = Array.isArray(rawExpenses)
+          const rawExpenses = data.expenses
+          const parsedExpenses: RaffleExpenseItem[] = Array.isArray(rawExpenses)
             ? rawExpenses.filter((e: any) => !e.isBudget)
             : Array.isArray(rawExpenses?.items)
               ? rawExpenses.items
@@ -95,26 +150,31 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
                 : ""
 
           setFormData({
-            title: raffleData.title,
-            description: raffleData.description,
-            longDescription: raffleData.longDescription || "",
-            image: raffleData.image || "",
-            gallery: raffleData.gallery || [],
-            price: (raffleData.price / 100).toString(),
-            realPrice: (raffleData.realPrice / 100).toString(),
+            title: data.title || "",
+            description: data.description || "",
+            longDescription: data.longDescription || "",
+            image: data.image || "",
+            gallery: data.gallery || [],
+            price: (data.price / 100).toString(),
+            realPrice: (data.realPrice / 100).toString(),
             budget: parsedBudget,
-            totalEntries: raffleData.totalEntries.toString(),
-            category: raffleData.category,
-            featured: raffleData.featured,
-            status: raffleData.status,
-            endDate: new Date(raffleData.endDate).toISOString().slice(0, 16),
-            specifications: raffleData.specifications || [],
-            rules: raffleData.rules || [],
+            totalEntries: data.totalEntries.toString(),
+            category: data.category || "Electronics",
+            featured: data.featured || false,
+            status: data.status || "ACTIVE",
+            endDate: data.endDate
+              ? new Date(data.endDate).toISOString().slice(0, 16)
+              : "",
+            specifications: data.specifications || [],
+            rules: data.rules || [],
             expenses: parsedExpenses,
           })
+        } else {
+          setError("Failed to load raffle details")
         }
-      } catch (error) {
-        console.error("Error fetching raffle:", error)
+      } catch (err) {
+        console.error("Error fetching raffle:", err)
+        setError("Network error loading raffle")
       } finally {
         setLoading(false)
       }
@@ -123,9 +183,10 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
     fetchRaffle()
   }, [params.id])
 
-  const addExpense = (customDesc?: string, customAmount?: string) => {
+  const addExpense = (customDesc?: string, customAmount?: string, customCategory?: string) => {
     const descToUse = (customDesc ?? expenseDesc).trim()
     const amountToUse = parseFloat(customAmount ?? expenseAmount)
+    const categoryToUse = customCategory ?? expenseCategory
 
     if (!descToUse) return
     if (isNaN(amountToUse) || amountToUse <= 0) return
@@ -134,6 +195,7 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
       id: `exp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       description: descToUse,
       amount: Math.round(amountToUse),
+      category: categoryToUse,
     }
 
     setFormData((prev) => ({
@@ -152,10 +214,145 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
     }))
   }
 
+  const addSpecification = () => {
+    if (newSpec.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        specifications: [...prev.specifications, newSpec.trim()],
+      }))
+      setNewSpec("")
+    }
+  }
+
+  const removeSpecification = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      specifications: prev.specifications.filter((_, i) => i !== index),
+    }))
+  }
+
+  const addRule = () => {
+    if (newRule.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        rules: [...prev.rules, newRule.trim()],
+      }))
+      setNewRule("")
+    }
+  }
+
+  const removeRule = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      rules: prev.rules.filter((_, i) => i !== index),
+    }))
+  }
+
+  const setQuickEndDate = (days: number) => {
+    const target = new Date()
+    target.setDate(target.getDate() + days)
+    target.setHours(23, 59, 0, 0)
+    setFormData((prev) => ({ ...prev, endDate: target.toISOString().slice(0, 16) }))
+  }
+
+  // Financial & Budget Calculation Engine
+  const financials = useMemo(() => {
+    const ticketPrice = parseFloat(formData.price) || 0
+    const totalCapacity = parseFloat(formData.totalEntries) || 0
+    const prizeRealCost = parseFloat(formData.realPrice) || 0
+    const allocatedBudget = parseFloat(formData.budget) || 0
+
+    const loggedExpenses = formData.expenses.reduce(
+      (sum, item) => sum + (Number(item.amount) || 0),
+      0
+    )
+
+    const grossRevenue = ticketPrice * totalCapacity
+    const remainingBudget = allocatedBudget > 0 ? allocatedBudget - loggedExpenses : 0
+    const isOverBudget = allocatedBudget > 0 && loggedExpenses > allocatedBudget
+    const overBudgetAmount = isOverBudget ? loggedExpenses - allocatedBudget : 0
+    const budgetUsedPercent =
+      allocatedBudget > 0 ? Math.min(100, Math.round((loggedExpenses / allocatedBudget) * 100)) : 0
+
+    const currentTotalOutflow = prizeRealCost + loggedExpenses
+    const currentNetProfit = grossRevenue - currentTotalOutflow
+    const currentROI =
+      currentTotalOutflow > 0
+        ? roundUpTwoDecimals(((grossRevenue - currentTotalOutflow) / currentTotalOutflow) * 100)
+        : 0
+
+    const maxBudgetUsed = Math.max(allocatedBudget, loggedExpenses)
+    const worstCaseOutflow = prizeRealCost + maxBudgetUsed
+    const budgetedNetProfit = grossRevenue - worstCaseOutflow
+    const budgetedROI =
+      worstCaseOutflow > 0
+        ? roundUpTwoDecimals(((grossRevenue - worstCaseOutflow) / worstCaseOutflow) * 100)
+        : 0
+
+    const breakEvenTicketsCurrent =
+      ticketPrice > 0 ? Math.ceil(currentTotalOutflow / ticketPrice) : 0
+    const breakEvenPercentage =
+      totalCapacity > 0
+        ? Math.min(100, Math.round((breakEvenTicketsCurrent / totalCapacity) * 100))
+        : 0
+
+    return {
+      ticketPrice,
+      totalCapacity,
+      prizeRealCost,
+      allocatedBudget,
+      loggedExpenses,
+      grossRevenue,
+      remainingBudget,
+      isOverBudget,
+      overBudgetAmount,
+      budgetUsedPercent,
+      currentTotalOutflow,
+      currentNetProfit,
+      currentROI,
+      budgetedNetProfit,
+      budgetedROI,
+      worstCaseOutflow,
+      breakEvenTicketsCurrent,
+      breakEvenPercentage,
+      isProfitable: currentNetProfit >= 0,
+    }
+  }, [formData.price, formData.totalEntries, formData.realPrice, formData.budget, formData.expenses])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
     setError("")
+
+    if (!formData.title.trim()) {
+      setError("Please enter a raffle title.")
+      setSubmitting(false)
+      return
+    }
+
+    if (!formData.price || Number(formData.price) <= 0) {
+      setError("Ticket price must be greater than 0.")
+      setSubmitting(false)
+      return
+    }
+
+    if (!formData.totalEntries || Number(formData.totalEntries) <= 0) {
+      setError("Total entries capacity must be greater than 0.")
+      setSubmitting(false)
+      return
+    }
+
+    if (!formData.realPrice || Number(formData.realPrice) <= 0) {
+      setError("Prize base cost is required.")
+      setSubmitting(false)
+      return
+    }
+
+    if (!formData.endDate) {
+      setError("Please specify a raffle end date.")
+      setSubmitting(false)
+      return
+    }
 
     try {
       const coverImage =
@@ -169,175 +366,592 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
         ])
       )
 
+      const payload = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        longDescription: formData.longDescription.trim() || undefined,
+        image: coverImage,
+        gallery: fullGallery,
+        price: Number.parseInt(formData.price) * 100, // in paisa
+        realPrice: Number.parseInt(formData.realPrice), // in PKR (API multiplies by 100)
+        totalEntries: Number.parseInt(formData.totalEntries),
+        category: formData.category,
+        featured: formData.featured,
+        status: formData.status,
+        endDate: new Date(formData.endDate).toISOString(),
+        specifications: formData.specifications,
+        rules: formData.rules,
+        expenses: {
+          budget: Number(formData.budget) || 0,
+          items: formData.expenses.map((exp) => ({
+            id: exp.id,
+            description: exp.description,
+            amount: Number(exp.amount),
+            category: exp.category || "Marketing",
+          })),
+        },
+      }
+
       const response = await fetch(`/api/raffles/${params.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          image: coverImage,
-          gallery: fullGallery,
-          price: Number.parseInt(formData.price) * 100,
-          realPrice: Number.parseInt(formData.realPrice),
-          totalEntries: Number.parseInt(formData.totalEntries),
-          endDate: new Date(formData.endDate).toISOString(),
-          expenses: {
-            budget: Number(formData.budget) || 0,
-            items: formData.expenses.map((exp) => ({
-              id: exp.id,
-              description: exp.description,
-              amount: Number(exp.amount),
-            })),
-          },
-        }),
+        body: JSON.stringify(payload),
       })
 
       const data = await response.json()
 
       if (response.ok) {
-        router.push("/admin/raffles")
+        toast.success("Raffle campaign updated successfully!")
+        router.push(`/admin/raffles/${params.id}`)
       } else {
         setError(data.error || "Failed to update raffle")
       }
-    } catch (error) {
+    } catch (err: any) {
+      console.error("Submission error:", err)
       setError("Network error. Please try again.")
     } finally {
       setSubmitting(false)
     }
   }
 
-  const addSpecification = () => {
-    if (newSpec.trim()) {
-      setFormData({
-        ...formData,
-        specifications: [...formData.specifications, newSpec.trim()],
-      })
-      setNewSpec("")
-    }
-  }
-
-  const removeSpecification = (index: number) => {
-    setFormData({
-      ...formData,
-      specifications: formData.specifications.filter((_, i) => i !== index),
-    })
-  }
-
-  const addRule = () => {
-    if (newRule.trim()) {
-      setFormData({
-        ...formData,
-        rules: [...formData.rules, newRule.trim()],
-      })
-      setNewRule("")
-    }
-  }
-
-  const removeRule = (index: number) => {
-    setFormData({
-      ...formData,
-      rules: formData.rules.filter((_, i) => i !== index),
-    })
-  }
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <p className="text-sm font-semibold text-slate-600">Loading raffle details...</p>
       </div>
     )
   }
 
-  if (!raffle) {
+  if (!raffle && !loading) {
     return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Raffle Not Found</h1>
-        <Link href="/admin/raffles">
-          <Button>Back to Raffles</Button>
-        </Link>
+      <div className="text-center py-16 max-w-md mx-auto space-y-4">
+        <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
+        <h2 className="text-2xl font-bold text-slate-900">Raffle Not Found</h2>
+        <p className="text-sm text-slate-500">
+          The requested raffle campaign could not be located or has been deleted.
+        </p>
+        <Button asChild className="rounded-xl">
+          <Link href="/admin/raffles">Back to Raffles</Link>
+        </Button>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button asChild variant="ghost" className="rounded-2xl">
-          <Link href="/admin/raffles">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Raffles
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Edit Raffle</h1>
-          <p className="text-gray-600 mt-2">Update raffle details and settings</p>
+    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto pb-16">
+      {/* Top Header & Navigation */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 min-h-[38px] shadow-2xs"
+          >
+            <Link href={`/admin/raffles/${params.id}`}>
+              <ArrowLeft className="mr-1.5 h-4 w-4" />
+              Back to Details
+            </Link>
+          </Button>
+
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                Edit Raffle Campaign
+              </h1>
+              <Badge
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                  formData.status === "ACTIVE"
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : formData.status === "COMPLETED"
+                      ? "bg-blue-50 text-blue-700 border border-blue-200"
+                      : "bg-slate-100 text-slate-700 border border-slate-200"
+                }`}
+              >
+                {formData.status}
+              </Badge>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Refine pricing, campaign photos, budget allocation, specifications & rules
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 min-h-[38px]"
+          >
+            <Link href={`/raffles/${params.id}`} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+              Public View
+            </Link>
+          </Button>
+
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs min-h-[38px] px-5 shadow-xs"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                Saving Changes...
+              </>
+            ) : (
+              <>
+                <Save className="w-3.5 h-3.5 mr-1.5" />
+                Save Changes
+              </>
+            )}
+          </Button>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Basic Information */}
-        <Card className="rounded-2xl shadow-lg border-0">
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>Update the basic details of your raffle</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
+      {error && (
+        <div className="flex items-center gap-2.5 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Main Grid: Form Left (8 cols) + Sticky Live Financial Simulator Right (4 cols) */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        <div className="lg:col-span-8 space-y-6">
+          {/* SECTION 1: CAMPAIGN BASICS */}
+          <Card className="rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs bg-white overflow-hidden">
+            <CardHeader className="p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50">
+              <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Tag className="w-4 h-4 text-emerald-600" />
+                Campaign Basics
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Essential customer-facing identifiers, title, and prize overview
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-5 sm:p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="sm:col-span-2 space-y-1.5">
+                  <Label htmlFor="title" className="text-xs font-semibold text-slate-700">
+                    Raffle Title *
+                  </Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="e.g. Brand New iPhone 16 Pro Max 256GB"
+                    className="rounded-xl border-slate-200 text-sm font-semibold"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="category" className="text-xs font-semibold text-slate-700">
+                    Category *
+                  </Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(val) => setFormData({ ...formData, category: val })}
+                  >
+                    <SelectTrigger id="category" className="rounded-xl border-slate-200 text-sm">
+                      <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="Electronics">Electronics</SelectItem>
+                      <SelectItem value="Vehicles">Vehicles</SelectItem>
+                      <SelectItem value="Jewelry">Jewelry & Gold</SelectItem>
+                      <SelectItem value="Gaming">Gaming & Consoles</SelectItem>
+                      <SelectItem value="Cash">Cash Prizes</SelectItem>
+                      <SelectItem value="Home">Home & Kitchen</SelectItem>
+                      <SelectItem value="Fashion">Fashion & Luxury</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="description" className="text-xs font-semibold text-slate-700">
+                  Short Hook / Card Summary *
+                </Label>
                 <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="rounded-2xl"
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Win an authentic PTA-approved iPhone 16 Pro Max with 1 year Apple official warranty."
+                  className="rounded-xl border-slate-200 text-sm"
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="category">Category *</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
-                >
-                  <SelectTrigger className="rounded-2xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Electronics">Electronics</SelectItem>
-                    <SelectItem value="Vehicles">Vehicles</SelectItem>
-                    <SelectItem value="Jewelry">Jewelry</SelectItem>
-                    <SelectItem value="Gaming">Gaming</SelectItem>
-                    <SelectItem value="Cash">Cash Prizes</SelectItem>
-                    <SelectItem value="Home">Home & Garden</SelectItem>
-                    <SelectItem value="Fashion">Fashion</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="longDescription" className="text-xs font-semibold text-slate-700">
+                  Comprehensive Item Details & Story
+                </Label>
+                <Textarea
+                  id="longDescription"
+                  value={formData.longDescription}
+                  onChange={(e) => setFormData({ ...formData, longDescription: e.target.value })}
+                  placeholder="Full specifications, color options, warranty details, and prize delivery terms..."
+                  className="rounded-xl border-slate-200 text-sm min-h-[110px]"
+                />
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Short Description *</Label>
-              <Input
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="rounded-2xl"
-                required
-              />
-            </div>
+          {/* SECTION 2: TIMELINE & STATUS */}
+          <Card className="rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs bg-white overflow-hidden">
+            <CardHeader className="p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50">
+              <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-blue-600" />
+                Schedule, Timeline & Status
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Control active lifecycle, countdown clock, and home page feature flags
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-5 sm:p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="status" className="text-xs font-semibold text-slate-700">
+                    Draw Status
+                  </Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(val) => setFormData({ ...formData, status: val })}
+                  >
+                    <SelectTrigger id="status" className="rounded-xl border-slate-200 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="ACTIVE">ACTIVE (Open for purchases)</SelectItem>
+                      <SelectItem value="DRAFT">DRAFT (Hidden preview)</SelectItem>
+                      <SelectItem value="COMPLETED">COMPLETED (Draw finished)</SelectItem>
+                      <SelectItem value="CANCELLED">CANCELLED (Suspended)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="longDescription">Long Description</Label>
-              <Textarea
-                id="longDescription"
-                value={formData.longDescription}
-                onChange={(e) => setFormData({ ...formData, longDescription: e.target.value })}
-                className="rounded-2xl min-h-[120px]"
-              />
-            </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="endDate" className="text-xs font-semibold text-slate-700">
+                      End Date & Draw Deadline *
+                    </Label>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setQuickEndDate(7)}
+                        className="text-[10px] text-emerald-600 hover:underline font-semibold"
+                      >
+                        +7d
+                      </button>
+                      <span className="text-[10px] text-slate-300">·</span>
+                      <button
+                        type="button"
+                        onClick={() => setQuickEndDate(14)}
+                        className="text-[10px] text-emerald-600 hover:underline font-semibold"
+                      >
+                        +14d
+                      </button>
+                      <span className="text-[10px] text-slate-300">·</span>
+                      <button
+                        type="button"
+                        onClick={() => setQuickEndDate(30)}
+                        className="text-[10px] text-emerald-600 hover:underline font-semibold"
+                      >
+                        +30d
+                      </button>
+                    </div>
+                  </div>
+                  <Input
+                    id="endDate"
+                    type="datetime-local"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    className="rounded-xl border-slate-200 text-sm"
+                    required
+                  />
+                </div>
+              </div>
 
-            <div className="space-y-2 pt-2">
-              <Label className="text-sm font-bold text-slate-800">Campaign Photos & Gallery</Label>
+              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/60">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
+                    <Crown className="w-4 h-4 text-amber-600" />
+                    Featured Spotlight Campaign
+                  </div>
+                  <p className="text-[11px] text-amber-700/90">
+                    Pins this raffle at the top of the home page banner and recommendations
+                  </p>
+                </div>
+                <Switch
+                  id="featured"
+                  checked={formData.featured}
+                  onCheckedChange={(checked) => setFormData({ ...formData, featured: checked })}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* SECTION 3: TICKET PRICING & CAPACITY */}
+          <Card className="rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs bg-white overflow-hidden">
+            <CardHeader className="p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50">
+              <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Ticket className="w-4 h-4 text-emerald-600" />
+                Ticket Pricing & Pool Capacity
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Configure ticket economics, target pool size, and prize acquisition cost
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-5 sm:p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="price" className="text-xs font-semibold text-slate-700">
+                    Ticket Price (PKR) *
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                      Rs.
+                    </span>
+                    <Input
+                      id="price"
+                      type="number"
+                      min="1"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      placeholder="100"
+                      className="rounded-xl border-slate-200 pl-10 text-sm font-mono font-semibold"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="totalEntries" className="text-xs font-semibold text-slate-700">
+                    Total Tickets Pool *
+                  </Label>
+                  <Input
+                    id="totalEntries"
+                    type="number"
+                    min="1"
+                    value={formData.totalEntries}
+                    onChange={(e) => setFormData({ ...formData, totalEntries: e.target.value })}
+                    placeholder="2500"
+                    className="rounded-xl border-slate-200 text-sm font-mono font-semibold"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="realPrice" className="text-xs font-semibold text-slate-700">
+                    Prize Base Asset Cost (PKR) *
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                      Rs.
+                    </span>
+                    <Input
+                      id="realPrice"
+                      type="number"
+                      min="1"
+                      value={formData.realPrice}
+                      onChange={(e) => setFormData({ ...formData, realPrice: e.target.value })}
+                      placeholder="185000"
+                      className="rounded-xl border-slate-200 pl-10 text-sm font-mono font-semibold"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {financials.grossRevenue > 0 && (
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-slate-600">Projected Gross Revenue at 100% capacity:</span>
+                  <span className="font-mono font-bold text-slate-900 text-sm">
+                    Rs. {financials.grossRevenue.toLocaleString()}
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* SECTION 4: FINANCIAL ARCHITECTURE, BUDGET & EXPENSES */}
+          <Card className="rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs bg-white overflow-hidden">
+            <CardHeader className="p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <Receipt className="w-4 h-4 text-amber-500" />
+                    Financial Architecture & Budget Planning
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Set campaign budget limits and track itemized marketing, ad spend & logistics expenses
+                  </CardDescription>
+                </div>
+                <Badge
+                  className={`text-xs font-mono font-bold px-2.5 py-1 ${
+                    financials.isOverBudget
+                      ? "bg-rose-100 text-rose-700 border border-rose-200"
+                      : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  }`}
+                >
+                  {financials.isOverBudget
+                    ? `Over Budget by Rs. ${financials.overBudgetAmount.toLocaleString()}`
+                    : `Rs. ${financials.remainingBudget.toLocaleString()} Budget Remaining`}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-5 sm:p-6 space-y-5">
+              {/* Budget Allocation Field */}
+              <div className="space-y-1.5">
+                <Label htmlFor="budget" className="text-xs font-semibold text-slate-700">
+                  Allocated Marketing & Campaign Budget (PKR)
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                    Rs.
+                  </span>
+                  <Input
+                    id="budget"
+                    type="number"
+                    min="0"
+                    value={formData.budget}
+                    onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                    placeholder="e.g. 15000"
+                    className="rounded-xl border-slate-200 pl-10 text-sm font-mono font-semibold"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Guarantees safe margin calculation even before all marketing expenses are logged.
+                </p>
+              </div>
+
+              {/* Quick Expense Presets */}
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  Quick Pakistani eCommerce Presets
+                </Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {expensePresets.map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => addExpense(preset.label, preset.amount, preset.category)}
+                      className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-200 border border-transparent transition-colors text-slate-700 flex items-center gap-1"
+                    >
+                      <Sparkles className="w-3 h-3 text-amber-500" />
+                      <span>{preset.label}</span>
+                      <span className="font-mono font-bold text-[10px] text-slate-500">
+                        Rs. {Number(preset.amount).toLocaleString()}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Add Custom Expense Input */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 pt-2">
+                <div className="sm:col-span-6">
+                  <Input
+                    value={expenseDesc}
+                    onChange={(e) => setExpenseDesc(e.target.value)}
+                    placeholder="Custom expense description..."
+                    className="rounded-xl border-slate-200 text-xs h-10"
+                  />
+                </div>
+                <div className="sm:col-span-3">
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                      Rs.
+                    </span>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={expenseAmount}
+                      onChange={(e) => setExpenseAmount(e.target.value)}
+                      placeholder="Amount"
+                      className="rounded-xl border-slate-200 pl-9 text-xs h-10 font-mono"
+                    />
+                  </div>
+                </div>
+                <div className="sm:col-span-3">
+                  <Button
+                    type="button"
+                    onClick={() => addExpense()}
+                    className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs h-10 font-semibold"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" />
+                    Add Expense
+                  </Button>
+                </div>
+              </div>
+
+              {/* Itemized Expenses List */}
+              {formData.expenses.length > 0 ? (
+                <div className="space-y-2 pt-2">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    Logged Expenses ({formData.expenses.length}):
+                  </span>
+                  <div className="space-y-1.5">
+                    {formData.expenses.map((exp) => (
+                      <div
+                        key={exp.id}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                          {exp.category && (
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] bg-slate-200/70 text-slate-700 px-1.5 py-0"
+                            >
+                              {exp.category}
+                            </Badge>
+                          )}
+                          <span className="font-semibold text-slate-800 truncate">
+                            {exp.description}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          <span className="font-mono font-bold text-slate-900">
+                            Rs. {exp.amount.toLocaleString()}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeExpense(exp.id)}
+                            className="text-slate-400 hover:text-rose-600 transition-colors p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 text-center py-2">
+                  No individual expenses logged yet.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* SECTION 5: MEDIA & IMAGES */}
+          <Card className="rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs bg-white overflow-hidden">
+            <CardHeader className="p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50">
+              <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Layers className="w-4 h-4 text-purple-600" />
+                Campaign Photos & Cloudinary Gallery
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Pick multiple photos to upload to Cloudinary. The first photo is set as the main cover, and remaining photos render in the interactive details carousel.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-5 sm:p-6">
               <RaffleImageUploader
                 mainImage={formData.image}
                 gallery={formData.gallery}
@@ -349,574 +963,241 @@ export default function EditRafflePage({ params }: { params: { id: string } }) {
                   }))
                 }
               />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Pricing & Settings */}
-        <Card className="rounded-2xl shadow-lg border-0">
-          <CardHeader>
-            <CardTitle>Pricing & Settings</CardTitle>
-            <CardDescription>Update pricing and raffle settings</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid md:grid-cols-4 gap-6">
-               <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                  <SelectTrigger className="rounded-2xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DRAFT">Draft</SelectItem>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="COMPLETED">Completed</SelectItem>
-                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="real_price">Real Price (PKR) *</Label>
-                <Input
-                  id="real_price"
-                  type="number"
-                  value={formData.realPrice}
-                  onChange={(e) => setFormData({ ...formData, realPrice: e.target.value })}
-                  className="rounded-2xl"
-                  min="1"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="price">Price per Entry (PKR) *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="rounded-2xl"
-                  min="1"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="totalEntries">Total Entries *</Label>
-                <Input
-                  id="totalEntries"
-                  type="number"
-                  value={formData.totalEntries}
-                  onChange={(e) => setFormData({ ...formData, totalEntries: e.target.value })}
-                  className="rounded-2xl"
-                  min="1"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="endDate">End Date *</Label>
-                <Input
-                  id="endDate"
-                  type="datetime-local"
-                  value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  className="rounded-2xl"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2 pt-2">
-              <Switch
-                id="featured"
-                checked={formData.featured}
-                onCheckedChange={(checked) => setFormData({ ...formData, featured: checked })}
-              />
-              <Label htmlFor="featured" className="cursor-pointer">
-                Featured Raffle (Highlights on Home Page)
-              </Label>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Expenses & Marketing Costs Card */}
-        <Card className="rounded-2xl shadow-lg border-0 overflow-hidden bg-white">
-          <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100/60 pb-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-sm">
-                  <Receipt className="h-5 w-5" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl text-gray-900">
-                    Raffle Expenses & Marketing Costs
-                  </CardTitle>
-                  <CardDescription className="text-gray-600">
-                    Add ad spend (e.g. TikTok ads Rs. 1,200), promotions, shipping, or packaging to deduct from profits.
-                  </CardDescription>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="bg-white/80 border-amber-300 text-amber-900 font-semibold px-3 py-1 text-sm rounded-xl">
-                  Total Expenses: Rs. {formData.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0).toLocaleString()}
-                </Badge>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-6">
-            {/* Campaign Budget Input */}
-            <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/70 space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="budget" className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
-                  Allocated Campaign Budget (PKR)
+          {/* SECTION 6: SPECIFICATIONS & RULES BUILDER */}
+          <Card className="rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs bg-white overflow-hidden">
+            <CardHeader className="p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50">
+              <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                Specifications & Official Draw Rules
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Bullet points displayed on product tabs to guarantee trust and transparency
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-5 sm:p-6 space-y-6">
+              {/* Specifications */}
+              <div className="space-y-2.5">
+                <Label className="text-xs font-semibold text-slate-700">
+                  Key Inclusions & Box Specifications
                 </Label>
-                {formData.budget && Number(formData.budget) > 0 && (
-                  <Badge variant="outline" className="text-[11px] bg-white text-amber-900 border-amber-300">
-                    Remaining: Rs. {(
-                      Number(formData.budget) -
-                      formData.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0)
-                    ).toLocaleString()}
-                  </Badge>
-                )}
-              </div>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-600">
-                  Rs.
-                </span>
-                <Input
-                  id="budget"
-                  type="number"
-                  min="0"
-                  value={formData.budget}
-                  onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                  className="rounded-xl pl-10 border-amber-200 text-sm font-mono font-bold bg-white"
-                  placeholder="25000"
-                />
-              </div>
-              <span className="text-[11px] text-amber-900 block">
-                Target marketing & operations ceiling for this raffle campaign
-              </span>
-            </div>
-
-            {/* Quick Presets */}
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Quick Pakistani Campaign Presets (Click to autofill)
-              </Label>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { label: "TikTok ads", amount: "1200" },
-                  { label: "Meta / Instagram Ads", amount: "2500" },
-                  { label: "Courier & Delivery", amount: "600" },
-                  { label: "WhatsApp Broadcast", amount: "800" },
-                  { label: "Influencer Promotion", amount: "5000" },
-                  { label: "Prize Packaging", amount: "400" },
-                ].map((preset) => (
-                  <button
-                    key={preset.label}
-                    type="button"
-                    onClick={() => {
-                      setExpenseDesc(preset.label)
-                      setExpenseAmount(preset.amount)
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-xl border border-gray-200 bg-gray-50 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-900 transition-colors"
-                  >
-                    <Plus className="h-3 w-3 text-amber-600" />
-                    <span>{preset.label}</span>
-                    <span className="text-gray-400 font-mono">Rs.{preset.amount}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Expense Inputs */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end p-4 bg-gray-50/80 rounded-2xl border border-gray-100">
-              <div className="md:col-span-6 space-y-1.5">
-                <Label htmlFor="expense_desc" className="text-xs font-medium text-gray-700">
-                  Expense Description *
-                </Label>
-                <Input
-                  id="expense_desc"
-                  value={expenseDesc}
-                  onChange={(e) => setExpenseDesc(e.target.value)}
-                  placeholder="e.g. TikTok ads, Facebook boost, Packaging"
-                  className="rounded-xl bg-white"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault()
-                      addExpense()
-                    }
-                  }}
-                />
-              </div>
-
-              <div className="md:col-span-4 space-y-1.5">
-                <Label htmlFor="expense_amount" className="text-xs font-medium text-gray-700">
-                  Amount in PKR (Rs.) *
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">
-                    Rs.
-                  </span>
+                <div className="flex gap-2">
                   <Input
-                    id="expense_amount"
-                    type="number"
-                    min="1"
-                    value={expenseAmount}
-                    onChange={(e) => setExpenseAmount(e.target.value)}
-                    placeholder="1200"
-                    className="rounded-xl pl-9 bg-white"
+                    value={newSpec}
+                    onChange={(e) => setNewSpec(e.target.value)}
+                    placeholder="e.g. 1 Year Official Apple Warranty & PTA Approved"
+                    className="rounded-xl border-slate-200 text-xs h-10"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault()
-                        addExpense()
+                        addSpecification()
                       }
                     }}
                   />
+                  <Button
+                    type="button"
+                    onClick={addSpecification}
+                    className="rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs h-10 px-4 shrink-0"
+                  >
+                    Add
+                  </Button>
                 </div>
-              </div>
-
-              <div className="md:col-span-2">
-                <Button
-                  type="button"
-                  onClick={() => addExpense()}
-                  disabled={!expenseDesc.trim() || !expenseAmount || Number(expenseAmount) <= 0}
-                  className="w-full bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-sm"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add
-                </Button>
-              </div>
-            </div>
-
-            {/* Itemized Expenses List */}
-            {formData.expenses.length === 0 ? (
-              <div className="text-center py-6 px-4 border border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
-                <Receipt className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm font-medium text-gray-700">No expenses added yet</p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Type an expense like <span className="font-semibold text-gray-700">Rs. 1200 TikTok ads</span> above to factor it into the raffle profit calculations.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-gray-500 px-2 uppercase tracking-wider">
-                  <span>Expense Item ({formData.expenses.length})</span>
-                  <span>Amount & Action</span>
-                </div>
-                <div className="divide-y divide-gray-100 border border-gray-200 rounded-2xl overflow-hidden bg-white">
-                  {formData.expenses.map((expense, idx) => (
-                    <div
-                      key={expense.id || idx}
-                      className="flex items-center justify-between p-3.5 hover:bg-amber-50/30 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center justify-center h-6 w-6 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">
-                          {idx + 1}
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">
-                            {expense.description}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Marketing / Campaign Cost
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-bold font-mono text-gray-900 bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100">
-                          Rs. {Number(expense.amount).toLocaleString()}
-                        </span>
-                        <Button
+                {formData.specifications.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {formData.specifications.map((spec, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-lg text-xs text-slate-700"
+                      >
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        {spec}
+                        <button
                           type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeExpense(expense.id)}
-                          className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                          onClick={() => removeSpecification(i)}
+                          className="text-slate-400 hover:text-rose-600 ml-1"
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Rules */}
+              <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                <Label className="text-xs font-semibold text-slate-700">
+                  Official Terms & Fairness Rules
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={newRule}
+                    onChange={(e) => setNewRule(e.target.value)}
+                    placeholder="e.g. Winner will be drawn live on YouTube once 100% tickets are sold."
+                    className="rounded-xl border-slate-200 text-xs h-10"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        addRule()
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    onClick={addRule}
+                    className="rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs h-10 px-4 shrink-0"
+                  >
+                    Add
+                  </Button>
                 </div>
-                <div className="flex justify-end pt-1">
-                  <span className="text-xs font-medium text-gray-500">
-                    Total Campaign Outflow: <span className="font-bold text-gray-900">Rs. {formData.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0).toLocaleString()}</span>
+                {formData.rules.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    {formData.rules.map((rule, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between p-2 rounded-lg bg-slate-50 text-xs text-slate-700"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-4 h-4 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center justify-center shrink-0">
+                            {i + 1}
+                          </span>
+                          <span>{rule}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeRule(i)}
+                          className="text-slate-400 hover:text-rose-600 p-1"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Column 2: Sticky Live Financial Simulator (4 cols on lg) */}
+        <div className="lg:col-span-4 sticky top-6 space-y-4">
+          <Card className="rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm bg-white overflow-hidden">
+            <CardHeader className="p-4 sm:p-5 border-b border-slate-100 bg-slate-900 text-white">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Scale className="w-4 h-4 text-emerald-400" />
+                  Live Profit Simulator
+                </CardTitle>
+                <Badge
+                  className={`text-[10px] font-bold px-2 py-0.5 border-0 ${
+                    financials.isProfitable
+                      ? "bg-emerald-500 text-white"
+                      : "bg-rose-500 text-white"
+                  }`}
+                >
+                  {financials.isProfitable ? "Profitable" : "Loss Risk"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-5 space-y-4 text-xs">
+              {/* Projected Net Profit Metric */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 text-center space-y-1">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                  Projected Net Profit (100% Sellout)
+                </span>
+                <p
+                  className={`text-2xl sm:text-3xl font-extrabold font-mono ${
+                    financials.isProfitable ? "text-emerald-700" : "text-rose-600"
+                  }`}
+                >
+                  Rs. {financials.currentNetProfit.toLocaleString()}
+                </p>
+                <span className="text-[11px] font-semibold text-slate-500 block">
+                  ROI: {financials.currentROI}%
+                </span>
+              </div>
+
+              {/* Financial Architecture Breakdown */}
+              <div className="space-y-2 border-t border-slate-100 pt-3">
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Gross Target Revenue:</span>
+                  <span className="font-mono font-bold text-slate-900">
+                    Rs. {financials.grossRevenue.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Base Prize Asset Cost:</span>
+                  <span className="font-mono font-bold text-slate-900">
+                    -Rs. {financials.prizeRealCost.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Logged Expenses:</span>
+                  <span className="font-mono font-bold text-amber-700">
+                    -Rs. {financials.loggedExpenses.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600">
+                  <span>Break-Even Tickets:</span>
+                  <span className="font-mono font-bold text-slate-900">
+                    {financials.breakEvenTicketsCurrent} / {financials.totalCapacity} (
+                    {financials.breakEvenPercentage}%)
                   </span>
                 </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Financial & Profit Calculation Card */}
-        {(() => {
-          const entryPrice = parseFloat(formData.price) || 0
-          const totalEntries = parseFloat(formData.totalEntries) || 0
-          const realPrice = parseFloat(formData.realPrice) || 0
-          const totalExpenses = formData.expenses.reduce(
-            (sum, item) => sum + (Number(item.amount) || 0),
-            0
-          )
-          const approxRevenue = entryPrice * totalEntries
-          const totalCost = realPrice + totalExpenses
-          const netProfit = approxRevenue - totalCost
-          const earningPercentage =
-            totalCost > 0
-              ? roundUpTwoDecimals(((approxRevenue - totalCost) / totalCost) * 100)
-              : 0
-          const isProfitable = netProfit >= 0
-
-          return (
-            <Card className="rounded-2xl shadow-lg border-0 overflow-hidden bg-white">
-              <CardHeader className="bg-gradient-to-r from-slate-900 to-gray-900 text-white pb-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-emerald-400" />
-                      <CardTitle className="text-xl text-white">
-                        Live Financial & Profit Projections
-                      </CardTitle>
-                    </div>
-                    <CardDescription className="text-gray-300 mt-1">
-                      Calculates gross revenue, deducts real prize cost and all campaign expenses to show true net earnings.
-                    </CardDescription>
-                  </div>
-                  <Badge
-                    className={`px-3 py-1.5 text-xs font-bold rounded-xl border ${
-                      isProfitable
-                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-                        : "bg-red-500/20 text-red-300 border-red-500/40"
-                    }`}
-                  >
-                    {isProfitable ? "PROFITABLE RAFFLE" : "DEFICIT / LOSS"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6 pt-6">
-                {/* 4 Metrics Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-blue-50/70 border border-blue-100 rounded-2xl p-4">
-                    <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-                      Gross Revenue (Aprox)
+              {/* Budget consumption gauge */}
+              {financials.allocatedBudget > 0 && (
+                <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500 font-semibold">Budget Consumption</span>
+                    <span className="font-mono font-bold text-slate-900">
+                      {financials.budgetUsedPercent}%
                     </span>
-                    <div className="text-xl font-black text-blue-950 mt-1">
-                      Rs. {approxRevenue.toLocaleString()}
-                    </div>
-                    <p className="text-xs text-blue-600 mt-0.5 font-mono">
-                      Rs. {entryPrice} × {totalEntries.toLocaleString()} tickets
-                    </p>
                   </div>
-
-                  <div className="bg-purple-50/70 border border-purple-100 rounded-2xl p-4">
-                    <span className="text-xs font-semibold text-purple-700 uppercase tracking-wider">
-                      Real Prize Cost
-                    </span>
-                    <div className="text-xl font-black text-purple-950 mt-1">
-                      Rs. {realPrice.toLocaleString()}
-                    </div>
-                    <p className="text-xs text-purple-600 mt-0.5">
-                      Base item purchase
-                    </p>
+                  <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        financials.isOverBudget
+                          ? "bg-rose-500"
+                          : financials.budgetUsedPercent > 80
+                            ? "bg-amber-500"
+                            : "bg-emerald-500"
+                      }`}
+                      style={{ width: `${Math.min(100, financials.budgetUsedPercent)}%` }}
+                    />
                   </div>
-
-                  <div className="bg-amber-50/70 border border-amber-100 rounded-2xl p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-amber-700 uppercase tracking-wider">
-                        Added Expenses
-                      </span>
-                      {formData.expenses.length > 0 && (
-                        <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded-full">
-                          {formData.expenses.length}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-xl font-black text-amber-950 mt-1">
-                      Rs. {totalExpenses.toLocaleString()}
-                    </div>
-                    <p className="text-xs text-amber-700 mt-0.5">
-                      TikTok ads & marketing
-                    </p>
-                  </div>
-
-                  <div className="bg-rose-50/70 border border-rose-100 rounded-2xl p-4">
-                    <span className="text-xs font-semibold text-rose-700 uppercase tracking-wider">
-                      Total Outflow (Costs)
-                    </span>
-                    <div className="text-xl font-black text-rose-950 mt-1">
-                      Rs. {totalCost.toLocaleString()}
-                    </div>
-                    <p className="text-xs text-rose-600 mt-0.5">
-                      Real Price + Expenses
-                    </p>
+                  <div className="flex items-center justify-between text-[10px] text-slate-400">
+                    <span>Rs. {financials.loggedExpenses.toLocaleString()} spent</span>
+                    <span>Rs. {financials.allocatedBudget.toLocaleString()} cap</span>
                   </div>
                 </div>
+              )}
 
-                {/* Net Profit Banner */}
-                <div
-                  className={`rounded-2xl p-5 border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                    isProfitable
-                      ? "bg-gradient-to-r from-emerald-500/10 via-emerald-50 to-teal-50 border-emerald-200"
-                      : "bg-gradient-to-r from-red-500/10 via-red-50 to-orange-50 border-red-200"
-                  }`}
+              {/* Primary Action Button */}
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm h-11 shadow-xs"
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      {isProfitable ? (
-                        <TrendingUp className="h-5 w-5 text-emerald-600" />
-                      ) : (
-                        <TrendingDown className="h-5 w-5 text-red-600" />
-                      )}
-                      <span className="text-sm font-bold uppercase tracking-wider text-gray-700">
-                        Net Projected Profit (After All Deductions)
-                      </span>
-                    </div>
-                    <div className="flex items-baseline gap-3">
-                      <span
-                        className={`text-3xl sm:text-4xl font-black tracking-tight ${
-                          isProfitable ? "text-emerald-700" : "text-red-700"
-                        }`}
-                      >
-                        {isProfitable ? "+" : ""}Rs. {netProfit.toLocaleString()}
-                      </span>
-                      <span
-                        className={`text-sm font-bold px-2.5 py-1 rounded-xl ${
-                          isProfitable
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {earningPercentage >= 0 ? "+" : ""}
-                        {earningPercentage}% Return (ROI)
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Per ticket net profit:{" "}
-                      <span className="font-semibold text-gray-800">
-                        Rs. {totalEntries > 0 ? (netProfit / totalEntries).toFixed(2) : 0}
-                      </span>{" "}
-                      per sold entry
-                    </p>
-                  </div>
-
-                  {/* Math Breakdown Box */}
-                  <div className="bg-white/90 backdrop-blur rounded-xl p-3 border border-gray-200/80 shadow-sm text-xs space-y-1 md:min-w-[280px]">
-                    <div className="font-bold text-gray-800 mb-1 flex items-center justify-between">
-                      <span>Profit Formula Verification:</span>
-                      <span className="text-[10px] text-gray-400 font-mono">100% Verified</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Gross Ticket Revenue:</span>
-                      <span className="font-semibold text-blue-700 font-mono">
-                        + Rs. {approxRevenue.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Base Prize Real Price:</span>
-                      <span className="font-semibold text-purple-700 font-mono">
-                        - Rs. {realPrice.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Added Campaign Expenses:</span>
-                      <span className="font-semibold text-amber-700 font-mono">
-                        - Rs. {totalExpenses.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="border-t border-gray-200 pt-1 mt-1 flex justify-between font-bold">
-                      <span className="text-gray-900">Net Calculated Profit:</span>
-                      <span
-                        className={`font-mono ${
-                          isProfitable ? "text-emerald-700" : "text-red-700"
-                        }`}
-                      >
-                        Rs. {netProfit.toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })()}
-
-        {/* Specifications */}
-        <Card className="rounded-2xl shadow-lg border-0">
-          <CardHeader>
-            <CardTitle>Specifications</CardTitle>
-            <CardDescription>Update technical specifications or features</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex space-x-2">
-              <Input
-                value={newSpec}
-                onChange={(e) => setNewSpec(e.target.value)}
-                className="rounded-2xl"
-                placeholder="Add a specification..."
-                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addSpecification())}
-              />
-              <Button type="button" onClick={addSpecification} className="rounded-2xl">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.specifications.map((spec, index) => (
-                <Badge key={index} variant="secondary" className="rounded-2xl">
-                  {spec}
-                  <button type="button" onClick={() => removeSpecification(index)} className="ml-2 hover:text-red-500">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Rules */}
-        <Card className="rounded-2xl shadow-lg border-0">
-          <CardHeader>
-            <CardTitle>Rules & Terms</CardTitle>
-            <CardDescription>Update specific rules for this raffle</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex space-x-2">
-              <Input
-                value={newRule}
-                onChange={(e) => setNewRule(e.target.value)}
-                className="rounded-2xl"
-                placeholder="Add a rule..."
-                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addRule())}
-              />
-              <Button type="button" onClick={addRule} className="rounded-2xl">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.rules.map((rule, index) => (
-                <Badge key={index} variant="secondary" className="rounded-2xl">
-                  {rule}
-                  <button type="button" onClick={() => removeRule(index)} className="ml-2 hover:text-red-500">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
-            <p className="text-red-700">{error}</p>
-          </div>
-        )}
-
-        {/* Submit */}
-        <div className="flex justify-end space-x-4">
-          <Button type="button" variant="outline" asChild className="rounded-2xl">
-            <Link href="/admin/raffles">Cancel</Link>
-          </Button>
-          <Button type="submit" disabled={submitting} className="bg-red-500 hover:bg-red-600 text-white rounded-2xl">
-            {submitting ? "Updating..." : "Update Raffle"}
-          </Button>
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving Changes...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save & Update Raffle
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </form>
     </div>

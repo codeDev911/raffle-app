@@ -30,6 +30,8 @@ import {
   Award,
   ChevronRight,
   Info,
+  Eye,
+  Ticket,
 } from "lucide-react"
 
 interface Raffle {
@@ -122,38 +124,25 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
   const [copiedLink, setCopiedLink] = useState(false)
   const [copiedPhone, setCopiedPhone] = useState(false)
 
-  // Countdown timer state
-  const [timeLeft, setTimeLeft] = useState<{
-    days: number
-    hours: number
-    minutes: number
-    seconds: number
-    isEnded: boolean
-  }>({ days: 0, hours: 0, minutes: 0, seconds: 0, isEnded: false })
+  // Live viewer count state (random view count e.g. 4 watching now)
+  const [watchingNow, setWatchingNow] = useState(4)
 
   useEffect(() => {
-    if (!raffle?.endDate) return
+    // Generate initial realistic random viewer count (e.g. 3 to 7)
+    const initial = Math.floor(Math.random() * 5) + 3
+    setWatchingNow(initial)
 
-    const calculateTimeLeft = () => {
-      const difference = new Date(raffle.endDate).getTime() - new Date().getTime()
-      if (difference <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isEnded: true })
-        return
-      }
-
-      setTimeLeft({
-        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((difference / 1000 / 60) % 60),
-        seconds: Math.floor((difference / 1000) % 60),
-        isEnded: false,
+    // Subtle realistic fluctuation periodically
+    const interval = setInterval(() => {
+      setWatchingNow((prev) => {
+        const delta = Math.random() > 0.5 ? 1 : -1
+        const nextVal = prev + delta
+        return nextVal < 3 ? 3 : nextVal > 12 ? 9 : nextVal
       })
-    }
+    }, 10000)
 
-    calculateTimeLeft()
-    const timer = setInterval(calculateTimeLeft, 1000)
-    return () => clearInterval(timer)
-  }, [raffle?.endDate])
+    return () => clearInterval(interval)
+  }, [])
 
   const getMe = async () => {
     try {
@@ -282,15 +271,15 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
           {/* LEFT COLUMN: IMAGES + PRODUCT DETAILS RIGHT BELOW THEM   */}
           {/* ======================================================== */}
           <div className="lg:col-span-7 space-y-6">
-            {/* Image Gallery Carousel Card */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-2.5 sm:p-4 shadow-xs">
+            {/* Image Gallery Carousel Card - Edge to edge without outer padding */}
+            <div className="bg-white rounded-2xl border border-gray-200/90 overflow-hidden shadow-xs">
               <RaffleImageCarousel
                 images={allImages}
                 title={raffle.title}
                 category={raffle.category}
                 status={raffle.status}
                 featured={raffle.featured}
-                aspectRatioClass="aspect-square sm:aspect-[4/3]"
+                aspectRatioClass="aspect-[4/3] sm:aspect-[16/11]"
               />
             </div>
 
@@ -323,17 +312,17 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
                 </div>
               </div>
 
-              {/* Tickets Progress */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-gray-700">
-                    Sold: <strong className="text-gray-900 font-mono">{currentEntries}</strong> / {totalEntries}
-                  </span>
-                  <span className="text-emerald-600 font-bold font-mono">
-                    {percentFilled}% ({remainingEntries} left)
-                  </span>
+              {/* Tickets Sold & Watching Now Count (No timing or draws left) */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                <div className="flex items-center gap-1.5 text-sm font-bold text-gray-900">
+                  <Ticket className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{currentEntries} solds</span>
                 </div>
-                <Progress value={percentFilled} className="h-2 bg-gray-100" />
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/80 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{watchingNow} watching now</span>
+                </div>
               </div>
 
               {/* Mobile Direct Action Button - Status Based */}
@@ -674,58 +663,19 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
                   </div>
                   <p className="text-xs text-amber-700">Entries will open soon.</p>
                 </div>
-              ) : (
-                <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3.5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-amber-600" />
-                      Draw Closes In:
-                    </span>
-                    <span className="text-[11px] text-amber-700">
-                      {new Date(raffle.endDate).toLocaleDateString()}
-                    </span>
-                  </div>
+              ) : null}
 
-                  <div className="grid grid-cols-4 gap-1.5 text-center">
-                    <div className="bg-white rounded-lg py-1.5 border border-amber-100">
-                      <div className="text-base font-bold text-gray-900 font-mono">
-                        {String(timeLeft.days).padStart(2, "0")}
-                      </div>
-                      <div className="text-[9px] uppercase tracking-wider text-gray-500">Days</div>
-                    </div>
-                    <div className="bg-white rounded-lg py-1.5 border border-amber-100">
-                      <div className="text-base font-bold text-gray-900 font-mono">
-                        {String(timeLeft.hours).padStart(2, "0")}
-                      </div>
-                      <div className="text-[9px] uppercase tracking-wider text-gray-500">Hours</div>
-                    </div>
-                    <div className="bg-white rounded-lg py-1.5 border border-amber-100">
-                      <div className="text-base font-bold text-gray-900 font-mono">
-                        {String(timeLeft.minutes).padStart(2, "0")}
-                      </div>
-                      <div className="text-[9px] uppercase tracking-wider text-gray-500">Mins</div>
-                    </div>
-                    <div className="bg-white rounded-lg py-1.5 border border-amber-100">
-                      <div className="text-base font-bold text-gray-900 font-mono">
-                        {String(timeLeft.seconds).padStart(2, "0")}
-                      </div>
-                      <div className="text-[9px] uppercase tracking-wider text-gray-500">Secs</div>
-                    </div>
-                  </div>
+              {/* Tickets Sold & Watching Now Count (No timing or draws left) */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
+                  <Ticket className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{currentEntries} solds</span>
                 </div>
-              )}
-
-              {/* Progress */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-gray-700">
-                    Sold: <strong className="text-gray-900 font-mono">{currentEntries}</strong> / {totalEntries}
-                  </span>
-                  <span className="text-emerald-600 font-bold font-mono">
-                    {percentFilled}% ({remainingEntries} left)
-                  </span>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/80 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{watchingNow} watching now</span>
                 </div>
-                <Progress value={percentFilled} className="h-2 bg-gray-100" />
               </div>
 
               {/* Buy Actions - Status Based */}
