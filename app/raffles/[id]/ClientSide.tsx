@@ -312,17 +312,15 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
                 </div>
               </div>
 
-              {/* Tickets Sold & Watching Now Count (No timing or draws left) */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                <div className="flex items-center gap-1.5 text-sm font-bold text-gray-900">
-                  <Ticket className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{currentEntries} solds</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/80 shadow-2xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <Eye className="w-3.5 h-3.5 text-emerald-600" />
+              {/* Solds & watching - simple text space between (no colored wrapper div) */}
+              <div className="flex items-center justify-between text-xs sm:text-sm text-gray-700 px-0.5">
+                <span className="font-semibold text-gray-900">
+                  {currentEntries} solds
+                </span>
+                <span className="flex items-center gap-1.5 text-gray-600">
+                  <Eye className="w-4 h-4 text-emerald-600" />
                   <span>{watchingNow} watching now</span>
-                </div>
+                </span>
               </div>
 
               {/* Mobile Direct Action Button - Status Based */}
@@ -665,17 +663,15 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
                 </div>
               ) : null}
 
-              {/* Tickets Sold & Watching Now Count (No timing or draws left) */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
-                <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
-                  <Ticket className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{currentEntries} solds</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/80 shadow-2xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <Eye className="w-3.5 h-3.5 text-emerald-600" />
+              {/* Solds & watching - simple text space between (no colored wrapper div) */}
+              <div className="flex items-center justify-between text-xs sm:text-sm text-gray-700 px-0.5">
+                <span className="font-semibold text-gray-900">
+                  {currentEntries} solds
+                </span>
+                <span className="flex items-center gap-1.5 text-gray-600">
+                  <Eye className="w-4 h-4 text-emerald-600" />
                   <span>{watchingNow} watching now</span>
-                </div>
+                </span>
               </div>
 
               {/* Buy Actions - Status Based */}

@@ -145,6 +145,42 @@ export function Header() {
     checkAuth()
   }, [])
 
+  // Categories nav scroll hide/show: hidden when scrolling down, shown when scrolling up
+  const [showCategoryBar, setShowCategoryBar] = useState(true)
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY
+    let ticking = false
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+
+      // Always show when near the top of the page
+      if (currentScrollY <= 40) {
+        setShowCategoryBar(true)
+      } else if (currentScrollY > lastScrollY && currentScrollY - lastScrollY > 6) {
+        // Scrolling down -> hide categories nav
+        setShowCategoryBar(false)
+      } else if (currentScrollY < lastScrollY && lastScrollY - currentScrollY > 6) {
+        // Scrolling up -> show categories nav
+        setShowCategoryBar(true)
+      }
+
+      lastScrollY = currentScrollY > 0 ? currentScrollY : 0
+      ticking = false
+    }
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(handleScroll)
+        ticking = true
+      }
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" })
@@ -686,53 +722,61 @@ export function Header() {
         </div>
       </div>
 
-      {/* 4. FAST CATEGORY BAR (SCROLLABLE ON MOBILE, SLEEK ROW ON DESKTOP) */}
-      <div className="border-t border-gray-100 bg-gray-50/90 overflow-x-auto no-scrollbar">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex items-center gap-2 sm:gap-3 text-xs whitespace-nowrap">
-          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider hidden sm:inline-block pr-1">
-            Categories:
-          </span>
+      {/* 4. FAST CATEGORY BAR (HIDDEN ON SCROLL DOWN, SHOWN ON SCROLL UP) */}
+      <div
+        className={`border-t border-gray-100 bg-gray-50/95 backdrop-blur-xs transition-all duration-300 ease-in-out overflow-hidden ${
+          showCategoryBar
+            ? "max-h-16 opacity-100 transform translate-y-0"
+            : "max-h-0 opacity-0 pointer-events-none transform -translate-y-1"
+        }`}
+      >
+        <div className="overflow-x-auto no-scrollbar">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex items-center gap-2 sm:gap-3 text-xs whitespace-nowrap">
+            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider hidden sm:inline-block pr-1">
+              Categories:
+            </span>
 
-          <Link
-            href="/raffles"
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors shrink-0 ${
-              pathname === "/raffles" && !pathname.includes("category")
-                ? "bg-green-600 text-white shadow-2xs"
-                : "bg-white text-gray-700 border border-gray-200 hover:border-green-400 hover:text-green-700"
-            }`}
-          >
-            <Gift className="w-3.5 h-3.5" />
-            <span>All Draws</span>
-          </Link>
+            <Link
+              href="/raffles"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors shrink-0 ${
+                pathname === "/raffles" && !pathname.includes("category")
+                  ? "bg-green-600 text-white shadow-2xs"
+                  : "bg-white text-gray-700 border border-gray-200 hover:border-green-400 hover:text-green-700"
+              }`}
+            >
+              <Gift className="w-3.5 h-3.5" />
+              <span>All Draws</span>
+            </Link>
 
-          {CATEGORIES_LIST.map((cat) => {
-            const isSelected = pathname?.includes(`category=${cat.slug}`)
-            return (
-              <Link
-                key={cat.slug}
-                href={cat.href}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors shrink-0 ${
-                  isSelected
-                    ? "bg-green-600 text-white shadow-2xs"
-                    : "bg-white text-gray-700 border border-gray-200 hover:border-green-400 hover:text-green-700"
-                }`}
-              >
-                <cat.icon className="w-3.5 h-3.5" />
-                <span>{cat.name}</span>
-                {cat.badge === "Hot" && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                )}
-              </Link>
-            )
-          })}
+            {CATEGORIES_LIST.map((cat) => {
+              const isSelected = pathname?.includes(`category=${cat.slug}`)
+              return (
+                <Link
+                  key={cat.slug}
+                  href={cat.href}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors shrink-0 ${
+                    isSelected
+                      ? "bg-green-600 text-white shadow-2xs"
+                      : "bg-white text-gray-700 border border-gray-200 hover:border-green-400 hover:text-green-700"
+                  }`}
+                >
+                  <cat.icon className="w-3.5 h-3.5" />
+                  <span>{cat.name}</span>
+                  {cat.badge === "Hot" && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                  )}
+                </Link>
+              )
+            })}
 
-          <Link
-            href="/winners"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors shrink-0 ml-auto"
-          >
-            <Trophy className="w-3.5 h-3.5 text-amber-600" />
-            <span>Hall of Fame</span>
-          </Link>
+            <Link
+              href="/winners"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors shrink-0 ml-auto"
+            >
+              <Trophy className="w-3.5 h-3.5 text-amber-600" />
+              <span>Hall of Fame</span>
+            </Link>
+          </div>
         </div>
       </div>
     </header>
