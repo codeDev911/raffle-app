@@ -33,7 +33,6 @@ import { prisma } from "@/lib/prisma"
 import { formatCurrency, formatDateTime } from "@/lib/utils"
 import { notFound } from "next/navigation"
 
-export const WHATSAPP_NUMBER = "+92 337 7155722"
 export const WHATSAPP_CLEAN = "923377155722"
 export const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/invite/pakraffle-official"
 
@@ -168,7 +167,7 @@ async function getWinnerDetails(raffleId: string) {
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   return {
     title: "Official Verified Raffle Winner - PakRaffle Pakistan",
-    description: "Verified winner details, prize handover proof, and official live draw certificate. Contact WhatsApp +92 337 7155722 for inquiries.",
+    description: "Verified winner details, prize handover proof, and official live draw certificate. Contact official WhatsApp support for inquiries.",
   }
 }
 
@@ -219,12 +218,14 @@ export default async function WinnerDetailPage({ params }: { params: { id: strin
             <span className="hidden md:inline text-emerald-200">| Certified Public Audit</span>
           </div>
           <div className="flex items-center gap-3 text-emerald-100 text-[11px]">
-            <span>WhatsApp Helpline:</span>
             <a
-              href={`tel:${WHATSAPP_CLEAN}`}
-              className="font-mono font-bold text-white underline hover:text-emerald-300"
+              href={waInquiryUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-white hover:text-emerald-300 flex items-center gap-1.5"
             >
-              {WHATSAPP_NUMBER}
+              <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
+              <span>Official WhatsApp Support</span>
             </a>
           </div>
         </div>
@@ -354,7 +355,7 @@ export default async function WinnerDetailPage({ params }: { params: { id: strin
                   Official WhatsApp Contact & Draw Support
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
-                  WhatsApp: <span className="text-emerald-700 font-mono">{WHATSAPP_NUMBER}</span>
+                  WhatsApp: <span className="text-emerald-700 font-bold">Official Support Desk</span>
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-xl">
                   Connect directly with our Islamabad/Lahore operations center for draw video recordings, winner verification, upcoming draw announcements, or ticket payment assistance.
@@ -378,14 +379,6 @@ export default async function WinnerDetailPage({ params }: { params: { id: strin
               >
                 <WhatsAppIcon className="w-5 h-5" />
                 Chat on WhatsApp Now
-              </a>
-
-              <a
-                href={`tel:${WHATSAPP_CLEAN}`}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border-2 border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-900 text-sm font-bold transition-all whitespace-nowrap min-h-[48px]"
-              >
-                <Phone className="w-4 h-4 text-emerald-700" />
-                Call Helpline
               </a>
 
               <a
@@ -568,7 +561,7 @@ export default async function WinnerDetailPage({ params }: { params: { id: strin
               Official Anti-Fraud Warning For PakRaffle Winners
             </h4>
             <p className="text-[11px] sm:text-xs text-amber-800 leading-relaxed">
-              PakRaffle will <strong>NEVER</strong> ask winners for money, shipping fees, or banking passwords/OTPs to claim their prize. Prize shipping and tax are 100% paid by PakRaffle. All winner announcements and communications are handled exclusively through our official WhatsApp at <strong className="font-mono text-emerald-800">{WHATSAPP_NUMBER}</strong>.
+              PakRaffle will <strong>NEVER</strong> ask winners for money, shipping fees, or banking passwords/OTPs to claim their prize. Prize shipping and tax are 100% paid by PakRaffle. All winner announcements and communications are handled exclusively through our official WhatsApp verified channel.
             </p>
           </div>
         </div>
@@ -643,7 +636,7 @@ export default async function WinnerDetailPage({ params }: { params: { id: strin
             className="flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl bg-[#25D366] active:bg-[#1caa52] text-white text-xs font-bold shadow-xs min-h-[44px]"
           >
             <WhatsAppIcon className="w-4 h-4" />
-            WhatsApp: {WHATSAPP_NUMBER}
+            WhatsApp Support
           </a>
 
           <Button asChild className="flex-1 rounded-xl bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-3 min-h-[44px]">

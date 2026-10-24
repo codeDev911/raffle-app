@@ -24,7 +24,6 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 
-const WHATSAPP_NUMBER = "03377155722"
 const WHATSAPP_INTL = "923377155722"
 
 export default function PartnerPage() {
@@ -136,7 +135,7 @@ export default function PartnerPage() {
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold text-base px-7 py-4 rounded-2xl border-2 border-emerald-300 transition-all duration-200"
               >
                 <MessageCircle className="h-5 w-5 text-emerald-600 fill-emerald-600/20" />
-                <span>Chat on WhatsApp ({WHATSAPP_NUMBER})</span>
+                <span>Chat on WhatsApp</span>
               </a>
             </div>
 
@@ -784,7 +783,7 @@ export default function PartnerPage() {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-800/80 hover:bg-emerald-800 text-white font-bold text-base px-7 py-4 rounded-2xl border border-emerald-400/40"
             >
               <MessageCircle className="h-5 w-5 text-emerald-300" />
-              <span>Talk to Affiliate VIP Manager ({WHATSAPP_NUMBER})</span>
+              <span>Talk to Affiliate VIP Manager</span>
             </a>
           </div>
 
@@ -811,7 +810,7 @@ export default function PartnerPage() {
         title="Chat with Affiliate VIP Support on WhatsApp"
       >
         <MessageCircle className="h-5 w-5 fill-white text-emerald-600" />
-        <span className="text-xs sm:text-sm font-bold hidden sm:inline">Affiliate Help ({WHATSAPP_NUMBER})</span>
+        <span className="text-xs sm:text-sm font-bold hidden sm:inline">Affiliate WhatsApp Help</span>
       </a>
     </div>
   )

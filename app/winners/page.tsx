@@ -18,7 +18,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 
-const WHATSAPP_NUMBER = "+92 337 7155722"
 const WHATSAPP_CLEAN = "923377155722"
 const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/invite/pakraffle-official"
 
@@ -245,7 +244,7 @@ export default async function WinnersPage() {
                   </span>
                 </div>
                 <h3 className="text-lg sm:text-xl font-black text-gray-900">
-                  Contact Us on WhatsApp: <span className="font-mono text-emerald-700">{WHATSAPP_NUMBER}</span>
+                  Contact Us on WhatsApp: <span className="text-emerald-700 font-bold">Official 24/7 Desk</span>
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-xl">
                   Have questions about draw results, prize delivery proof, or upcoming draws? Chat directly with our team or join our WhatsApp community of 25,000+ members.
@@ -264,14 +263,6 @@ export default async function WinnersPage() {
               >
                 <WhatsAppIcon className="w-4 h-4" />
                 Chat on WhatsApp
-              </a>
-
-              <a
-                href={`tel:${WHATSAPP_CLEAN}`}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap min-h-[44px]"
-              >
-                <Phone className="w-4 h-4" />
-                Call Helpline
               </a>
 
               <a
@@ -480,7 +471,7 @@ export default async function WinnersPage() {
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-900 font-bold text-xs sm:text-sm transition-colors w-full sm:w-auto"
               >
                 <WhatsAppIcon className="w-4 h-4" />
-                Ask Us on WhatsApp ({WHATSAPP_NUMBER})
+                Ask Us on WhatsApp
               </a>
             </div>
           </div>

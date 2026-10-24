@@ -1,217 +1,202 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { XCircle, AlertTriangle, Shield, Phone } from "lucide-react"
- export const metadata = {
-  title: 'Refund Policy - PakRaffle',
-  description: 'Read PakRaffle’s refund policy to understand eligibility, process, and conditions.',
-  keywords: ['refund policy', 'PakRaffle refund', 'return', 'cancel payment', 'raffle refund'],
-  robots: 'index, follow',
+import { Shield, AlertTriangle, CheckCircle2, ArrowRight, RotateCcw, Lock, FileQuestion } from "lucide-react"
+import Link from "next/link"
+
+export const metadata = {
+  title: "Refund Policy — Official Cancellation & Return Terms | PakRaffle",
+  description:
+    "Review PakRaffle’s official refund and cancellation policy, entry finality, and 100% target sales guarantee.",
+  keywords: ["PakRaffle refund", "cancellation policy", "ticket return", "Pakistan raffle refund rules"],
+  robots: "index, follow",
   openGraph: {
-    title: 'Refund Policy - PakRaffle',
-    description: 'Clear refund policy for participants of PakRaffle lucky draws.',
-    url: 'https://pakraffle.com/refund',
-    siteName: 'PakRaffle',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary',
-    title: 'Refund Policy - PakRaffle',
-    description: 'Understand when and how refunds can be processed at PakRaffle.',
+    title: "Refund Policy - PakRaffle Pakistan",
+    description: "Clear guidelines on entry finality, fair play pool funding, and raffle cancellation guarantees.",
+    url: "https://pakraffle.com/refund",
+    siteName: "PakRaffle",
+    type: "website",
   },
 }
 
 export default function RefundPage() {
   return (
-    <>
-     
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <div className="bg-red-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <XCircle className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-slate-50 py-10 sm:py-16">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        {/* Header Section */}
+        <div className="text-center space-y-3 pb-2">
+          <div className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+            <Shield className="w-4 h-4 text-emerald-700" />
+            <span>Official Cancellation & Return Terms</span>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Refund Policy</h1>
-          <p className="text-xl text-gray-600">Important information about our no-refund policy</p>
+          <h1 className="text-3xl sm:text-5xl font-black text-gray-900 tracking-tight">
+            Refund <span className="text-emerald-700">Policy</span>
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            Transparent guidelines regarding ticket entry finality, fair play guarantees, and full refund protocols in cases of platform-canceled draws.
+          </p>
+          <div className="flex items-center justify-center gap-3 text-xs text-gray-500 pt-1">
+            <span>Last Updated: 2025</span>
+            <span>•</span>
+            <span>Applicable across Pakistan</span>
+          </div>
         </div>
 
-        <div className="space-y-8">
-          {/* Main Policy */}
-          <Card className="rounded-2xl shadow-lg border-0 bg-red-50 border-red-200">
-            <CardHeader>
-              <CardTitle className="flex items-center text-xl text-red-800">
-                <AlertTriangle className="mr-3 h-6 w-6 text-red-600" />
-                No Refund Policy
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-red-100 p-6 rounded-2xl border border-red-200">
-                <h3 className="text-lg font-bold text-red-800 mb-3">WE DO NOT PROVIDE REFUNDS</h3>
-                <p className="text-red-700 text-lg leading-relaxed">
-                  All raffle entries are final and non-refundable. Once payment is completed through EasyPaisa or
-                  JazzCash, no refunds will be issued under any circumstances.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        {/* SECTION 1: NON-REFUNDABLE ENTRY RULE */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">1. Finality of Lucky Draw Entries</h3>
+              <p className="text-xs text-gray-500">Why purchased raffle tickets are strictly non-refundable</p>
+            </div>
+          </div>
 
-          {/* Why No Refunds */}
-          <Card className="rounded-2xl shadow-lg border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center text-xl">
-                <Shield className="mr-3 h-6 w-6 text-green-500" />
-                Why We Have This Policy
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-gray-600">
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Fair Play Guarantee</h4>
-                  <p>
-                    Our no-refund policy ensures that all participants are committed to their entries, maintaining the
-                    integrity and fairness of every raffle draw.
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Transparent Operations</h4>
-                  <p>
-                    This policy allows us to operate transparently with fixed entry counts and guaranteed prize
-                    distributions, ensuring every raffle proceeds as advertised.
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Legal Compliance</h4>
-                  <p>
-                    Our policy complies with Pakistani gaming and lottery regulations, ensuring we operate within legal
-                    boundaries while protecting all participants.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* What This Means */}
-          <Card className="rounded-2xl shadow-lg border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center text-xl">
-                <AlertTriangle className="mr-3 h-6 w-6 text-orange-500" />
-                What This Means for You
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-gray-600">
-              <div className="space-y-4">
-                <div className="bg-orange-50 p-4 rounded-2xl border border-orange-200">
-                  <h4 className="font-semibold text-orange-800 mb-2">Before You Purchase</h4>
-                  <ul className="list-disc list-inside space-y-1 ml-4 text-orange-700">
-                    <li>Carefully read all raffle details and rules</li>
-                    <li>Ensure you understand the prize and draw date</li>
-                    <li>Verify your payment amount before confirming</li>
-                    <li>Make sure you meet all eligibility requirements</li>
-                  </ul>
-                </div>
-
-                <div className="bg-red-50 p-4 rounded-2xl border border-red-200">
-                  <h4 className="font-semibold text-red-800 mb-2">After Purchase</h4>
-                  <ul className="list-disc list-inside space-y-1 ml-4 text-red-700">
-                    <li>Your entry is immediately confirmed and cannot be cancelled</li>
-                    <li>No refunds will be provided for any reason</li>
-                    <li>You cannot transfer your entry to another person</li>
-                    <li>You cannot change your entry to a different raffle</li>
-                  </ul>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
-                  <h4 className="font-semibold text-gray-800 mb-2">Special Circumstances</h4>
-                  <p className="text-gray-700">
-                    Even in cases of technical issues, payment errors, or personal emergencies, we cannot provide
-                    refunds. Please ensure you are certain about your purchase before proceeding.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Exceptions */}
-          <Card className="rounded-2xl shadow-lg border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center text-xl">
-                <Shield className="mr-3 h-6 w-6 text-blue-500" />
-                Limited Exceptions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-gray-600">
-              <p className="text-lg font-medium text-gray-800 mb-4">
-                The only circumstances where we may consider compensation (not refunds):
-              </p>
-
-              <div className="space-y-3">
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Platform Error</h4>
-                    <p>
-                      If our system incorrectly charges you multiple times for the same entry, we may provide credit for
-                      future raffles.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Cancelled Raffle</h4>
-                    <p>
-                      If we cancel a raffle due to insufficient entries or other operational issues, participants will
-                      receive credit for future raffles.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Fraudulent Activity</h4>
-                    <p>
-                      If we determine that fraudulent activity affected a raffle, we may provide compensation to
-                      affected legitimate participants.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-blue-50 p-4 rounded-2xl border border-blue-200 mt-6">
-                <p className="text-blue-800 font-medium">
-                  Note: Even in these exceptional cases, compensation will be in the form of raffle credits, not cash
-                  refunds.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Contact Information */}
-          <Card className="rounded-2xl shadow-lg border-0 bg-green-50 border-green-200">
-            <CardContent className="p-6">
-              <div className="text-center">
-                <Phone className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-green-800 mb-2">Questions About This Policy?</h3>
-                <p className="text-green-700 mb-4">
-                  While we cannot provide refunds, our support team is here to help with any questions or concerns.
-                </p>
-                <div className="space-y-2 text-green-600">
-                  <p>Email: support@pakraffle.com</p> 
-                  <p>Hours: 9 AM - 9 PM (Monday to Sunday)</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-3 text-xs sm:text-sm text-gray-600 leading-relaxed">
+            <p>
+              <strong>Immediate Entry Allocation:</strong> Once payment verification is completed through EasyPaisa, JazzCash, or bank transfer, all raffle ticket purchases are final. We do not provide refunds, charge reversals, or entry cancellations.
+            </p>
+            <p>
+              <strong>Non-Transferable Entries:</strong> Purchased tickets cannot be transferred to another user&apos;s account, exchanged for cash, or migrated to a different lucky draw.
+            </p>
+            <p>
+              <strong>Personal Circumstances:</strong> Requests for refunds due to accidental ticket purchase, change of mind, or misreading prize specifications cannot be entertained once tickets have been issued.
+            </p>
+          </div>
         </div>
 
-        <div className="text-center mt-12 text-gray-500">
-          <p>Last updated: December 2024</p>
-          <p className="mt-2 text-sm">This policy is effective immediately and applies to all raffle purchases.</p>
+        {/* SECTION 2: WHY THIS POLICY EXISTS */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">2. Why This Policy Protects All Participants</h3>
+              <p className="text-xs text-gray-500">Maintaining fair odds and 100% target pool integrity</p>
+            </div>
+          </div>
+
+          <div className="space-y-3 text-xs sm:text-sm text-gray-600 leading-relaxed">
+            <p>
+              <strong>Mathematical Odds Protection:</strong> In a transparent raffle with a fixed target ticket count (e.g. 1,000 total tickets), every purchased ticket directly secures an exact, verifiable probability of winning. Allowing ticket cancellations or refunds after purchase would alter the odds for all other participants and jeopardize fair play.
+            </p>
+            <p>
+              <strong>100% Target Ticket Sell-Out Policy:</strong> PakRaffle conducts each live draw only when 100% of target tickets are sold. Strict entry finality guarantees that the prize fund is fully locked, verified, and secured prior to the certified draw.
+            </p>
+            <p>
+              <strong>Prevention of Market Manipulation:</strong> Entry finality stops bad actors from buying blocks of tickets and canceling them right before the draw, keeping the platform clean, fair, and reliable.
+            </p>
+          </div>
+        </div>
+
+        {/* SECTION 3: PRE-CHECKOUT CHECKLIST */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <FileQuestion className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">3. Pre-Purchase Verification Checklist</h3>
+              <p className="text-xs text-gray-500">Recommended steps before confirming your ticket purchase</p>
+            </div>
+          </div>
+
+          <div className="space-y-3 text-xs sm:text-sm text-gray-600 leading-relaxed">
+            <p>To avoid any misunderstandings, please ensure you review the following before completing your transfer:</p>
+            <ul className="space-y-2 list-none">
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span>Verify the exact prize title, model, and item description shown on the raffle details page.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span>Confirm your selected ticket quantity and the total payable PKR amount before submitting payment.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span>Ensure your registered mobile number is accurate so you can receive draw alerts and verification calls.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* SECTION 4: EXCEPTION GUARANTEE: CANCELED RAFFLES */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <RotateCcw className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">4. Full Refund Guarantee for Canceled Raffles</h3>
+              <p className="text-xs text-gray-500">Our 100% money-back guarantee in extraordinary circumstances</p>
+            </div>
+          </div>
+
+          <div className="space-y-3 text-xs sm:text-sm text-gray-600 leading-relaxed">
+            <p>
+              <strong>100% Refund on Canceled Draws:</strong> In the rare circumstance that an active raffle is officially canceled by PakRaffle due to product discontinuation, severe supply chain disruption, or regulatory compliance mandates, <strong>100% of the ticket purchase price will be promptly refunded to each participant</strong>.
+            </p>
+            <p>
+              <strong>Refund Processing Timeline:</strong> Canceled draw refunds are processed directly back to the participant&apos;s original payment method (EasyPaisa, JazzCash, or bank account) within 24 to 48 business hours with zero deduction of processing fees.
+            </p>
+            <p>
+              <strong>Duplicate Charge Adjustments:</strong> If a technical glitch causes a user to be billed multiple times for a single ticket order, our finance team will promptly reverse the duplicate payment upon receiving statement proof.
+            </p>
+          </div>
+        </div>
+
+        {/* SECTION 5: DISPUTES & TRANSACTION ISSUES */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">5. Payment Inquiries & Receipt Verification Support</h3>
+              <p className="text-xs text-gray-500">What to do if your payment screenshot requires manual matching</p>
+            </div>
+          </div>
+
+          <div className="space-y-3 text-xs sm:text-sm text-gray-600 leading-relaxed">
+            <p>
+              If your payment was completed but your tickets have not reflected in your account within 15 minutes, please do not worry. Simply reach out to our dedicated support desk with your Transaction ID (TID) and receipt screenshot.
+            </p>
+            <p>
+              Our support team will cross-check the institutional bank statement and manually allocate your official ticket numbers without any delay.
+            </p>
+          </div>
+        </div>
+
+        {/* HELP & SUPPORT DESK */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs text-center space-y-3">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900">
+            Need Clarification on Our Refund or Payment Terms?
+          </h3>
+          <p className="text-xs sm:text-sm text-gray-600 max-w-xl mx-auto">
+            Our customer care team is available 24/7 on WhatsApp and email to resolve any transaction queries or ticket confirmation questions.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-xs transition-colors"
+            >
+              Contact Support Desk
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <Link
+              href="/terms"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs transition-colors"
+            >
+              Read Full Terms & Conditions
+            </Link>
+          </div>
+        </div>
+
+        {/* Footer Audit Stamp */}
+        <div className="text-center text-xs text-gray-400 pt-2">
+          <p>PakRaffle Official Transparency Agreement • Pakistan&apos;s Verified Digital Lucky Draw Platform</p>
         </div>
       </div>
     </div>
-    </>
   )
 }

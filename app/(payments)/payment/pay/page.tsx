@@ -25,7 +25,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
-const WHATSAPP_SUPPORT_NUMBER = "+92 337 7155722"
 const WHATSAPP_PHONE_CLEAN = "923377155722"
 
 // Pakistani Payment Methods Config
@@ -581,7 +580,7 @@ function PaymentPageContent() {
                     Facing any issue during transfer?
                   </h4>
                   <p className="text-[11px] text-gray-600 mt-0.5">
-                    Pakistani Support 24/7 on WhatsApp: <span className="font-bold text-emerald-800 font-mono">0337 7155722</span>
+                    Pakistani Support 24/7 on WhatsApp — Instant receipt help
                   </p>
                 </div>
               </div>
@@ -593,7 +592,7 @@ function PaymentPageContent() {
                 className="shrink-0 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs py-2.5 px-3.5 rounded-xl transition-colors flex items-center justify-center gap-1.5 shadow-xs"
               >
                 <WhatsAppIcon className="w-3.5 h-3.5" />
-                <span>Chat 0337 7155722</span>
+                <span>Chat on WhatsApp</span>
                 <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
               </a>
             </div>

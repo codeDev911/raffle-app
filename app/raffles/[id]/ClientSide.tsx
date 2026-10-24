@@ -95,7 +95,6 @@ const renderStatusBadge = (status: string) => {
 }
 
 const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/invite/pakraffle-official"
-const WHATSAPP_SUPPORT_NUMBER = "+92 337 7155722"
 const WHATSAPP_PHONE_CLEAN = "923377155722"
 
 function WhatsAppIcon({ className = "w-5 h-5" }: { className?: string }) {
@@ -122,7 +121,6 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
   const [paymentUnderReview, setPaymentUnderReview] = useState<any>()
   const [selectedImage, setSelectedImage] = useState<string>(raffle?.image || "")
   const [copiedLink, setCopiedLink] = useState(false)
-  const [copiedPhone, setCopiedPhone] = useState(false)
 
   // Live viewer count state (random view count e.g. 4 watching now)
   const [watchingNow, setWatchingNow] = useState(4)
@@ -204,12 +202,6 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
       setCopiedLink(true)
       setTimeout(() => setCopiedLink(false), 2000)
     }
-  }
-
-  const copyWhatsAppNumber = () => {
-    navigator.clipboard.writeText(WHATSAPP_SUPPORT_NUMBER)
-    setCopiedPhone(true)
-    setTimeout(() => setCopiedPhone(false), 2000)
   }
 
   if (!raffle) {
@@ -829,17 +821,6 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
                 >
                   Direct Support
                 </a>
-              </div>
-
-              <div className="pt-2 border-t border-emerald-100 flex items-center justify-between text-[11px] text-gray-500">
-                <span>Helpline: {WHATSAPP_SUPPORT_NUMBER}</span>
-                <button
-                  onClick={copyWhatsAppNumber}
-                  className="text-emerald-700 hover:text-emerald-900 font-semibold inline-flex items-center gap-1"
-                >
-                  {copiedPhone ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                  {copiedPhone ? "Copied" : "Copy"}
-                </button>
               </div>
             </div>
 

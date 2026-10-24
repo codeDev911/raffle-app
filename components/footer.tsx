@@ -105,9 +105,9 @@ export function Footer() {
                   href="https://wa.me/923377155722"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-green-400 font-mono text-sm"
+                  className="text-gray-400 hover:text-green-400 text-sm"
                 >
-                  +92 337 7155722 (WhatsApp)
+                  WhatsApp Support (24/7 Live Chat)
                 </a>
               </div>
               <div className="flex items-center space-x-3">

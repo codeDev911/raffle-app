@@ -40,7 +40,6 @@ import {
   Layers,
 } from "lucide-react"
 
-export const WHATSAPP_NUMBER = "+92 337 7155722"
 export const WHATSAPP_CLEAN = "923377155722"
 export const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/invite/pakraffle-official"
 
@@ -149,24 +148,42 @@ export function Header() {
   const [showCategoryBar, setShowCategoryBar] = useState(true)
 
   useEffect(() => {
-    let lastScrollY = window.scrollY
+    let lastScrollY = typeof window !== "undefined" ? window.scrollY : 0
+    let lastToggleTime = 0
     let ticking = false
 
     const handleScroll = () => {
       const currentScrollY = window.scrollY
+      const now = Date.now()
 
       // Always show when near the top of the page
-      if (currentScrollY <= 40) {
+      if (currentScrollY <= 80) {
         setShowCategoryBar(true)
-      } else if (currentScrollY > lastScrollY && currentScrollY - lastScrollY > 6) {
-        // Scrolling down -> hide categories nav
-        setShowCategoryBar(false)
-      } else if (currentScrollY < lastScrollY && lastScrollY - currentScrollY > 6) {
-        // Scrolling up -> show categories nav
-        setShowCategoryBar(true)
+        lastScrollY = currentScrollY
+        ticking = false
+        return
       }
 
-      lastScrollY = currentScrollY > 0 ? currentScrollY : 0
+      // Cooldown guard (400ms): prevents layout oscillation / blinking feedback loop
+      if (now - lastToggleTime < 400) {
+        lastScrollY = currentScrollY
+        ticking = false
+        return
+      }
+
+      const delta = currentScrollY - lastScrollY
+
+      // Substantial scroll down (> 35px) and past top threshold
+      if (delta > 35 && currentScrollY > 120) {
+        setShowCategoryBar(false)
+        lastToggleTime = now
+      } else if (delta < -25) {
+        // Deliberate scroll up (> 25px)
+        setShowCategoryBar(true)
+        lastToggleTime = now
+      }
+
+      lastScrollY = currentScrollY
       ticking = false
     }
 
@@ -228,8 +245,7 @@ export function Header() {
               className="flex items-center gap-1.5 font-bold hover:text-emerald-300 transition-colors"
             >
               <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
-              <span className="hidden sm:inline">WhatsApp Support:</span>
-              <span className="font-mono">{WHATSAPP_NUMBER}</span>
+              <span>WhatsApp Support</span>
             </a>
             <span className="hidden md:inline text-emerald-500">|</span>
             <Link
@@ -661,8 +677,8 @@ export function Header() {
                           <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">
                             Direct Support & Alerts
                           </span>
-                          <span className="text-xs font-black text-gray-900 block font-mono">
-                            {WHATSAPP_NUMBER}
+                          <span className="text-xs font-bold text-gray-900 block">
+                            Live WhatsApp Help Desk
                           </span>
                           <p className="text-[11px] text-gray-600 mt-0.5 leading-tight">
                             Live chat, ticket assistance & live stream links.

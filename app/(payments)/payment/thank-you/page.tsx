@@ -28,7 +28,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
-const WHATSAPP_SUPPORT_NUMBER = "+92 337 7155722"
 const WHATSAPP_PHONE_CLEAN = "923377155722"
 const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/invite/pakraffle-official"
 
@@ -221,7 +220,7 @@ function ThankYouContent() {
           </div>
         </div>
 
-        {/* FAST-TRACK WHATSAPP CALLOUT (0337 7155722) */}
+        {/* FAST-TRACK WHATSAPP CALLOUT */}
         <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 rounded-3xl p-6 sm:p-7 text-white shadow-md relative overflow-hidden">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
             <div className="space-y-1.5 max-w-xl">
@@ -236,9 +235,7 @@ function ThankYouContent() {
                 Want Instant Approval for Order #{orderId}?
               </h3>
               <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
-                Send your order reference and receipt screenshot to our official WhatsApp support number{" "}
-                <span className="font-bold text-white underline decoration-amber-400 decoration-2">0337 7155722</span>{" "}
-                for prioritized 5-minute verification!
+                Send your order reference and receipt screenshot to our official WhatsApp support desk for prioritized 5-minute verification!
               </p>
             </div>
 
@@ -249,7 +246,7 @@ function ThankYouContent() {
               className="shrink-0 inline-flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20ba59] text-white px-5 py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-black/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <WhatsAppIcon className="w-5 h-5" />
-              <span>Fast-Track on 0337 7155722</span>
+              <span>Fast-Track on WhatsApp</span>
               <ArrowRight className="w-4 h-4 ml-0.5" />
             </a>
           </div>
@@ -450,8 +447,7 @@ function ThankYouContent() {
               <div>
                 <h4 className="text-sm font-bold text-gray-900">Need Immediate Help?</h4>
                 <p className="text-xs text-gray-600 mt-0.5">
-                  Our live support executive is active on WhatsApp at{" "}
-                  <span className="font-bold text-gray-900 font-mono">0337 7155722</span> for any questions or receipt help.
+                  Our live support executive is active on WhatsApp 24/7 for any questions or receipt help.
                 </p>
               </div>
             </div>
@@ -463,7 +459,7 @@ function ThankYouContent() {
               className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200 transition-colors"
             >
               <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
-              <span>Chat on WhatsApp: 0337 7155722</span>
+              <span>Chat on WhatsApp Support</span>
               <ArrowRight className="w-3.5 h-3.5 text-emerald-600 ml-auto" />
             </a>
           </div>
@@ -477,7 +473,7 @@ function ThankYouContent() {
           </div>
           <p className="text-[11px] text-gray-500 max-w-xl mx-auto">
             All draws are conducted live with certified random selection. Receipts are manually matched to official bank statements.
-            For any dispute or clarification, reach us anytime via WhatsApp at 0337 7155722.
+            For any dispute or clarification, reach us anytime via our official WhatsApp support.
           </p>
         </div>
       </main>
