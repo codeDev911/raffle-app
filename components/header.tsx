@@ -38,10 +38,11 @@ import {
   LucideUser,
   X,
   Layers,
+  Tag,
 } from "lucide-react"
 
 export const WHATSAPP_CLEAN = "923377155722"
-export const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/invite/pakraffle-official"
+export const WHATSAPP_COMMUNITY_URL = "https://whatsapp.com/channel/0029VbB0CzJ8fewyBXpXy210"
 
 function WhatsAppIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -388,6 +389,21 @@ export function Header() {
             >
               How It Works
             </Link>
+
+            <Link
+              href="/list-product"
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors ${
+                pathname === "/list-product"
+                  ? "text-emerald-700 bg-emerald-50 font-bold"
+                  : "text-gray-700 hover:text-emerald-600 hover:bg-gray-50 font-medium"
+              }`}
+            >
+              <Tag className="w-3.5 h-3.5 text-emerald-600" />
+              <span>List Product</span>
+              <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-600 text-white">
+                8% Fee
+              </span>
+            </Link>
           </nav>
 
           {/* Right: Actions & User Auth */}
@@ -649,6 +665,20 @@ export function Header() {
                         <span>News & Draw Blogs</span>
                       </div>
                       <ExternalLink className="h-3.5 w-3.5 text-gray-400" />
+                    </Link>
+
+                    <Link
+                      href="/list-product"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-emerald-800 bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200/60"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Tag className="h-4 w-4 text-emerald-600" />
+                        <span className="font-bold">List Your Product</span>
+                      </div>
+                      <span className="text-[9px] font-extrabold text-white bg-emerald-600 px-1.5 py-0.5 rounded-full">
+                        8% Fee
+                      </span>
                     </Link>
 
                     <Link

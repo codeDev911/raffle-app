@@ -79,7 +79,134 @@ export interface Winner {
   updatedAt: Date
 }
 
+export interface ProductListingRequest {
+  id: string
+  productType: string
+  productName: string
+  description: string
+  phone: string
+  email: string
+  fullNameCnic: string
+  cnicNumber?: string | null
+  city?: string | null
+  marketPrice: number // In PKR
+  ticketPrice: number // In PKR
+  totalTickets: number
+  totalRevenue: number // ticketPrice * totalTickets
+  platformFee: number // 8% fee
+  sellerPayout: number // totalRevenue - platformFee
+  condition?: string | null
+  images: string[]
+  status: "PENDING" | "UNDER_REVIEW" | "APPROVED" | "REJECTED"
+  adminNotes?: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
 // Seed data
+export const productListingRequestsStore: ProductListingRequest[] = [
+  {
+    id: "req-101",
+    productType: "Electronics",
+    productName: "Apple iPhone 16 Pro 256GB Natural Titanium (PTA Approved)",
+    description: "Brand new sealed box iPhone 16 Pro with 1-year official Apple and Mercantile warranty. PTA approved with physical SIM + eSIM. Receipt from official reseller available.",
+    phone: "+92 300 1234567",
+    email: "usman.nadeem@gmail.com",
+    fullNameCnic: "Muhammad Usman Nadeem",
+    cnicNumber: "35201-1234567-1",
+    city: "Lahore",
+    marketPrice: 380000,
+    ticketPrice: 500,
+    totalTickets: 826,
+    totalRevenue: 413000,
+    platformFee: 33040, // 8%
+    sellerPayout: 379960,
+    condition: "Brand New (Sealed)",
+    images: [
+      "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800&auto=format&fit=crop&q=80",
+    ],
+    status: "PENDING",
+    adminNotes: "Customer submitted official purchase receipt. Needs physical verification at Lahore hub.",
+    createdAt: new Date(Date.now() - 2 * 3600 * 1000),
+    updatedAt: new Date(Date.now() - 2 * 3600 * 1000),
+  },
+  {
+    id: "req-102",
+    productType: "Vehicles",
+    productName: "Honda CB 150F Red 2024 (Zero Meter)",
+    description: "Brand new Honda CB 150F Self Start Euro II. Fresh showroom delivery with invoice ready to register in buyer's name. Zero kilometers driven, with 2 factory keys and warranty book.",
+    phone: "+92 321 5556677",
+    email: "tariq.mehmood@outlook.com",
+    fullNameCnic: "Tariq Mehmood Gondal",
+    cnicNumber: "61101-7654321-3",
+    city: "Islamabad",
+    marketPrice: 495000,
+    ticketPrice: 1000,
+    totalTickets: 538,
+    totalRevenue: 538000,
+    platformFee: 43040, // 8%
+    sellerPayout: 494960,
+    condition: "Brand New (Zero Meter)",
+    images: [
+      "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&auto=format&fit=crop&q=80",
+    ],
+    status: "UNDER_REVIEW",
+    adminNotes: "Invoice verified with authorized Honda dealership in I-9 Islamabad. Scheduling physical inspection.",
+    createdAt: new Date(Date.now() - 14 * 3600 * 1000),
+    updatedAt: new Date(Date.now() - 5 * 3600 * 1000),
+  },
+  {
+    id: "req-103",
+    productType: "Gaming",
+    productName: "Sony PlayStation 5 Pro 2TB Digital Edition + DualSense Edge",
+    description: "Imported US edition PS5 Pro console with enhanced ray tracing and AI upscaling. Includes DualSense Edge pro controller and sealed Spiderman 2.",
+    phone: "+92 333 4445566",
+    email: "bilal.ahmed99@yahoo.com",
+    fullNameCnic: "Bilal Ahmed Khan",
+    cnicNumber: "42101-9988776-5",
+    city: "Karachi",
+    marketPrice: 260000,
+    ticketPrice: 400,
+    totalTickets: 706,
+    totalRevenue: 282400,
+    platformFee: 22592, // 8%
+    sellerPayout: 259808,
+    condition: "Open Box - Like New",
+    images: [
+      "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=800&auto=format&fit=crop&q=80",
+    ],
+    status: "APPROVED",
+    adminNotes: "Approved by Admin. Ready to prepare raffle entry draft and schedule launch.",
+    createdAt: new Date(Date.now() - 28 * 3600 * 1000),
+    updatedAt: new Date(Date.now() - 4 * 3600 * 1000),
+  },
+  {
+    id: "req-104",
+    productType: "Electronics",
+    productName: "Apple MacBook Air 15\" M3 Chip 16GB / 512GB Midnight",
+    description: "MacBook Air 15-inch M3, 16GB Unified Memory, 512GB SSD. Midnight color, brand new sealed box with AppleCare eligible.",
+    phone: "+92 345 6677889",
+    email: "ayesha.siddiqui@gmail.com",
+    fullNameCnic: "Ayesha Noor Siddiqui",
+    cnicNumber: "35202-3344556-2",
+    city: "Rawalpindi",
+    marketPrice: 340000,
+    ticketPrice: 500,
+    totalTickets: 739,
+    totalRevenue: 369500,
+    platformFee: 29560, // 8%
+    sellerPayout: 339940,
+    condition: "Brand New (Sealed)",
+    images: [
+      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80",
+    ],
+    status: "PENDING",
+    adminNotes: "Awaiting CNIC scan upload from user.",
+    createdAt: new Date(Date.now() - 48 * 3600 * 1000),
+    updatedAt: new Date(Date.now() - 48 * 3600 * 1000),
+  },
+]
+
 const usersStore: User[] = [
   {
     id: "user-admin-1",
@@ -841,6 +968,83 @@ const mockPrisma = {
       return {
         _sum: {
           prizeValue: totalPrize,
+        },
+        _count: filtered.length,
+      }
+    },
+  },
+
+  productListingRequest: {
+    findUnique: async (args: { where: any; select?: any }) => {
+      const req = productListingRequestsStore.find((r) => matchesWhere(r, args.where))
+      return req ? { ...req } : null
+    },
+    findFirst: async (args: { where?: any; select?: any }) => {
+      const req = productListingRequestsStore.find((r) => matchesWhere(r, args?.where))
+      return req ? { ...req } : null
+    },
+    findMany: async (args?: { where?: any; select?: any; take?: number; orderBy?: any }) => {
+      let items = productListingRequestsStore.filter((r) => matchesWhere(r, args?.where))
+      if (args?.orderBy) {
+        if (args.orderBy.createdAt === "desc") {
+          items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        } else if (args.orderBy.createdAt === "asc") {
+          items.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+        }
+      }
+      if (args?.take) items = items.slice(0, args.take)
+      return items.map((r) => ({ ...r }))
+    },
+    count: async (args?: { where?: any }) => {
+      return productListingRequestsStore.filter((r) => matchesWhere(r, args?.where)).length
+    },
+    create: async (args: { data: any; select?: any }) => {
+      const newReq: ProductListingRequest = {
+        id: `req-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        status: args.data.status || "PENDING",
+        images: args.data.images || [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ...args.data,
+      }
+      productListingRequestsStore.unshift(newReq)
+      return { ...newReq }
+    },
+    update: async (args: { where: any; data: any; select?: any }) => {
+      const idx = productListingRequestsStore.findIndex((r) => matchesWhere(r, args.where))
+      if (idx !== -1) {
+        productListingRequestsStore[idx] = {
+          ...productListingRequestsStore[idx],
+          ...args.data,
+          updatedAt: new Date(),
+        }
+        return { ...productListingRequestsStore[idx] }
+      }
+      return null
+    },
+    delete: async (args: { where: any }) => {
+      const idx = productListingRequestsStore.findIndex((r) => matchesWhere(r, args.where))
+      if (idx !== -1) {
+        const deleted = productListingRequestsStore.splice(idx, 1)[0]
+        return { ...deleted }
+      }
+      return null
+    },
+    aggregate: async (args?: { where?: any; _sum?: any }) => {
+      const filtered = productListingRequestsStore.filter((r) => matchesWhere(r, args?.where))
+      let totalMarket = 0
+      let totalRev = 0
+      let totalFee = 0
+      for (const r of filtered) {
+        totalMarket += r.marketPrice || 0
+        totalRev += r.totalRevenue || 0
+        totalFee += r.platformFee || 0
+      }
+      return {
+        _sum: {
+          marketPrice: totalMarket,
+          totalRevenue: totalRev,
+          platformFee: totalFee,
         },
         _count: filtered.length,
       }

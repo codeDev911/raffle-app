@@ -23,6 +23,7 @@ import {
   ArrowRight,
   Clock,
   Zap,
+  ChevronDown,
 } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import Image from "next/image"
@@ -72,7 +73,7 @@ const paymentMethodsList = [
     color: "border-orange-500 text-orange-700 bg-orange-50/70",
     badgeColor: "bg-orange-100 text-orange-800",
     avatarBg: "bg-orange-500 text-white",
-    logo: "/assets/nayapay.png",
+    logo: "/assets/nayapay.svg",
   },
   {
     id: "SADAPAY",
@@ -82,17 +83,17 @@ const paymentMethodsList = [
     color: "border-teal-500 text-teal-700 bg-teal-50/70",
     badgeColor: "bg-teal-100 text-teal-800",
     avatarBg: "bg-teal-600 text-white",
-    logo: "https://crystalpng.com/wp-content/uploads/2025/09/Sadapay-Logo-768x768.png",
+    logo: "/assets/sadapay.svg",
   },
   {
     id: "MEZAN",
-    title: "Meezan Bank",
+    title: "Meezan Bank & Raast",
     subtitle: "Direct Bank Transfer / Raast",
-    tag: "Islamic Bank",
+    tag: "Raast Instant",
     color: "border-purple-600 text-purple-800 bg-purple-50/70",
     badgeColor: "bg-purple-100 text-purple-800",
     avatarBg: "bg-purple-800 text-white",
-    logo: "https://crystalpng.com/wp-content/uploads/2025/01/meezan-bank-logo-768x768.png",
+    logo: "/assets/raast.svg",
   },
 ]
 
@@ -168,7 +169,7 @@ export function EnterRaffleModal({ raffle, isOpen, onClose, referralLinkId }: En
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="fixed left-0 top-0 translate-x-0 translate-y-0 w-full h-[100dvh] max-w-none rounded-none border-0 p-0 overflow-hidden bg-white flex flex-col sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:w-full sm:max-w-lg sm:h-auto sm:max-h-[90vh] sm:rounded-3xl sm:border sm:border-gray-200 sm:shadow-2xl [&>button]:text-white [&>button]:opacity-90 [&>button]:hover:opacity-100 [&>button]:bg-white/20 [&>button]:hover:bg-white/30 [&>button]:rounded-full [&>button]:p-1.5 [&>button]:top-4 [&>button]:right-4">
         {/* Header Bar */}
         <div className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-700 px-6 py-5 text-white relative">
           <div className="flex items-center justify-between gap-3">
@@ -314,75 +315,54 @@ export function EnterRaffleModal({ raffle, isOpen, onClose, referralLinkId }: En
             </div>
           </div>
 
-          {/* Payment Method Selector */}
-          <div className="space-y-2.5">
+          {/* Payment Method Selector (Select Dropdown - Provider Names Only) */}
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs sm:text-sm font-bold text-gray-800">
-                Choose Payment Method
+              <label htmlFor="payment-method-select" className="text-xs sm:text-sm font-bold text-gray-800">
+                Payment Method
               </label>
-              <span className="text-[11px] text-gray-500">Instant Verification</span>
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                Instant Verification
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {paymentMethodsList.map((method) => {
-                const isSelected = paymentMethod === method.id
-                return (
-                  <div
-                    key={method.id}
-                    onClick={() => !submitting && setPaymentMethod(method.id)}
-                    className={`relative p-3 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-3 ${
-                      isSelected
-                        ? `${method.color} shadow-sm ring-2 ring-emerald-500/20`
-                        : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/70 text-gray-800"
-                    }`}
-                  >
-                    {/* Method Icon / Avatar */}
-                    <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 shadow-xs flex items-center justify-center p-1.5 shrink-0 overflow-hidden">
-                      {method.logo ? (
-                        <img
-                          src={method.logo}
-                          alt={method.title}
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <div
-                          className={`w-full h-full rounded-lg ${method.avatarBg} flex items-center justify-center font-bold text-xs`}
-                        >
-                          {method.title.slice(0, 2)}
-                        </div>
-                      )}
+            <div className="relative">
+              {/* Selected Method Logo Preview on Left */}
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none z-10">
+                <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center p-1 shadow-2xs">
+                  {selectedMethodObj.logo ? (
+                    <img
+                      src={selectedMethodObj.logo}
+                      alt={selectedMethodObj.title}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px]">
+                      {selectedMethodObj.title.slice(0, 2)}
                     </div>
+                  )}
+                </div>
+              </div>
 
-                    {/* Method Text */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-xs sm:text-sm leading-tight truncate">
-                          {method.title}
-                        </span>
-                        <span className={`text-[9px] font-semibold px-1.5 py-0.2 rounded-md ${method.badgeColor}`}>
-                          {method.tag}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-gray-500 truncate mt-0.5">
-                        {method.subtitle}
-                      </p>
-                    </div>
+              {/* Native / Stylized Select Dropdown with Provider Names Only */}
+              <select
+                id="payment-method-select"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                disabled={submitting}
+                className="w-full pl-13 pr-10 py-3.5 text-xs sm:text-sm font-bold bg-white border-2 border-gray-200 rounded-2xl appearance-none focus:outline-hidden focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 text-gray-900 shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+              >
+                {paymentMethodsList.map((m) => (
+                  <option key={m.id} value={m.id} className="text-gray-900 font-semibold py-2">
+                    {m.title}
+                  </option>
+                ))}
+              </select>
 
-                    {/* Radio indicator */}
-                    <div className="shrink-0">
-                      <div
-                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                          isSelected
-                            ? "border-emerald-600 bg-emerald-600 text-white"
-                            : "border-gray-300 bg-white"
-                        }`}
-                      >
-                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
+              {/* Custom Down Arrow Icon */}
+              <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-gray-400">
+                <ChevronDown className="w-4 h-4 stroke-[2.5]" />
+              </div>
             </div>
           </div>
 

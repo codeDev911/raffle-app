@@ -16,11 +16,13 @@ import {
   ExternalLink,
   ShieldCheck,
   ChevronRight,
+  ClipboardList,
 } from "lucide-react"
 
 const navigation = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Raffles", href: "/admin/raffles", icon: Gift },
+  { name: "Product Requests", href: "/admin/requests", icon: ClipboardList },
   { name: "Customers", href: "/admin/customers", icon: Users },
   { name: "Payments", href: "/admin/payments", icon: CreditCard },
 ]

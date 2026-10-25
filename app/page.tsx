@@ -49,6 +49,9 @@ export const metadata = {
     description: 'Join exciting lucky draws and win prizes like iPhones, AirPods, and more!',
     images: ['https://pakraffle.com/images/og-home.jpg'],
   },
+}
+
+export const viewport = {
   themeColor: '#10B981',
 }
 

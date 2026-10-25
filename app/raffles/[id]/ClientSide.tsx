@@ -94,7 +94,7 @@ const renderStatusBadge = (status: string) => {
   }
 }
 
-const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/invite/pakraffle-official"
+const WHATSAPP_COMMUNITY_URL = "https://whatsapp.com/channel/0029VbB0CzJ8fewyBXpXy210"
 const WHATSAPP_PHONE_CLEAN = "923377155722"
 
 function WhatsAppIcon({ className = "w-5 h-5" }: { className?: string }) {
@@ -271,7 +271,7 @@ const ClientSide = ({ raffle }: { raffle: Raffle }) => {
                 category={raffle.category}
                 status={raffle.status}
                 featured={raffle.featured}
-                aspectRatioClass="aspect-[4/3] sm:aspect-[16/11]"
+                aspectRatioClass="aspect-square sm:aspect-[4/3]"
               />
             </div>
 

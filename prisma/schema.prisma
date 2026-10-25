@@ -145,3 +145,36 @@ enum PaymentStatus {
   FAILED
   CANCELLED
 }
+
+model ProductListingRequest {
+  id           String        @id @default(cuid())
+  productType  String
+  productName  String
+  description  String
+  phone        String
+  email        String
+  fullNameCnic String
+  cnicNumber   String?
+  city         String?
+  marketPrice  Int           // Market price in PKR
+  ticketPrice  Int           // Ticket price in PKR
+  totalTickets Int
+  totalRevenue Int           // ticketPrice * totalTickets
+  platformFee  Int           // 8% platform fee
+  sellerPayout Int           // totalRevenue - platformFee
+  condition    String?
+  images       String[]      @default([])
+  status       ListingStatus @default(PENDING)
+  adminNotes   String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("product_listing_requests")
+}
+
+enum ListingStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}

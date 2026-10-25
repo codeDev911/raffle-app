@@ -1,439 +1,269 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import {
-  Phone,
-  Mail,
-  MapPin,
-  Clock,
-  MessageCircle,
-  Send,
-  Headphones,
-  Users,
-  Shield,
-  Zap,
-  ArrowRight,
-  Facebook,
-  Twitter,
-  Instagram,
-  Youtube,
-  HelpCircle,
-  Star,
-} from "lucide-react"
+import { Headphones, MessageSquare, Mail, MapPin, Clock, HelpCircle, ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react"
+import Link from "next/link"
+import { ContactForm } from "@/components/contact-form"
 
 export const metadata = {
-  title: 'Contact Us - PakRaffle',
-  description: 'Get in touch with PakRaffle for support, queries, or collaboration. We’re here to help.',
-  keywords: ['contact PakRaffle', 'support', 'PakRaffle help', 'email PakRaffle'],
-  robots: 'index, follow',
+  title: "Contact Us — Official Support Desk & Inquiries | PakRaffle",
+  description:
+    "Reach out to PakRaffle customer support. Get assistance with ticket verification, draw schedules, prize claims, or live chat.",
+  keywords: [
+    "contact PakRaffle",
+    "PakRaffle support",
+    "lucky draw help Pakistan",
+    "ticket verification help",
+    "PakRaffle customer care",
+  ],
+  robots: "index, follow",
   openGraph: {
-    title: 'Contact Us - PakRaffle',
-    description: 'Need help or have a question? Contact the PakRaffle support team.',
-    url: 'https://pakraffle.com/contact',
-    siteName: 'PakRaffle',
-    images: [
-      {
-        url: 'https://pakraffle.com/images/contact-og.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Contact PakRaffle',
-      },
-    ],
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Contact Us - PakRaffle',
-    description: 'Get support or send us a message — PakRaffle support team is ready to help.',
-    images: ['https://pakraffle.com/images/contact-og.jpg'],
+    title: "Contact Us - PakRaffle Pakistan",
+    description: "Get in touch with PakRaffle customer care via WhatsApp, email, or our inquiry desk.",
+    url: "https://pakraffle.com/contact",
+    siteName: "PakRaffle",
+    type: "website",
   },
 }
 
-
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-white text-gray-900 overflow-hidden">
-      {/* Geometric Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-green-500/10 to-emerald-600/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-gradient-to-tr from-green-400/5 to-teal-500/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-gradient-to-tl from-green-600/8 to-lime-500/8 rounded-full blur-2xl"></div>
+    <div className="min-h-screen bg-slate-50 py-10 sm:py-16">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        {/* Header Section */}
+        <div className="text-center space-y-3 pb-2">
+          <div className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+            <Headphones className="w-4 h-4 text-emerald-700" />
+            <span>Official Customer Support & Inquiry Desk</span>
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-black text-gray-900 tracking-tight">
+            Contact <span className="text-emerald-700">Support</span>
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            Have questions regarding ticket verification, the 100% target ticket draw policy, or prize handover? Our support team is active 7 days a week to assist you.
+          </p>
+          <div className="flex items-center justify-center gap-3 text-xs text-gray-500 pt-1">
+            <span>Average Response: &lt; 15 mins</span>
+            <span>•</span>
+            <span>24/7 WhatsApp &amp; Email</span>
+            <span>•</span>
+            <span>Lahore &amp; Islamabad Desks</span>
+          </div>
+        </div>
+
+        {/* SECTION 1: DIRECT CONTACT CHANNELS */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">1. Direct Communication Channels</h3>
+              <p className="text-xs text-gray-500">Fastest ways to reach our verification and support representatives</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+            {/* WhatsApp */}
+            <div className="p-5 rounded-2xl bg-slate-50 border border-gray-200/60 flex flex-col justify-between space-y-3">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm">
+                  <MessageSquare className="w-4 h-4" />
+                  <span>WhatsApp Live Support</span>
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Best for instant ticket confirmation, payment slip reviews, and rapid questions.
+                </p>
+              </div>
+              <a
+                href="https://wa.me/923377155722?text=Hello%20PakRaffle%20Support%2C%20I%20need%20assistance"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs transition-colors"
+              >
+                <span>Chat on WhatsApp</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+
+            {/* Email */}
+            <div className="p-5 rounded-2xl bg-slate-50 border border-gray-200/60 flex flex-col justify-between space-y-3">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 text-gray-900 font-bold text-sm">
+                  <Mail className="w-4 h-4 text-emerald-700" />
+                  <span>Official Email Desk</span>
+                </div>
+                <p className="text-xs font-mono font-medium text-emerald-800">support@pakraffle.com</p>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  For formal dispute reviews, partnership inquiries, and account audits.
+                </p>
+              </div>
+              <a
+                href="mailto:support@pakraffle.com"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs transition-colors"
+              >
+                <span>Send Email</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+
+            {/* Offices */}
+            <div className="p-5 rounded-2xl bg-slate-50 border border-gray-200/60 flex flex-col justify-between space-y-3">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 text-gray-900 font-bold text-sm">
+                  <MapPin className="w-4 h-4 text-emerald-700" />
+                  <span>Regional Desks</span>
+                </div>
+                <p className="text-xs font-semibold text-gray-800">Lahore &amp; Islamabad, Pakistan</p>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Physical winner ceremonies and prize collection. Mon–Sat, 10:00 AM – 6:00 PM PKT.
+                </p>
+              </div>
+              <div className="text-[11px] font-bold text-gray-500 bg-white px-3 py-1.5 rounded-lg border border-gray-200/70 text-center">
+                By Appointment For Prize Delivery
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 2: SEND US A MESSAGE FORM */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-5">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <Mail className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">2. Submit an Inquiry</h3>
+              <p className="text-xs text-gray-500">Send our support staff a message directly from this portal</p>
+            </div>
+          </div>
+
+          <ContactForm />
+        </div>
+
+        {/* SECTION 3: DEPARTMENT RESOLUTION STANDARDS */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">3. Resolution Timelines &amp; SLA</h3>
+              <p className="text-xs text-gray-500">Expected turnaround times for common requests</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm text-gray-600">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-gray-200/60 space-y-1">
+              <div className="flex items-center gap-2 font-bold text-gray-900">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Payment &amp; Ticket Approval</span>
+              </div>
+              <p className="text-xs text-gray-500 pl-6">5 to 15 minutes average review time 24 hours a day.</p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-gray-200/60 space-y-1">
+              <div className="flex items-center gap-2 font-bold text-gray-900">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Draw Schedule Updates</span>
+              </div>
+              <p className="text-xs text-gray-500 pl-6">Live broadcast dates announced upon 100% target ticket sales.</p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-gray-200/60 space-y-1">
+              <div className="flex items-center gap-2 font-bold text-gray-900">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Prize Claim &amp; Verification</span>
+              </div>
+              <p className="text-xs text-gray-500 pl-6">Winner identity validation initiated within 2 hours of draw end.</p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-gray-200/60 space-y-1">
+              <div className="flex items-center gap-2 font-bold text-gray-900">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Technical &amp; Account Support</span>
+              </div>
+              <p className="text-xs text-gray-500 pl-6">Password resets and profile updates handled within 30 minutes.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 4: FREQUENTLY ASKED QUESTIONS */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <HelpCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">4. Frequently Asked Questions</h3>
+              <p className="text-xs text-gray-500">Quick answers to standard participant questions</p>
+            </div>
+          </div>
+
+          <div className="space-y-3 text-xs sm:text-sm text-gray-600 leading-relaxed">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-gray-200/60 space-y-1.5">
+              <h4 className="font-bold text-gray-900">When does a lucky draw take place?</h4>
+              <p className="text-xs text-gray-600">
+                A draw takes place only when <strong>100% of the target tickets are sold</strong>. There are no artificial countdown deadlines or premature cancellations. Once the ticket progress bar reaches 100%, the live stream date and time are published on our website and social channels.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-gray-200/60 space-y-1.5">
+              <h4 className="font-bold text-gray-900">How do I verify my payment after transferring funds?</h4>
+              <p className="text-xs text-gray-600">
+                After completing your payment via JazzCash, EasyPaisa, or Pakistani Bank Transfer, enter your Transaction ID (TID) and submit a screenshot on the checkout page. Our verification desk reconciles payments within 5 to 15 minutes, and your tickets appear in your profile entries immediately.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-gray-200/60 space-y-1.5">
+              <h4 className="font-bold text-gray-900">How do winners receive their prizes?</h4>
+              <p className="text-xs text-gray-600">
+                Prizes are delivered free of charge nationwide. Electronics and gadgets are shipped via insured couriers directly to your home. Vehicles are handed over in person with full registration paperwork at our office or arranged doorstep delivery. Cash prizes are transferred to your verified Pakistani bank account or mobile wallet.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-gray-200/60 space-y-1.5">
+              <h4 className="font-bold text-gray-900">Are my entries guaranteed against fraud?</h4>
+              <p className="text-xs text-gray-600">
+                Yes. Every verified ticket is assigned an immutable alphanumeric serial number and recorded with your CNIC and timestamp. Draws use verified cryptographically secure random number generation (CSPRNG) and are broadcast live without camera cuts.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* QUICK ACTION TILES */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs text-center space-y-3">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900">
+            Looking for Your Tickets or Recent Winners?
+          </h3>
+          <p className="text-xs sm:text-sm text-gray-600 max-w-xl mx-auto">
+            You can view your active tickets, check draw statuses, or see photos and videos from our latest prize distribution ceremonies.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <Link
+              href="/profile/entries"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-xs transition-colors"
+            >
+              View My Tickets
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <Link
+              href="/winners"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs transition-colors"
+            >
+              Winners Gallery
+            </Link>
+            <Link
+              href="/raffles"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs transition-colors"
+            >
+              Explore Active Draws
+            </Link>
+          </div>
+        </div>
+
+        {/* Footer Audit Stamp */}
+        <div className="text-center text-xs text-gray-400 pt-2">
+          <p>PakRaffle Official Support Center • Pakistan&apos;s Verified Digital Lucky Draw Platform</p>
+        </div>
       </div>
-
-      {/* Hero Section */}
-      <section className="relative py-20 px-6">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <Badge className="bg-green-500/10 text-green-600 border-green-500/20 hover:bg-green-500/20 transition-colors mb-6">
-              💬 We're Here to Help
-            </Badge>
-            <h1 className="text-5xl lg:text-6xl font-bold leading-tight mb-6">
-              <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent">
-                Get in Touch
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-green-500 to-green-600 bg-clip-text text-transparent">
-                With PakRaffle
-              </span>
-            </h1>
-            <p className="text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto">
-              Have questions about our raffles? Need support with your account? Our dedicated team is ready to assist
-              you 24/7 with any inquiries you may have.
-            </p>
-          </div>
-
-          {/* Quick Contact Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 text-center hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Clock className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-2xl font-bold text-gray-900 mb-1">24/7</div>
-                <div className="text-sm text-gray-600">Support Available</div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 text-center hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <MessageCircle className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-2xl font-bold text-gray-900 mb-1">{"<5min"}</div>
-                <div className="text-sm text-gray-600">Response Time</div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 text-center hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="w-12 h-12 bg-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-2xl font-bold text-gray-900 mb-1">50K+</div>
-                <div className="text-sm text-gray-600">Happy Customers</div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-yellow-50 to-orange-100 border-orange-200 text-center hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6">
-                <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Star className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-2xl font-bold text-gray-900 mb-1">4.9/5</div>
-                <div className="text-sm text-gray-600">Satisfaction Rate</div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Contact Section */}
-      <section className="relative  py-20 px-6 bg-gray-50">
-        <div className="container max-w-7xl  mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            {/* Contact Form */}
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  Send us a Message
-                </h2>
-                <p className="text-gray-600 text-lg">
-                  Fill out the form below and we'll get back to you within 24 hours.
-                </p>
-              </div>
-
-              <Card className="bg-white border-gray-200 shadow-xl">
-                <CardContent className="p-8">
-                  <form className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">First Name</label>
-                        <input
-                          type="text"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300"
-                          placeholder="Enter your first name"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Last Name</label>
-                        <input
-                          type="text"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300"
-                          placeholder="Enter your last name"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">Email Address</label>
-                      <input
-                        type="email"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300"
-                        placeholder="Enter your email address"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">Phone Number</label>
-                      <input
-                        type="tel"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300"
-                        placeholder="+92 300 1234567"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">Subject</label>
-                      <select className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300">
-                        <option>Select a topic</option>
-                        <option>Account Support</option>
-                        <option>Payment Issues</option>
-                        <option>Prize Claims</option>
-                        <option>Technical Support</option>
-                        <option>General Inquiry</option>
-                        <option>Partnership</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-700">Message</label>
-                      <textarea
-                        rows={5}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300 resize-none"
-                        placeholder="Tell us how we can help you..."
-                      ></textarea>
-                    </div>
-
-                    <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-4 text-lg font-semibold shadow-lg shadow-green-500/25 transition-all duration-300 transform hover:scale-105">
-                      <Send className="w-5 h-5 mr-2" />
-                      Send Message
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Contact Information */}
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  Contact Information
-                </h2>
-                <p className="text-gray-600 text-lg">
-                  Reach out to us through any of these channels. We're always ready to help!
-                </p>
-              </div>
-
-              {/* Contact Methods */}
-              <div className="space-y-6">
-               
-
-                <Card className="bg-white border-gray-200 hover:shadow-lg transition-all duration-300 group">
-                  <CardContent className="p-6">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <Mail className="w-7 h-7 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-gray-900">Email Support</h3>
-                        <p className="text-gray-600">support@pakraffle.com</p>
-                        <p className="text-sm text-blue-600">Response within 2 hours</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white border-gray-200 hover:shadow-lg transition-all duration-300 group">
-                  <CardContent className="p-6">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <MessageCircle className="w-7 h-7 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-gray-900">Live Chat</h3>
-                        <p className="text-gray-600">Available on website</p>
-                        <p className="text-sm text-purple-600">Instant responses</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
- 
-              </div>
-
-              {/* Social Media */}
-              <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200">
-                <CardContent className="p-6">
-                  <h3 className="font-bold text-lg text-gray-900 mb-4">Follow Us</h3>
-                  <div className="flex space-x-4">
-                    <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer">
-                      <Facebook className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="w-12 h-12 bg-sky-500 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer">
-                      <Twitter className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="w-12 h-12 bg-pink-600 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer">
-                      <Instagram className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer">
-                      <Youtube className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Support Categories */}
-      <section className="relative py-20 px-6 bg-white">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-              How Can We Help?
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Choose the category that best describes your inquiry for faster assistance.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="bg-white border-gray-200 hover:shadow-xl hover:-translate-y-2 transition-all duration-500 group">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-green-500/25">
-                  <Headphones className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold mb-4 text-gray-900">Account Support</h3>
-                <p className="text-gray-600 mb-6">
-                  Issues with login, account verification, profile updates, or password reset.
-                </p>
-                <Button variant="outline" className="border-green-500 text-green-600 hover:bg-green-50 bg-transparent">
-                  Get Help
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border-gray-200 hover:shadow-xl hover:-translate-y-2 transition-all duration-500 group">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-blue-500/25">
-                  <Zap className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold mb-4 text-gray-900">Payment Issues</h3>
-                <p className="text-gray-600 mb-6">
-                  Problems with payments, refunds, transaction failures, or payment method setup.
-                </p>
-                <Button variant="outline" className="border-blue-500 text-blue-600 hover:bg-blue-50 bg-transparent">
-                  Get Help
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border-gray-200 hover:shadow-xl hover:-translate-y-2 transition-all duration-500 group">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-yellow-500/25">
-                  <Shield className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold mb-4 text-gray-900">Prize Claims</h3>
-                <p className="text-gray-600 mb-6">
-                  Questions about prize delivery, claim process, or verification requirements.
-                </p>
-                <Button
-                  variant="outline"
-                  className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 bg-transparent"
-                >
-                  Get Help
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="relative py-20 px-6 bg-gray-50">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-green-500/10 text-green-600 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <HelpCircle className="w-4 h-4" />
-              Frequently Asked Questions
-            </div>
-            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-              Quick Answers
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Find instant answers to the most common questions about PakRaffle.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            <Card className="bg-white border-gray-200 hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg text-gray-900 mb-3">How do I claim my prize?</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Winners are automatically notified via SMS and email. Prizes are transferred directly to your
-                  registered payment method within 5 minutes of the draw.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border-gray-200 hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg text-gray-900 mb-3">Are the draws really fair?</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Yes! All draws are conducted live and recorded. We use blockchain technology for transparency and
-                  third-party auditing to ensure complete fairness.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border-gray-200 hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg text-gray-900 mb-3">What payment methods do you accept?</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  We accept EasyPaisa, JazzCash, and NayaPay for both ticket purchases and prize payouts. All
-                  transactions are secure and instant.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border-gray-200 hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg text-gray-900 mb-3">How can I increase my chances of winning?</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Each ticket has an equal chance of winning. You can increase your odds by purchasing more tickets for
-                  the same draw or participating in multiple draws.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border-gray-200 hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg text-gray-900 mb-3">Is my personal information safe?</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  We use military-grade encryption to protect your data and never share your information with third
-                  parties without your consent.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border-gray-200 hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg text-gray-900 mb-3">Can I play from anywhere in Pakistan?</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Yes! PakRaffle is available nationwide. As long as you have internet access and a Pakistani mobile
-                  number, you can participate from anywhere.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-     
- 
     </div>
   )
 }

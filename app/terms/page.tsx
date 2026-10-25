@@ -199,6 +199,51 @@ export default function TermsPage() {
           </div>
         </div>
 
+        {/* SECTION 7: USER-LISTED RAFFLES, CUSTODY, CANCELLATION & 3-MONTH DURATION */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-emerald-500/30 shadow-xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+              <Shield className="w-5 h-5 text-emerald-700" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                7. User Product Listings, Physical Custody &amp; Cancellation Policy
+              </h3>
+              <p className="text-xs text-gray-500">
+                Mandatory operational terms for users listing products for public draw campaigns
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3.5 text-xs sm:text-sm text-gray-600 leading-relaxed">
+            <p>
+              <strong>Review &amp; Verified Outreach:</strong> After submitting a product listing application, our verification desk will review the documentation and contact the applicant directly through one of their provided and verified contact channels (WhatsApp, phone call, or email) to confirm asset authenticity and CNIC legal identity.
+            </p>
+
+            <p>
+              <strong>Physical Verification &amp; Escrow Custody:</strong> Before ticket sales commence, the physical item must be shipped or delivered to an authorized PakRaffle custody facility in Lahore, Islamabad, or Karachi. PakRaffle will hold the verified item in secure, insured custody until the raffle is either successfully completed or officially cancelled.
+            </p>
+
+            <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-amber-950 space-y-2">
+              <p className="font-bold text-xs uppercase tracking-wider text-amber-900">
+                Voluntary Cancellation &amp; 8% Platform Fee Clause:
+              </p>
+              <p className="text-xs leading-relaxed">
+                If a seller requests to cancel their live raffle after tickets have been made available for purchase, <strong>100% of all sold ticket amounts will be immediately refunded to participants</strong>. The seller is required to pay PakRaffle the <strong>8% platform fee</strong> (covering payment gateway transaction charges, verification labor, and marketing expenses) before the item will be released and returned to the seller.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 space-y-2">
+              <p className="font-bold text-xs uppercase tracking-wider text-slate-900">
+                3-Month Maximum Duration Limit:
+              </p>
+              <p className="text-xs leading-relaxed">
+                All community product raffles must be completed within <strong>3 months (90 days)</strong> from their official launch date. If the required ticket goal is not met within 3 months, PakRaffle will automatically cancel the raffle, process full 100% refunds to all ticket buyers, charge/deduct the 8% platform fee, and securely return the physical item to the verified owner.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* HELP & SUPPORT DESK */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs text-center space-y-3">
           <h3 className="text-base sm:text-lg font-bold text-gray-900">
