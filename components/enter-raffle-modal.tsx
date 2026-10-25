@@ -46,26 +46,6 @@ interface EnterRaffleModalProps {
 
 const paymentMethodsList = [
   {
-    id: "EASYPAISA",
-    title: "EasyPaisa",
-    subtitle: "Instant Mobile Account / QR",
-    tag: "Most Popular",
-    color: "border-emerald-500 text-emerald-700 bg-emerald-50/70",
-    badgeColor: "bg-emerald-100 text-emerald-800",
-    avatarBg: "bg-emerald-600 text-white",
-    logo: "/assets/easypaisa-logo.png",
-  },
-  {
-    id: "JAZZCASH",
-    title: "JazzCash",
-    subtitle: "Instant Mobile Account / Till",
-    tag: "Instant",
-    color: "border-red-500 text-red-700 bg-red-50/70",
-    badgeColor: "bg-red-100 text-red-800",
-    avatarBg: "bg-red-700 text-white",
-    logo: "/assets/jazzcash-logo.png",
-  },
-  {
     id: "NAYAPAY",
     title: "NayaPay",
     subtitle: "Digital Wallet & Visa Debit",
