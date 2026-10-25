@@ -44,32 +44,8 @@ const paymentMethodsConfig: Record<
     iban: string
   }
 > = {
-  easypaisa: {
-    name: "EasyPaisa",
-    shortName: "EasyPaisa",
-    typeLabel: "Mobile Wallet Account",
-    icon: "/assets/easypaisa-logo.png",
-    fallbackBg: "bg-emerald-600",
-    brandGradient: "from-emerald-700 via-emerald-600 to-teal-700",
-    borderAccent: "border-emerald-500",
-    pillBg: "bg-emerald-50 text-emerald-800 border-emerald-200",
-    accountNumber: process.env.NEXT_PUBLIC_EASYPAISA_ACCOUNT_NUMBER || "03001234567",
-    accountName: process.env.NEXT_PUBLIC_EASYPAISA_ACCOUNT_NAME || "PakRaffle Official",
-    iban: process.env.NEXT_PUBLIC_EASYPAISA_ACCOUNT_IBN || "PK36EPAY0000000000000000",
-  },
-  jazzcash: {
-    name: "JazzCash",
-    shortName: "JazzCash",
-    typeLabel: "Mobile Wallet Account",
-    icon: "/assets/jazzcash-logo.png",
-    fallbackBg: "bg-red-700",
-    brandGradient: "from-red-800 via-rose-700 to-red-600",
-    borderAccent: "border-red-500",
-    pillBg: "bg-red-50 text-red-800 border-red-200",
-    accountNumber: process.env.NEXT_PUBLIC_JAZZCASH_ACCOUNT_NUMBER || "03007654321",
-    accountName: process.env.NEXT_PUBLIC_JAZZCASH_ACCOUNT_NAME || "PakRaffle Official",
-    iban: process.env.NEXT_PUBLIC_JAZZCASH_ACCOUNT_IBN || "PK36JCAS0000000000000000",
-  },
+  
+  
   nayapay: {
     name: "NayaPay",
     shortName: "NayaPay",
@@ -79,9 +55,9 @@ const paymentMethodsConfig: Record<
     brandGradient: "from-orange-600 via-orange-500 to-amber-600",
     borderAccent: "border-orange-500",
     pillBg: "bg-orange-50 text-orange-800 border-orange-200",
-    accountNumber: process.env.NEXT_PUBLIC_NAYAPAY_ACCOUNT_NUMBER || "03009876543",
-    accountName: process.env.NEXT_PUBLIC_NAYAPAY_ACCOUNT_NAME || "PakRaffle Official",
-    iban: process.env.NEXT_PUBLIC_NAYAPAY_ACCOUNT_IBN || "PK36NAYA0000000000000000",
+    accountNumber: process.env.NEXT_PUBLIC_NAYAPAY_ACCOUNT_NUMBER || "03051767579",
+    accountName: process.env.NEXT_PUBLIC_NAYAPAY_ACCOUNT_NAME || "Muhammad Afnan",
+    iban: process.env.NEXT_PUBLIC_NAYAPAY_ACCOUNT_IBN || "---",
   },
   sadapay: {
     name: "SadaPay",
@@ -92,23 +68,11 @@ const paymentMethodsConfig: Record<
     brandGradient: "from-teal-700 via-teal-600 to-cyan-700",
     borderAccent: "border-teal-500",
     pillBg: "bg-teal-50 text-teal-800 border-teal-200",
-    accountNumber: process.env.NEXT_PUBLIC_SADAPAY_ACCOUNT_NUMBER || "03004567890",
-    accountName: process.env.NEXT_PUBLIC_SADAPAY_ACCOUNT_NAME || "PakRaffle Official",
-    iban: process.env.NEXT_PUBLIC_SADAPAY_ACCOUNT_IBN || "PK36SADA0000000000000000",
+    accountNumber: process.env.NEXT_PUBLIC_SADAPAY_ACCOUNT_NUMBER || "03045645642",
+    accountName: process.env.NEXT_PUBLIC_SADAPAY_ACCOUNT_NAME || "Muhammad Afnan",
+    iban: process.env.NEXT_PUBLIC_SADAPAY_ACCOUNT_IBN || "---",
   },
-  sayapay: {
-    name: "SadaPay",
-    shortName: "SadaPay",
-    typeLabel: "Mastercard & SadaBiz Wallet",
-    icon: "https://crystalpng.com/wp-content/uploads/2025/09/Sadapay-Logo-768x768.png",
-    fallbackBg: "bg-teal-600",
-    brandGradient: "from-teal-700 via-teal-600 to-cyan-700",
-    borderAccent: "border-teal-500",
-    pillBg: "bg-teal-50 text-teal-800 border-teal-200",
-    accountNumber: process.env.NEXT_PUBLIC_SADAPAY_ACCOUNT_NUMBER || "03004567890",
-    accountName: process.env.NEXT_PUBLIC_SADAPAY_ACCOUNT_NAME || "PakRaffle Official",
-    iban: process.env.NEXT_PUBLIC_SADAPAY_ACCOUNT_IBN || "PK36SADA0000000000000000",
-  },
+  
   mezan: {
     name: "Meezan Bank",
     shortName: "Meezan Bank",
@@ -118,9 +82,9 @@ const paymentMethodsConfig: Record<
     brandGradient: "from-purple-900 via-purple-800 to-indigo-900",
     borderAccent: "border-purple-600",
     pillBg: "bg-purple-50 text-purple-800 border-purple-200",
-    accountNumber: process.env.NEXT_PUBLIC_MEEZAN_ACCOUNT_NUMBER || "01010101010101",
-    accountName: process.env.NEXT_PUBLIC_MEEZAN_ACCOUNT_NAME || "PakRaffle Official",
-    iban: process.env.NEXT_PUBLIC_MEEZAN_ACCOUNT_IBAN || "PK36MEZN0000000000000000",
+    accountNumber: process.env.NEXT_PUBLIC_MEEZAN_ACCOUNT_NUMBER || "000030011243",
+    accountName: process.env.NEXT_PUBLIC_MEEZAN_ACCOUNT_NAME || "Muhammad Afnan",
+    iban: process.env.NEXT_PUBLIC_MEEZAN_ACCOUNT_IBAN || "PK53MEZN0000300112437772",
   },
 }
 
