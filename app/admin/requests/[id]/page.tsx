@@ -55,6 +55,7 @@ interface ProductRequest {
   images: string[]
   status: "PENDING" | "UNDER_REVIEW" | "APPROVED" | "REJECTED"
   adminNotes?: string | null
+  secureToken?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -76,7 +77,9 @@ export default function AdminRequestDetailPage() {
     const fetchDetail = async () => {
       setLoading(true)
       try {
-        const res = await fetch(`/api/listing-requests/${id}`)
+        const res = await fetch(`/api/listing-requests/${id}`, {
+          headers: { "x-admin-request": "true" },
+        })
         const data = await res.json()
         if (data.success && data.request) {
           setRequest(data.request)
@@ -243,6 +246,21 @@ export default function AdminRequestDetailPage() {
             <MessageCircle className="w-3.5 h-3.5" />
             <span>Chat on WhatsApp</span>
           </a>
+
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="rounded-xl text-xs font-semibold h-9 gap-1.5"
+          >
+            <Link
+              href={`/application/status/${request.id}?token=${request.secureToken || ""}`}
+              target="_blank"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>View Public Status</span>
+            </Link>
+          </Button>
 
           <Button
             variant="outline"

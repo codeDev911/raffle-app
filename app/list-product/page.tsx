@@ -24,6 +24,9 @@ import {
   Flame,
   Check,
   ExternalLink,
+  Copy,
+  Lock,
+  MessageCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -83,6 +86,16 @@ export default function ListProductPage() {
   const [errorMsg, setErrorMsg] = useState("")
   const [successData, setSuccessData] = useState<any>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
+  const [copiedLink, setCopiedLink] = useState(false)
+
+  const handleCopyLink = (url: string) => {
+    if (typeof window !== "undefined") {
+      const fullUrl = url.startsWith("http") ? url : `${window.location.origin}${url}`
+      navigator.clipboard.writeText(fullUrl)
+      setCopiedLink(true)
+      setTimeout(() => setCopiedLink(false), 2500)
+    }
+  }
 
   // Calculations for Calculator (purely derived from whatever the user typed)
   const cMarket = Math.max(0, parseInt(calcMarketPrice) || 0)
@@ -204,7 +217,13 @@ export default function ListProductPage() {
       const data = await res.json()
 
       if (res.ok && data.success) {
-        setSuccessData(data.request)
+        const token = data.secureToken || data.request?.secureToken || ""
+        const statusUrl = data.statusUrl || `/application/status/${data.request.id}?token=${token}`
+        setSuccessData({
+          ...data.request,
+          secureToken: token,
+          statusUrl,
+        })
         // reset fields
         setFormData({
           fullNameCnic: "",
@@ -776,72 +795,184 @@ export default function ListProductPage() {
             )}
 
             {successData ? (
-              <div className="p-8 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center border-2 border-emerald-300">
+              <div className="p-6 sm:p-8 space-y-6 text-center">
+                <div className="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center border-2 border-emerald-300 shadow-sm">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
-                <h3 className="text-2xl font-extrabold text-slate-900">
-                  Application Submitted Successfully!
-                </h3>
-                <p className="text-sm text-slate-600 max-w-md mx-auto">
-                  Your reference ID is{" "}
-                  <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
-                    {successData.id}
-                  </span>
-                  . Our verification desk will review your submission and contact you via WhatsApp within 24 hours.
-                </p>
 
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 max-w-md mx-auto text-left space-y-2 text-xs">
+                <div>
+                  <Badge className="bg-emerald-100 text-emerald-900 border-emerald-300 text-xs mb-2">
+                    Application Logged Successfully
+                  </Badge>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                    Product Listing Request Submitted!
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto mt-2 leading-relaxed">
+                    Your reference ID is{" "}
+                    <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      #{successData.id}
+                    </span>
+                    . Our verification team will review your specifications and contact your WhatsApp within 24-48 hours.
+                  </p>
+                </div>
+
+                {/* Secure Tracking Link Box - Requested Feature */}
+                <div className="bg-gradient-to-br from-emerald-50 via-teal-50/50 to-white border-2 border-emerald-500/50 rounded-3xl p-6 text-left space-y-4 shadow-sm max-w-2xl mx-auto">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <Lock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-slate-900 text-base">
+                        Your Secure Application Status Page
+                      </h4>
+                      <p className="text-xs text-slate-600">
+                        Track live desk verification, physical custody hold, and raffle schedule.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                      Private Tracking URL:
+                    </span>
+                    <div className="flex flex-col sm:flex-row items-center gap-2">
+                      <div className="w-full bg-white border border-emerald-300 rounded-xl px-3.5 py-2.5 font-mono text-xs text-slate-800 select-all overflow-x-auto whitespace-nowrap shadow-2xs">
+                        {typeof window !== "undefined"
+                          ? `${window.location.origin}/application/status/${successData.id}?token=${successData.secureToken || ""}`
+                          : `/application/status/${successData.id}?token=${successData.secureToken || ""}`}
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={() =>
+                          handleCopyLink(
+                            `/application/status/${successData.id}?token=${successData.secureToken || ""}`
+                          )
+                        }
+                        className={`w-full sm:w-auto h-10 px-5 rounded-xl text-xs font-bold shrink-0 transition-all ${
+                          copiedLink
+                            ? "bg-emerald-700 text-white"
+                            : "bg-slate-900 hover:bg-slate-800 text-white"
+                        }`}
+                      >
+                        {copiedLink ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 mr-1.5" />
+                            <span>Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 mr-1.5" />
+                            <span>Copy Link</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+                    <Button
+                      asChild
+                      className="w-full sm:w-auto flex-1 h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-600/20"
+                    >
+                      <Link
+                        href={`/application/status/${successData.id}?token=${successData.secureToken || ""}`}
+                        className="flex items-center justify-center gap-2"
+                      >
+                        <span>View Application Status &amp; Timeline</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                  </div>
+
+                  <p className="text-[11px] text-emerald-900/80 bg-emerald-100/60 p-2.5 rounded-xl flex items-start gap-2">
+                    <span className="font-bold">🔒 Note:</span>
+                    <span>
+                      Please bookmark this private tracking URL. Anyone with this link can check the verification progress and custody updates for this product.
+                    </span>
+                  </p>
+                </div>
+
+                {/* Application Snapshot Card */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 max-w-2xl mx-auto text-left space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                    <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                      Submitted Application Snapshot
+                    </span>
+                    <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full border border-amber-200">
+                      Pending Review
+                    </span>
+                  </div>
+
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Product:</span>
-                    <span className="font-semibold text-slate-900">{successData.productName}</span>
+                    <span className="text-slate-500">Product Name:</span>
+                    <span className="font-semibold text-slate-900 text-right">{successData.productName}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Legal Name (CNIC):</span>
+                    <span className="text-slate-500">Legal Name (as per CNIC):</span>
                     <span className="font-semibold text-slate-900">{successData.fullNameCnic}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Market Price:</span>
+                    <span className="text-slate-500">Declared Market Price:</span>
                     <span className="font-semibold text-slate-900">Rs. {successData.marketPrice.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Target Tickets to Sold Out:</span>
-                    <span className="font-semibold text-emerald-700 font-mono">{(successData.totalTickets || formTickets).toLocaleString()} Tickets</span>
+                  <div className="flex justify-between bg-emerald-100/60 p-2 rounded-lg">
+                    <span className="font-bold text-emerald-950">Target Tickets to Sold Out:</span>
+                    <span className="font-extrabold text-emerald-800 font-mono text-sm">
+                      {(successData.totalTickets || formTickets).toLocaleString()} Tickets
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Suggested Ticket:</span>
+                    <span className="text-slate-500">Ticket Price per Entry:</span>
                     <span className="font-semibold text-slate-900">Rs. {successData.ticketPrice.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">8% Platform Fee:</span>
+                    <span className="text-slate-500">PakRaffle Platform Fee (8%):</span>
                     <span className="font-semibold text-red-600">Rs. {successData.platformFee.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between border-t border-slate-200 pt-2 font-bold">
-                    <span className="text-emerald-700">Estimated Net Payout:</span>
+                  <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-sm">
+                    <span className="text-emerald-800">Your Net Payout (92%):</span>
                     <span className="text-emerald-700 font-mono">Rs. {successData.sellerPayout.toLocaleString()}</span>
                   </div>
                 </div>
 
-                {/* Next Steps & Terms Reminder */}
-                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 max-w-md mx-auto text-left text-[11px] text-amber-900 space-y-1.5">
+                {/* Terms & Timeline Reminder */}
+                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 max-w-2xl mx-auto text-left text-[11px] text-amber-900 space-y-1.5">
                   <p className="font-bold text-xs text-amber-950 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-amber-700" />
-                    <span>Next Steps &amp; Policy Timeline:</span>
+                    <span>Next Steps &amp; Custody Reminder:</span>
                   </p>
-                  <p>1. Our team will contact you via WhatsApp / Phone within 24-48 hours to confirm identity.</p>
-                  <p>2. You will be provided shipping/handover instructions to our verified custody desk.</p>
+                  <p>1. Our verification desk will contact your WhatsApp within 24-48 hours to confirm identity.</p>
+                  <p>2. You will be provided shipping/handover instructions to deliver the item for physical escrow custody.</p>
                   <p>3. Campaign runs for a maximum of 3 months (90 days). If cancelled or expired, full ticket buyer refunds + 8% fee applies.</p>
                 </div>
 
-                <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-2xl mx-auto">
                   <Button
                     type="button"
                     onClick={() => setSuccessData(null)}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs px-6 h-11"
+                    className="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs px-6 h-11"
                   >
                     Submit Another Product
                   </Button>
-                  <Button asChild variant="outline" className="rounded-xl text-xs px-6 h-11">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full sm:w-auto rounded-xl text-xs px-6 h-11 border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+                  >
+                    <a
+                      href={`https://wa.me/923000000000?text=${encodeURIComponent(
+                        `Assalam o Alaikum PakRaffle, I submitted Product Listing Application #${successData.id} for "${successData.productName}".`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Inquire on WhatsApp</span>
+                    </a>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full sm:w-auto rounded-xl text-xs px-6 h-11">
                     <Link href="/raffles">Browse Live Draws</Link>
                   </Button>
                 </div>

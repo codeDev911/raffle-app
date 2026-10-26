@@ -7,6 +7,11 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+    const { searchParams } = new URL(req.url)
+    const token = searchParams.get("token")
+    const referer = req.headers.get("referer") || ""
+    const isAdmin = req.headers.get("x-admin-request") === "true" || referer.includes("/admin")
+
     let request: any = null
     try {
       request = await prisma.productListingRequest.findUnique({
@@ -20,9 +25,34 @@ export async function GET(
 
     if (!request) {
       return NextResponse.json(
-        { success: false, error: "Listing request not found" },
+        { success: false, error: "Listing application not found" },
         { status: 404 }
       )
+    }
+
+    // Security check: If record has a secureToken, require matching token unless requested by admin
+    if (request.secureToken && !isAdmin) {
+      if (!token) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Private tracking token is missing. Please use the full secure link provided upon application submission.",
+            requiresToken: true,
+          },
+          { status: 401 }
+        )
+      }
+
+      if (token !== request.secureToken) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Invalid or unauthorized tracking token. Please verify your private link or contact PakRaffle support.",
+            invalidToken: true,
+          },
+          { status: 403 }
+        )
+      }
     }
 
     return NextResponse.json({

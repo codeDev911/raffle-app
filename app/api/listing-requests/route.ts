@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma, mockPrisma } from "@/lib/prisma"
+import crypto from "crypto"
 
 export async function GET(req: NextRequest) {
   try {
@@ -102,6 +103,9 @@ export async function POST(req: NextRequest) {
     const platformFee = Math.round(totalRevenue * 0.08) // Exactly 8%
     const sellerPayout = totalRevenue - platformFee // 92%
 
+    // Generate secure random access token for private tracking
+    const secureToken = crypto.randomBytes(24).toString("hex")
+
     const dataToSave = {
       productType,
       productName: productName.trim(),
@@ -120,6 +124,7 @@ export async function POST(req: NextRequest) {
       condition: condition || "Brand New",
       images: Array.isArray(images) && images.length > 0 ? images : [],
       status: "PENDING" as const,
+      secureToken,
     }
 
     let newRequest: any = null
@@ -134,10 +139,14 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    const statusUrl = `/application/status/${newRequest.id}?token=${secureToken}`
+
     return NextResponse.json({
       success: true,
       message: "Your product listing request has been submitted successfully for verification.",
       request: newRequest,
+      secureToken,
+      statusUrl,
     })
   } catch (error: any) {
     console.error("Error creating listing request:", error)

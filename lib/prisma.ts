@@ -99,12 +99,22 @@ export interface ProductListingRequest {
   images: string[]
   status: "PENDING" | "UNDER_REVIEW" | "APPROVED" | "REJECTED"
   adminNotes?: string | null
+  secureToken?: string | null
   createdAt: Date
   updatedAt: Date
 }
 
+const globalStores = globalThis as unknown as {
+  productListingRequestsStore?: ProductListingRequest[]
+  usersStore?: User[]
+  rafflesStore?: Raffle[]
+  entriesStore?: Entry[]
+  paymentsStore?: Payment[]
+  winnersStore?: Winner[]
+}
+
 // Seed data
-export const productListingRequestsStore: ProductListingRequest[] = [
+const initialProductListingRequestsStore: ProductListingRequest[] = [
   {
     id: "req-101",
     productType: "Electronics",
@@ -127,6 +137,7 @@ export const productListingRequestsStore: ProductListingRequest[] = [
     ],
     status: "PENDING",
     adminNotes: "Customer submitted official purchase receipt. Needs physical verification at Lahore hub.",
+    secureToken: "tok_demo_iphone16_a94b81c2d3",
     createdAt: new Date(Date.now() - 2 * 3600 * 1000),
     updatedAt: new Date(Date.now() - 2 * 3600 * 1000),
   },
@@ -152,6 +163,7 @@ export const productListingRequestsStore: ProductListingRequest[] = [
     ],
     status: "UNDER_REVIEW",
     adminNotes: "Invoice verified with authorized Honda dealership in I-9 Islamabad. Scheduling physical inspection.",
+    secureToken: "tok_demo_hondacb_f47e2311b9",
     createdAt: new Date(Date.now() - 14 * 3600 * 1000),
     updatedAt: new Date(Date.now() - 5 * 3600 * 1000),
   },
@@ -177,6 +189,7 @@ export const productListingRequestsStore: ProductListingRequest[] = [
     ],
     status: "APPROVED",
     adminNotes: "Approved by Admin. Ready to prepare raffle entry draft and schedule launch.",
+    secureToken: "tok_demo_ps5pro_8c12903b41",
     createdAt: new Date(Date.now() - 28 * 3600 * 1000),
     updatedAt: new Date(Date.now() - 4 * 3600 * 1000),
   },
@@ -202,10 +215,16 @@ export const productListingRequestsStore: ProductListingRequest[] = [
     ],
     status: "PENDING",
     adminNotes: "Awaiting CNIC scan upload from user.",
+    secureToken: "tok_demo_macbook_e18239021a",
     createdAt: new Date(Date.now() - 48 * 3600 * 1000),
     updatedAt: new Date(Date.now() - 48 * 3600 * 1000),
   },
 ]
+
+if (!globalStores.productListingRequestsStore) {
+  globalStores.productListingRequestsStore = initialProductListingRequestsStore
+}
+export const productListingRequestsStore: ProductListingRequest[] = globalStores.productListingRequestsStore
 
 const usersStore: User[] = [
   {
