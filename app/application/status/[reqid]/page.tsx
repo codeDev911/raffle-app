@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import {
   ShieldCheck,
   CheckCircle2,
@@ -61,11 +61,16 @@ interface ApplicationData {
   updatedAt: string | Date
 }
 
-function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid: string }> }) {
+function StatusDetailContent() {
+  const params = useParams()
   const searchParams = useSearchParams()
+
+  const rawReqId = params?.reqid
+  const reqId = typeof rawReqId === "string" ? rawReqId : Array.isArray(rawReqId) ? rawReqId[0] : ""
   const tokenFromUrl = searchParams.get("token") || ""
 
-  const [reqId, setReqId] = useState<string>("")
+  const [mounted, setMounted] = useState(false)
+  const [origin, setOrigin] = useState("")
   const [tokenInput, setTokenInput] = useState<string>("")
   const [activeToken, setActiveToken] = useState<string>("")
 
@@ -76,12 +81,13 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
   const [application, setApplication] = useState<ApplicationData | null>(null)
   const [copiedLink, setCopiedLink] = useState(false)
 
-  // Resolve params
+  // Track hydration / window origin safely
   useEffect(() => {
-    paramsPromise.then((p) => {
-      setReqId(p.reqid)
-    })
-  }, [paramsPromise])
+    setMounted(true)
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin)
+    }
+  }, [])
 
   // Sync token from URL
   useEffect(() => {
@@ -91,7 +97,7 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
     }
   }, [tokenFromUrl])
 
-  // Fetch status
+  // Fetch status from API
   const fetchStatus = async (id: string, token: string, isManualRefresh = false) => {
     if (!id) return
     if (isManualRefresh) {
@@ -102,17 +108,23 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
     setError(null)
 
     try {
-      const url = `/api/listing-requests/${encodeURIComponent(id)}${token ? `?token=${encodeURIComponent(token)}` : ""}`
+      const url = `/api/listing-requests/${encodeURIComponent(id)}${
+        token ? `?token=${encodeURIComponent(token)}` : ""
+      }`
       const res = await fetch(url)
       const data = await res.json()
 
       if (!res.ok || !data.success) {
         if (res.status === 401 || data.requiresToken) {
           setRequiresToken(true)
-          setError("This application is private. A valid secure tracking token is required to view status and custody details.")
+          setError(
+            "This application is private. A valid secure tracking token is required to view status and custody details."
+          )
         } else if (res.status === 403 || data.invalidToken) {
           setRequiresToken(true)
-          setError("The tracking token provided does not match this application record. Please verify the link from your submission confirmation.")
+          setError(
+            "The tracking token provided does not match this application record. Please verify the link from your submission confirmation."
+          )
         } else if (res.status === 404) {
           setError(`No application found with ID "${id}". Please check your Reference ID.`)
         } else {
@@ -125,7 +137,7 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
         setError(null)
       }
     } catch (err: any) {
-      console.error(err)
+      console.error("Status fetch error:", err)
       setError("Network error while connecting to PakRaffle server. Please check your connection.")
     } finally {
       setLoading(false)
@@ -133,6 +145,7 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
     }
   }
 
+  // Trigger fetch when reqId or activeToken changes
   useEffect(() => {
     if (reqId) {
       fetchStatus(reqId, activeToken)
@@ -145,10 +158,27 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
     setActiveToken(tokenInput.trim())
   }
 
-  const handleCopyLink = () => {
-    if (typeof window !== "undefined") {
-      const fullUrl = `${window.location.origin}/application/status/${reqId}?token=${activeToken || application?.secureToken || ""}`
-      navigator.clipboard.writeText(fullUrl)
+  const handleCopyLink = async () => {
+    if (typeof window === "undefined" || !reqId) return
+    const token = activeToken || application?.secureToken || ""
+    const fullUrl = `${window.location.origin}/application/status/${reqId}${
+      token ? `?token=${token}` : ""
+    }`
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(fullUrl)
+      } else {
+        const textArea = document.createElement("textarea")
+        textArea.value = fullUrl
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand("copy")
+        document.body.removeChild(textArea)
+      }
+      setCopiedLink(true)
+      setTimeout(() => setCopiedLink(false), 2500)
+    } catch (err) {
+      console.error("Clipboard copy failed:", err)
       setCopiedLink(true)
       setTimeout(() => setCopiedLink(false), 2500)
     }
@@ -364,6 +394,23 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
     return `${clean.substring(0, 5)}-*****${clean.slice(-3)}`
   }
 
+  const dateValue = application.updatedAt || application.createdAt
+  const formattedDate = mounted && dateValue
+    ? new Date(dateValue).toLocaleString("en-PK", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "Recently updated"
+
+  const safeTotalTickets = Number(application.totalTickets) || 0
+  const safeTicketPrice = Number(application.ticketPrice) || 0
+  const safePlatformFee = Number(application.platformFee) || 0
+  const safeSellerPayout = Number(application.sellerPayout) || 0
+  const safeMarketPrice = Number(application.marketPrice) || 0
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20 selection:bg-emerald-500 selection:text-white">
       {/* Top Banner Navigation */}
@@ -446,7 +493,7 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
                 </span>
                 <span className="text-xs text-slate-300">•</span>
                 <span className="text-xs text-slate-500">
-                  Updated: {new Date(application.updatedAt || application.createdAt).toLocaleString("en-PK")}
+                  Updated: {formattedDate}
                 </span>
               </div>
 
@@ -562,7 +609,7 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
                 <span>Target to Sold Out</span>
               </span>
               <span className="font-mono text-2xl sm:text-3xl font-extrabold text-white block">
-                {application.totalTickets.toLocaleString()}
+                {safeTotalTickets.toLocaleString()}
               </span>
               <span className="text-[11px] text-slate-400 block">
                 Desired tickets to reach 100% completion
@@ -575,7 +622,7 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
                 Ticket Price (PKR)
               </span>
               <span className="font-mono text-2xl sm:text-3xl font-extrabold text-amber-400 block">
-                Rs. {application.ticketPrice.toLocaleString()}
+                Rs. {safeTicketPrice.toLocaleString()}
               </span>
               <span className="text-[11px] text-slate-400 block">Per community raffle entry</span>
             </div>
@@ -586,7 +633,7 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
                 PakRaffle Fee (8%)
               </span>
               <span className="font-mono text-2xl sm:text-3xl font-extrabold text-red-400 block">
-                Rs. {application.platformFee.toLocaleString()}
+                Rs. {safePlatformFee.toLocaleString()}
               </span>
               <span className="text-[11px] text-slate-400 block">
                 Covers marketing, escrow &amp; live draw
@@ -599,7 +646,7 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
                 Your Net Payout (92%)
               </span>
               <span className="font-mono text-2xl sm:text-3xl font-black text-white block">
-                Rs. {application.sellerPayout.toLocaleString()}
+                Rs. {safeSellerPayout.toLocaleString()}
               </span>
               <span className="text-[11px] text-emerald-100/90 block">
                 Guaranteed cash to your bank account
@@ -612,15 +659,15 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
             <span className="leading-relaxed">
               <strong>Campaign Target:</strong> Exactly{" "}
               <strong className="text-emerald-300 underline font-mono">
-                {application.totalTickets.toLocaleString()} tickets
+                {safeTotalTickets.toLocaleString()} tickets
               </strong>{" "}
               will be issued for public purchase at{" "}
               <strong className="text-amber-300 font-mono">
-                Rs. {application.ticketPrice.toLocaleString()}
+                Rs. {safeTicketPrice.toLocaleString()}
               </strong>{" "}
               each. Upon 100% ticket sellout, the live draw will be broadcasted, and{" "}
               <strong className="text-emerald-300 font-mono">
-                Rs. {application.sellerPayout.toLocaleString()}
+                Rs. {safeSellerPayout.toLocaleString()}
               </strong>{" "}
               will be wired to your verified Pakistani bank account.
             </span>
@@ -657,7 +704,7 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
                 <span className="text-slate-500 block">Declared Market Price:</span>
                 <span className="font-mono font-bold text-slate-900 text-sm">
-                  Rs. {application.marketPrice.toLocaleString()}
+                  Rs. {safeMarketPrice.toLocaleString()}
                 </span>
               </div>
 
@@ -827,8 +874,8 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
 
           <div className="flex flex-col sm:flex-row items-center gap-2">
             <div className="w-full bg-white border border-emerald-300 rounded-2xl px-4 py-3 font-mono text-xs text-slate-700 select-all overflow-x-auto whitespace-nowrap">
-              {typeof window !== "undefined"
-                ? `${window.location.origin}/application/status/${application.id}?token=${activeToken || application.secureToken || ""}`
+              {origin
+                ? `${origin}/application/status/${application.id}?token=${activeToken || application.secureToken || ""}`
                 : `/application/status/${application.id}?token=${activeToken || application.secureToken || ""}`}
             </div>
             <Button
@@ -887,11 +934,7 @@ function StatusDetailContent({ paramsPromise }: { paramsPromise: Promise<{ reqid
   )
 }
 
-export default function ApplicationStatusPage({
-  params,
-}: {
-  params: Promise<{ reqid: string }>
-}) {
+export default function ApplicationStatusPage() {
   return (
     <Suspense
       fallback={
@@ -904,7 +947,7 @@ export default function ApplicationStatusPage({
         </div>
       }
     >
-      <StatusDetailContent paramsPromise={params} />
+      <StatusDetailContent />
     </Suspense>
   )
 }
