@@ -56,11 +56,12 @@ const CITIES_LIST = [
 ]
 
 export default function ListProductPage() {
-  // Calculator State
-  const [calcMarketPrice, setCalcMarketPrice] = useState<number>(350000)
-  const [calcTicketPrice, setCalcTicketPrice] = useState<number>(500)
+  // Calculator State (strings for natural typing and erasing)
+  const [calcMarketPrice, setCalcMarketPrice] = useState<string>("350000")
+  const [calcTargetTickets, setCalcTargetTickets] = useState<string>("300")
+  const [calcTicketPrice, setCalcTicketPrice] = useState<string>("1200")
 
-  // Form State
+  // Form State (strictly independent inputs so typing never overwrites user's other fields)
   const [formData, setFormData] = useState({
     fullNameCnic: "",
     cnicNumber: "",
@@ -72,7 +73,8 @@ export default function ListProductPage() {
     condition: "Brand New (Sealed)",
     description: "",
     marketPrice: "350000",
-    ticketPrice: "500",
+    targetTickets: "300",
+    ticketPrice: "1200",
     imageUrl: "",
     agreeTerms: false,
   })
@@ -82,27 +84,49 @@ export default function ListProductPage() {
   const [successData, setSuccessData] = useState<any>(null)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
 
-  // Calculations for Calculator
-  const calcGrossRevenue = Math.round(calcMarketPrice / 0.92)
-  const calcTotalTickets = Math.max(1, Math.ceil(calcGrossRevenue / calcTicketPrice))
-  const calcActualGross = calcTotalTickets * calcTicketPrice
+  // Calculations for Calculator (purely derived from whatever the user typed)
+  const cMarket = Math.max(0, parseInt(calcMarketPrice) || 0)
+  const cTickets = Math.max(0, parseInt(calcTargetTickets) || 0)
+  const cPrice = Math.max(0, parseInt(calcTicketPrice) || 0)
+  const calcActualGross = cTickets * cPrice
   const calcPlatformFee = Math.round(calcActualGross * 0.08)
   const calcSellerPayout = calcActualGross - calcPlatformFee
+  const calcGrossNeeded = Math.round(cMarket / 0.92)
+  const suggestedTicketPriceForCalc = cTickets > 0 ? Math.max(50, Math.ceil(calcGrossNeeded / cTickets)) : 50
 
-  // Calculations for Form
+  // Optional manual helper: only when seller clicks suggest button
+  const handleAutoSuggestCalcTicketPrice = () => {
+    if (cTickets > 0 && cMarket > 0) {
+      setCalcTicketPrice(suggestedTicketPriceForCalc.toString())
+    }
+  }
+
+  // Calculations for Form (purely derived from whatever the user entered)
   const formMarket = Math.max(0, parseInt(formData.marketPrice) || 0)
-  const formTicket = Math.max(1, parseInt(formData.ticketPrice) || 1)
-  const formGrossTarget = Math.round(formMarket / 0.92)
-  const formTotalTickets = Math.max(1, Math.ceil(formGrossTarget / formTicket))
-  const formActualGross = formTotalTickets * formTicket
+  const formTickets = Math.max(0, parseInt(formData.targetTickets) || 0)
+  const formTicket = Math.max(0, parseInt(formData.ticketPrice) || 0)
+  const formActualGross = formTickets * formTicket
   const formPlatformFee = Math.round(formActualGross * 0.08)
   const formSellerPayout = formActualGross - formPlatformFee
+  const formGrossNeeded = Math.round(formMarket / 0.92)
+  const suggestedTicketPriceForForm = formTickets > 0 ? Math.max(50, Math.ceil(formGrossNeeded / formTickets)) : 50
+
+  // Optional manual helper for form
+  const handleAutoSuggestFormTicketPrice = () => {
+    if (formTickets > 0 && formMarket > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        ticketPrice: suggestedTicketPriceForForm.toString(),
+      }))
+    }
+  }
 
   const handleApplyCalculatorToForm = () => {
     setFormData((prev) => ({
       ...prev,
-      marketPrice: calcMarketPrice.toString(),
-      ticketPrice: calcTicketPrice.toString(),
+      marketPrice: calcMarketPrice,
+      targetTickets: calcTargetTickets,
+      ticketPrice: calcTicketPrice,
     }))
     const formEl = document.getElementById("listing-form-section")
     if (formEl) {
@@ -138,8 +162,12 @@ export default function ListProductPage() {
       setErrorMsg("Market price must be at least PKR 1,000.")
       return
     }
-    if (formTicket < 50) {
-      setErrorMsg("Ticket price must be at least PKR 50.")
+    if (formTickets < 1) {
+      setErrorMsg("Please enter your desired target tickets to be sold out (e.g. 300, 400).")
+      return
+    }
+    if (formTicket < 1) {
+      setErrorMsg("Please enter your ticket price per entry.")
       return
     }
     if (!formData.agreeTerms) {
@@ -161,6 +189,8 @@ export default function ListProductPage() {
         condition: formData.condition,
         description: formData.description.trim(),
         marketPrice: formMarket,
+        targetTickets: formTickets,
+        totalTickets: formTickets,
         ticketPrice: formTicket,
         images: formData.imageUrl.trim() ? [formData.imageUrl.trim()] : [],
       }
@@ -187,7 +217,8 @@ export default function ListProductPage() {
           condition: "Brand New (Sealed)",
           description: "",
           marketPrice: "350000",
-          ticketPrice: "500",
+          targetTickets: "300",
+          ticketPrice: "1269",
           imageUrl: "",
           agreeTerms: false,
         })
@@ -488,23 +519,23 @@ export default function ListProductPage() {
           <div className="grid lg:grid-cols-12 gap-8 items-center">
             {/* Input Controls */}
             <div className="lg:col-span-7 space-y-6">
-              {/* Market Price input */}
+              {/* 1. Market Price input */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs sm:text-sm font-semibold text-slate-200">
-                    Product Market Price (What You Want to Receive)
+                    1. Product Market Price (What You Want to Receive)
                   </label>
                   <span className="text-base sm:text-lg font-mono font-bold text-emerald-400">
-                    Rs. {calcMarketPrice.toLocaleString()}
+                    Rs. {cMarket.toLocaleString()}
                   </span>
                 </div>
                 <Input
                   type="number"
-                  min="5000"
+                  min="1000"
                   max="50000000"
                   step="5000"
                   value={calcMarketPrice}
-                  onChange={(e) => setCalcMarketPrice(Math.max(1000, Number(e.target.value) || 0))}
+                  onChange={(e) => setCalcMarketPrice(e.target.value)}
                   className="bg-slate-900/80 border-slate-700 text-white font-mono text-base h-12 rounded-xl focus:border-emerald-500"
                 />
 
@@ -519,9 +550,9 @@ export default function ListProductPage() {
                     <button
                       key={preset.val}
                       type="button"
-                      onClick={() => setCalcMarketPrice(preset.val)}
+                      onClick={() => setCalcMarketPrice(preset.val.toString())}
                       className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all ${
-                        calcMarketPrice === preset.val
+                        calcMarketPrice === preset.val.toString()
                           ? "bg-emerald-600 text-white border-emerald-500"
                           : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
                       }`}
@@ -532,45 +563,103 @@ export default function ListProductPage() {
                 </div>
               </div>
 
-              {/* Ticket Price input */}
-              <div className="space-y-2">
+              {/* 2. Target Tickets to Sold Out input (User enters any number freely) */}
+              <div className="space-y-2 bg-slate-900/90 p-4 rounded-2xl border border-emerald-500/40">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs sm:text-sm font-semibold text-slate-200">
-                    Suggested Ticket Price per Entry
+                  <label className="text-xs sm:text-sm font-bold text-emerald-300 flex items-center gap-1.5">
+                    <span>🎯 2. Desired Target Tickets to Sold Out</span>
                   </label>
-                  <span className="text-base sm:text-lg font-mono font-bold text-amber-400">
-                    Rs. {calcTicketPrice.toLocaleString()}
+                  <span className="text-base sm:text-lg font-mono font-extrabold text-emerald-400">
+                    {cTickets.toLocaleString()} Tickets
                   </span>
                 </div>
+                <Input
+                  type="number"
+                  min="1"
+                  max="50000"
+                  value={calcTargetTickets}
+                  onChange={(e) => setCalcTargetTickets(e.target.value)}
+                  placeholder="Enter desired tickets (e.g. 300, 400)"
+                  className="bg-slate-950 border-emerald-500/60 text-emerald-300 font-mono text-base font-bold h-12 rounded-xl focus:border-emerald-400"
+                />
 
-                <div className="grid grid-cols-4 gap-2">
-                  {[250, 500, 1000, 2500].map((price) => (
+                {/* Preset Ticket Target Chips */}
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className="text-[11px] text-slate-400">Quick Targets:</span>
+                  {[100, 250, 300, 400, 500, 1000].map((tickets) => (
                     <button
-                      key={price}
+                      key={tickets}
                       type="button"
-                      onClick={() => setCalcTicketPrice(price)}
-                      className={`py-2.5 rounded-xl text-xs font-bold border transition-all ${
-                        calcTicketPrice === price
-                          ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md"
-                          : "bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800"
+                      onClick={() => setCalcTargetTickets(tickets.toString())}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
+                        calcTargetTickets === tickets.toString()
+                          ? "bg-emerald-500 text-slate-950 border-emerald-400 shadow-md font-extrabold"
+                          : "bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:border-slate-600"
                       }`}
                     >
-                      Rs. {price}
+                      {tickets} Tickets
                     </button>
                   ))}
                 </div>
+                <p className="text-[11px] text-slate-400 leading-snug">
+                  Type any number of tickets you desire (e.g. 300, 400). You have complete freedom to type your own values.
+                </p>
+              </div>
 
-                <div className="flex items-center gap-2 pt-1">
-                  <span className="text-xs text-slate-400">Custom Ticket Price:</span>
-                  <Input
-                    type="number"
-                    min="50"
-                    step="50"
-                    value={calcTicketPrice}
-                    onChange={(e) => setCalcTicketPrice(Math.max(50, Number(e.target.value) || 50))}
-                    className="bg-slate-900/80 border-slate-700 text-white font-mono text-xs h-8 w-28 rounded-lg"
-                  />
-                  <span className="text-[11px] text-slate-400">PKR</span>
+              {/* 3. Ticket Price input (Completely independent typing) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs sm:text-sm font-semibold text-slate-200">
+                    3. Ticket Price per Entry
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base sm:text-lg font-mono font-bold text-amber-400">
+                      Rs. {cPrice.toLocaleString()}
+                    </span>
+                    {cTickets > 0 && cMarket > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleAutoSuggestCalcTicketPrice}
+                        className="text-[11px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md transition-colors"
+                      >
+                        Auto-fill suggested: Rs. {suggestedTicketPriceForCalc.toLocaleString()}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1">
+                    <span className="absolute inset-y-0 left-3.5 flex items-center text-xs font-bold text-slate-400">
+                      Rs.
+                    </span>
+                    <Input
+                      type="number"
+                      min="1"
+                      step="50"
+                      value={calcTicketPrice}
+                      onChange={(e) => setCalcTicketPrice(e.target.value)}
+                      placeholder="e.g. 500, 1000, 1200"
+                      className="bg-slate-900/80 border-slate-700 text-amber-300 font-mono text-base font-bold h-12 pl-10 rounded-xl"
+                    />
+                  </div>
+                  <span className="text-xs text-slate-400 shrink-0">or presets:</span>
+                  <div className="flex gap-1.5">
+                    {[250, 500, 1000, 1200].map((price) => (
+                      <button
+                        key={price}
+                        type="button"
+                        onClick={() => setCalcTicketPrice(price.toString())}
+                        className={`px-2.5 py-2 rounded-lg text-xs font-bold border transition-all ${
+                          calcTicketPrice === price.toString()
+                            ? "bg-amber-500 text-slate-950 border-amber-400"
+                            : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
+                        }`}
+                      >
+                        Rs. {price}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -590,22 +679,26 @@ export default function ListProductPage() {
                 <div className="flex justify-between items-center text-slate-300">
                   <span>Product Market Value:</span>
                   <span className="font-mono font-bold text-white text-sm">
-                    Rs. {calcMarketPrice.toLocaleString()}
+                    Rs. {cMarket.toLocaleString()}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center text-slate-300">
+                  <span className="font-semibold text-emerald-300">Target Tickets to Sold Out:</span>
+                  <span className="font-mono font-extrabold text-emerald-400 text-sm bg-emerald-950/70 border border-emerald-500/40 px-2.5 py-0.5 rounded-lg">
+                    {cTickets.toLocaleString()} Tickets
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center text-slate-300">
                   <span>Ticket Price per Entry:</span>
                   <span className="font-mono font-bold text-amber-400">
-                    Rs. {calcTicketPrice.toLocaleString()}
+                    Rs. {cPrice.toLocaleString()}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center text-slate-300">
-                  <span>Required Tickets to Sell:</span>
-                  <span className="font-mono font-bold text-emerald-400 text-sm">
-                    {calcTotalTickets.toLocaleString()} Tickets
-                  </span>
+                <div className="text-[11px] text-emerald-300 bg-emerald-950/60 p-2.5 rounded-xl border border-emerald-500/30 leading-snug">
+                  🎯 <strong>Target to Sold Out:</strong> Exactly <strong>{cTickets.toLocaleString()} tickets</strong> must be sold out at Rs. {cPrice.toLocaleString()} each to reach 100% completion and disburse your Rs. {calcSellerPayout.toLocaleString()} net payout.
                 </div>
 
                 <div className="flex justify-between items-center text-slate-300">
@@ -642,7 +735,7 @@ export default function ListProductPage() {
                 onClick={handleApplyCalculatorToForm}
                 className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-11 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
               >
-                <span>Use These Values in Listing Form</span>
+                <span>Use These Values in Listing Form ({calcTargetTickets} Tickets @ Rs. {calcTicketPrice})</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
@@ -650,86 +743,8 @@ export default function ListProductPage() {
         </div>
       </section>
 
-      {/* Official Seller Agreement & Custody Terms Policy Card */}
-      <section className="py-6 max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="bg-gradient-to-br from-amber-500/10 via-emerald-500/10 to-teal-500/10 border-2 border-emerald-500/30 rounded-3xl p-6 sm:p-8 space-y-5 shadow-xs">
-          <div className="flex items-center justify-between pb-3 border-b border-emerald-200/80">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-base sm:text-lg text-slate-900">
-                  Seller Agreement, Custody &amp; Cancellation Policy
-                </h3>
-                <p className="text-xs text-slate-600">
-                  Please review these mandatory operational rules before submitting your application
-                </p>
-              </div>
-            </div>
-            <Badge className="bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider hidden sm:inline-flex">
-              Binding Terms
-            </Badge>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4 text-xs">
-            {/* Rule 1: Review & Contact */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-2 text-slate-900 font-bold">
-                <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-[11px]">
-                  1
-                </span>
-                <span>Review &amp; Contact Outreach</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                After reviewing your application, our compliance team will get in touch directly using one of your provided contact details (WhatsApp, phone, or email) to verify identity and confirm specifications.
-              </p>
-            </div>
-
-            {/* Rule 2: Item Shipped & Custody Hold */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-2 text-slate-900 font-bold">
-                <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-[11px]">
-                  2
-                </span>
-                <span>Physical Shipping &amp; Custody Hold</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                The item must be shipped or delivered to PakRaffle for physical verification and will be held in secure escrow custody until the raffle is either completed or officially cancelled.
-              </p>
-            </div>
-
-            {/* Rule 3: Cancellation & 8% Platform Fee */}
-            <div className="bg-white p-4 rounded-2xl border border-amber-200 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-2 text-slate-900 font-bold">
-                <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-[11px]">
-                  3
-                </span>
-                <span>Seller Cancellation &amp; 8% Fee</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                If a seller chooses to cancel their raffle after launch, all sold tickets will be refunded 100% to buyers, and the seller must pay PakRaffle the 8% platform fee before receiving their product back.
-              </p>
-            </div>
-
-            {/* Rule 4: 3-Month Maximum Duration */}
-            <div className="bg-white p-4 rounded-2xl border border-amber-200 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-2 text-slate-900 font-bold">
-                <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-[11px]">
-                  4
-                </span>
-                <span>3-Month Completion Limit</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                The raffle must be completed within 3 months (90 days). Otherwise, PakRaffle will cancel the raffle, issue full refunds to all ticket buyers, charge/deduct the 8% platform fee, and return the item.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Main Listing Application Form */}
-      <section id="listing-form-section" className="py-10 max-w-4xl mx-auto px-4 sm:px-6">
+      <section id="listing-form-section" className="py-12 max-w-4xl mx-auto px-4 sm:px-6">
         <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden">
           {/* Form Header */}
           <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-green-700 px-6 sm:px-8 py-6 text-white">
@@ -788,6 +803,10 @@ export default function ListProductPage() {
                   <div className="flex justify-between">
                     <span className="text-slate-500">Market Price:</span>
                     <span className="font-semibold text-slate-900">Rs. {successData.marketPrice.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Target Tickets to Sold Out:</span>
+                    <span className="font-semibold text-emerald-700 font-mono">{(successData.totalTickets || formTickets).toLocaleString()} Tickets</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Suggested Ticket:</span>
@@ -1027,11 +1046,12 @@ export default function ListProductPage() {
                       3
                     </span>
                     <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                      Pricing &amp; 8% Platform Fee Auto-Calculation
+                      Pricing, Target Tickets to Sold Out &amp; 8% Platform Fee
                     </h3>
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    {/* 1. Market Price */}
                     <div className="space-y-1.5">
                       <Label htmlFor="formMarketPrice" className="text-xs font-bold text-slate-800">
                         Product Market Price (PKR) <span className="text-red-500">*</span>
@@ -1056,9 +1076,59 @@ export default function ListProductPage() {
                       </span>
                     </div>
 
+                    {/* 2. Target Tickets to Sold Out (User enters 300, 400, or any custom value) */}
                     <div className="space-y-1.5">
-                      <Label htmlFor="formTicketPrice" className="text-xs font-bold text-slate-800">
-                        Suggested Ticket Price per Entry (PKR) <span className="text-red-500">*</span>
+                      <Label htmlFor="formTargetTickets" className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                        <span>Desired Target Tickets <span className="text-red-500">*</span></span>
+                        <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
+                          {formTickets.toLocaleString()} Tickets
+                        </span>
+                      </Label>
+                      <Input
+                        id="formTargetTickets"
+                        type="number"
+                        required
+                        min="1"
+                        max="50000"
+                        placeholder="e.g. 300, 400"
+                        value={formData.targetTickets}
+                        onChange={(e) => setFormData({ ...formData, targetTickets: e.target.value })}
+                        className="rounded-xl h-11 text-xs sm:text-sm font-mono font-bold text-emerald-700 bg-emerald-50/50 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500"
+                      />
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {[100, 250, 300, 400, 500, 1000].map((tVal) => (
+                          <button
+                            key={tVal}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, targetTickets: tVal.toString() })}
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded border transition-all ${
+                              formData.targetTickets === tVal.toString()
+                                ? "bg-emerald-600 text-white border-emerald-500"
+                                : "bg-white text-slate-600 border-slate-300 hover:bg-slate-100"
+                            }`}
+                          >
+                            {tVal}
+                          </button>
+                        ))}
+                      </div>
+                      <span className="text-[11px] text-slate-500 block">
+                        Enter any tickets you want sold out (e.g. 300, 400).
+                      </span>
+                    </div>
+
+                    {/* 3. Ticket Price per Entry (Independent user typing) */}
+                    <div className="space-y-1.5">
+                      <Label htmlFor="formTicketPrice" className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                        <span>Ticket Price (PKR) <span className="text-red-500">*</span></span>
+                        {formTickets > 0 && formMarket > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleAutoSuggestFormTicketPrice}
+                            className="text-[10px] text-emerald-700 hover:text-emerald-800 font-semibold underline cursor-pointer"
+                          >
+                            Auto-suggest: Rs. {suggestedTicketPriceForForm.toLocaleString()}
+                          </button>
+                        )}
                       </Label>
                       <div className="relative">
                         <span className="absolute inset-y-0 left-3.5 flex items-center text-xs font-bold text-slate-400">
@@ -1068,15 +1138,32 @@ export default function ListProductPage() {
                           id="formTicketPrice"
                           type="number"
                           required
-                          min="50"
+                          min="1"
                           step="50"
                           value={formData.ticketPrice}
                           onChange={(e) => setFormData({ ...formData, ticketPrice: e.target.value })}
+                          placeholder="e.g. 500, 1000, 1200"
                           className="rounded-xl h-11 pl-10 text-xs sm:text-sm font-mono font-bold text-amber-600"
                         />
                       </div>
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {[250, 500, 1000, 1200].map((pVal) => (
+                          <button
+                            key={pVal}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, ticketPrice: pVal.toString() })}
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded border transition-all ${
+                              formData.ticketPrice === pVal.toString()
+                                ? "bg-amber-500 text-slate-950 border-amber-400"
+                                : "bg-white text-slate-600 border-slate-300 hover:bg-slate-100"
+                            }`}
+                          >
+                            Rs. {pVal}
+                          </button>
+                        ))}
+                      </div>
                       <span className="text-[11px] text-slate-500 block">
-                        Common presets: Rs. 250, Rs. 500, Rs. 1,000
+                        Enter your own ticket price freely.
                       </span>
                     </div>
                   </div>
@@ -1089,16 +1176,19 @@ export default function ListProductPage() {
                         <span>Live Revenue &amp; 8% Fee Breakdown</span>
                       </span>
                       <span className="text-[11px] font-bold text-emerald-800 bg-emerald-200/60 px-2 py-0.5 rounded-md">
-                        Auto-Generated
+                        Auto-Calculated
                       </span>
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                      <div className="bg-white p-3 rounded-xl border border-emerald-100 shadow-2xs">
-                        <span className="text-[11px] text-slate-500 block">Required Tickets:</span>
-                        <span className="font-mono font-extrabold text-slate-900 text-sm">
-                          {formTotalTickets.toLocaleString()}
+                      <div className="bg-white p-3 rounded-xl border-2 border-emerald-500/50 shadow-2xs">
+                        <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider block">
+                          Target to Sold Out:
                         </span>
+                        <span className="font-mono font-extrabold text-emerald-700 text-sm sm:text-base">
+                          {formTickets.toLocaleString()} Tickets
+                        </span>
+                        <span className="text-[10px] text-slate-500 block mt-0.5">100% Sold Out Target</span>
                       </div>
 
                       <div className="bg-white p-3 rounded-xl border border-emerald-100 shadow-2xs">
@@ -1121,6 +1211,13 @@ export default function ListProductPage() {
                           Rs. {formSellerPayout.toLocaleString()}
                         </span>
                       </div>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-emerald-100/80 border border-emerald-300 text-xs text-emerald-950 font-medium flex items-start gap-2.5">
+                      <span className="text-lg shrink-0 leading-none">🎯</span>
+                      <span className="leading-relaxed">
+                        <strong>Target to Sold Out:</strong> Exactly <strong className="text-emerald-800 underline decoration-emerald-500">{formTickets.toLocaleString()} tickets</strong> must be sold out at <strong className="text-amber-800">Rs. {formTicket.toLocaleString()} each</strong> to reach 100% draw completion, guaranteeing your full <strong className="text-emerald-900">Rs. {formSellerPayout.toLocaleString()}</strong> net payout.
+                      </span>
                     </div>
                   </div>
                 </div>

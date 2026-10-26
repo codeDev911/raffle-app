@@ -736,7 +736,7 @@ function resolveWinnerRelations(winner: Winner, include?: any, select?: any) {
   return result
 }
 
-const mockPrisma = {
+export const mockPrisma = {
   user: {
     findUnique: async (args: { where: any; include?: any; select?: any }) => {
       const user = usersStore.find((u) => matchesWhere(u, args.where))

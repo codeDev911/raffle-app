@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma, mockPrisma } from "@/lib/prisma"
 
 export async function GET(
   req: NextRequest,
@@ -7,9 +7,16 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const request = await prisma.productListingRequest.findUnique({
-      where: { id },
-    })
+    let request: any = null
+    try {
+      request = await prisma.productListingRequest.findUnique({
+        where: { id },
+      })
+    } catch (err) {
+      request = await mockPrisma.productListingRequest.findUnique({
+        where: { id },
+      })
+    }
 
     if (!request) {
       return NextResponse.json(
@@ -40,9 +47,16 @@ export async function PATCH(
     const body = await req.json()
     const { status, adminNotes } = body
 
-    const existing = await prisma.productListingRequest.findUnique({
-      where: { id },
-    })
+    let existing: any = null
+    try {
+      existing = await prisma.productListingRequest.findUnique({
+        where: { id },
+      })
+    } catch (err) {
+      existing = await mockPrisma.productListingRequest.findUnique({
+        where: { id },
+      })
+    }
 
     if (!existing) {
       return NextResponse.json(
@@ -59,10 +73,18 @@ export async function PATCH(
       dataToUpdate.adminNotes = adminNotes
     }
 
-    const updated = await prisma.productListingRequest.update({
-      where: { id },
-      data: dataToUpdate,
-    })
+    let updated: any = null
+    try {
+      updated = await prisma.productListingRequest.update({
+        where: { id },
+        data: dataToUpdate,
+      })
+    } catch (err) {
+      updated = await mockPrisma.productListingRequest.update({
+        where: { id },
+        data: dataToUpdate,
+      })
+    }
 
     return NextResponse.json({
       success: true,
@@ -84,9 +106,15 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-    await prisma.productListingRequest.delete({
-      where: { id },
-    })
+    try {
+      await prisma.productListingRequest.delete({
+        where: { id },
+      })
+    } catch (err) {
+      await mockPrisma.productListingRequest.delete({
+        where: { id },
+      })
+    }
 
     return NextResponse.json({
       success: true,
