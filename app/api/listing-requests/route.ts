@@ -103,10 +103,13 @@ export async function POST(req: NextRequest) {
     const platformFee = Math.round(totalRevenue * 0.08) // Exactly 8%
     const sellerPayout = totalRevenue - platformFee // 92%
 
-    // Generate secure random access token for private tracking
-    const secureToken = crypto.randomBytes(24).toString("hex")
+    // Generate or preserve secure tracking token
+    const secureToken = (body.secureToken && typeof body.secureToken === "string")
+      ? body.secureToken.trim()
+      : crypto.randomBytes(24).toString("hex")
 
     const dataToSave = {
+      ...(body.id ? { id: String(body.id).trim() } : {}),
       productType,
       productName: productName.trim(),
       description: description.trim(),

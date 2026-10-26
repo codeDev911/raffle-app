@@ -71,8 +71,8 @@ function StatusDetailContent() {
 
   const [mounted, setMounted] = useState(false)
   const [origin, setOrigin] = useState("")
-  const [tokenInput, setTokenInput] = useState<string>("")
-  const [activeToken, setActiveToken] = useState<string>("")
+  const [tokenInput, setTokenInput] = useState<string>(tokenFromUrl)
+  const [activeToken, setActiveToken] = useState<string>(tokenFromUrl)
 
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -89,17 +89,18 @@ function StatusDetailContent() {
     }
   }, [])
 
-  // Sync token from URL
+  // Sync token from URL whenever URL changes
   useEffect(() => {
-    if (tokenFromUrl) {
+    if (tokenFromUrl && tokenFromUrl !== activeToken) {
       setActiveToken(tokenFromUrl)
       setTokenInput(tokenFromUrl)
     }
-  }, [tokenFromUrl])
+  }, [tokenFromUrl, activeToken])
 
   // Fetch status from API
   const fetchStatus = async (id: string, token: string, isManualRefresh = false) => {
     if (!id) return
+    const effectiveToken = token || tokenFromUrl || ""
     if (isManualRefresh) {
       setRefreshing(true)
     } else {
@@ -109,7 +110,7 @@ function StatusDetailContent() {
 
     try {
       const url = `/api/listing-requests/${encodeURIComponent(id)}${
-        token ? `?token=${encodeURIComponent(token)}` : ""
+        effectiveToken ? `?token=${encodeURIComponent(effectiveToken)}` : ""
       }`
       const res = await fetch(url)
       const data = await res.json()
@@ -126,11 +127,39 @@ function StatusDetailContent() {
             "The tracking token provided does not match this application record. Please verify the link from your submission confirmation."
           )
         } else if (res.status === 404) {
-          setError(`No application found with ID "${id}". Please check your Reference ID.`)
+          // Check local client storage backup in case of server reset
+          let recoveredFromLocal = false
+          if (typeof window !== "undefined") {
+            try {
+              const localAppStr = localStorage.getItem(`pakraffle_app_${id}`)
+              if (localAppStr) {
+                const localApp = JSON.parse(localAppStr)
+                if (localApp && (localApp.id === id || localApp.id)) {
+                  setApplication(localApp)
+                  setRequiresToken(false)
+                  setError(null)
+                  recoveredFromLocal = true
+                  // Re-sync to server storage in background
+                  fetch("/api/listing-requests", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(localApp),
+                  }).catch(() => {})
+                }
+              }
+            } catch (localErr) {
+              console.warn("Could not retrieve local backup:", localErr)
+            }
+          }
+          if (!recoveredFromLocal) {
+            setError(`No application found with ID "${id}". Please check your Reference ID.`)
+          }
         } else {
           setError(data.error || "Failed to load application status.")
         }
-        setApplication(null)
+        if (!application) {
+          setApplication(null)
+        }
       } else {
         setApplication(data.request)
         setRequiresToken(false)

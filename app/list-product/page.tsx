@@ -217,13 +217,26 @@ export default function ListProductPage() {
       const data = await res.json()
 
       if (res.ok && data.success) {
-        const token = data.secureToken || data.request?.secureToken || ""
-        const statusUrl = data.statusUrl || `/application/status/${data.request.id}?token=${token}`
-        setSuccessData({
+        const savedApp = {
           ...data.request,
           secureToken: token,
           statusUrl,
-        })
+        }
+        setSuccessData(savedApp)
+
+        // Store client-side copy as safety backup across tabs/reloads
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(`pakraffle_app_${data.request.id}`, JSON.stringify(savedApp))
+            const raw = localStorage.getItem("pakraffle_my_submissions")
+            const existing = raw ? JSON.parse(raw) : []
+            const updated = [savedApp, ...existing.filter((item: any) => item.id !== data.request.id)].slice(0, 25)
+            localStorage.setItem("pakraffle_my_submissions", JSON.stringify(updated))
+          } catch (e) {
+            console.warn("Could not save application to localStorage:", e)
+          }
+        }
+
         // reset fields
         setFormData({
           fullNameCnic: "",

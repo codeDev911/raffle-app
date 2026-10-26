@@ -3,6 +3,13 @@
 // and gracefully falls back to in-memory mock store if DATABASE_URL is not set.
 import { PrismaClient } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
+import {
+  readAllListingRequests,
+  saveListingRequest,
+  updateListingRequest,
+  removeListingRequest,
+  getListingRequestById,
+} from "./listing-storage"
 
 export interface User {
   id: string
@@ -221,10 +228,18 @@ const initialProductListingRequestsStore: ProductListingRequest[] = [
   },
 ]
 
-if (!globalStores.productListingRequestsStore) {
-  globalStores.productListingRequestsStore = initialProductListingRequestsStore
-}
-export const productListingRequestsStore: ProductListingRequest[] = globalStores.productListingRequestsStore
+// Persistent store connected to disk storage
+export const productListingRequestsStore: ProductListingRequest[] = new Proxy([] as ProductListingRequest[], {
+  get(target, prop, receiver) {
+    const list = readAllListingRequests()
+    return Reflect.get(list, prop, receiver)
+  },
+  set(target, prop, value, receiver) {
+    const list = readAllListingRequests()
+    const success = Reflect.set(list, prop, value, receiver)
+    return success
+  },
+})
 
 const usersStore: User[] = [
   {
@@ -995,62 +1010,82 @@ export const mockPrisma = {
 
   productListingRequest: {
     findUnique: async (args: { where: any; select?: any }) => {
-      const req = productListingRequestsStore.find((r) => matchesWhere(r, args.where))
+      if (args?.where?.id) {
+        const direct = getListingRequestById(args.where.id)
+        if (direct && matchesWhere(direct, args.where)) {
+          return { ...direct }
+        }
+      }
+      const all = readAllListingRequests()
+      const req = all.find((r) => matchesWhere(r, args.where))
       return req ? { ...req } : null
     },
     findFirst: async (args: { where?: any; select?: any }) => {
-      const req = productListingRequestsStore.find((r) => matchesWhere(r, args?.where))
+      const all = readAllListingRequests()
+      const req = all.find((r) => matchesWhere(r, args?.where))
       return req ? { ...req } : null
     },
     findMany: async (args?: { where?: any; select?: any; take?: number; orderBy?: any }) => {
-      let items = productListingRequestsStore.filter((r) => matchesWhere(r, args?.where))
+      const all = readAllListingRequests()
+      let items = all.filter((r) => matchesWhere(r, args?.where))
       if (args?.orderBy) {
         if (args.orderBy.createdAt === "desc") {
-          items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+          items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         } else if (args.orderBy.createdAt === "asc") {
-          items.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+          items.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
         }
       }
       if (args?.take) items = items.slice(0, args.take)
       return items.map((r) => ({ ...r }))
     },
     count: async (args?: { where?: any }) => {
-      return productListingRequestsStore.filter((r) => matchesWhere(r, args?.where)).length
+      const all = readAllListingRequests()
+      return all.filter((r) => matchesWhere(r, args?.where)).length
     },
     create: async (args: { data: any; select?: any }) => {
       const newReq: ProductListingRequest = {
-        id: `req-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        id: args.data.id || `req-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         status: args.data.status || "PENDING",
         images: args.data.images || [],
-        createdAt: new Date(),
+        createdAt: args.data.createdAt ? new Date(args.data.createdAt) : new Date(),
         updatedAt: new Date(),
         ...args.data,
       }
-      productListingRequestsStore.unshift(newReq)
+      saveListingRequest(newReq)
       return { ...newReq }
     },
     update: async (args: { where: any; data: any; select?: any }) => {
-      const idx = productListingRequestsStore.findIndex((r) => matchesWhere(r, args.where))
-      if (idx !== -1) {
-        productListingRequestsStore[idx] = {
-          ...productListingRequestsStore[idx],
-          ...args.data,
-          updatedAt: new Date(),
-        }
-        return { ...productListingRequestsStore[idx] }
+      if (args?.where?.id) {
+        const updated = updateListingRequest(args.where.id, args.data)
+        if (updated) return { ...updated }
+      }
+      const all = readAllListingRequests()
+      const target = all.find((r) => matchesWhere(r, args.where))
+      if (target) {
+        const updated = updateListingRequest(target.id, args.data)
+        return updated ? { ...updated } : null
       }
       return null
     },
     delete: async (args: { where: any }) => {
-      const idx = productListingRequestsStore.findIndex((r) => matchesWhere(r, args.where))
-      if (idx !== -1) {
-        const deleted = productListingRequestsStore.splice(idx, 1)[0]
-        return { ...deleted }
+      if (args?.where?.id) {
+        const target = getListingRequestById(args.where.id)
+        if (target) {
+          removeListingRequest(target.id)
+          return { ...target }
+        }
+      }
+      const all = readAllListingRequests()
+      const target = all.find((r) => matchesWhere(r, args.where))
+      if (target) {
+        removeListingRequest(target.id)
+        return { ...target }
       }
       return null
     },
     aggregate: async (args?: { where?: any; _sum?: any }) => {
-      const filtered = productListingRequestsStore.filter((r) => matchesWhere(r, args?.where))
+      const all = readAllListingRequests()
+      const filtered = all.filter((r) => matchesWhere(r, args?.where))
       let totalMarket = 0
       let totalRev = 0
       let totalFee = 0
