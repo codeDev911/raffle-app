@@ -15,6 +15,11 @@ const Scripts = () => {
     <Script id="chatbase-loader" strategy="afterInteractive">
   {`
     (function(){
+    window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-EX44PLKN82');
       if(!window.chatbase || window.chatbase("getState") !== "initialized"){
         window.chatbase = (...arguments) => {
           if(!window.chatbase.q){ window.chatbase.q = [] }
