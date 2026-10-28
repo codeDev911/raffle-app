@@ -42,11 +42,11 @@
     "images": [
       "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800&auto=format&fit=crop&q=80"
     ],
-    "status": "PENDING",
+    "status": "APPROVED",
     "adminNotes": "Application received and registered in PakRaffle verification queue. Awaiting physical item verification at Lahore hub.",
-    "secureToken": "sample_user_copied_token_123",
+    "secureToken": "tok_secure_1793003835516_456w",
     "createdAt": "2026-10-26T08:37:15.516Z",
-    "updatedAt": "2026-10-26T08:45:25.844Z"
+    "updatedAt": "2026-10-28T07:20:27.767Z"
   },
   {
     "id": "req-101",
@@ -72,7 +72,7 @@
     "adminNotes": "Customer submitted official purchase receipt. Needs physical verification at Lahore hub.",
     "secureToken": "tok_demo_iphone16_a94b81c2d3",
     "createdAt": "2026-10-26T06:45:23.325Z",
-    "updatedAt": "2026-10-26T06:45:23.325Z"
+    "updatedAt": "2026-10-28T08:09:54.948Z"
   },
   {
     "id": "req-102",

@@ -176,14 +176,6 @@ export function readAllListingRequests(): ProductListingRequest[] {
           createdAt: new Date(item.createdAt),
           updatedAt: new Date(item.updatedAt),
         }))
-        // Ensure user's reported reference id exists
-        if (!memoryCache.some((r) => r.id === "req-1793003835516-456w")) {
-          const userReq = initialListingRequests.find((r) => r.id === "req-1793003835516-456w")
-          if (userReq) {
-            memoryCache.unshift(userReq)
-            writeAllListingRequests(memoryCache)
-          }
-        }
         return memoryCache
       }
     }
@@ -218,14 +210,16 @@ export function writeAllListingRequests(requests: ProductListingRequest[]): bool
 }
 
 export function getListingRequestById(id: string): ProductListingRequest | null {
+  const cleanId = String(id || "").trim().toLowerCase()
   const all = readAllListingRequests()
-  const found = all.find((r) => r.id === id)
+  const found = all.find((r) => String(r.id || "").trim().toLowerCase() === cleanId)
   return found ? { ...found } : null
 }
 
 export function saveListingRequest(request: ProductListingRequest): ProductListingRequest {
   const all = readAllListingRequests()
-  const existingIdx = all.findIndex((r) => r.id === request.id)
+  const cleanId = String(request.id || "").trim().toLowerCase()
+  const existingIdx = all.findIndex((r) => String(r.id || "").trim().toLowerCase() === cleanId)
 
   const toSave: ProductListingRequest = {
     ...request,
@@ -247,9 +241,11 @@ export function updateListingRequest(
   updates: Partial<ProductListingRequest>
 ): ProductListingRequest | null {
   const all = readAllListingRequests()
-  const existingIdx = all.findIndex((r) => r.id === id)
+  const cleanId = String(id || "").trim().toLowerCase()
+  const existingIdx = all.findIndex((r) => String(r.id || "").trim().toLowerCase() === cleanId)
 
   if (existingIdx === -1) {
+    console.warn(`[ListingStorage] Update failed: request ID "${id}" not found`)
     return null
   }
 
@@ -266,10 +262,12 @@ export function updateListingRequest(
 
 export function removeListingRequest(id: string): boolean {
   const all = readAllListingRequests()
-  const filtered = all.filter((r) => r.id !== id)
+  const cleanId = String(id || "").trim().toLowerCase()
+  const filtered = all.filter((r) => String(r.id || "").trim().toLowerCase() !== cleanId)
   if (filtered.length !== all.length) {
     writeAllListingRequests(filtered)
     return true
   }
   return false
 }
+

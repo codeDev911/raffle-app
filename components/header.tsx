@@ -39,6 +39,9 @@ import {
   X,
   Layers,
   Tag,
+  Search,
+  Clock,
+  ArrowRight,
 } from "lucide-react"
 
 export const WHATSAPP_CLEAN = "923377155722"
@@ -117,14 +120,22 @@ export function Header() {
   const [categoriesOpen, setCategoriesOpen] = useState(true)
   const [user, setUser] = useState<UserType | null>(null)
   const [loading, setLoading] = useState(true)
+  const [trackIdInput, setTrackIdInput] = useState("")
   const router = useRouter()
   const pathname = usePathname()
 
+  const handleQuickTrack = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!trackIdInput.trim()) return
+    const cleanId = trackIdInput.trim()
+    setIsOpen(false)
+    router.push(`/application/status/${encodeURIComponent(cleanId)}`)
+  }
+
   const navigation = [
     { name: "Home", href: "/", icon: HomeIcon },
-    { name: "All Raffles", href: "/raffles", icon: Gift },
+    { name: "All Draws", href: "/raffles", icon: Gift },
     { name: "Winners", href: "/winners", icon: Trophy, badge: "Live" },
-    { name: "How It Works", href: "/#how-it-works", icon: FileText },
   ]
 
   useEffect(() => {
@@ -272,97 +283,25 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Center: Desktop Navigation */}
+          {/* Center: Desktop Navigation (Decluttered & Clean) */}
           <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2 text-sm font-medium">
             <Link
               href="/"
-              className={`px-3 py-2 rounded-xl transition-colors ${
+              className={`px-3.5 py-2 rounded-xl transition-colors ${
                 pathname === "/"
-                  ? "text-green-700 bg-green-50 font-bold"
-                  : "text-gray-700 hover:text-green-600 hover:bg-gray-50"
+                  ? "text-emerald-700 bg-emerald-50 font-bold"
+                  : "text-gray-700 hover:text-emerald-600 hover:bg-gray-50"
               }`}
             >
               Home
             </Link>
 
-            {/* Categories Dropdown Mega-Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors cursor-pointer outline-none ${
-                    pathname?.startsWith("/raffles")
-                      ? "text-green-700 bg-green-50 font-bold"
-                      : "text-gray-700 hover:text-green-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <Layers className="h-4 w-4 text-green-600" />
-                  <span>Browse Categories</span>
-                  <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform duration-200" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                className="w-80 p-2 rounded-2xl shadow-xl border border-gray-200 bg-white"
-              >
-                <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-900 uppercase tracking-wider">
-                    Prize Categories
-                  </span>
-                  <Link
-                    href="/raffles"
-                    className="text-[11px] font-bold text-green-600 hover:text-green-700 hover:underline"
-                  >
-                    View All Draws →
-                  </Link>
-                </div>
-
-                <div className="py-1 space-y-0.5">
-                  {CATEGORIES_LIST.map((cat) => (
-                    <DropdownMenuItem key={cat.slug} asChild className="p-0 cursor-pointer focus:bg-green-50">
-                      <Link
-                        href={cat.href}
-                        className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-green-50/80 transition-colors w-full"
-                      >
-                        <div className="p-2 rounded-xl bg-green-100/70 text-green-700 shrink-0">
-                          <cat.icon className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="font-semibold text-gray-900 text-xs truncate">
-                              {cat.name}
-                            </span>
-                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${cat.badgeColor}`}>
-                              {cat.badge}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-gray-500 truncate mt-0.5">
-                            {cat.description}
-                          </p>
-                        </div>
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-
-                <DropdownMenuSeparator className="my-1" />
-                <div className="p-1.5">
-                  <Link
-                    href="/raffles"
-                    className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition-colors shadow-2xs"
-                  >
-                    <Gift className="w-3.5 h-3.5" />
-                    Explore All Lucky Draws
-                  </Link>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             <Link
               href="/raffles"
-              className={`px-3 py-2 rounded-xl transition-colors ${
+              className={`px-3.5 py-2 rounded-xl transition-colors ${
                 pathname === "/raffles" && !pathname.includes("category")
-                  ? "text-green-700 bg-green-50 font-bold"
-                  : "text-gray-700 hover:text-green-600 hover:bg-gray-50"
+                  ? "text-emerald-700 bg-emerald-50 font-bold"
+                  : "text-gray-700 hover:text-emerald-600 hover:bg-gray-50"
               }`}
             >
               All Draws
@@ -370,10 +309,10 @@ export function Header() {
 
             <Link
               href="/winners"
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-colors ${
                 pathname?.startsWith("/winners")
-                  ? "text-green-700 bg-green-50 font-bold"
-                  : "text-gray-700 hover:text-green-600 hover:bg-gray-50"
+                  ? "text-emerald-700 bg-emerald-50 font-bold"
+                  : "text-gray-700 hover:text-emerald-600 hover:bg-gray-50"
               }`}
             >
               <Trophy className="h-4 w-4 text-amber-500" />
@@ -383,27 +322,214 @@ export function Header() {
               </span>
             </Link>
 
-            <Link
-              href="/#how-it-works"
-              className="px-3 py-2 rounded-xl text-gray-700 hover:text-green-600 hover:bg-gray-50 transition-colors"
-            >
-              How It Works
-            </Link>
+            {/* "More" Helpful Links Popup Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-colors cursor-pointer outline-none font-semibold ${
+                    pathname === "/list-product" ||
+                    pathname?.startsWith("/application") ||
+                    pathname === "/become-a-partner"
+                      ? "text-emerald-700 bg-emerald-50 font-bold"
+                      : "text-gray-700 hover:text-emerald-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <span>More</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform duration-200" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="center"
+                className="w-[92vw] sm:w-[580px] max-w-xl p-4 sm:p-5 rounded-3xl shadow-2xl border border-gray-200 bg-white space-y-4"
+              >
+                {/* Header inside popup */}
+                <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-emerald-100 text-emerald-800">
+                      <Sparkles className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <h4 className="text-xs font-black text-gray-900 uppercase tracking-wider">
+                        Helpful Links &amp; Seller Services
+                      </h4>
+                      <p className="text-[11px] text-gray-500">
+                        Sell your products, track applications, and platform transparency
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] bg-slate-50 font-semibold text-slate-600">
+                    PakRaffle Hub
+                  </Badge>
+                </div>
 
-            <Link
-              href="/list-product"
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors ${
-                pathname === "/list-product"
-                  ? "text-emerald-700 bg-emerald-50 font-bold"
-                  : "text-gray-700 hover:text-emerald-600 hover:bg-gray-50 font-medium"
-              }`}
-            >
-              <Tag className="w-3.5 h-3.5 text-emerald-600" />
-              <span>List Product</span>
-              <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-600 text-white">
-                8% Fee
-              </span>
-            </Link>
+                {/* 2-Column Grid of Helpful Links */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* Link 1: List Product */}
+                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-emerald-50">
+                    <Link
+                      href="/list-product"
+                      className="p-3 rounded-2xl border border-emerald-100 bg-emerald-50/40 hover:bg-emerald-50 transition-colors flex items-start gap-3 w-full group"
+                    >
+                      <div className="p-2 rounded-xl bg-emerald-600 text-white shrink-0 group-hover:scale-105 transition-transform">
+                        <Tag className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-xs font-bold text-gray-900 group-hover:text-emerald-700">
+                            List Your Product
+                          </span>
+                          <span className="text-[9px] font-extrabold bg-emerald-600 text-white px-1.5 py-0.2 rounded-full">
+                            8% Fee
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
+                          Sell phones, bikes or electronics with guaranteed 92% bank payout.
+                        </p>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {/* Link 2: Track Application Status */}
+                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-blue-50">
+                    <Link
+                      href="/application/status/req-101"
+                      className="p-3 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 transition-colors flex items-start gap-3 w-full group"
+                    >
+                      <div className="p-2 rounded-xl bg-blue-100 text-blue-700 shrink-0 group-hover:scale-105 transition-transform">
+                        <Clock className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-bold text-gray-900 group-hover:text-blue-700 block">
+                          Track Application Status
+                        </span>
+                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
+                          Check review progress, inspection, and escrow custody hold.
+                        </p>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {/* Link 3: How It Works */}
+                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-emerald-50">
+                    <Link
+                      href="/#how-it-works"
+                      className="p-3 rounded-2xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/40 transition-colors flex items-start gap-3 w-full group"
+                    >
+                      <div className="p-2 rounded-xl bg-amber-100 text-amber-700 shrink-0 group-hover:scale-105 transition-transform">
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-bold text-gray-900 group-hover:text-emerald-700 block">
+                          How It Works
+                        </span>
+                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
+                          Fair quota mechanism, live draws &amp; insured TCS delivery.
+                        </p>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {/* Link 4: Winner Verification */}
+                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-amber-50">
+                    <Link
+                      href="/winners"
+                      className="p-3 rounded-2xl border border-gray-100 hover:border-amber-200 hover:bg-amber-50/40 transition-colors flex items-start gap-3 w-full group"
+                    >
+                      <div className="p-2 rounded-xl bg-amber-500 text-white shrink-0 group-hover:scale-105 transition-transform">
+                        <Trophy className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-xs font-bold text-gray-900 group-hover:text-amber-800">
+                            Verify Winners
+                          </span>
+                          <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded-full">
+                            CNIC Proof
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
+                          Hall of fame, delivery photos &amp; live video call archives.
+                        </p>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {/* Link 5: Partner / Affiliate */}
+                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-purple-50">
+                    <Link
+                      href="/become-a-partner"
+                      className="p-3 rounded-2xl border border-gray-100 hover:border-purple-200 hover:bg-purple-50/40 transition-colors flex items-start gap-3 w-full group"
+                    >
+                      <div className="p-2 rounded-xl bg-purple-100 text-purple-700 shrink-0 group-hover:scale-105 transition-transform">
+                        <TrendingUp className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-xs font-bold text-gray-900 group-hover:text-purple-700">
+                            Partner &amp; Affiliates
+                          </span>
+                          <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded-full">
+                            Earn PKR
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
+                          Earn commission sharing verified draws on social channels.
+                        </p>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {/* Link 6: Live WhatsApp Support */}
+                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-green-50">
+                    <a
+                      href={waInquiryUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 rounded-2xl border border-[#25D366]/30 bg-green-50/40 hover:bg-green-50 transition-colors flex items-start gap-3 w-full group"
+                    >
+                      <div className="p-2 rounded-xl bg-[#25D366] text-white shrink-0 group-hover:scale-105 transition-transform">
+                        <WhatsAppIcon className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-bold text-gray-900 group-hover:text-green-700 block">
+                          WhatsApp Help Desk
+                        </span>
+                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
+                          Direct assistance for tickets, payments &amp; general inquiries.
+                        </p>
+                      </div>
+                    </a>
+                  </DropdownMenuItem>
+                </div>
+
+                {/* Bottom Quick Application Search */}
+                <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                      <Search className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Quick Application Lookup</span>
+                    </span>
+                    <span className="text-[10px] text-slate-400">Enter Reference ID</span>
+                  </div>
+                  <form onSubmit={handleQuickTrack} className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="e.g. req-1793003835516-456w"
+                      value={trackIdInput}
+                      onChange={(e) => setTrackIdInput(e.target.value)}
+                      className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-mono font-medium focus:outline-hidden focus:border-emerald-500"
+                    />
+                    <Button
+                      type="submit"
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl h-8 px-3.5 shrink-0"
+                    >
+                      Track
+                    </Button>
+                  </form>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
           {/* Right: Actions & User Auth */}
@@ -639,8 +765,8 @@ export function Header() {
                         onClick={() => setIsOpen(false)}
                         className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
                           pathname === item.href
-                            ? "bg-green-50 text-green-700 font-bold"
-                            : "text-gray-700 hover:bg-gray-50 hover:text-green-600"
+                            ? "bg-emerald-50 text-emerald-800 font-bold"
+                            : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -654,23 +780,18 @@ export function Header() {
                         )}
                       </Link>
                     ))}
+                  </div>
 
-                    <Link
-                      href="https://blog.pakraffle.com?utm=pakraffle&medium=mobile-sidebar"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 hover:text-green-600"
-                    >
-                      <div className="flex items-center gap-3">
-                        <TrendingUp className="h-4 w-4 text-gray-500" />
-                        <span>News & Draw Blogs</span>
-                      </div>
-                      <ExternalLink className="h-3.5 w-3.5 text-gray-400" />
-                    </Link>
+                  {/* HELPFUL LINKS & SELLER SERVICES IN MOBILE */}
+                  <div className="pt-4 space-y-1">
+                    <span className="text-xs font-black text-gray-900 uppercase tracking-wider px-1 block mb-2">
+                      Helpful Links &amp; Seller Hub
+                    </span>
 
                     <Link
                       href="/list-product"
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-emerald-800 bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200/60"
+                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-emerald-900 bg-emerald-50/80 hover:bg-emerald-100/80 border border-emerald-200"
                     >
                       <div className="flex items-center gap-3">
                         <Tag className="h-4 w-4 text-emerald-600" />
@@ -682,9 +803,33 @@ export function Header() {
                     </Link>
 
                     <Link
+                      href="/application/status/req-101"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Clock className="h-4 w-4 text-blue-600" />
+                        <span>Track Application Status</span>
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
+                    </Link>
+
+                    <Link
+                      href="/#how-it-works"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+                    >
+                      <div className="flex items-center gap-3">
+                        <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                        <span>How It Works &amp; Rules</span>
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
+                    </Link>
+
+                    <Link
                       href="/become-a-partner"
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 hover:text-green-600"
+                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
                     >
                       <div className="flex items-center gap-3">
                         <Sparkles className="h-4 w-4 text-amber-500" />
@@ -694,6 +839,26 @@ export function Header() {
                         Earn PKR
                       </span>
                     </Link>
+
+                    {/* Mobile Quick Track Input */}
+                    <div className="pt-2 px-1">
+                      <form onSubmit={handleQuickTrack} className="flex gap-1.5">
+                        <input
+                          type="text"
+                          placeholder="Application ID (e.g. req-101)"
+                          value={trackIdInput}
+                          onChange={(e) => setTrackIdInput(e.target.value)}
+                          className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1.5 text-xs font-mono font-medium focus:outline-hidden focus:border-emerald-500"
+                        />
+                        <Button
+                          type="submit"
+                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl h-8 px-3 shrink-0"
+                        >
+                          Track
+                        </Button>
+                      </form>
+                    </div>
                   </div>
 
                   {/* WHATSAPP HELPLINE SECTION IN MOBILE SIDEBAR */}

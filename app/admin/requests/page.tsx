@@ -24,6 +24,8 @@ import {
   Bike,
   Gamepad2,
   Laptop,
+  Trash2,
+  Sparkles,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -76,10 +78,16 @@ export default function AdminRequestsPage() {
   const [typeFilter, setTypeFilter] = useState("ALL")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
-  const fetchRequests = async () => {
-    setLoading(true)
+  const fetchRequests = async (showLoading = true) => {
+    if (showLoading) setLoading(true)
     try {
-      const res = await fetch("/api/listing-requests")
+      const res = await fetch(`/api/listing-requests?_t=${Date.now()}`, {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      })
       const data = await res.json()
       if (data.success && Array.isArray(data.requests)) {
         setRequests(data.requests)
@@ -87,12 +95,12 @@ export default function AdminRequestsPage() {
     } catch (err) {
       console.error("Failed to load requests:", err)
     } finally {
-      setLoading(false)
+      if (showLoading) setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchRequests()
+    fetchRequests(true)
   }, [])
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
@@ -108,11 +116,38 @@ export default function AdminRequestsPage() {
         setRequests((prev) =>
           prev.map((r) => (r.id === id ? { ...r, status: newStatus as any } : r))
         )
+        // Re-sync with server
+        await fetchRequests(false)
       }
     } catch (err) {
       console.error("Failed to update status:", err)
     } finally {
       setActionLoading(null)
+    }
+  }
+
+  const [requestToDelete, setRequestToDelete] = useState<ProductRequest | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id)
+    try {
+      const res = await fetch(`/api/listing-requests/${id}`, {
+        method: "DELETE",
+        headers: { "x-admin-request": "true" },
+      })
+      const data = await res.json()
+      if (data.success) {
+        setRequests((prev) => prev.filter((r) => r.id !== id))
+        setRequestToDelete(null)
+      } else {
+        alert(data.error || "Failed to delete request")
+      }
+    } catch (err) {
+      console.error("Failed to delete request:", err)
+      alert("Network error deleting request")
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -505,6 +540,22 @@ export default function AdminRequestsPage() {
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
                           asChild
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2 rounded-lg text-xs font-bold border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+                          title="Open Partner Revenue & Analytics Dashboard"
+                        >
+                          <Link
+                            href={`/application/details/${item.id}?token=${item.secureToken || ""}`}
+                            target="_blank"
+                          >
+                            <Sparkles className="w-3 h-3 mr-1 text-emerald-600" />
+                            <span>Dashboard</span>
+                          </Link>
+                        </Button>
+
+                        <Button
+                          asChild
                           variant="ghost"
                           size="sm"
                           className="h-8 px-2.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-emerald-700 hover:bg-emerald-50"
@@ -551,8 +602,26 @@ export default function AdminRequestsPage() {
                             >
                               Reset to Pending
                             </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => setRequestToDelete(item)}
+                              className="font-bold text-red-600 cursor-pointer border-t border-slate-100"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                              <span>Delete Request</span>
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setRequestToDelete(item)}
+                          className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
+                          title="Delete Request"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -562,6 +631,49 @@ export default function AdminRequestsPage() {
           </Table>
         </div>
       </Card>
+
+      {/* Delete Confirmation Modal Dialog */}
+      {requestToDelete && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 sm:p-7 max-w-md w-full space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Delete Product Request?</h3>
+              <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                Are you sure you want to permanently delete application <span className="font-mono font-bold text-slate-900">#{requestToDelete.id}</span> ({requestToDelete.productName})? This will remove the listing and tracking link permanently.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRequestToDelete(null)}
+                disabled={Boolean(deletingId)}
+                className="rounded-xl text-xs font-semibold h-10 px-4"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => handleDelete(requestToDelete.id)}
+                disabled={Boolean(deletingId)}
+                className="bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold h-10 px-4 gap-1.5"
+              >
+                {deletingId ? (
+                  <span>Deleting...</span>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Yes, Delete Request</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

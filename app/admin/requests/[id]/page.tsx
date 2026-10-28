@@ -71,30 +71,41 @@ export default function AdminRequestDetailPage() {
   const [updatingStatus, setUpdatingStatus] = useState(false)
   const [notes, setNotes] = useState("")
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null)
+  const [copiedDetailsLink, setCopiedDetailsLink] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  const fetchDetail = async (showLoading = true) => {
+    if (!id) return
+    if (showLoading) setLoading(true)
+    try {
+      const res = await fetch(`/api/listing-requests/${encodeURIComponent(id)}?_t=${Date.now()}`, {
+        cache: "no-store",
+        headers: {
+          "x-admin-request": "true",
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      })
+      const data = await res.json()
+      if (data.success && data.request) {
+        setRequest(data.request)
+        setNotes(data.request.adminNotes || "")
+      } else {
+        setMessage({ text: data.error || "Request not found", type: "error" })
+      }
+    } catch (err) {
+      console.error("Error fetching request details:", err)
+      setMessage({ text: "Network error loading details", type: "error" })
+    } finally {
+      if (showLoading) setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    if (!id) return
-    const fetchDetail = async () => {
-      setLoading(true)
-      try {
-        const res = await fetch(`/api/listing-requests/${id}`, {
-          headers: { "x-admin-request": "true" },
-        })
-        const data = await res.json()
-        if (data.success && data.request) {
-          setRequest(data.request)
-          setNotes(data.request.adminNotes || "")
-        } else {
-          setMessage({ text: data.error || "Request not found", type: "error" })
-        }
-      } catch (err) {
-        console.error("Error fetching request details:", err)
-        setMessage({ text: "Network error loading details", type: "error" })
-      } finally {
-        setLoading(false)
-      }
+    if (id) {
+      fetchDetail(true)
     }
-    fetchDetail()
   }, [id])
 
   const handleUpdateStatus = async (newStatus: "PENDING" | "UNDER_REVIEW" | "APPROVED" | "REJECTED") => {
@@ -111,6 +122,8 @@ export default function AdminRequestDetailPage() {
       if (data.success) {
         setRequest((prev) => (prev ? { ...prev, status: newStatus } : null))
         setMessage({ text: `Request status successfully changed to ${newStatus}`, type: "success" })
+        // Immediately fetch fresh state from server to guarantee persistence
+        await fetchDetail(false)
       } else {
         setMessage({ text: data.error || "Failed to update status", type: "error" })
       }
@@ -144,6 +157,30 @@ export default function AdminRequestDetailPage() {
       setMessage({ text: "Network error saving notes", type: "error" })
     } finally {
       setSavingNotes(false)
+    }
+  }
+
+  const handleDeleteRequest = async () => {
+    if (!request) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/listing-requests/${request.id}`, {
+        method: "DELETE",
+        headers: { "x-admin-request": "true" },
+      })
+      const data = await res.json()
+      if (data.success) {
+        router.push("/admin/requests?deleted=true")
+      } else {
+        setMessage({ text: data.error || "Failed to delete request", type: "error" })
+        setShowDeleteConfirm(false)
+        setDeleting(false)
+      }
+    } catch (err) {
+      console.error(err)
+      setMessage({ text: "Network error deleting request", type: "error" })
+      setShowDeleteConfirm(false)
+      setDeleting(false)
     }
   }
 
@@ -249,6 +286,21 @@ export default function AdminRequestDetailPage() {
 
           <Button
             asChild
+            size="sm"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold h-9 gap-1.5 shadow-sm"
+          >
+            <Link
+              href={`/application/details/${request.id}?token=${request.secureToken || ""}`}
+              target="_blank"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>Partner Dashboard</span>
+              <ExternalLink className="w-3 h-3 text-emerald-200" />
+            </Link>
+          </Button>
+
+          <Button
+            asChild
             variant="outline"
             size="sm"
             className="rounded-xl text-xs font-semibold h-9 gap-1.5"
@@ -258,7 +310,7 @@ export default function AdminRequestDetailPage() {
               target="_blank"
             >
               <ExternalLink className="w-3.5 h-3.5" />
-              <span>View Public Status</span>
+              <span>Public Status</span>
             </Link>
           </Button>
 
@@ -286,12 +338,139 @@ export default function AdminRequestDetailPage() {
             size="sm"
             onClick={() => handleUpdateStatus("REJECTED")}
             disabled={updatingStatus || request.status === "REJECTED"}
-            className="text-red-600 border-red-200 hover:bg-red-50 rounded-xl text-xs font-semibold h-9"
+            className="text-amber-700 border-amber-300 hover:bg-amber-50 rounded-xl text-xs font-semibold h-9"
           >
             Reject
           </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700 rounded-xl text-xs font-bold h-9 gap-1"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Delete</span>
+          </Button>
         </div>
       </div>
+
+      {/* Generated Partner Dashboard Link Box (Always visible for admin) */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white shadow-md border border-emerald-500/30 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              <h3 className="text-base font-extrabold text-white">
+                Partner Revenue &amp; Analytics Dashboard Link
+              </h3>
+              {request.status === "APPROVED" ? (
+                <Badge className="bg-emerald-600 text-white border-emerald-400 text-[10px]">
+                  Live &amp; Active
+                </Badge>
+              ) : (
+                <Badge className="bg-amber-500/30 text-amber-200 border-amber-400/40 text-[10px]">
+                  {request.status} (Preview Link)
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-slate-300">
+              Provide this private dashboard link to the seller so they can monitor their real-time revenue, tickets sold, and net payout.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              asChild
+              className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs h-9 rounded-xl gap-1.5"
+            >
+              <Link
+                href={`/application/details/${request.id}?token=${request.secureToken || ""}`}
+                target="_blank"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Open Dashboard</span>
+              </Link>
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                const url = `${typeof window !== "undefined" ? window.location.origin : ""}/application/details/${request.id}?token=${request.secureToken || ""}`
+                if (navigator?.clipboard?.writeText) {
+                  await navigator.clipboard.writeText(url)
+                }
+                setCopiedDetailsLink(true)
+                setTimeout(() => setCopiedDetailsLink(false), 2500)
+              }}
+              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold h-9 rounded-xl gap-1.5"
+            >
+              {copiedDetailsLink ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Copy Link</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        <div className="p-3 rounded-xl bg-slate-950/80 border border-emerald-500/20 font-mono text-xs text-emerald-400 break-all select-all flex items-center justify-between gap-3">
+          <span>
+            {typeof window !== "undefined" ? window.location.origin : ""}/application/details/{request.id}?token={request.secureToken || ""}
+          </span>
+        </div>
+      </div>
+
+      {/* Delete Confirmation Modal Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 sm:p-7 max-w-md w-full space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Delete Product Request?</h3>
+              <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                Are you sure you want to permanently delete application <span className="font-mono font-bold text-slate-900">#{request.id}</span> ({request.productName})? This request and its tracking history will be permanently deleted from the database.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                className="rounded-xl text-xs font-semibold h-10 px-4"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleDeleteRequest}
+                disabled={deleting}
+                className="bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold h-10 px-4 gap-1.5"
+              >
+                {deleting ? (
+                  <span>Deleting...</span>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Yes, Delete Request</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Status Alert Banner */}
       {message && (

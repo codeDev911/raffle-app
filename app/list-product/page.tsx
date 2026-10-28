@@ -217,10 +217,14 @@ export default function ListProductPage() {
       const data = await res.json()
 
       if (res.ok && data.success) {
+        const token = data.secureToken || data.request?.secureToken || ""
+        const statusUrl = data.statusUrl || `/application/status/${data.request.id}?token=${token}`
+        const detailsUrl = data.detailsUrl || `/application/details/${data.request.id}?token=${token}`
         const savedApp = {
           ...data.request,
           secureToken: token,
           statusUrl,
+          detailsUrl,
         }
         setSuccessData(savedApp)
 
@@ -894,6 +898,20 @@ export default function ListProductPage() {
                       >
                         <span>View Application Status &amp; Timeline</span>
                         <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </Button>
+
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full sm:w-auto h-11 border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 font-extrabold text-xs rounded-xl"
+                    >
+                      <Link
+                        href={`/application/details/${successData.id}?token=${successData.secureToken || ""}`}
+                        className="flex items-center justify-center gap-2"
+                      >
+                        <Sparkles className="w-4 h-4 text-emerald-600" />
+                        <span>Partner Revenue Dashboard</span>
                       </Link>
                     </Button>
                   </div>

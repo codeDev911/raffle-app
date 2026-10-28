@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma, mockPrisma } from "@/lib/prisma"
 import crypto from "crypto"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
+const noCacheHeaders = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+  "Pragma": "no-cache",
+  "Expires": "0",
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -44,16 +53,19 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    return NextResponse.json({
-      success: true,
-      requests,
-      count: requests.length,
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        requests,
+        count: requests.length,
+      },
+      { headers: noCacheHeaders }
+    )
   } catch (error) {
     console.error("Error fetching listing requests:", error)
     return NextResponse.json(
       { success: false, error: "Failed to fetch listing requests" },
-      { status: 500 }
+      { status: 500, headers: noCacheHeaders }
     )
   }
 }
@@ -144,18 +156,21 @@ export async function POST(req: NextRequest) {
 
     const statusUrl = `/application/status/${newRequest.id}?token=${secureToken}`
 
-    return NextResponse.json({
-      success: true,
-      message: "Your product listing request has been submitted successfully for verification.",
-      request: newRequest,
-      secureToken,
-      statusUrl,
-    })
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Your product listing request has been submitted successfully for verification.",
+        request: newRequest,
+        secureToken,
+        statusUrl,
+      },
+      { headers: noCacheHeaders }
+    )
   } catch (error: any) {
     console.error("Error creating listing request:", error)
     return NextResponse.json(
       { success: false, error: error?.message || "Failed to submit listing request. Please check inputs and try again." },
-      { status: 500 }
+      { status: 500, headers: noCacheHeaders }
     )
   }
 }

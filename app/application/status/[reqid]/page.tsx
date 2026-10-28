@@ -109,57 +109,36 @@ function StatusDetailContent() {
     setError(null)
 
     try {
-      const url = `/api/listing-requests/${encodeURIComponent(id)}${
-        effectiveToken ? `?token=${encodeURIComponent(effectiveToken)}` : ""
+      const url = `/api/listing-requests/${encodeURIComponent(id)}?_t=${Date.now()}${
+        effectiveToken ? `&token=${encodeURIComponent(effectiveToken)}` : ""
       }`
-      const res = await fetch(url)
+      const res = await fetch(url, {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+        },
+      })
       const data = await res.json()
 
       if (!res.ok || !data.success) {
+        setApplication(null)
+        setRequiresToken(true)
         if (res.status === 401 || data.requiresToken) {
-          setRequiresToken(true)
           setError(
-            "This application is private. A valid secure tracking token is required to view status and custody details."
+            "Access Denied: Private tracking token is required. Please provide a valid security token to view this application."
           )
         } else if (res.status === 403 || data.invalidToken) {
-          setRequiresToken(true)
           setError(
-            "The tracking token provided does not match this application record. Please verify the link from your submission confirmation."
+            "Access Denied: The security token provided is invalid. Please check your reference link or enter the correct token below."
           )
         } else if (res.status === 404) {
-          // Check local client storage backup in case of server reset
-          let recoveredFromLocal = false
-          if (typeof window !== "undefined") {
-            try {
-              const localAppStr = localStorage.getItem(`pakraffle_app_${id}`)
-              if (localAppStr) {
-                const localApp = JSON.parse(localAppStr)
-                if (localApp && (localApp.id === id || localApp.id)) {
-                  setApplication(localApp)
-                  setRequiresToken(false)
-                  setError(null)
-                  recoveredFromLocal = true
-                  // Re-sync to server storage in background
-                  fetch("/api/listing-requests", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(localApp),
-                  }).catch(() => {})
-                }
-              }
-            } catch (localErr) {
-              console.warn("Could not retrieve local backup:", localErr)
-            }
-          }
-          if (!recoveredFromLocal) {
-            setError(`No application found with ID "${id}". Please check your Reference ID.`)
-          }
+          setRequiresToken(false)
+          setError(`No application found with ID "${id}". Please check your Reference ID.`)
         } else {
           setError(data.error || "Failed to load application status.")
         }
-        if (!application) {
-          setApplication(null)
-        }
+        return
       } else {
         setApplication(data.request)
         setRequiresToken(false)
@@ -184,7 +163,13 @@ function StatusDetailContent() {
   const handleManualTokenSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!tokenInput.trim()) return
-    setActiveToken(tokenInput.trim())
+    const trimmed = tokenInput.trim()
+    setActiveToken(trimmed)
+    if (typeof window !== "undefined" && reqId) {
+      const newUrl = `${window.location.pathname}?token=${encodeURIComponent(trimmed)}`
+      window.history.replaceState(null, "", newUrl)
+    }
+    fetchStatus(reqId, trimmed, true)
   }
 
   const handleCopyLink = async () => {
@@ -512,6 +497,39 @@ function StatusDetailContent() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 space-y-6">
+        {/* Approved Status Celebration & Partner Analytics Dashboard Banner */}
+        {application.status === "APPROVED" && (
+          <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-5 border border-emerald-400/40">
+            <div className="space-y-1.5 max-w-2xl">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+                <Badge className="bg-emerald-500/50 text-white border-emerald-300 text-xs font-bold uppercase tracking-wider">
+                  Partner Portal Active
+                </Badge>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
+                Your Application is Approved &amp; Live!
+              </h2>
+              <p className="text-xs sm:text-sm text-emerald-100/95 leading-relaxed">
+                Your product raffle campaign has been successfully approved and launched. Track your real-time raffle revenue, net profit, sold tickets, and payout settlement on your dedicated one-page dashboard.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full md:w-auto">
+              <Button
+                asChild
+                className="bg-white text-emerald-800 hover:bg-emerald-50 font-black text-xs sm:text-sm h-11 px-5 rounded-2xl shadow-lg gap-2"
+              >
+                <Link href={`/application/details/${application.id}?token=${application.secureToken || activeToken}`}>
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                  <span>Open Partner Analytics Dashboard</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Highlighted Status Hero Card */}
         <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-6 sm:p-8 space-y-4">
