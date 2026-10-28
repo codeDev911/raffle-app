@@ -29,17 +29,9 @@ export default function ClientLayout({
   return (
     <html lang="en">
       <head>
-        
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-EX44PLKN82"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-EX44PLKN82');
-</script>
-        <meta name="monetag" content="78091832d51a3d2d1cd351e318c806b9"></meta>
-        <meta name="google-adsense-account" content="ca-pub-8516478537168335"></meta>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EX44PLKN82"></script>
+     <meta name="monetag" content="78091832d51a3d2d1cd351e318c806b9"></meta>
+     <meta name="google-adsense-account" content="ca-pub-8516478537168335"></meta>
      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8516478537168335"
      crossorigin="anonymous"></script>
       </head>
