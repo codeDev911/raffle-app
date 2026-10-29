@@ -34,6 +34,7 @@ export function SimulatorTab({
     unitPrice: "1500",
     customerName: "Ayesha Khan",
     customerPhone: "03001234567",
+    customerCity: "Lahore",
     productTitle: "",
     sku: "",
     orderId: "",
@@ -71,6 +72,7 @@ export function SimulatorTab({
           unitPrice: Number(form.unitPrice),
           customerName: form.customerName || undefined,
           customerPhone: form.customerPhone || undefined,
+          customerCity: form.customerCity || undefined,
           productTitle: form.productTitle || undefined,
           sku: form.sku || undefined,
           orderId: form.orderId || undefined,
@@ -144,6 +146,9 @@ export function SimulatorTab({
             </Field>
             <Field label="Phone">
               <TextInput value={form.customerPhone} onChange={set("customerPhone")} maxLength={20} className="font-mono" />
+            </Field>
+            <Field label="City" hint="Saved as the customer's location">
+              <TextInput value={form.customerCity} onChange={set("customerCity")} maxLength={60} placeholder="Lahore" />
             </Field>
             <Field label="Product title" hint="Tests product filters">
               <TextInput value={form.productTitle} onChange={set("productTitle")} maxLength={120} placeholder="Lawn Suit" />

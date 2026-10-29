@@ -297,6 +297,35 @@ await check("the batch opened one payment per customer for PakRaffle to confirm"
   assert.equal(mine.every((p) => p.transactionId.startsWith("MCH-PKR-SHOPIFY-")), true)
 })
 
+await check("a failed batch transfer reopens the invoice for resubmission", async () => {
+  const [target] = payments.rows.filter((p) => p.metadata?.invoiceId === invoice.id)
+  // What /admin/payments does when it marks the transfer FAILED.
+  await payments.update({ where: { id: target.id }, data: { status: "FAILED" } })
+
+  const released = await svc.releaseMerchantPayment(target.id)
+  assert.equal(released.released, true)
+  assert.equal(released.invoiceReopened, true)
+  const db = await getMerchantDb()
+  assert.equal((await db.merchantInvoice.findUnique({ where: { id: invoice.id } })).status, "PENDING")
+
+  // The ticket is still on the batch (never silently re-billed) and the shopper sees the retry.
+  const detail = await svc.getInvoiceDetail(invoice.id, store.id)
+  assert.equal(detail.entries.find((e) => e.id === released.entry.id).paymentStatus, "FAILED")
+  const failedView = await svc.lookupTickets(released.entry.ticketNumber)
+  assert.equal(failedView[0].stage, "PAYMENT_FAILED")
+
+  // Resubmitting re-arms the same payment rows instead of opening new ones.
+  const before = payments.rows.length
+  const resubmitted = await svc.submitInvoicePayment(store, invoice.id, {
+    paymentMethod: "RAAST",
+    transactionRef: "TXN-88990012",
+    paymentProof: "https://res.cloudinary.com/demo/image/upload/receipt-2.png",
+  })
+  assert.equal(resubmitted.invoice.status, "UNDER_REVIEW")
+  assert.equal(payments.rows.length, before)
+  assert.equal(payments.rows.find((p) => p.id === target.id).status, "PENDING")
+})
+
 await check("nothing is confirmed until PakRaffle clears those payments", async () => {
   const db = await getMerchantDb()
   assert.equal(await db.merchantEntry.count({ where: { invoiceId: invoice.id, status: "PAID" } }), 0)
@@ -373,6 +402,7 @@ async function mintSolo(orderId, customerName, customerPhone, customerEmail) {
       customerName,
       customerEmail,
       customerPhone,
+      customerCity: "Lahore",
       subtotal: 2400,
       fulfilled: true,
       cancelled: false,
@@ -418,6 +448,26 @@ await check("a merchant can pay one ticket without waiting for a batch", async (
   const account = await prisma.user.findUnique({ where: { id: ledger.userId } })
   assert.equal(account.email, "ayesha@example.com")
   assert.equal(account.name, "Ayesha Khan")
+  // Contact details from the order land on the account (Admin → Customers shows them).
+  assert.equal(account.phone, "03334567890")
+  assert.equal(account.city, "Lahore")
+})
+
+await check("a returning customer's account gains the city and phone it is missing", async () => {
+  const ledger = payments.rows.find((p) => p.transactionId === `MCH-${soloEntry.ticketNumber}`)
+  // An account created before addresses were captured: no phone, no city, name already set.
+  await prisma.user.update({ where: { id: ledger.userId }, data: { phone: null, city: null } })
+
+  await svc.payEntry(store, soloEntry.id, {
+    paymentMethod: "RAAST",
+    transactionRef: "TXN-BACKFILL-0001",
+    paymentProof: "https://res.cloudinary.com/demo/image/upload/backfill.png",
+  })
+
+  const account = await prisma.user.findUnique({ where: { id: ledger.userId } })
+  assert.equal(account.city, "Lahore")
+  assert.equal(account.phone, "03334567890")
+  assert.equal(account.name, "Ayesha Khan") // never overwritten
 })
 
 await check("re-submitting the same ticket re-arms its payment instead of double-billing", async () => {
@@ -452,6 +502,54 @@ await check("lookup follows the money: awaiting store, then confirming, then con
   assert.equal(done[0].stage, "CONFIRMED")
   assert.equal(done[0].status, "PAID")
   assert.equal(entries.rows.filter((e) => e.paymentId === ledger.id && e.userId === ledger.userId).length, 1)
+})
+
+await check("a rejected transfer reopens the ticket for payment", async () => {
+  const entry = await mintSolo("solo-3", "Bilal Ahmed", "03211234567", "bilal@example.com")
+  const paid = await svc.payEntry(store, entry.id, {
+    paymentMethod: "NAYAPAY",
+    transactionRef: "TXN-REJECT-0001",
+    paymentProof: "https://res.cloudinary.com/demo/image/upload/reject.png",
+  })
+  assert.equal(paid.entry.status, "INVOICED")
+
+  // What /admin/payments does when it marks the transfer FAILED.
+  await payments.update({ where: { id: paid.payment.id }, data: { status: "FAILED" } })
+  const released = await svc.releaseMerchantPayment(paid.payment.id)
+  assert.equal(released.released, true)
+  assert.equal(released.invoiceReopened, false)
+  assert.equal(released.entry.status, "ISSUED") // payable again, no stuck "awaiting confirmation"
+
+  // The dashboard list reports the real payment state, not just the ticket status.
+  const feed = await svc.listEntries(store, { campaignId: soloCampaign.id, status: "ISSUED", includeTest: false })
+  const row = feed.entries.find((e) => e.id === entry.id)
+  assert.equal(row.status, "ISSUED")
+  assert.equal(row.paymentStatus, "FAILED")
+
+  const view = await svc.lookupTickets("#solo-3")
+  assert.equal(view[0].stage, "PAYMENT_FAILED")
+
+  // Paying again re-arms the same payment row instead of billing the customer twice.
+  const before = payments.rows.length
+  const again = await svc.payEntry(store, entry.id, {
+    paymentMethod: "RAAST",
+    transactionRef: "TXN-REJECT-0002",
+    paymentProof: "https://res.cloudinary.com/demo/image/upload/reject-2.png",
+  })
+  assert.equal(payments.rows.length, before)
+  assert.equal(again.payment.status, "PENDING")
+  assert.equal(again.entry.status, "INVOICED")
+
+  const settled = await svc.settleMerchantPayment(again.payment.id)
+  assert.equal(settled.settled, true)
+  assert.equal((await svc.lookupTickets("#solo-3"))[0].stage, "CONFIRMED")
+})
+
+await check("a confirmed transfer is never rolled back by a stale failure", async () => {
+  const ledger = payments.rows.find((p) => p.transactionId === `MCH-${soloEntry.ticketNumber}`)
+  const result = await svc.releaseMerchantPayment(ledger.id)
+  assert.equal(result.released, false)
+  assert.equal(result.reason, "already_confirmed")
 })
 
 await check("a confirmed ticket can no longer be paid", async () => {

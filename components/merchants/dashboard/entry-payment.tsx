@@ -35,6 +35,11 @@ export function EntryPaymentDialog({
   const [done, setDone] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
+  // Re-paying after PakRaffle rejected the transfer: the merchant must know why the form is back.
+  const retrying = Boolean(
+    entry?.paymentStatus && ["FAILED", "REFUNDED", "CANCELLED"].includes(entry.paymentStatus),
+  )
+
   // Keyed on the id: the entry feed polls every 15s and hands back fresh objects mid-typing.
   const entryId = entry?.id ?? null
   useEffect(() => {
@@ -122,6 +127,13 @@ export function EntryPaymentDialog({
 
         {!done && entry && (
           <form onSubmit={submit} className="space-y-4">
+            {retrying && (
+              <Alert>
+                PakRaffle could not verify the last transfer for this ticket, so it is unpaid again. Send the amount once
+                more and submit the new reference with its receipt.
+              </Alert>
+            )}
+
             <Field label="Payment method">
               <SelectInput value={form.paymentMethod} onChange={(e) => setForm((f) => ({ ...f, paymentMethod: e.target.value }))}>
                 {Object.entries(PAYMENT_METHOD_LABELS).map(([value, label]) => (

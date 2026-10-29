@@ -21,6 +21,7 @@ import { submitPaymentSchema } from "../validators"
 import { getPrizeMap } from "./prizes"
 
 export const ENTRY_PAYMENT_KIND = "merchant_entry"
+const ENTRY_PAYMENT_PREFIX = "MCH-"
 
 const OPEN_STATUSES = ["ISSUED", "INVOICED"]
 const CUSTOMER_EMAIL_DOMAIN = "customers.pakraffle.pk"
@@ -37,7 +38,31 @@ export interface EntrySettlementInput {
 
 /** One payment record per ticket: also the idempotency key, so a replayed call can't double-bill. */
 export function entryPaymentTransactionId(ticketNumber: string): string {
-  return `MCH-${ticketNumber}`
+  return `${ENTRY_PAYMENT_PREFIX}${ticketNumber}`
+}
+
+/**
+ * Ticket number → status of its PakRaffle payment row. Missing rows mean nothing was ever
+ * submitted for that ticket. Never throws: a ledger hiccup must not break a dashboard list.
+ */
+export async function ticketPaymentStatuses(ticketNumbers: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+  const ids = Array.from(new Set(ticketNumbers.map((ticket) => entryPaymentTransactionId(ticket))))
+  if (ids.length === 0) return map
+  try {
+    const rows: Array<{ transactionId: string | null; status: string }> = await prisma.payment.findMany({
+      where: { transactionId: { in: ids } },
+    })
+    for (const row of rows) {
+      const transactionId = row.transactionId
+      if (transactionId?.startsWith(ENTRY_PAYMENT_PREFIX)) {
+        map.set(transactionId.slice(ENTRY_PAYMENT_PREFIX.length), row.status)
+      }
+    }
+  } catch (err) {
+    console.warn("[MerchantConnect] payment status lookup failed, relying on ticket status:", err)
+  }
+  return map
 }
 
 function asRecord(value: unknown): Record<string, any> {
@@ -61,7 +86,7 @@ async function ensureCustomerUser(entry: MerchantEntry): Promise<string> {
   const emails = customerEmails(entry)
   for (const email of emails) {
     const existing = await prisma.user.findUnique({ where: { email } })
-    if (existing) return existing.id as string
+    if (existing) return backfillCustomerContact(existing, entry)
   }
 
   for (const email of emails) {
@@ -70,7 +95,10 @@ async function ensureCustomerUser(entry: MerchantEntry): Promise<string> {
         data: {
           email,
           name: entry.customerName,
+          // The Shopify order carries the delivery phone and city: they belong on the account,
+          // which is what Admin → Customers reads as the customer's location.
           phone: entry.customerPhone ?? null,
+          city: entry.customerCity ?? null,
           password: CUSTOMER_PASSWORD_PLACEHOLDER,
         },
       })
@@ -79,10 +107,27 @@ async function ensureCustomerUser(entry: MerchantEntry): Promise<string> {
       if (!isUniqueViolation(err)) throw err
       // A concurrent payment created the account first — reuse it.
       const raced = await prisma.user.findUnique({ where: { email } })
-      if (raced) return raced.id as string
+      if (raced) return backfillCustomerContact(raced, entry)
     }
   }
   throw new MerchantError("Could not link this order to a customer account", 500, "CUSTOMER_LINK_FAILED")
+}
+
+/** Fills in phone/city the account is missing, without overwriting what the customer set. */
+async function backfillCustomerContact(user: any, entry: MerchantEntry): Promise<string> {
+  const patch: Record<string, string> = {}
+  const phone = entry.customerPhone?.trim()
+  const city = entry.customerCity?.trim()
+  if (phone && !user?.phone) patch.phone = phone
+  if (city && !user?.city) patch.city = city
+  if (Object.keys(patch).length > 0) {
+    try {
+      await prisma.user.update({ where: { id: user.id }, data: patch })
+    } catch (err) {
+      console.warn("[MerchantConnect] could not update customer contact details:", err)
+    }
+  }
+  return user.id as string
 }
 
 // ───────────────────────── payment ledger ─────────────────────────
@@ -241,6 +286,69 @@ export async function voidOpenEntryPayment(entry: MerchantEntry): Promise<boolea
   if (!existing || !["PENDING", "PROCESSING"].includes(existing.status)) return false
   await prisma.payment.update({ where: { id: existing.id }, data: { status: "CANCELLED" } })
   return true
+}
+
+// ───────────────────────── admin rejection ─────────────────────────
+
+export interface ReleaseResult {
+  released: boolean
+  reason?: string
+  entry?: ReturnType<typeof toEntryDTO>
+  invoiceReopened?: boolean
+}
+
+/**
+ * Runs when an admin marks a merchant payment FAILED/REFUNDED in /admin/payments.
+ *
+ * A direct ticket goes back to ISSUED so the merchant can transfer again; a batch invoice
+ * reopens (PENDING) so the transfer can be resubmitted for the whole batch. Safe to re-run:
+ * every step is a conditional update, and a confirmed ticket is never rolled back.
+ */
+export async function releaseMerchantPayment(paymentId: string): Promise<ReleaseResult> {
+  const payment: Payment | null = await prisma.payment.findUnique({ where: { id: paymentId } })
+  if (!payment) throw notFound("Payment")
+
+  const metadata = asRecord(payment.metadata)
+  if (metadata.kind !== ENTRY_PAYMENT_KIND || typeof metadata.merchantEntryId !== "string") {
+    return { released: false, reason: "not_a_merchant_payment" }
+  }
+
+  const db = await getMerchantDb()
+  const entry: MerchantEntry | null = await db.merchantEntry.findUnique({ where: { id: metadata.merchantEntryId } })
+  if (!entry) return { released: false, reason: "entry_missing" }
+  // A confirmed ticket already produced a raffle entry; undoing that is a manual refund, not this.
+  if (entry.status === "PAID") return { released: false, reason: "already_confirmed" }
+
+  let released = false
+  if (!entry.invoiceId) {
+    const { count } = await db.merchantEntry.updateMany({
+      where: { id: entry.id, status: "INVOICED" },
+      data: { status: "ISSUED" },
+    })
+    released = count > 0
+  }
+
+  // A failed transfer on a batch reopens the invoice so the merchant can resubmit it.
+  let invoiceReopened = false
+  if (entry.invoiceId) {
+    const { count } = await db.merchantInvoice.updateMany({
+      where: { id: entry.invoiceId, status: "UNDER_REVIEW" },
+      data: { status: "PENDING" },
+    })
+    invoiceReopened = count > 0
+    released = invoiceReopened || released
+  }
+
+  // Keep the audit trail on the payment row itself.
+  if (!metadata.failedAt) {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: { metadata: { ...metadata, failedAt: new Date().toISOString() } },
+    })
+  }
+
+  const fresh: MerchantEntry = await db.merchantEntry.findUnique({ where: { id: entry.id } })
+  return { released, entry: toEntryDTO(fresh), invoiceReopened }
 }
 
 // ───────────────────────── admin confirmation ─────────────────────────

@@ -1,31 +1,11 @@
 // Public ticket lookup for shoppers: by ticket number, Shopify order id / number, or phone.
-import { prisma } from "@/lib/prisma"
 import { getMerchantDb } from "../db"
 import { toPublicTicketDTO } from "../dto"
 import { MerchantError } from "../errors"
 import type { MerchantCampaign, MerchantEntry, MerchantStore } from "../types"
 import { normalizePhone } from "../utils"
-import { entryPaymentTransactionId } from "./entry-payments"
+import { ticketPaymentStatuses } from "./entry-payments"
 import { getPrizeMap } from "./prizes"
-
-/**
- * Per-ticket payment rows, so the lookup can tell "store hasn't paid yet" apart from
- * "paid, waiting for PakRaffle to confirm". Missing rows simply mean nothing was submitted.
- */
-async function paymentStatuses(entries: MerchantEntry[]): Promise<Map<string, string>> {
-  const ids = entries.map((entry) => entryPaymentTransactionId(entry.ticketNumber))
-  const map = new Map<string, string>()
-  if (ids.length === 0) return map
-  try {
-    const payments = await prisma.payment.findMany({ where: { transactionId: { in: ids } } })
-    for (const payment of payments) {
-      if (payment.transactionId) map.set(payment.transactionId, payment.status)
-    }
-  } catch (err) {
-    console.warn("[MerchantConnect] payment lookup failed, relying on ticket status:", err)
-  }
-  return map
-}
 
 export async function lookupTickets(rawQuery: string) {
   const q = String(rawQuery || "").trim()
@@ -57,7 +37,7 @@ export async function lookupTickets(rawQuery: string) {
   const campaignById = new Map(campaigns.map((c) => [c.id, c]))
   const storeById = new Map(stores.map((s) => [s.id, s]))
   const prizes = await getPrizeMap(campaigns.map((c) => c.raffleId))
-  const payments = await paymentStatuses(entries)
+  const payments = await ticketPaymentStatuses(entries.map((entry) => entry.ticketNumber))
 
   return entries.map((entry) => {
     const campaign = campaignById.get(entry.campaignId) ?? null
@@ -65,7 +45,7 @@ export async function lookupTickets(rawQuery: string) {
       storeName: storeById.get(entry.storeId)?.name ?? "Partner Store",
       campaign,
       prize: campaign?.raffleId ? prizes.get(campaign.raffleId) ?? null : null,
-      paymentStatus: payments.get(entryPaymentTransactionId(entry.ticketNumber)) ?? null,
+      paymentStatus: payments.get(entry.ticketNumber) ?? null,
     })
   })
 }

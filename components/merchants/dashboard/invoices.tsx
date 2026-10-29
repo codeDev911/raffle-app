@@ -23,6 +23,7 @@ import {
   merchantApi,
 } from "../ui"
 import { dialogClass } from "./campaigns"
+import { entryStatusKey } from "./shared"
 import { PAYMENT_METHOD_LABELS, type InvoiceDTO, type InvoiceDetail } from "./types"
 
 const MAX_RECEIPT_BYTES = 8 * 1024 * 1024
@@ -94,6 +95,9 @@ export function InvoicesTab({
                       <StatusText status={inv.status} />
                       {inv.status === "PENDING" && inv.adminNotes && (
                         <p className="mt-0.5 text-[11px] text-rose-300">Payment rejected · resubmit</p>
+                      )}
+                      {inv.status === "PENDING" && !inv.adminNotes && inv.submittedAt && (
+                        <p className="mt-0.5 text-[11px] text-rose-300">Transfer failed · resubmit</p>
                       )}
                     </td>
                     <td className="whitespace-nowrap px-5 py-3 text-right text-xs text-slate-500">{formatDate(inv.createdAt)}</td>
@@ -228,6 +232,9 @@ function InvoiceDetailDialog({
                         <td className="whitespace-nowrap px-3 py-2 font-mono tabular-nums text-emerald-300">{entry.ticketNumber}</td>
                         <td className="whitespace-nowrap px-3 py-2 font-mono tabular-nums">{entry.orderName || `#${entry.shopifyOrderId}`}</td>
                         <td className="max-w-[160px] truncate px-3 py-2 text-slate-400">{entry.customerName}</td>
+                        <td className="whitespace-nowrap px-3 py-2">
+                          <StatusText status={entryStatusKey(entry)} />
+                        </td>
                         <td className="whitespace-nowrap px-3 py-2 text-right font-mono tabular-nums">{formatPKR(invoice.unitPrice)}</td>
                       </tr>
                     ))}
@@ -260,7 +267,17 @@ function InvoiceDetailDialog({
               </Alert>
             )}
 
-            {invoice.paymentProof && invoice.status !== "PENDING" && (
+            {invoice.status === "PENDING" && invoice.submittedAt && (
+              <Alert>
+                <span className="inline-flex items-start gap-2">
+                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                  PakRaffle marked the transfer submitted {formatDate(invoice.submittedAt, true)} as failed, so these tickets are
+                  unpaid again. Send the amount once more and resubmit the reference and receipt below.
+                </span>
+              </Alert>
+            )}
+
+            {invoice.paymentProof && (invoice.status !== "PENDING" || invoice.submittedAt) && (
               <a href={invoice.paymentProof} target="_blank" rel="noopener noreferrer" className="inline-flex text-xs text-emerald-400 hover:underline">
                 View submitted receipt
               </a>
@@ -346,7 +363,9 @@ function InvoiceDetailDialog({
                 {submitError && <Alert>{submitError}</Alert>}
 
                 <Btn type="submit" className="w-full" loading={submitting} disabled={uploading}>
-                  {invoice.status === "UNDER_REVIEW" ? "Resubmit payment details" : "Submit payment for verification"}
+                  {invoice.status === "UNDER_REVIEW" || invoice.submittedAt
+                    ? "Resubmit payment details"
+                    : "Submit payment for verification"}
                 </Btn>
               </form>
             )}

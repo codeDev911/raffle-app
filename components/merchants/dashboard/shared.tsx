@@ -43,6 +43,24 @@ export function CampaignStatus({ campaign }: { campaign: CampaignDTO }) {
   return <StatusText status={campaign.status} />
 }
 
+/**
+ * What the merchant should read in the Status column. The fate of the PakRaffle payment wins over
+ * the raw ledger status: a rejected transfer is actionable, "invoiced" is not.
+ */
+export function entryStatusKey(entry: EntryDTO): string {
+  if (entry.status === "PAID") return "PAID"
+  if (entry.status === "CANCELLED") return "CANCELLED"
+  if (entry.paymentStatus === "FAILED" || entry.paymentStatus === "REFUNDED") return "PAYMENT_FAILED"
+  if (entry.paymentStatus === "CANCELLED") return "PAYMENT_CANCELLED"
+  if (entry.paymentStatus === "PENDING" || entry.paymentStatus === "PROCESSING") return "AWAITING_CONFIRMATION"
+  return entry.invoiceId ? "ON_INVOICE" : "UNPAID"
+}
+
+/** A rejected transfer the merchant can re-send on its own (batch tickets go through the invoice). */
+export function paymentFailed(entry: EntryDTO) {
+  return entry.status !== "PAID" && (entry.paymentStatus === "FAILED" || entry.paymentStatus === "REFUNDED")
+}
+
 export function EntriesTable({
   entries,
   campaignTitles,
@@ -84,8 +102,16 @@ export function EntriesTable({
               </td>
               <td className="max-w-[180px] px-3 py-3">
                 <p className="truncate text-slate-200">{entry.customerName}</p>
-                {entry.customerPhone && (
-                  <p className="truncate font-mono text-[11px] tabular-nums text-slate-500">{entry.customerPhone}</p>
+                {(entry.customerPhone || entry.customerCity) && (
+                  <p className="truncate font-mono text-[11px] tabular-nums text-slate-500">
+                    {entry.customerPhone || "—"}
+                    {entry.customerCity && (
+                      <>
+                        <span className="px-1 text-slate-600">·</span>
+                        <span className="font-sans">{entry.customerCity}</span>
+                      </>
+                    )}
+                  </p>
                 )}
               </td>
               <td className="whitespace-nowrap px-3 py-3 text-right font-mono text-xs tabular-nums">
@@ -100,9 +126,14 @@ export function EntriesTable({
               )}
               <td className="whitespace-nowrap px-3 py-3">
                 <span className="inline-flex items-center gap-2">
-                  <StatusText status={entry.status} />
+                  <StatusText status={entryStatusKey(entry)} />
                   {entry.isTest && <StatusText status="TEST" />}
                 </span>
+                {paymentFailed(entry) && (
+                  <p className="mt-0.5 text-[11px] text-slate-500">
+                    {entry.invoiceId ? "transfer not verified · resubmit the invoice" : "transfer not verified"}
+                  </p>
+                )}
                 {entry.cancelledReason && <p className="mt-0.5 text-[11px] text-slate-500">{entry.cancelledReason}</p>}
               </td>
               <td className="whitespace-nowrap px-5 py-3 text-right text-xs text-slate-500" title={new Date(entry.createdAt).toLocaleString()}>

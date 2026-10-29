@@ -56,6 +56,11 @@ export function normalizeShopifyOrder(payload: any): NormalizedOrder {
     customerName,
     customerEmail: str(payload?.email) || str(payload?.contact_email) || str(customer.email),
     customerPhone: str(payload?.phone) || str(customer.phone) || str(shipping.phone) || str(billing.phone),
+    customerCity:
+      str(shipping.city) ||
+      str(billing.city) ||
+      str(customer.default_address?.city) ||
+      str(payload?.customer?.addresses?.[0]?.city),
     subtotal: num(payload?.current_subtotal_price ?? payload?.subtotal_price ?? payload?.total_price),
     lineItems,
     fulfilled: String(payload?.fulfillment_status || "").toLowerCase() === "fulfilled",
@@ -77,6 +82,7 @@ export interface MockOrderInput {
   customerName?: string
   customerPhone?: string
   customerEmail?: string
+  customerCity?: string
   productTitle?: string
   sku?: string
 }
@@ -111,6 +117,12 @@ export function buildMockShopifyOrder(input: MockOrderInput) {
       last_name: rest.join(" ") || null,
       email: input.customerEmail || "test.customer@example.com",
       phone: input.customerPhone || "+923001234567",
+      default_address: input.customerCity ? { city: input.customerCity } : null,
+    },
+    shipping_address: {
+      name: (input.customerName || "Test Customer").trim(),
+      phone: input.customerPhone || "+923001234567",
+      city: input.customerCity || null,
     },
     line_items: [
       {

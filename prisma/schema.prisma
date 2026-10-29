@@ -252,6 +252,7 @@ model MerchantEntry {
   customerName    String
   customerEmail   String?
   customerPhone   String?
+  customerCity    String? // shipping city, also written to the customer account's location
   phoneNormalized String? // digits-only 92XXXXXXXXXX for lookups
   ticketNumber    String              @unique
   orderAmount     Int // PKR (qualifying subtotal)

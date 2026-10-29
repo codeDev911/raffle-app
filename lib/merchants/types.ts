@@ -62,6 +62,8 @@ export interface MerchantEntry {
   customerName: string
   customerEmail?: string | null
   customerPhone?: string | null
+  /** Shipping city from the order — becomes the customer account's location. */
+  customerCity?: string | null
   phoneNormalized?: string | null
   ticketNumber: string
   orderAmount: number
@@ -108,6 +110,8 @@ export interface NormalizedOrder {
   customerName: string
   customerEmail?: string | null
   customerPhone?: string | null
+  /** Shipping city, stored as the customer account's location. */
+  customerCity?: string | null
   subtotal: number // PKR, may contain decimals
   lineItems: NormalizedLineItem[]
   fulfilled: boolean

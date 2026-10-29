@@ -9,7 +9,7 @@ import type { MerchantCampaign, MerchantEntry, MerchantInvoice, MerchantStore } 
 import { generateInvoiceNumber } from "../utils"
 import { generateInvoiceSchema, submitPaymentSchema } from "../validators"
 import { getOwnedCampaign } from "./campaigns"
-import { settleInvoiceEntries } from "./entry-payments"
+import { settleInvoiceEntries, ticketPaymentStatuses } from "./entry-payments"
 
 const INVOICEABLE_STATUSES = ["ACTIVE", "PAUSED"]
 
@@ -121,9 +121,12 @@ export async function getInvoiceDetail(invoiceId: string, storeId?: string) {
     db.merchantStore.findUnique({ where: { id: invoice.storeId } }),
   ])
 
+  const rows = entries as MerchantEntry[]
+  const payments = await ticketPaymentStatuses(rows.map((entry) => entry.ticketNumber))
+
   return {
     invoice: toInvoiceDTO(invoice, { campaignTitle: campaign?.title, storeName: store?.name }),
-    entries: (entries as MerchantEntry[]).map(toEntryDTO),
+    entries: rows.map((entry) => toEntryDTO(entry, { paymentStatus: payments.get(entry.ticketNumber) ?? null })),
     store: store ? { id: store.id, name: store.name, storeUrl: store.storeUrl, contactEmail: store.contactEmail } : null,
     settlementAccounts: getSettlementAccounts(),
   }

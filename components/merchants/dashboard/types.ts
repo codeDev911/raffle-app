@@ -80,11 +80,14 @@ export interface EntryDTO {
   customerName: string
   customerEmail: string | null
   customerPhone: string | null
+  customerCity: string | null
   ticketNumber: string
   orderAmount: number
   itemCount: number
   isTest: boolean
   status: "ISSUED" | "INVOICED" | "PAID" | "CANCELLED"
+  /** PakRaffle payment row status for this ticket (null when nothing was submitted). */
+  paymentStatus: string | null
   cancelledReason: string | null
   createdAt: string
 }

@@ -145,13 +145,30 @@ await check("tampered bodies and wrong secrets are rejected", () => {
 
 await check("mock payload normalizes into the ingestion shape", async () => {
   const { buildMockShopifyOrder } = await import("../../lib/merchants/shopify.ts")
-  const payload = buildMockShopifyOrder({ itemCount: 4, unitPrice: 1500, customerName: "Ali", customerPhone: "03001234567" })
+  const payload = buildMockShopifyOrder({
+    itemCount: 4,
+    unitPrice: 1500,
+    customerName: "Ali",
+    customerPhone: "03001234567",
+    customerCity: "Lahore",
+  })
   const normalized = normalizeShopifyOrder(payload)
   assert.equal(normalized.fulfilled, true)
   assert.equal(normalised_qty(normalized), 4)
   assert.equal(Math.round(normalized.subtotal), 6000)
   assert.equal(normalized.customerName, "Ali")
+  assert.equal(normalized.customerCity, "Lahore")
   assert.ok(normalized.orderId)
+})
+
+await check("the delivery city is read from the shipping address, then billing", async () => {
+  const { normalizeShopifyOrder: normalize } = await import("../../lib/merchants/shopify.ts")
+  const shipping = normalize({ id: 1, shipping_address: { city: "Karachi" }, billing_address: { city: "Islamabad" } })
+  assert.equal(shipping.customerCity, "Karachi")
+  const billing = normalize({ id: 2, billing_address: { city: "Islamabad" } })
+  assert.equal(billing.customerCity, "Islamabad")
+  const none = normalize({ id: 3 })
+  assert.equal(none.customerCity, null)
 })
 
 function normalised_qty(order) {

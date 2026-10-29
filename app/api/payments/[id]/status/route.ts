@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { settleMerchantPayment } from "@/lib/merchants/services/entry-payments"
+import { settleMerchantPayment, releaseMerchantPayment } from "@/lib/merchants/services/entry-payments"
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -36,6 +36,20 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         console.error("[MerchantConnect] settlement failed:", error)
         return NextResponse.json(
           { error: "Could not confirm this merchant entry. Please retry." },
+          { status: 500 },
+        )
+      }
+    }
+
+    // A failed transfer hands the ticket back to the merchant: the entry returns to payable and
+    // a batch invoice reopens, so the dashboard never sits on "Awaiting confirmation" forever.
+    if (status === "FAILED" || status === "REFUNDED") {
+      try {
+        await releaseMerchantPayment(params.id)
+      } catch (error) {
+        console.error("[MerchantConnect] release failed:", error)
+        return NextResponse.json(
+          { error: "Could not reopen this merchant entry. Please retry." },
           { status: 500 },
         )
       }

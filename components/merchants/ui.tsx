@@ -86,6 +86,12 @@ const STATUS_TONE: Record<string, { dot: string; text: string; label?: string }>
   CANCELLED: { dot: "bg-rose-400", text: "text-rose-300" },
   ENDED: { dot: "bg-slate-500", text: "text-slate-400", label: "Ended" },
   TEST: { dot: "bg-fuchsia-400", text: "text-fuchsia-300", label: "Test" },
+  // Merchant ticket states, derived from the ticket + its PakRaffle payment row.
+  UNPAID: { dot: "bg-amber-400", text: "text-amber-300", label: "Unpaid" },
+  ON_INVOICE: { dot: "bg-slate-500", text: "text-slate-400", label: "On invoice" },
+  AWAITING_CONFIRMATION: { dot: "bg-sky-400", text: "text-sky-300", label: "Awaiting confirmation" },
+  PAYMENT_FAILED: { dot: "bg-rose-400", text: "text-rose-300", label: "Payment failed" },
+  PAYMENT_CANCELLED: { dot: "bg-rose-400", text: "text-rose-300", label: "Payment cancelled" },
 }
 
 export function statusLabel(status: string) {

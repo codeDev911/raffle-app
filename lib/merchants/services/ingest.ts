@@ -23,7 +23,7 @@ import type {
 } from "../types"
 import { generateTicketNumber, normalizePhone } from "../utils"
 import { simulateOrderSchema } from "../validators"
-import { voidOpenEntryPayment } from "./entry-payments"
+import { ticketPaymentStatuses, voidOpenEntryPayment } from "./entry-payments"
 import { findStoreByDomain, getStoreById } from "./stores"
 
 const TEST_ORDER_PREFIX = "TEST-"
@@ -87,6 +87,7 @@ async function mintEntry(
             customerName: order.customerName,
             customerEmail: order.customerEmail ?? null,
             customerPhone: order.customerPhone ?? null,
+            customerCity: order.customerCity ?? null,
             phoneNormalized: normalizePhone(order.customerPhone),
             ticketNumber,
             orderAmount: Math.round(evaluation.amount),
@@ -330,5 +331,11 @@ export async function listEntries(
     db.merchantEntry.findMany({ where, orderBy: { createdAt: "desc" }, take }),
     db.merchantEntry.count({ where }),
   ])
-  return { entries: (entries as MerchantEntry[]).map(toEntryDTO), total }
+  const rows = entries as MerchantEntry[]
+  // The ledger says ISSUED/INVOICED, but the merchant needs to know a transfer was marked failed.
+  const payments = await ticketPaymentStatuses(rows.map((entry) => entry.ticketNumber))
+  return {
+    entries: rows.map((entry) => toEntryDTO(entry, { paymentStatus: payments.get(entry.ticketNumber) ?? null })),
+    total,
+  }
 }

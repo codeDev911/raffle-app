@@ -109,6 +109,7 @@ export const simulateOrderSchema = z.object({
   unitPrice: z.coerce.number().min(0).max(10_000_000),
   customerName: z.string().trim().max(80).optional(),
   customerPhone: z.string().trim().max(20).optional(),
+  customerCity: z.string().trim().max(60).optional(),
   customerEmail: z.string().trim().email().max(120).optional().or(z.literal("")),
   productTitle: z.string().trim().max(120).optional(),
   sku: z.string().trim().max(64).optional(),

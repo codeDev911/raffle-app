@@ -80,7 +80,10 @@ export function EntriesTab({
   const prices = Object.fromEntries(campaigns.map((c) => [c.id, c.ticketPrice]))
 
   // Tickets still waiting for money: not on a batch invoice, not simulated, not yet settled.
+  // A rejected transfer drops the ticket back to ISSUED, so the same button turns into "Pay again".
   const canPay = (entry: EntryDTO) => entry.status === "ISSUED" && !entry.invoiceId && !entry.isTest
+  const rejected = (entry: EntryDTO) =>
+    entry.paymentStatus === "FAILED" || entry.paymentStatus === "REFUNDED" || entry.paymentStatus === "CANCELLED"
 
   return (
     <Panel>
@@ -120,10 +123,10 @@ export function EntriesTab({
         </SelectInput>
         <SelectInput value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status">
           <option value="">Any status</option>
-          <option value="ISSUED">Issued</option>
-          <option value="INVOICED">Invoiced</option>
-          <option value="PAID">Paid</option>
-          <option value="CANCELLED">Cancelled</option>
+          <option value="ISSUED">Unpaid</option>
+          <option value="INVOICED">Payment submitted</option>
+          <option value="PAID">Confirmed</option>
+          <option value="CANCELLED">Voided</option>
         </SelectInput>
         <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-slate-400">
           <input
@@ -148,12 +151,14 @@ export function EntriesTab({
         renderActions={(entry) =>
           canPay(entry) ? (
             <Btn
-              variant="secondary"
+              variant={rejected(entry) ? "primary" : "secondary"}
               className="min-h-0 px-3 py-1.5 text-xs"
               onClick={() => setPaying(entry)}
             >
-              <Wallet className="h-3.5 w-3.5 text-emerald-400" /> Pay now
+              <Wallet className="h-3.5 w-3.5 text-emerald-400" /> {rejected(entry) ? "Pay again" : "Pay now"}
             </Btn>
+          ) : entry.paymentStatus === "PENDING" || entry.paymentStatus === "PROCESSING" ? (
+            <span className="text-[11px] text-slate-500">Waiting for PakRaffle</span>
           ) : entry.status === "ISSUED" && entry.invoiceId ? (
             <span className="text-[11px] text-slate-500">On invoice</span>
           ) : null

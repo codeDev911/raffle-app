@@ -68,7 +68,7 @@ export function toCampaignDTO(
   }
 }
 
-export function toEntryDTO(entry: MerchantEntry) {
+export function toEntryDTO(entry: MerchantEntry, extras: { paymentStatus?: string | null } = {}) {
   return {
     id: entry.id,
     campaignId: entry.campaignId,
@@ -78,11 +78,14 @@ export function toEntryDTO(entry: MerchantEntry) {
     customerName: entry.customerName,
     customerEmail: entry.customerEmail ?? null,
     customerPhone: entry.customerPhone ?? null,
+    customerCity: entry.customerCity ?? null,
     ticketNumber: entry.ticketNumber,
     orderAmount: entry.orderAmount,
     itemCount: entry.itemCount,
     isTest: entry.isTest,
     status: entry.status,
+    /** PakRaffle payment row status for this ticket (null when nothing was submitted). */
+    paymentStatus: extras.paymentStatus ?? null,
     cancelledReason: entry.cancelledReason ?? null,
     createdAt: entry.createdAt,
   }
@@ -111,11 +114,13 @@ export function toInvoiceDTO(invoice: MerchantInvoice, extras: { campaignTitle?:
 }
 
 /** Where the shopper's ticket actually stands, expressed in the customer's terms. */
-export type PublicTicketStage = "PAYMENT_PENDING" | "AWAITING_CONFIRMATION" | "CONFIRMED" | "VOIDED"
+export type PublicTicketStage = "PAYMENT_PENDING" | "PAYMENT_FAILED" | "AWAITING_CONFIRMATION" | "CONFIRMED" | "VOIDED"
 
 function publicStage(entry: MerchantEntry, paymentStatus?: string | null): PublicTicketStage {
   if (entry.status === "CANCELLED") return "VOIDED"
   if (entry.status === "PAID" || paymentStatus === "COMPLETED") return "CONFIRMED"
+  // PakRaffle rejected the transfer: the store has to send the money again.
+  if (paymentStatus === "FAILED" || paymentStatus === "REFUNDED") return "PAYMENT_FAILED"
   // A payment row exists but PakRaffle has not confirmed it yet.
   if (paymentStatus === "PENDING" || paymentStatus === "PROCESSING") return "AWAITING_CONFIRMATION"
   // The store has not paid for this ticket yet (individually or via its batch invoice).
