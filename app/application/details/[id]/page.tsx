@@ -45,6 +45,9 @@ interface RecentOrder {
 
 interface AnalyticsData {
   isApproved: boolean
+  isLaunched?: boolean
+  raffleId?: string | null
+  publicRaffleUrl?: string | null
   status: string
   totalTickets: number
   soldTickets: number
@@ -68,6 +71,7 @@ interface AnalyticsData {
 
 interface ProductApplication {
   id: string
+  raffleId?: string | null
   productType: string
   productName: string
   description: string
@@ -346,28 +350,35 @@ function ApplicationDashboardContent() {
   // Derived calculations
   const stats = analytics || {
     isApproved: application.status === "APPROVED",
+    isLaunched: Boolean(application.raffleId),
+    raffleId: application.raffleId || null,
+    publicRaffleUrl: application.raffleId ? `/raffles/${application.raffleId}` : null,
     status: application.status,
     totalTickets: application.totalTickets,
-    soldTickets: Math.round(application.totalTickets * 0.68),
-    remainingTickets: Math.max(0, application.totalTickets - Math.round(application.totalTickets * 0.68)),
-    percentageSold: 68,
+    soldTickets: 0,
+    remainingTickets: application.totalTickets,
+    percentageSold: 0,
     ticketPrice: application.ticketPrice,
     marketPrice: application.marketPrice,
     totalRevenue: application.totalRevenue,
     platformFee: application.platformFee,
     sellerPayout: application.sellerPayout,
-    currentGrossRevenue: Math.round(application.totalRevenue * 0.68),
-    currentPlatformFee: Math.round(application.totalRevenue * 0.68 * 0.08),
-    currentSellerPayout: Math.round(application.totalRevenue * 0.68 * 0.92),
-    uniqueBuyers: 89,
+    currentGrossRevenue: 0,
+    currentPlatformFee: 0,
+    currentSellerPayout: 0,
+    uniqueBuyers: 0,
     recentOrders: [],
-    settlementStatus: "HELD_IN_ESCROW",
+    settlementStatus: application.raffleId
+      ? "HELD_IN_ESCROW"
+      : application.status === "APPROVED"
+      ? "APPROVED_FOR_LAUNCH"
+      : "PENDING_APPROVAL",
     payoutMethod: "Raast / Direct IBFT",
     custodyLocation: `${application.city || "Lahore"} Central Vault`,
-    inspectionStatus: "VERIFIED & INSURED",
+    inspectionStatus: application.raffleId ? "VERIFIED & INSURED" : "PENDING_INSPECTION",
   }
 
-  const publicRaffleUrl = `/raffles/raffle-1`
+  const publicRaffleUrl = stats.publicRaffleUrl || (application.raffleId ? `/raffles/${application.raffleId}` : null)
   const whatsappShareText = `Assalam-o-Alaikum! My ${application.productName} is officially live on PakRaffle! Tickets are just Rs. ${application.ticketPrice.toLocaleString()} each! Grab your entry before it's sold out:`
 
   return (
@@ -505,35 +516,60 @@ function ApplicationDashboardContent() {
             {/* Campaign Quick Actions Card */}
             <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200 shrink-0 w-full lg:w-72 space-y-3">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
-                Public Raffle Links
+                Public Raffle Campaign
               </span>
 
-              <Button
-                asChild
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs h-10 rounded-xl gap-2 shadow-xs"
-              >
-                <Link href={publicRaffleUrl} target="_blank">
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>View Public Buyer Page</span>
-                </Link>
-              </Button>
+              {publicRaffleUrl ? (
+                <>
+                  <Button
+                    asChild
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs h-10 rounded-xl gap-2 shadow-xs"
+                  >
+                    <Link href={publicRaffleUrl} target="_blank">
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>View Live Raffle Page</span>
+                    </Link>
+                  </Button>
 
-              <Button
-                asChild
-                variant="outline"
-                className="w-full text-xs font-bold rounded-xl h-10 gap-2 border-emerald-300 text-emerald-800 hover:bg-emerald-50"
-              >
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(
-                    `${whatsappShareText} ${typeof window !== "undefined" ? window.location.origin : ""}${publicRaffleUrl}`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MessageCircle className="w-4 h-4 text-emerald-600" />
-                  <span>Share on WhatsApp</span>
-                </a>
-              </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full text-xs font-bold rounded-xl h-10 gap-2 border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+                  >
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent(
+                        `${whatsappShareText} ${typeof window !== "undefined" ? window.location.origin : ""}${publicRaffleUrl}`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <MessageCircle className="w-4 h-4 text-emerald-600" />
+                      <span>Share on WhatsApp</span>
+                    </a>
+                  </Button>
+                </>
+              ) : (
+                <div className="space-y-2.5">
+                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1">
+                    <span className="font-bold flex items-center gap-1.5 text-amber-800">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>Campaign Pending Launch</span>
+                    </span>
+                    <p className="text-[11px] text-amber-700 leading-relaxed">
+                      Admin review desk is preparing physical inspection &amp; catalog setup. The live raffle link will appear here once published.
+                    </p>
+                  </div>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full text-xs font-bold rounded-xl h-9 border-slate-200"
+                  >
+                    <Link href={`/application/status/${application.id}?token=${activeToken}`}>
+                      <span>Check Verification Status</span>
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </section>

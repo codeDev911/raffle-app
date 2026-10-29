@@ -48,6 +48,7 @@ model Raffle {
   specifications  String[]
   rules           String[]
   expenses        Json?       @default("[]")
+  listingRequestId String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -167,6 +168,7 @@ model ProductListingRequest {
   status       ListingStatus @default(PENDING)
   adminNotes   String?
   secureToken  String?
+  raffleId     String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 

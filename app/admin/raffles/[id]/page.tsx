@@ -30,6 +30,12 @@ import {
   Receipt,
   Eye,
   Percent,
+  ShieldCheck,
+  User,
+  Sparkles,
+  Phone,
+  Mail,
+  MapPin,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -159,8 +165,31 @@ async function getRaffleDetails(id: string) {
       ? Math.ceil(((totalRevenue - totalCostPaisa) / totalCostPaisa) * 100)
       : 0
 
+  // Fetch linked client product listing request if any
+  let clientListingRequest: any = null
+  const reqId = (raffle as any).listingRequestId
+  if (reqId) {
+    try {
+      clientListingRequest = await prisma.productListingRequest.findUnique({
+        where: { id: reqId },
+      })
+    } catch (e) {
+      console.error("Error fetching linked listing request:", e)
+    }
+  }
+  if (!clientListingRequest) {
+    try {
+      clientListingRequest = await prisma.productListingRequest.findFirst({
+        where: { raffleId: raffle.id },
+      })
+    } catch (e) {
+      console.error("Error fetching linked listing request by raffleId:", e)
+    }
+  }
+
   return {
     raffle,
+    clientListingRequest,
     totalRevenue,
     totalEntries,
     uniqueCustomers,
@@ -188,6 +217,7 @@ export default async function AdminRaffleDetailPage({
   const resolvedParams = await Promise.resolve(params)
   const {
     raffle,
+    clientListingRequest,
     totalRevenue,
     totalEntries,
     uniqueCustomers,
@@ -287,6 +317,77 @@ export default async function AdminRaffleDetailPage({
         </div>
       </div>
 
+      {/* Client / Partner Listed Asset Card */}
+      {clientListingRequest && (
+        <div className="bg-gradient-to-r from-teal-950 via-slate-900 to-emerald-950 border border-teal-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white shadow-md animate-in fade-in">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-teal-500/20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 border border-teal-500/30 flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-teal-400">
+                    Client / Partner Listed Product
+                  </span>
+                  <Badge className="bg-teal-500/20 text-teal-200 border border-teal-500/30 text-[10px] font-mono">
+                    #{clientListingRequest.id}
+                  </Badge>
+                  <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px]">
+                    8% Platform Commission
+                  </Badge>
+                </div>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  This live campaign was submitted by an external seller and approved through PakRaffle Product Listing Verification.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <Button asChild size="sm" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs rounded-xl h-8">
+                <Link href={`/admin/requests/${clientListingRequest.id}`} target="_blank">
+                  <span>View Original Application</span>
+                  <ExternalLink className="w-3.5 h-3.5 ml-1" />
+                </Link>
+              </Button>
+              <Button asChild size="sm" className="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl h-8">
+                <Link href={`/application/details/${clientListingRequest.id}?token=${clientListingRequest.secureToken || ""}`} target="_blank">
+                  <span>Open Partner Live Dashboard</span>
+                  <ExternalLink className="w-3.5 h-3.5 ml-1" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 text-xs">
+            <div className="bg-slate-900/60 p-3 rounded-xl border border-teal-500/20">
+              <span className="text-slate-400 block text-[11px]">Seller (CNIC Name):</span>
+              <span className="font-bold text-white text-xs sm:text-sm mt-0.5 block truncate">
+                {clientListingRequest.fullNameCnic}
+              </span>
+            </div>
+            <div className="bg-slate-900/60 p-3 rounded-xl border border-teal-500/20">
+              <span className="text-slate-400 block text-[11px]">Seller Contact / City:</span>
+              <span className="font-semibold text-slate-200 text-xs mt-0.5 block truncate">
+                {clientListingRequest.phone} ({clientListingRequest.city || "Pakistan"})
+              </span>
+            </div>
+            <div className="bg-slate-900/60 p-3 rounded-xl border border-teal-500/20">
+              <span className="text-slate-400 block text-[11px]">Desired Seller Price:</span>
+              <span className="font-mono font-bold text-emerald-400 text-xs sm:text-sm mt-0.5 block">
+                Rs. {Number(clientListingRequest.marketPrice || 0).toLocaleString()}
+              </span>
+            </div>
+            <div className="bg-slate-900/60 p-3 rounded-xl border border-teal-500/20">
+              <span className="text-slate-400 block text-[11px]">Net Seller Payout (92%):</span>
+              <span className="font-mono font-bold text-teal-300 text-xs sm:text-sm mt-0.5 block">
+                Rs. {Number(clientListingRequest.sellerPayout || 0).toLocaleString()}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hero Overview Header */}
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs p-5 sm:p-7">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
@@ -311,6 +412,12 @@ export default async function AdminRaffleDetailPage({
           <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
             <div>
               <div className="flex flex-wrap items-center gap-2.5 mb-2.5">
+                {clientListingRequest && (
+                  <Badge className="rounded-xl text-xs font-bold bg-teal-50 text-teal-800 border border-teal-300 gap-1">
+                    <ShieldCheck className="w-3 h-3 text-teal-600" />
+                    <span>Client / Partner Product</span>
+                  </Badge>
+                )}
                 <Badge
                   className={`rounded-xl text-xs font-semibold px-2.5 py-1 ${
                     raffle.status === "ACTIVE"

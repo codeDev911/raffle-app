@@ -16,7 +16,10 @@ export default function ClientLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const isAdminRoute = pathname?.startsWith("/admin") || pathname?.startsWith("/payment")
+  const isStandaloneRoute =
+    pathname?.startsWith("/admin") ||
+    pathname?.startsWith("/payment") ||
+    pathname?.startsWith("/application/")
   useEffect(() => {
     if (typeof window !== "undefined") {
       const key = "client_browse_id"
@@ -36,9 +39,9 @@ export default function ClientLayout({
      crossorigin="anonymous"></script>
       </head>
       <body className={inter.className}>
-        {!isAdminRoute && <Header />}
+        {!isStandaloneRoute && <Header />}
         <main>{children}</main>
-        {!isAdminRoute && <Footer />}
+        {!isStandaloneRoute && <Footer />}
       </body>
     </html>
   )

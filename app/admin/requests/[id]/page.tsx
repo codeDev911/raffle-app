@@ -29,6 +29,8 @@ import {
   Bike,
   Gamepad2,
   Laptop,
+  Copy,
+  Check,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -56,6 +58,7 @@ interface ProductRequest {
   status: "PENDING" | "UNDER_REVIEW" | "APPROVED" | "REJECTED"
   adminNotes?: string | null
   secureToken?: string | null
+  raffleId?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -805,19 +808,52 @@ export default function AdminRequestDetailPage() {
           {/* Convert to Live Raffle Action */}
           <Card className="rounded-2xl border-slate-200/90 bg-gradient-to-br from-slate-50 to-emerald-50/30 shadow-2xs">
             <CardContent className="p-6 space-y-3">
-              <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
-                <Gift className="w-4 h-4 text-red-600" />
-                <span>Convert to Official Raffle</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                  <Gift className="w-4 h-4 text-red-600" />
+                  <span>Official Raffle Campaign</span>
+                </div>
+                {request.raffleId && (
+                  <Badge className="bg-emerald-600 text-white text-[10px] font-bold">
+                    Launched &amp; Linked
+                  </Badge>
+                )}
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Once physical inspection and custody agreement are completed, click to create a live campaign
-                in the official Raffles Catalog.
+                {request.raffleId
+                  ? "This client application asset has been converted into an official live PakRaffle campaign. Real buyer entries and ticket sales are synced directly to the partner dashboard."
+                  : "Once physical inspection and custody agreement are completed, click to create a live campaign in the official Raffles Catalog with prefilled specifications and pricing."}
               </p>
-              <Button asChild className="w-full bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold h-10">
-                <Link href={`/admin/raffles/create?title=${encodeURIComponent(request.productName)}&price=${request.ticketPrice}&category=${encodeURIComponent(request.productType)}`}>
-                  Create Raffle from this Asset →
-                </Link>
-              </Button>
+              {request.raffleId ? (
+                <div className="space-y-2 pt-1">
+                  <Button asChild className="w-full bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold h-10 gap-2">
+                    <Link href={`/admin/raffles/${request.raffleId}`}>
+                      <span>View Admin Raffle Details (#{request.raffleId})</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full rounded-xl text-xs font-bold h-9">
+                    <Link href={`/raffles/${request.raffleId}`} target="_blank">
+                      <span>Preview Public Catalog Page</span>
+                      <ExternalLink className="w-3.5 h-3.5 ml-1" />
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <Button asChild className="w-full bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold h-10">
+                  <Link
+                    href={`/admin/raffles/create?listingRequestId=${encodeURIComponent(
+                      request.id
+                    )}&title=${encodeURIComponent(request.productName)}&price=${request.ticketPrice}&totalEntries=${
+                      request.totalTickets
+                    }&realPrice=${request.marketPrice}&category=${encodeURIComponent(
+                      request.productType
+                    )}&description=${encodeURIComponent(request.description)}`}
+                  >
+                    Create Raffle from this Asset →
+                  </Link>
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>

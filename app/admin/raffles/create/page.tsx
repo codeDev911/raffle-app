@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-import { useState, useMemo } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useMemo, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -47,6 +47,7 @@ import {
   HelpCircle,
   Coins,
   ShieldAlert,
+  ExternalLink,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -63,20 +64,22 @@ export function roundUpTwoDecimals(num: number) {
   return Math.ceil(num * 100) / 100
 }
 
-export default function CreateRafflePage() {
+function CreateRaffleForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const listingRequestId = searchParams?.get("listingRequestId") || ""
 
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
+    title: searchParams?.get("title") || "",
+    description: searchParams?.get("description") || "",
     longDescription: "",
     image: "",
     gallery: [] as string[],
-    price: "",
-    realPrice: "",
+    price: searchParams?.get("price") || "",
+    realPrice: searchParams?.get("realPrice") || "",
     budget: "", // Allocated marketing & campaign budget in PKR
-    totalEntries: "",
-    category: "",
+    totalEntries: searchParams?.get("totalEntries") || "",
+    category: searchParams?.get("category") || "",
     featured: false,
     status: "ACTIVE",
     endDate: "",
@@ -84,6 +87,27 @@ export default function CreateRafflePage() {
     rules: [] as string[],
     expenses: [] as RaffleExpenseItem[],
   })
+
+  useEffect(() => {
+    const title = searchParams?.get("title")
+    const price = searchParams?.get("price")
+    const totalEntries = searchParams?.get("totalEntries")
+    const realPrice = searchParams?.get("realPrice")
+    const category = searchParams?.get("category")
+    const description = searchParams?.get("description")
+
+    if (title || price || totalEntries || realPrice || category || description) {
+      setFormData((prev) => ({
+        ...prev,
+        title: title || prev.title,
+        price: price || prev.price,
+        totalEntries: totalEntries || prev.totalEntries,
+        realPrice: realPrice || prev.realPrice,
+        category: category || prev.category,
+        description: description || prev.description,
+      }))
+    }
+  }, [searchParams])
 
   const [newSpec, setNewSpec] = useState("")
   const [newRule, setNewRule] = useState("")
@@ -327,6 +351,7 @@ export default function CreateRafflePage() {
             category: exp.category || "Marketing",
           })),
         },
+        listingRequestId: listingRequestId || undefined,
       }
 
       const response = await fetch("/api/raffles", {
@@ -338,7 +363,11 @@ export default function CreateRafflePage() {
       const data = await response.json()
 
       if (response.ok) {
-        router.push("/admin/raffles")
+        if (data?.id) {
+          router.push(`/admin/raffles/${data.id}`)
+        } else {
+          router.push("/admin/raffles")
+        }
       } else {
         setError(data.error || "Failed to create raffle")
       }
@@ -390,6 +419,36 @@ export default function CreateRafflePage() {
           </Button>
         </div>
       </div>
+
+      {/* Client Partner Asset Conversion Banner */}
+      {listingRequestId && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 border border-emerald-500/40 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                  Client Product Listing Conversion
+                </span>
+                <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[11px]">
+                  #{listingRequestId}
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                Pre-filled directly from verified client application. Publishing this raffle will automatically link this raffle to the client&apos;s request and activate their live dashboard analytics.
+              </p>
+            </div>
+          </div>
+          <Button asChild variant="outline" size="sm" className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs shrink-0 rounded-xl h-8">
+            <Link href={`/admin/requests/${listingRequestId}`} target="_blank">
+              <span>View Request Dossier</span>
+              <ExternalLink className="w-3.5 h-3.5 ml-1" />
+            </Link>
+          </Button>
+        </div>
+      )}
 
       {/* Error Alert */}
       {error && (
@@ -1216,5 +1275,22 @@ export default function CreateRafflePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CreateRafflePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[400px] flex items-center justify-center">
+          <div className="text-center space-y-2">
+            <div className="w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-xs text-slate-500 font-semibold">Loading campaign configuration...</p>
+          </div>
+        </div>
+      }
+    >
+      <CreateRaffleForm />
+    </Suspense>
   )
 }

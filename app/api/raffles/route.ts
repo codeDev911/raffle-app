@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma, mockPrisma } from "@/lib/prisma"
 import { getUser } from "@/lib/auth"
 import { z } from "zod"
 
@@ -18,6 +18,7 @@ const createRaffleSchema = z.object({
   specifications: z.array(z.string()).optional(),
   rules: z.array(z.string()).optional(),
   expenses: z.any().optional(),
+  listingRequestId: z.string().optional(),
 })
 
 export async function GET(request: NextRequest) {
@@ -63,13 +64,39 @@ export async function POST(request: NextRequest) {
       data: {
         ...data,
         price: data.price * 100, // Convert to paisa
-        realPrice:data.realPrice * 100, // convert to paisa
+        realPrice: data.realPrice * 100, // convert to paisa
         gallery: data.gallery || [],
         specifications: data.specifications || [],
         rules: data.rules || [],
         expenses: data.expenses || [],
+        listingRequestId: data.listingRequestId || undefined,
       },
     })
+
+    if (data.listingRequestId) {
+      try {
+        await prisma.productListingRequest.update({
+          where: { id: data.listingRequestId },
+          data: {
+            raffleId: raffle.id,
+            status: "APPROVED",
+          },
+        })
+      } catch (linkErr) {
+        console.error("Note: Unable to auto-link listing request with raffle in prisma:", linkErr)
+      }
+      try {
+        await mockPrisma.productListingRequest.update({
+          where: { id: data.listingRequestId },
+          data: {
+            raffleId: raffle.id,
+            status: "APPROVED",
+          },
+        })
+      } catch (mockErr) {
+        console.error("Note: Unable to auto-link listing request with raffle in mockPrisma:", mockErr)
+      }
+    }
 
     return NextResponse.json(raffle)
   } catch (error) {

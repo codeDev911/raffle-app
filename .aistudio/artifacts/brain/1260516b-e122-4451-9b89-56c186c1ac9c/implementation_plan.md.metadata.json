@@ -1,0 +1,6 @@
+{
+  "summary":  "Implementation plan for PakRaffle Merchant Connect & Shopify Lucky Draw Loyalty Engine. Enables e-commerce sellers to connect stores, configure order rules (e.g., buy 4 items for free lucky draw), ingest fulfillment webhooks, and settle ticket batch invoices before live draw finalization.",
+  "updatedAt":  "2026-10-29T08:45:30.428348213Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

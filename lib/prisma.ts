@@ -43,6 +43,7 @@ export interface Raffle {
   specifications: string[]
   rules: string[]
   expenses?: any
+  listingRequestId?: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -107,6 +108,7 @@ export interface ProductListingRequest {
   status: "PENDING" | "UNDER_REVIEW" | "APPROVED" | "REJECTED"
   adminNotes?: string | null
   secureToken?: string | null
+  raffleId?: string | null
   createdAt: Date
   updatedAt: Date
 }

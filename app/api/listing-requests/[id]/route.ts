@@ -26,10 +26,14 @@ export async function GET(
       request = await prisma.productListingRequest.findUnique({
         where: { id },
       })
-    } catch (err) {
-      request = await mockPrisma.productListingRequest.findUnique({
-        where: { id },
-      })
+    } catch (err) {}
+
+    if (!request) {
+      try {
+        request = await mockPrisma.productListingRequest.findUnique({
+          where: { id },
+        })
+      } catch (err) {}
     }
 
     if (!request) {
@@ -82,47 +86,115 @@ export async function GET(
     const statusUrl = `/application/status/${request.id}?token=${secureToken}`
     const detailsUrl = `/application/details/${request.id}?token=${secureToken}`
 
-    // Compute live dashboard analytics
-    const isApproved = request.status === "APPROVED"
-    const totalTickets = Number(request.totalTickets) || 300
-    const ticketPrice = Number(request.ticketPrice) || 1000
-    const totalRevenue = Number(request.totalRevenue) || totalTickets * ticketPrice
-    const platformFee = Number(request.platformFee) || Math.round(totalRevenue * 0.08)
-    const sellerPayout = Number(request.sellerPayout) || totalRevenue - platformFee
-
-    // Realistic ticket sales based on status
-    let soldRatio = 0
-    if (isApproved) {
-      soldRatio = 0.68 // 68% sold out when live
-    } else if (request.status === "UNDER_REVIEW") {
-      soldRatio = 0.12
-    } else {
-      soldRatio = 0
+    // Check for real linked raffle
+    let linkedRaffle: any = null
+    const reqRaffleId = (request as any).raffleId
+    try {
+      if (reqRaffleId) {
+        linkedRaffle = await prisma.raffle.findUnique({
+          where: { id: reqRaffleId },
+        })
+      }
+      if (!linkedRaffle) {
+        linkedRaffle = await prisma.raffle.findFirst({
+          where: { listingRequestId: request.id },
+        })
+      }
+    } catch (lookupErr) {
+      console.warn("Direct raffle lookup threw, falling back to findMany:", lookupErr)
     }
 
-    const soldTickets = Math.min(totalTickets, Math.max(0, Math.round(totalTickets * soldRatio)))
+    if (!linkedRaffle) {
+      try {
+        const allRaffles = await prisma.raffle.findMany()
+        linkedRaffle = allRaffles.find(
+          (r: any) =>
+            r.listingRequestId === request.id ||
+            r.id === reqRaffleId ||
+            (r as any).expenses?.listingRequestId === request.id ||
+            r.title?.trim().toLowerCase() === request.productName?.trim().toLowerCase()
+        )
+      } catch (e) {
+        console.warn("findMany raffle lookup failed:", e)
+      }
+    }
+
+    const isApproved = request.status === "APPROVED"
+    const totalTickets = linkedRaffle
+      ? Number(linkedRaffle.totalEntries) || Number(request.totalTickets) || 1
+      : Number(request.totalTickets) || 300
+    const ticketPrice = linkedRaffle
+      ? Math.round(linkedRaffle.price / 100) || Number(request.ticketPrice) || 1
+      : Number(request.ticketPrice) || 1000
+    const totalRevenue = totalTickets * ticketPrice
+    const platformFee = Math.round(totalRevenue * 0.08)
+    const sellerPayout = totalRevenue - platformFee
+
+    let soldTickets = 0
+    let uniqueBuyers = 0
+    let recentOrders: Array<{
+      name: string
+      city: string
+      tickets: number
+      time: string
+      amount: number
+    }> = []
+
+    if (linkedRaffle) {
+      // Fetch real entries for this raffle
+      const realEntries = await prisma.entry.findMany({
+        where: { raffleId: linkedRaffle.id },
+        include: { user: true },
+        orderBy: { createdAt: "desc" },
+      })
+
+      const entriesTicketCount = realEntries.reduce((sum, e) => sum + (e.quantity || 1), 0)
+      soldTickets = Math.max(entriesTicketCount, linkedRaffle.currentEntries || 0)
+
+      const uniqueUserIds = new Set(realEntries.map((e) => e.userId))
+      uniqueBuyers = uniqueUserIds.size
+
+      const timeAgo = (date: Date | string) => {
+        const diffSec = Math.max(1, Math.floor((Date.now() - new Date(date).getTime()) / 1000))
+        if (diffSec < 60) return "Just now"
+        const diffMin = Math.floor(diffSec / 60)
+        if (diffMin < 60) return `${diffMin} min${diffMin > 1 ? "s" : ""} ago`
+        const diffHr = Math.floor(diffMin / 60)
+        if (diffHr < 24) return `${diffHr} hr${diffHr > 1 ? "s" : ""} ago`
+        return `${Math.floor(diffHr / 24)} days ago`
+      }
+
+      recentOrders = realEntries.slice(0, 10).map((entry) => {
+        const userName = entry.user?.name || "Verified Participant"
+        // Privacy mask name like "Muhammad Z."
+        const nameParts = userName.split(" ")
+        const maskedName =
+          nameParts.length > 1
+            ? `${nameParts[0]} ${nameParts[1][0]}.`
+            : userName
+
+        return {
+          name: maskedName,
+          city: entry.user?.city || request.city || "Pakistan",
+          tickets: entry.quantity || 1,
+          time: timeAgo(entry.createdAt),
+          amount: Math.round((entry.totalCost || (entry.quantity || 1) * linkedRaffle.price) / 100),
+        }
+      })
+    }
+
     const remainingTickets = Math.max(0, totalTickets - soldTickets)
-    const percentageSold = Math.min(100, Math.round((soldTickets / totalTickets) * 100))
+    const percentageSold = totalTickets > 0 ? Math.min(100, Math.round((soldTickets / totalTickets) * 100)) : 0
     const currentGrossRevenue = soldTickets * ticketPrice
     const currentPlatformFee = Math.round(currentGrossRevenue * 0.08)
     const currentSellerPayout = currentGrossRevenue - currentPlatformFee
-    const uniqueBuyers = Math.max(1, Math.round(soldTickets / 2.3))
-
-    // Recent buyer entries for live feed
-    const sampleBuyers = [
-      { name: "Muhammad Z.", city: "Lahore", tickets: 5, time: "8 mins ago", amount: 5 * ticketPrice },
-      { name: "Ahmed R.", city: "Karachi", tickets: 2, time: "24 mins ago", amount: 2 * ticketPrice },
-      { name: "Usman B.", city: "Islamabad", tickets: 10, time: "1 hour ago", amount: 10 * ticketPrice },
-      { name: "Hamza T.", city: "Rawalpindi", tickets: 1, time: "2 hours ago", amount: 1 * ticketPrice },
-      { name: "Fatima S.", city: "Faisalabad", tickets: 4, time: "3 hours ago", amount: 4 * ticketPrice },
-      { name: "Bilal K.", city: "Multan", tickets: 3, time: "5 hours ago", amount: 3 * ticketPrice },
-      { name: "Zainab N.", city: "Peshawar", tickets: 2, time: "7 hours ago", amount: 2 * ticketPrice },
-      { name: "Tariq M.", city: "Sialkot", tickets: 6, time: "11 hours ago", amount: 6 * ticketPrice },
-    ]
-    const recentOrders = isApproved ? sampleBuyers : []
+    const publicRaffleUrl = linkedRaffle ? `/raffles/${linkedRaffle.id}` : null
 
     const analytics = {
       isApproved,
+      isLaunched: Boolean(linkedRaffle),
+      raffleId: linkedRaffle?.id || null,
+      publicRaffleUrl,
       status: request.status,
       totalTickets,
       soldTickets,
@@ -136,12 +208,20 @@ export async function GET(
       currentGrossRevenue,
       currentPlatformFee,
       currentSellerPayout,
-      uniqueBuyers: isApproved ? uniqueBuyers : 0,
+      uniqueBuyers,
       recentOrders,
-      settlementStatus: isApproved ? "HELD_IN_ESCROW" : "PENDING_APPROVAL",
+      settlementStatus: linkedRaffle
+        ? "HELD_IN_ESCROW"
+        : isApproved
+        ? "APPROVED_FOR_LAUNCH"
+        : "PENDING_APPROVAL",
       payoutMethod: "Raast / Direct IBFT to Seller Account",
       custodyLocation: `${request.city || "Lahore"} Central Hub & Verification Facility`,
-      inspectionStatus: isApproved ? "VERIFIED & INSURED" : "PENDING_INSPECTION",
+      inspectionStatus: linkedRaffle
+        ? "VERIFIED & INSURED"
+        : isApproved
+        ? "VERIFIED"
+        : "PENDING_INSPECTION",
     }
 
     return NextResponse.json(
@@ -154,10 +234,10 @@ export async function GET(
       },
       { headers: noCacheHeaders }
     )
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching listing request detail:", error)
     return NextResponse.json(
-      { success: false, error: "Failed to fetch request detail" },
+      { success: false, error: error?.message || String(error) },
       { status: 500, headers: noCacheHeaders }
     )
   }
@@ -177,10 +257,14 @@ export async function PATCH(
       existing = await prisma.productListingRequest.findUnique({
         where: { id },
       })
-    } catch (err) {
-      existing = await mockPrisma.productListingRequest.findUnique({
-        where: { id },
-      })
+    } catch (err) {}
+
+    if (!existing) {
+      try {
+        existing = await mockPrisma.productListingRequest.findUnique({
+          where: { id },
+        })
+      } catch (err) {}
     }
 
     if (!existing) {
@@ -204,11 +288,15 @@ export async function PATCH(
         where: { id },
         data: dataToUpdate,
       })
-    } catch (err) {
-      updated = await mockPrisma.productListingRequest.update({
-        where: { id },
-        data: dataToUpdate,
-      })
+    } catch (err) {}
+
+    if (!updated) {
+      try {
+        updated = await mockPrisma.productListingRequest.update({
+          where: { id },
+          data: dataToUpdate,
+        })
+      } catch (err) {}
     }
 
     const secureToken = updated?.secureToken || ""
