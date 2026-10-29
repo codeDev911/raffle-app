@@ -44,6 +44,10 @@ export function publicBaseUrl(req: Request): string {
   return configured || new URL(req.url).origin
 }
 
-export function webhookUrlFor(req: Request): string {
-  return `${publicBaseUrl(req)}/api/merchants/webhooks/shopify`
+export function webhookUrlFor(req: Request, storeId?: string | null): string {
+  const base = `${publicBaseUrl(req)}/api/merchants/webhooks/shopify`
+  // Scope the URL to the store id. Shopify keeps sending the shop's .myshopify.com domain in
+  // X-Shopify-Shop-Domain, which can be the OLD domain after a rename (it just redirects).
+  // Pinning ?store=<id> lets the handler resolve the right store even when the domain differs.
+  return storeId ? `${base}?store=${encodeURIComponent(storeId)}` : base
 }

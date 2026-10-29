@@ -212,11 +212,12 @@ export interface WebhookResult {
 }
 
 async function processWebhook(input: WebhookInput, options: IngestOptions): Promise<WebhookResult> {
-  const store = input.shopDomain
-    ? await findStoreByDomain(input.shopDomain)
-    : input.storeId
-      ? await getStoreById(input.storeId)
-      : null
+  // Prefer the exact shop domain, then fall back to the explicit ?store=<id> scope. The fallback
+  // matters for renamed stores: Shopify may still send the OLD .myshopify.com domain (which just
+  // redirects), but the store-scoped webhook URL pins the delivery to the correct store.
+  const store =
+    (input.shopDomain ? await findStoreByDomain(input.shopDomain) : null) ??
+    (input.storeId ? await getStoreById(input.storeId) : null)
   if (!store) throw notFound("Connected store")
 
   // Authenticate before revealing anything about the store or the payload.

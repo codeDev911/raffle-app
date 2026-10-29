@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     return ok({
       store: toStoreDTO(store),
       integration: {
-        webhookUrl: webhookUrlFor(req),
+        webhookUrl: webhookUrlFor(req, store.id),
         topics: ["orders/fulfilled", "orders/cancelled", "refunds/create"],
         entryFee: MERCHANT_ENTRY_FEE_PKR,
         storage: await getMerchantDbMode(),

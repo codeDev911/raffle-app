@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       {
         store: dto,
         credentials: { apiKey, webhookSecret },
-        webhookUrl: webhookUrlFor(req),
+        webhookUrl: webhookUrlFor(req, store.id),
         entryFee: MERCHANT_ENTRY_FEE_PKR,
       },
       201,
