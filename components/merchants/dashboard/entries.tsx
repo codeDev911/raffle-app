@@ -1,11 +1,12 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { RefreshCw, Search, Ticket } from "lucide-react"
+import { RefreshCw, Search, Ticket, Wallet } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Alert, Btn, EmptyState, Panel, PanelHeader, SelectInput, TextInput, formatNumber, merchantApi } from "../ui"
+import { EntryPaymentDialog } from "./entry-payment"
 import { EntriesTable } from "./shared"
-import type { CampaignDTO, EntryDTO } from "./types"
+import type { CampaignDTO, EntryDTO, SettlementAccount } from "./types"
 
 const POLL_MS = 15_000
 
@@ -45,12 +46,25 @@ export function useEntryFeed(params: Record<string, string | undefined>, refresh
   return { entries, total, loading, error, reload: load }
 }
 
-export function EntriesTab({ campaigns, refreshKey }: { campaigns: CampaignDTO[]; refreshKey: number }) {
+export function EntriesTab({
+  campaigns,
+  settlementAccounts,
+  entryFee,
+  refreshKey,
+  onSettled,
+}: {
+  campaigns: CampaignDTO[]
+  settlementAccounts: SettlementAccount[]
+  entryFee: number
+  refreshKey: number
+  onSettled: () => Promise<void> | void
+}) {
   const [campaignId, setCampaignId] = useState("")
   const [status, setStatus] = useState("")
   const [searchInput, setSearchInput] = useState("")
   const [search, setSearch] = useState("")
   const [includeTest, setIncludeTest] = useState(true)
+  const [paying, setPaying] = useState<EntryDTO | null>(null)
 
   // Debounce free-text search so typing doesn't fire a request per keystroke.
   useEffect(() => {
@@ -63,6 +77,10 @@ export function EntriesTab({ campaigns, refreshKey }: { campaigns: CampaignDTO[]
     refreshKey,
   )
   const titles = Object.fromEntries(campaigns.map((c) => [c.id, c.title]))
+  const prices = Object.fromEntries(campaigns.map((c) => [c.id, c.ticketPrice]))
+
+  // Tickets still waiting for money: not on a batch invoice, not simulated, not yet settled.
+  const canPay = (entry: EntryDTO) => entry.status === "ISSUED" && !entry.invoiceId && !entry.isTest
 
   return (
     <Panel>
@@ -71,6 +89,7 @@ export function EntriesTab({ campaigns, refreshKey }: { campaigns: CampaignDTO[]
         description={
           <>
             <span className="font-mono tabular-nums text-slate-300">{formatNumber(total)}</span> ticket{total === 1 ? "" : "s"} match
+            <span className="px-1.5 text-slate-600">·</span>pay any ticket on its own, or settle the batch later
             <span className="px-1.5 text-slate-600">·</span>auto-refreshes every 15s
           </>
         }
@@ -126,11 +145,35 @@ export function EntriesTab({ campaigns, refreshKey }: { campaigns: CampaignDTO[]
       <EntriesTable
         entries={entries}
         campaignTitles={titles}
+        renderActions={(entry) =>
+          canPay(entry) ? (
+            <Btn
+              variant="secondary"
+              className="min-h-0 px-3 py-1.5 text-xs"
+              onClick={() => setPaying(entry)}
+            >
+              <Wallet className="h-3.5 w-3.5 text-emerald-400" /> Pay now
+            </Btn>
+          ) : entry.status === "ISSUED" && entry.invoiceId ? (
+            <span className="text-[11px] text-slate-500">On invoice</span>
+          ) : null
+        }
         emptyState={
           <EmptyState icon={Ticket} title={loading ? "Loading tickets…" : "No tickets yet"}>
             {!loading && "Tickets appear here as soon as Shopify reports a qualifying fulfilled order. Try the simulator to see one."}
           </EmptyState>
         }
+      />
+
+      <EntryPaymentDialog
+        entry={paying}
+        amount={paying ? prices[paying.campaignId] ?? entryFee : entryFee}
+        settlementAccounts={settlementAccounts}
+        onClose={() => setPaying(null)}
+        onSubmitted={async () => {
+          await onSettled()
+          await reload()
+        }}
       />
     </Panel>
   )

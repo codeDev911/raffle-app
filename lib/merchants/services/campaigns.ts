@@ -1,5 +1,5 @@
 // Campaign builder: create, list and lifecycle controls for merchant lucky-draw campaigns.
-import { MERCHANT_ENTRY_FEE_PKR } from "../config"
+import { merchantTicketPrice } from "../config"
 import { getMerchantDb } from "../db"
 import { toCampaignDTO } from "../dto"
 import { MerchantError, conflict, notFound } from "../errors"
@@ -63,9 +63,13 @@ export async function createCampaign(store: MerchantStore, input: unknown) {
   if (data.endDate.getTime() <= now.getTime()) throw new MerchantError("End date must be in the future")
   if (data.endDate.getTime() <= startDate.getTime()) throw new MerchantError("End date must be after the start date")
 
+  // A linked raffle is billed at its own ticket price; campaigns without a prize fall back
+  // to the flat platform fee.
+  let raffleTicketPrice: number | null = null
   if (data.raffleId) {
     const prize = await getActivePrize(data.raffleId)
     if (!prize) throw new MerchantError("Selected prize is no longer available", 400, "INVALID_PRIZE")
+    raffleTicketPrice = prize.ticketPricePkr
   }
 
   const db = await getMerchantDb()
@@ -86,8 +90,8 @@ export async function createCampaign(store: MerchantStore, input: unknown) {
       minQuantity: needsQty ? data.minQuantity : null,
       minAmount: needsAmt ? data.minAmount : null,
       productFilters: data.productFilters,
-      // Platform fee is locked at creation so later price changes never alter running campaigns.
-      ticketPrice: MERCHANT_ENTRY_FEE_PKR,
+      // Price is snapshotted at creation so later raffle or fee changes never alter running campaigns.
+      ticketPrice: merchantTicketPrice(raffleTicketPrice),
       maxEntries: data.maxEntries ?? null,
       startDate,
       endDate: data.endDate,

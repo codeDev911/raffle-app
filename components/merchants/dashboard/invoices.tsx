@@ -255,7 +255,8 @@ function InvoiceDetailDialog({
                 <Sep />
                 {PAYMENT_METHOD_LABELS[invoice.paymentMethod || ""] || invoice.paymentMethod}
                 <Sep />
-                ref <span className="font-mono">{invoice.transactionRef}</span>. PakRaffle is verifying it — usually within a few hours.
+                ref <span className="font-mono">{invoice.transactionRef}</span>. One payment per customer is now waiting in
+                PakRaffle&apos;s confirmation queue — usually a few hours. Wrong reference? Resubmit below.
               </Alert>
             )}
 
@@ -265,7 +266,7 @@ function InvoiceDetailDialog({
               </a>
             )}
 
-            {invoice.status === "PENDING" && (
+            {(invoice.status === "PENDING" || invoice.status === "UNDER_REVIEW") && (
               <form onSubmit={submit} className="space-y-4 border-t border-slate-800 pt-5">
                 {invoice.adminNotes && (
                   <Alert>
@@ -345,7 +346,7 @@ function InvoiceDetailDialog({
                 {submitError && <Alert>{submitError}</Alert>}
 
                 <Btn type="submit" className="w-full" loading={submitting} disabled={uploading}>
-                  Submit payment for verification
+                  {invoice.status === "UNDER_REVIEW" ? "Resubmit payment details" : "Submit payment for verification"}
                 </Btn>
               </form>
             )}

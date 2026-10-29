@@ -36,6 +36,8 @@ export interface PrizeDTO {
   image: string | null
   category: string | null
   prizeValuePkr: number
+  /** What one ticket in this raffle costs (whole PKR) — the merchant's per-ticket price. */
+  ticketPricePkr: number
   endDate: string | null
 }
 

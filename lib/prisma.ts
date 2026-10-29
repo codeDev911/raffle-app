@@ -63,7 +63,16 @@ export interface Payment {
   userId: string
   amount: number
   currency: string
-  method: "EASYPAISA" | "JAZZCASH" | "CARD" | "NAYAPAY" | "SAYAPAY" | "MEZAN"
+  method:
+    | "EASYPAISA"
+    | "JAZZCASH"
+    | "CARD"
+    | "NAYAPAY"
+    | "SAYAPAY"
+    | "MEZAN"
+    | "RAAST"
+    | "IBFT"
+    | "SADAPAY"
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED"
   transactionId?: string | null
   gatewayRef?: string | null

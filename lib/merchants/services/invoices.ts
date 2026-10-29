@@ -1,4 +1,6 @@
 // Batch invoice settlement: close a campaign, bill its fulfilled entries, collect payment proof.
+// Submitting the batch opens one PakRaffle payment per customer ticket, so the batch is verified
+// from /admin/payments exactly like an individually paid entry.
 import { getSettlementAccounts } from "../config"
 import { getMerchantDb, type MerchantDb } from "../db"
 import { toEntryDTO, toInvoiceDTO } from "../dto"
@@ -7,6 +9,7 @@ import type { MerchantCampaign, MerchantEntry, MerchantInvoice, MerchantStore } 
 import { generateInvoiceNumber } from "../utils"
 import { generateInvoiceSchema, submitPaymentSchema } from "../validators"
 import { getOwnedCampaign } from "./campaigns"
+import { settleInvoiceEntries } from "./entry-payments"
 
 const INVOICEABLE_STATUSES = ["ACTIVE", "PAUSED"]
 
@@ -126,12 +129,36 @@ export async function getInvoiceDetail(invoiceId: string, storeId?: string) {
   }
 }
 
+/**
+ * Records the merchant's transfer for a batch. Each open ticket gets its own payment under the
+ * Shopify customer's account (one per customer) and moves to INVOICED, awaiting confirmation in
+ * /admin/payments. Re-submitting after a failed transfer re-arms the same payment rows.
+ */
 export async function submitInvoicePayment(store: MerchantStore, invoiceId: string, input: unknown) {
   const data = submitPaymentSchema.parse(input)
   const db = await getMerchantDb()
 
-  const { count } = await db.merchantInvoice.updateMany({
-    where: { id: invoiceId, storeId: store.id, status: "PENDING" },
+  const invoice: MerchantInvoice | null = await db.merchantInvoice.findFirst({
+    where: { id: invoiceId, storeId: store.id },
+  })
+  if (!invoice) throw notFound("Invoice")
+  if (invoice.status === "PAID") throw conflict("This invoice has already been settled")
+  if (invoice.status !== "PENDING" && invoice.status !== "UNDER_REVIEW") {
+    throw conflict("This invoice is not awaiting payment")
+  }
+
+  const entries: MerchantEntry[] = await db.merchantEntry.findMany({
+    where: { invoiceId: invoice.id, status: { in: ["ISSUED", "INVOICED"] } },
+  })
+  if (entries.length === 0) {
+    throw new MerchantError("This invoice has no open tickets left to settle", 400, "NOTHING_TO_SETTLE")
+  }
+
+  const campaign: MerchantCampaign | null = await db.merchantCampaign.findUnique({ where: { id: invoice.campaignId } })
+  await settleInvoiceEntries(store, invoice, campaign, entries, data)
+
+  await db.merchantInvoice.update({
+    where: { id: invoice.id },
     data: {
       status: "UNDER_REVIEW",
       paymentMethod: data.paymentMethod,
@@ -140,10 +167,5 @@ export async function submitInvoicePayment(store: MerchantStore, invoiceId: stri
       submittedAt: new Date(),
     },
   })
-  if (count === 0) {
-    const exists = await db.merchantInvoice.findFirst({ where: { id: invoiceId, storeId: store.id } })
-    if (!exists) throw notFound("Invoice")
-    throw conflict("This invoice is not awaiting payment")
-  }
   return getInvoiceDetail(invoiceId, store.id)
 }

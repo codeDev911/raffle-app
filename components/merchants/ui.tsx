@@ -80,7 +80,7 @@ const STATUS_TONE: Record<string, { dot: string; text: string; label?: string }>
   PENDING: { dot: "bg-amber-400", text: "text-amber-300", label: "Awaiting payment" },
   PENDING_INVOICE: { dot: "bg-amber-400", text: "text-amber-300", label: "Invoice pending" },
   UNDER_REVIEW: { dot: "bg-sky-400", text: "text-sky-300", label: "Under review" },
-  INVOICED: { dot: "bg-sky-400", text: "text-sky-300" },
+  INVOICED: { dot: "bg-sky-400", text: "text-sky-300", label: "Awaiting confirmation" },
   DRAW_READY: { dot: "bg-violet-400", text: "text-violet-300", label: "Ready for draw" },
   COMPLETED: { dot: "bg-slate-400", text: "text-slate-300", label: "Draw completed" },
   CANCELLED: { dot: "bg-rose-400", text: "text-rose-300" },

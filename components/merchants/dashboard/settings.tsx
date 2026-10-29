@@ -138,7 +138,8 @@ export function SettingsTab({
         </div>
         <div className="grid gap-3 border-t border-slate-800 px-5 py-4 text-xs text-slate-500 sm:grid-cols-3">
           <p>
-            Ticket fee <span className="font-mono tabular-nums text-slate-300">{formatPKR(me.integration.entryFee)}</span>
+            Base ticket fee <span className="font-mono tabular-nums text-slate-300">{formatPKR(me.integration.entryFee)}</span>
+            <span className="text-slate-600"> · linked raffles use their own price</span>
           </p>
           <p>
             API key <span className="font-mono text-slate-300">{me.store.apiKeyPrefix}</span>

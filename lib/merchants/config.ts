@@ -2,7 +2,15 @@
 // Settlement accounts reuse the same env vars as the retail checkout (/payment/pay)
 // so merchants and ticket buyers always pay into the same verified PakRaffle accounts.
 
+// The flat per-ticket fee is only a fallback for campaigns that are not tied to a PakRaffle
+// raffle; a linked raffle is billed at its own ticket price.
 export const MERCHANT_ENTRY_FEE_PKR = Math.max(1, Number(process.env.MERCHANT_ENTRY_FEE_PKR) || 250)
+
+/** What one minted ticket costs the merchant, in whole PKR. */
+export function merchantTicketPrice(raffleTicketPricePkr?: number | null): number {
+  const price = Math.round(Number(raffleTicketPricePkr) || 0)
+  return price > 0 ? price : MERCHANT_ENTRY_FEE_PKR
+}
 
 export const MERCHANT_SESSION_COOKIE = "merchant_session"
 

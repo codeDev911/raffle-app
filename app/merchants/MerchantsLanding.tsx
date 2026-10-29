@@ -120,8 +120,9 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
           </div>
 
           <p className="mt-6 text-sm text-slate-500">
-            Free to connect <Sep /> <span className="font-mono tabular-nums text-slate-300">{formatPKR(entryFee)}</span> per
-            ticket <Sep /> billed only on fulfilled orders
+            Free to connect <Sep /> from{" "}
+            <span className="font-mono tabular-nums text-slate-300">{formatPKR(entryFee)}</span> per ticket
+            <Sep /> each raffle sets its own rate <Sep /> billed only on fulfilled orders
           </p>
 
           {/* Live ticket illustration */}

@@ -23,6 +23,7 @@ import type {
 } from "../types"
 import { generateTicketNumber, normalizePhone } from "../utils"
 import { simulateOrderSchema } from "../validators"
+import { voidOpenEntryPayment } from "./entry-payments"
 import { findStoreByDomain, getStoreById } from "./stores"
 
 const TEST_ORDER_PREFIX = "TEST-"
@@ -187,7 +188,11 @@ export async function cancelOrderEntries(store: MerchantStore, shopifyOrderId: s
       }
       return "cancelled"
     })
-    if (outcome === "cancelled") result.cancelled++
+    if (outcome === "cancelled") {
+      result.cancelled++
+      // The ticket is void, so any payment submitted for it must not be confirmable any more.
+      await voidOpenEntryPayment(candidate)
+    }
     if (outcome === "locked") result.locked++
   }
   return result

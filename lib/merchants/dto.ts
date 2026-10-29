@@ -10,6 +10,8 @@ export interface PrizeSummary {
   image: string | null
   category: string | null
   prizeValuePkr: number
+  /** What a retail buyer pays for one ticket in this raffle, whole PKR. 0 when unset. */
+  ticketPricePkr: number
   endDate: Date | null
 }
 
@@ -108,15 +110,34 @@ export function toInvoiceDTO(invoice: MerchantInvoice, extras: { campaignTitle?:
   }
 }
 
+/** Where the shopper's ticket actually stands, expressed in the customer's terms. */
+export type PublicTicketStage = "PAYMENT_PENDING" | "AWAITING_CONFIRMATION" | "CONFIRMED" | "VOIDED"
+
+function publicStage(entry: MerchantEntry, paymentStatus?: string | null): PublicTicketStage {
+  if (entry.status === "CANCELLED") return "VOIDED"
+  if (entry.status === "PAID" || paymentStatus === "COMPLETED") return "CONFIRMED"
+  // A payment row exists but PakRaffle has not confirmed it yet.
+  if (paymentStatus === "PENDING" || paymentStatus === "PROCESSING") return "AWAITING_CONFIRMATION"
+  // The store has not paid for this ticket yet (individually or via its batch invoice).
+  return "PAYMENT_PENDING"
+}
+
 /** Public, privacy-safe view of a ticket for the customer lookup page. */
 export function toPublicTicketDTO(
   entry: MerchantEntry,
-  ctx: { storeName: string; campaign?: MerchantCampaign | null; prize?: PrizeSummary | null },
+  ctx: {
+    storeName: string
+    campaign?: MerchantCampaign | null
+    prize?: PrizeSummary | null
+    /** Status of this ticket's PakRaffle payment row, when one exists. */
+    paymentStatus?: string | null
+  },
 ) {
   const campaign = ctx.campaign
   return {
     ticketNumber: entry.ticketNumber,
     status: entry.status,
+    stage: publicStage(entry, ctx.paymentStatus),
     orderName: entry.orderName ?? null,
     customerName: maskName(entry.customerName),
     customerPhone: maskPhone(entry.customerPhone),

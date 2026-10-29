@@ -114,16 +114,6 @@ export const simulateOrderSchema = z.object({
   sku: z.string().trim().max(64).optional(),
 })
 
-export const adminReviewInvoiceSchema = z
-  .object({
-    action: z.enum(["approve", "reject"]),
-    adminNotes: optionalText(500),
-  })
-  .refine((v) => v.action !== "reject" || Boolean(v.adminNotes), {
-    message: "A reason is required when rejecting a payment",
-    path: ["adminNotes"],
-  })
-
 export const adminStoreStatusSchema = z.object({
   status: z.enum(["ACTIVE", "PAUSED"]),
 })

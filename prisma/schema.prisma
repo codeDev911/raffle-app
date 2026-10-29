@@ -138,6 +138,9 @@ enum PaymentMethod {
   NAYAPAY
   SAYAPAY
   MEZAN
+  RAAST
+  IBFT
+  SADAPAY
 }
 
 enum PaymentStatus {

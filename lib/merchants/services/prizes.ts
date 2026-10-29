@@ -31,6 +31,8 @@ function toPrize(raffle: any): PrizeSummary {
     category: raffle.category ?? null,
     // Raffle prices are stored in paisa; Merchant Connect works in whole PKR.
     prizeValuePkr: Math.round(Number(raffle.realPrice || raffle.price || 0) / 100),
+    // Raffle.price is the ticket price a retail buyer pays, not the prize's market value.
+    ticketPricePkr: Math.max(0, Math.round(Number(raffle.price || 0) / 100)),
     endDate: raffle.endDate ? new Date(raffle.endDate) : null,
   }
 }

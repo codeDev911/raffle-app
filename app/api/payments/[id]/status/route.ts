@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { settleMerchantPayment } from "@/lib/merchants/services/entry-payments"
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -24,6 +25,20 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     // Prevent updating completed or refunded payments
     if (["COMPLETED", "REFUNDED"].includes(existingPayment.status)) {
       return NextResponse.json({ error: "Cannot update completed or refunded payments" }, { status: 400 })
+    }
+
+    // Merchant Connect payments settle their ticket *before* the status flips: if confirmation
+    // fails the payment stays open and can be retried, instead of a paid ticket being locked out.
+    if (status === "COMPLETED") {
+      try {
+        await settleMerchantPayment(params.id)
+      } catch (error) {
+        console.error("[MerchantConnect] settlement failed:", error)
+        return NextResponse.json(
+          { error: "Could not confirm this merchant entry. Please retry." },
+          { status: 500 },
+        )
+      }
     }
 
     // Update payment status

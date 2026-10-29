@@ -12,7 +12,9 @@ import {
   ArrowRight,
   CalendarDays,
   CheckCircle2,
+  Clock,
   Gift,
+  Hourglass,
   Loader2,
   Search,
   ShieldQuestion,
@@ -28,6 +30,8 @@ const WHATSAPP_INTL = "923377155722"
 interface PublicTicket {
   ticketNumber: string
   status: "ISSUED" | "INVOICED" | "PAID" | "CANCELLED"
+  /** Keep in sync with PublicTicketStage in lib/merchants/dto.ts */
+  stage: "PAYMENT_PENDING" | "AWAITING_CONFIRMATION" | "CONFIRMED" | "VOIDED"
   orderName: string | null
   customerName: string
   customerPhone: string | null
@@ -42,11 +46,12 @@ interface PublicTicket {
   issuedAt: string
 }
 
-const TICKET_TONE: Record<string, { label: string; className: string; icon: any }> = {
-  ISSUED: { label: "Active entry", className: "bg-emerald-100 text-emerald-800", icon: CheckCircle2 },
-  INVOICED: { label: "Active entry", className: "bg-emerald-100 text-emerald-800", icon: CheckCircle2 },
-  PAID: { label: "Confirmed entry", className: "bg-emerald-100 text-emerald-800", icon: CheckCircle2 },
-  CANCELLED: { label: "Voided", className: "bg-rose-100 text-rose-800", icon: XCircle },
+// The stage, not the raw ledger status, is what a shopper can act on.
+const STAGE_TONE: Record<PublicTicket["stage"], { label: string; className: string; icon: any }> = {
+  PAYMENT_PENDING: { label: "Awaiting store confirmation", className: "bg-amber-100 text-amber-900", icon: Clock },
+  AWAITING_CONFIRMATION: { label: "Confirming payment", className: "bg-sky-100 text-sky-800", icon: Hourglass },
+  CONFIRMED: { label: "Confirmed entry", className: "bg-emerald-100 text-emerald-800", icon: CheckCircle2 },
+  VOIDED: { label: "Voided", className: "bg-rose-100 text-rose-800", icon: XCircle },
 }
 
 const formatDate = (value: string | null) =>
@@ -163,9 +168,9 @@ export default function StoreTicketLookupClient() {
 }
 
 function TicketCard({ ticket }: { ticket: PublicTicket }) {
-  const tone = TICKET_TONE[ticket.status] || TICKET_TONE.ISSUED
+  const tone = STAGE_TONE[ticket.stage] || STAGE_TONE.PAYMENT_PENDING
   const Icon = tone.icon
-  const voided = ticket.status === "CANCELLED"
+  const voided = ticket.stage === "VOIDED"
 
   return (
     <Card className={`border-gray-200 shadow-sm overflow-hidden ${voided ? "opacity-80" : ""}`}>
@@ -229,23 +234,42 @@ function TicketCard({ ticket }: { ticket: PublicTicket }) {
 
         {voided ? (
           <p className="text-xs text-rose-700">
-            This ticket was voided because the order was cancelled or refunded before the batch was settled.
-          </p>
-        ) : ticket.drawnAt ? (
-          <p className="text-xs text-gray-600 inline-flex items-center gap-1.5">
-            <CalendarDays className="w-3.5 h-3.5" /> Draw held on {formatDate(ticket.drawnAt)}.{" "}
-            <Link href="/winners" className="text-emerald-700 font-semibold hover:underline">
-              See winners
-            </Link>
+            This ticket was voided because the order was cancelled or refunded before the store settled it.
           </p>
         ) : (
-          <p className="text-xs text-gray-600 inline-flex items-center gap-1.5">
-            <CalendarDays className="w-3.5 h-3.5" /> Your entry is live in the draw pool. Results are announced on the{" "}
-            <Link href="/winners" className="text-emerald-700 font-semibold hover:underline">
-              winners page
-            </Link>{" "}
-            and PakRaffle WhatsApp.
-          </p>
+          <div className="space-y-1.5">
+            {ticket.stage === "PAYMENT_PENDING" && (
+              <p className="text-xs text-amber-800 inline-flex items-start gap-1.5">
+                <Clock className="mt-0.5 w-3.5 h-3.5 shrink-0" />
+                Waiting for {ticket.storeName} team to confirm your entry. Your ticket is reserved — the draw entry activates
+                as soon as the store settles it.
+              </p>
+            )}
+            {ticket.stage === "AWAITING_CONFIRMATION" && (
+              <p className="text-xs text-sky-800 inline-flex items-start gap-1.5">
+                <Hourglass className="mt-0.5 w-3.5 h-3.5 shrink-0" />
+                The store has submitted payment — PakRaffle is confirming your entry. This usually takes a few hours.
+              </p>
+            )}
+            {ticket.drawnAt ? (
+              <p className="text-xs text-gray-600 inline-flex items-center gap-1.5">
+                <CalendarDays className="w-3.5 h-3.5" /> Draw held on {formatDate(ticket.drawnAt)}.{" "}
+                <Link href="/winners" className="text-emerald-700 font-semibold hover:underline">
+                  See winners
+                </Link>
+              </p>
+            ) : (
+              <p className="text-xs text-gray-600 inline-flex items-center gap-1.5">
+                <CalendarDays className="w-3.5 h-3.5" />{" "}
+                {ticket.stage === "CONFIRMED" ? "Your entry is live in the draw pool. " : ""}
+                Results are announced on the{" "}
+                <Link href="/winners" className="text-emerald-700 font-semibold hover:underline">
+                  winners page
+                </Link>{" "}
+                and PakRaffle WhatsApp.
+              </p>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

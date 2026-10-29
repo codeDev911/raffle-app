@@ -96,7 +96,7 @@ export function CampaignsTab({
       <Panel>
         <PanelHeader
           title="Active Campaigns"
-          description={`Each qualifying fulfilled order mints one ticket · ${formatPKR(entryFee)} per ticket, billed per batch`}
+          description="Each qualifying fulfilled order mints one ticket · billed per batch at the linked raffle's ticket price"
           action={
             <Btn onClick={() => setBuilderOpen(true)} disabled={!storeActive}>
               <Plus className="h-4 w-4" /> New campaign
@@ -134,6 +134,8 @@ export function CampaignsTab({
                         )}
                         <Sep />
                         Draw {formatDate(c.endDate)}
+                        <Sep />
+                        <span className="font-mono tabular-nums">{formatPKR(c.ticketPrice)}</span> / ticket
                       </p>
                       {editable && c.billableEntries > 0 && (
                         <p className="text-xs text-slate-400">
@@ -289,6 +291,8 @@ function CampaignBuilderDialog({
     productFilters: filters,
   })
   const selectedPrize = prizes?.find((p) => p.id === form.raffleId) || null
+  // A linked raffle is billed at its own ticket price; the flat fee only applies without a prize.
+  const ticketPrice = selectedPrize?.ticketPricePkr || entryFee
 
   const choosePrize = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const prize = prizes?.find((p) => p.id === e.target.value)
@@ -369,6 +373,10 @@ function CampaignBuilderDialog({
                   {selectedPrize.category || "Prize"}
                   <Sep />
                   <span className="font-mono tabular-nums">{formatPKR(selectedPrize.prizeValuePkr)}</span>
+                </p>
+                <p className="mt-0.5 text-[11px] text-slate-500">
+                  {selectedPrize.ticketPricePkr > 0 ? "Ticket price" : "Base ticket fee"}{" "}
+                  <span className="font-mono tabular-nums text-emerald-300">{formatPKR(ticketPrice)}</span>
                 </p>
               </div>
             </div>
@@ -466,11 +474,11 @@ function CampaignBuilderDialog({
             <p className="text-slate-500">Rule preview</p>
             <p className="mt-1 text-sm font-medium text-emerald-300">{preview}</p>
             <p className="mt-2 text-slate-500">
-              <span className="font-mono tabular-nums text-slate-300">{formatPKR(entryFee)}</span> per ticket
+              <span className="font-mono tabular-nums text-slate-300">{formatPKR(ticketPrice)}</span> per ticket
               <Sep />
               {form.capped && Number(form.maxEntries) > 0 ? (
                 <>
-                  max <span className="font-mono tabular-nums text-slate-300">{formatPKR(entryFee * Number(form.maxEntries))}</span> at cap
+                  max <span className="font-mono tabular-nums text-slate-300">{formatPKR(ticketPrice * Number(form.maxEntries))}</span> at cap
                 </>
               ) : (
                 "no entry cap"

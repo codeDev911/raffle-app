@@ -48,11 +48,14 @@ export function EntriesTable({
   campaignTitles,
   emptyState,
   dense = false,
+  renderActions,
 }: {
   entries: EntryDTO[]
   campaignTitles: Record<string, string>
   emptyState: React.ReactNode
   dense?: boolean
+  /** Per-row settlement control (only the Entries tab bills tickets). */
+  renderActions?: (entry: EntryDTO) => React.ReactNode
 }) {
   if (entries.length === 0) return <>{emptyState}</>
   return (
@@ -67,6 +70,7 @@ export function EntriesTable({
             {!dense && <th className="px-3 py-2.5 font-medium">Campaign</th>}
             <th className="px-3 py-2.5 font-medium">Status</th>
             <th className="px-5 py-2.5 text-right font-medium">Minted</th>
+            {renderActions && <th className="px-5 py-2.5 text-right font-medium">Payment</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-800/70">
@@ -104,6 +108,7 @@ export function EntriesTable({
               <td className="whitespace-nowrap px-5 py-3 text-right text-xs text-slate-500" title={new Date(entry.createdAt).toLocaleString()}>
                 {timeAgo(entry.createdAt)}
               </td>
+              {renderActions && <td className="whitespace-nowrap px-5 py-3 text-right">{renderActions(entry)}</td>}
             </tr>
           ))}
         </tbody>

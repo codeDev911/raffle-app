@@ -1,10 +1,12 @@
-// PakRaffle admin operations: settlement review and campaign draws.
+// PakRaffle admin operations: campaign draws and store governance.
+// Payment confirmation is NOT handled here — merchant payments land in Admin → Payments
+// and are confirmed there, which then settles the matching tickets.
 import crypto from "crypto"
 import { getMerchantDb, type MerchantDb } from "../db"
 import { toEntryDTO, toInvoiceDTO, toStoreDTO } from "../dto"
 import { MerchantError, conflict, notFound } from "../errors"
 import type { MerchantCampaign, MerchantEntry, MerchantInvoice, MerchantStore } from "../types"
-import { adminReviewInvoiceSchema, adminStoreStatusSchema } from "../validators"
+import { adminStoreStatusSchema } from "../validators"
 import { decorateCampaigns } from "./campaigns"
 import { setStoreStatus } from "./stores"
 
@@ -56,45 +58,6 @@ export async function adminOverview() {
       toInvoiceDTO(i, { campaignTitle: campaignTitles.get(i.campaignId), storeName: storeNames.get(i.storeId) }),
     ),
   }
-}
-
-/** Approve: invoice PAID, its tickets PAID, campaign DRAW_READY. Reject: back to PENDING with a note. */
-export async function adminReviewInvoice(invoiceId: string, input: unknown) {
-  const data = adminReviewInvoiceSchema.parse(input)
-  const db = await getMerchantDb()
-
-  await db.$transaction(async (tx: MerchantDb) => {
-    const invoice: MerchantInvoice | null = await tx.merchantInvoice.findUnique({ where: { id: invoiceId } })
-    if (!invoice) throw notFound("Invoice")
-
-    if (data.action === "reject") {
-      const { count } = await tx.merchantInvoice.updateMany({
-        where: { id: invoice.id, status: "UNDER_REVIEW" },
-        data: { status: "PENDING", adminNotes: data.adminNotes },
-      })
-      if (count === 0) throw conflict("Only invoices under review can be rejected")
-      return
-    }
-
-    // Admins may also approve a PENDING invoice when payment was confirmed out-of-band.
-    const { count } = await tx.merchantInvoice.updateMany({
-      where: { id: invoice.id, status: { in: ["PENDING", "UNDER_REVIEW"] } },
-      data: { status: "PAID", paidAt: new Date(), adminNotes: data.adminNotes },
-    })
-    if (count === 0) throw conflict("This invoice has already been settled")
-
-    await tx.merchantEntry.updateMany({
-      where: { invoiceId: invoice.id, status: "INVOICED" },
-      data: { status: "PAID" },
-    })
-    await tx.merchantCampaign.updateMany({
-      where: { id: invoice.campaignId, status: "PENDING_INVOICE" },
-      data: { status: "DRAW_READY" },
-    })
-  })
-
-  const invoice: MerchantInvoice = await db.merchantInvoice.findUnique({ where: { id: invoiceId } })
-  return toInvoiceDTO(invoice)
 }
 
 /** Picks one winner uniformly at random (CSPRNG) from the campaign's paid, non-test tickets. */

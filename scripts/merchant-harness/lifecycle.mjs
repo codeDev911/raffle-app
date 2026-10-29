@@ -12,6 +12,12 @@ const svc = await import("../../lib/merchants/service.ts")
 const { signShopifyPayload } = await import("../../lib/merchants/shopify.ts")
 const { getMerchantDb } = await import("../../lib/merchants/db.ts")
 const { MERCHANT_ENTRY_FEE_PKR } = await import("../../lib/merchants/config.ts")
+// Same module instance the service layer sees (the loader maps @/lib/prisma here).
+const { prisma, payments, entries } = await import("./stubs/prisma.mjs")
+
+// The stub raffle prices a ticket at Rs. 500 (Raffle.price, in paisa) and values the prize at
+// Rs. 450,000 (Raffle.realPrice). Campaigns linked to it are billed at the ticket price.
+const RAFFLE_TICKET_PRICE_PKR = 500
 
 const DOMAIN = "harness-store.myshopify.com"
 const SECRET = "whsec_harness_0123456789abcdef"
@@ -71,7 +77,7 @@ await check("API keys authenticate at any length without leaking the hash", asyn
 
 console.log("\ncampaign building")
 
-await check("a buy-3+ campaign locks the platform fee per ticket", async () => {
+await check("a buy-3+ campaign prices tickets at the linked raffle's rate", async () => {
   campaign = await svc.createCampaign(store, {
     title: "Eid Basket Booster",
     raffleId: "prize-1",
@@ -80,10 +86,11 @@ await check("a buy-3+ campaign locks the platform fee per ticket", async () => {
     maxEntries: 100,
     endDate: new Date(Date.now() + 21 * 24 * 3600_000),
   })
-  assert.equal(campaign.ticketPrice, MERCHANT_ENTRY_FEE_PKR)
+  assert.equal(campaign.ticketPrice, RAFFLE_TICKET_PRICE_PKR) // not the Rs. 250 fallback
   assert.equal(campaign.status, "ACTIVE")
   assert.equal(campaign.ruleSummary, "Buy 3+ items")
   assert.equal(campaign.prize.title, "iPhone 16 Pro Max")
+  assert.equal(campaign.prize.ticketPricePkr, RAFFLE_TICKET_PRICE_PKR)
   assert.equal(campaign.prize.prizeValuePkr, 450000) // paisa → PKR
 })
 
@@ -234,8 +241,8 @@ await check("invoice preview counts only issued non-test tickets", async () => {
   )
   const preview = await svc.previewInvoice(store, campaign.id)
   assert.equal(preview.totalEntries, 2)
-  assert.equal(preview.unitPrice, MERCHANT_ENTRY_FEE_PKR)
-  assert.equal(preview.amountDue, 2 * MERCHANT_ENTRY_FEE_PKR)
+  assert.equal(preview.unitPrice, RAFFLE_TICKET_PRICE_PKR)
+  assert.equal(preview.amountDue, 2 * RAFFLE_TICKET_PRICE_PKR)
   assert.equal(preview.canGenerate, true)
 })
 
@@ -243,7 +250,7 @@ await check("generating an invoice closes the campaign and links every ticket", 
   invoice = await svc.generateInvoice(store, { campaignId: campaign.id })
   assert.match(invoice.invoiceNumber, /^INV-\d{6}-[0-9A-F]{6}$/)
   assert.equal(invoice.totalEntries, 2)
-  assert.equal(invoice.amountDue, 2 * MERCHANT_ENTRY_FEE_PKR)
+  assert.equal(invoice.amountDue, 2 * RAFFLE_TICKET_PRICE_PKR)
   const db = await getMerchantDb()
   const row = await db.merchantCampaign.findUnique({ where: { id: campaign.id } })
   assert.equal(row.status, "PENDING_INVOICE")
@@ -273,29 +280,66 @@ await check("admin overview aggregates the ledger", async () => {
   const overview = await svc.adminOverview()
   assert.equal(overview.stats.stores, 1)
   assert.equal(overview.stats.awaitingReview, 1)
-  assert.equal(overview.stats.awaitingReviewAmount, 2 * MERCHANT_ENTRY_FEE_PKR)
+  assert.equal(overview.stats.awaitingReviewAmount, 2 * RAFFLE_TICKET_PRICE_PKR)
   assert.equal(overview.invoices[0].storeName, "Harness Store")
   assert.equal(overview.campaigns[0].billableEntries, 0)
 })
 
-await check("rejecting returns the batch to the merchant with a reason", async () => {
-  const rejected = await svc.adminReviewInvoice(invoice.id, { action: "reject", adminNotes: "Transaction ID not in our statement" })
-  assert.equal(rejected.status, "PENDING")
-  assert.equal(rejected.adminNotes, "Transaction ID not in our statement")
-  await assert.rejects(() => svc.adminReviewInvoice(invoice.id, { action: "reject" }), (err) => err.name === "ZodError" || err.status === 400)
+await check("the batch opened one payment per customer for PakRaffle to confirm", async () => {
+  const mine = payments.rows.filter((p) => p.metadata?.invoiceId === invoice.id)
+  assert.equal(mine.length, 2)
+  assert.equal(mine.every((p) => p.metadata.kind === "merchant_entry"), true)
+  assert.equal(mine.every((p) => p.status === "PENDING"), true)
+  assert.equal(mine.every((p) => p.amount === RAFFLE_TICKET_PRICE_PKR * 100), true)
+  // one account per distinct Shopify customer, one row per ticket
+  assert.equal(new Set(mine.map((p) => p.userId)).size, 2)
+  assert.equal(new Set(mine.map((p) => p.transactionId)).size, 2)
+  assert.equal(mine.every((p) => p.transactionId.startsWith("MCH-PKR-SHOPIFY-")), true)
+})
+
+await check("nothing is confirmed until PakRaffle clears those payments", async () => {
+  const db = await getMerchantDb()
+  assert.equal(await db.merchantEntry.count({ where: { invoiceId: invoice.id, status: "PAID" } }), 0)
+  const viewed = await svc.lookupTickets("#big")
+  assert.equal(viewed[0].stage, "AWAITING_CONFIRMATION")
+})
+
+await check("admin/merchants no longer verifies payments itself", async () => {
+  assert.equal("adminReviewInvoice" in svc, false)
 })
 
 await check("a draw cannot run before settlement is verified", async () => {
   await assert.rejects(() => svc.adminExecuteDraw(campaign.id), (err) => err.status === 409 || err.status === 400)
 })
 
-await check("approving marks tickets PAID and unlocks the draw", async () => {
-  const approved = await svc.adminReviewInvoice(invoice.id, { action: "approve", adminNotes: null })
-  assert.equal(approved.status, "PAID")
+await check("confirming payments settles tickets, closes the invoice and unlocks the draw", async () => {
+  const mine = payments.rows.filter((p) => p.metadata?.invoiceId === invoice.id)
   const db = await getMerchantDb()
+
+  const first = await svc.settleMerchantPayment(mine[0].id)
+  assert.equal(first.settled, true)
+  assert.equal(first.entry.status, "PAID")
+  assert.ok(first.raffleEntryId)
+  assert.equal(first.invoicePaid, false) // the second ticket is still open
+  // the raffle entry was created for the Shopify customer's account
+  assert.equal(entries.rows.filter((e) => e.paymentId === mine[0].id && e.userId === mine[0].userId).length, 1)
+
+  const second = await svc.settleMerchantPayment(mine[1].id)
+  assert.equal(second.settled, true)
+  assert.equal(second.invoicePaid, true)
+  assert.equal(second.campaignStatus, "DRAW_READY")
+
   assert.equal(await db.merchantEntry.count({ where: { invoiceId: invoice.id, status: "PAID" } }), 2)
-  const row = await db.merchantCampaign.findUnique({ where: { id: campaign.id } })
-  assert.equal(row.status, "DRAW_READY")
+  assert.equal((await db.merchantCampaign.findUnique({ where: { id: campaign.id } })).status, "DRAW_READY")
+  assert.equal((await db.merchantInvoice.findUnique({ where: { id: invoice.id } })).status, "PAID")
+})
+
+await check("a replayed confirmation never duplicates the raffle entry", async () => {
+  const mine = payments.rows.filter((p) => p.metadata?.invoiceId === invoice.id)
+  const before = entries.rows.length
+  const replay = await svc.settleMerchantPayment(mine[0].id)
+  assert.equal(replay.settled, true)
+  assert.equal(entries.rows.length, before)
 })
 
 await check("the draw picks one paid ticket and completes the campaign", async () => {
@@ -315,6 +359,168 @@ await check("draws are not re-runnable", async () => {
   await assert.rejects(() => svc.adminExecuteDraw(campaign.id), (err) => err.status === 400 || err.status === 409)
 })
 
+console.log("\nper-ticket payment")
+
+let soloCampaign = null
+let soloEntry = null
+
+async function mintSolo(orderId, customerName, customerPhone, customerEmail) {
+  await svc.ingestOrder(
+    store,
+    {
+      orderId,
+      orderName: `#${orderId}`,
+      customerName,
+      customerEmail,
+      customerPhone,
+      subtotal: 2400,
+      fulfilled: true,
+      cancelled: false,
+      financialStatus: "paid",
+      lineItems: [{ id: "l", title: "Lawn Suit", sku: "SKU-1", productId: "1", variantId: "1", quantity: 2, unitPrice: 1200 }],
+    },
+    {},
+  )
+  const db = await getMerchantDb()
+  return db.merchantEntry.findFirst({ where: { shopifyOrderId: orderId } })
+}
+
+await check("a merchant can pay one ticket without waiting for a batch", async () => {
+  soloCampaign = await svc.createCampaign(store, {
+    title: "Pay As You Go",
+    raffleId: "prize-1",
+    ruleType: "ALL_ORDERS",
+    maxEntries: 20,
+    endDate: new Date(Date.now() + 14 * 24 * 3600_000),
+  })
+  soloEntry = await mintSolo("solo-1", "Ayesha Khan", "03334567890", "ayesha@example.com")
+
+  const paid = await svc.payEntry(store, soloEntry.id, {
+    paymentMethod: "SADAPAY",
+    transactionRef: "TXN-SOLO-0001",
+    paymentProof: "https://res.cloudinary.com/demo/image/upload/solo.png",
+  })
+  assert.equal(paid.entry.status, "INVOICED")
+  assert.equal(paid.entry.invoiceId, null) // direct payments never join a batch
+  assert.equal(paid.payment.status, "PENDING")
+  assert.equal(paid.payment.method, "SADAPAY")
+  assert.equal(paid.payment.amount, RAFFLE_TICKET_PRICE_PKR * 100)
+  assert.equal(paid.payment.transactionId, `MCH-${soloEntry.ticketNumber}`)
+
+  const ledger = payments.rows.find((p) => p.id === paid.payment.id)
+  assert.equal(ledger.metadata.kind, "merchant_entry")
+  assert.equal(ledger.metadata.invoiceId, null)
+  assert.equal(ledger.metadata.ticketNumber, soloEntry.ticketNumber)
+  assert.equal(ledger.gatewayRef, "TXN-SOLO-0001")
+  assert.equal(ledger.metadata.receiptUrl, "https://res.cloudinary.com/demo/image/upload/solo.png")
+
+  // The payment belongs to the Shopify customer, not to the store.
+  const account = await prisma.user.findUnique({ where: { id: ledger.userId } })
+  assert.equal(account.email, "ayesha@example.com")
+  assert.equal(account.name, "Ayesha Khan")
+})
+
+await check("re-submitting the same ticket re-arms its payment instead of double-billing", async () => {
+  const before = payments.rows.length
+  await svc.payEntry(store, soloEntry.id, {
+    paymentMethod: "IBFT",
+    transactionRef: "TXN-SOLO-0002",
+    paymentProof: "https://res.cloudinary.com/demo/image/upload/solo-2.png",
+  })
+  assert.equal(payments.rows.length, before)
+  const ledger = payments.rows.find((p) => p.transactionId === `MCH-${soloEntry.ticketNumber}`)
+  assert.equal(ledger.gatewayRef, "TXN-SOLO-0002")
+  assert.equal(ledger.method, "IBFT")
+  assert.equal(ledger.metadata.transactionRef, "TXN-SOLO-0002")
+})
+
+await check("lookup follows the money: awaiting store, then confirming, then confirmed", async () => {
+  await mintSolo("solo-2", "Usman Ali", "03005556666", null)
+  const unpaidView = await svc.lookupTickets("#solo-2")
+  assert.equal(unpaidView[0].stage, "PAYMENT_PENDING")
+  assert.equal(unpaidView[0].status, "ISSUED")
+
+  const awaiting = await svc.lookupTickets("#solo-1")
+  assert.equal(awaiting[0].stage, "AWAITING_CONFIRMATION")
+
+  const ledger = payments.rows.find((p) => p.transactionId === `MCH-${soloEntry.ticketNumber}`)
+  const confirmed = await svc.settleMerchantPayment(ledger.id)
+  assert.equal(confirmed.settled, true)
+  assert.equal(confirmed.invoicePaid, false) // never on an invoice
+
+  const done = await svc.lookupTickets("#solo-1")
+  assert.equal(done[0].stage, "CONFIRMED")
+  assert.equal(done[0].status, "PAID")
+  assert.equal(entries.rows.filter((e) => e.paymentId === ledger.id && e.userId === ledger.userId).length, 1)
+})
+
+await check("a confirmed ticket can no longer be paid", async () => {
+  await assert.rejects(
+    () =>
+      svc.payEntry(store, soloEntry.id, {
+        paymentMethod: "RAAST",
+        transactionRef: "TXN-TOO-LATE",
+        paymentProof: "https://res.cloudinary.com/demo/image/upload/late.png",
+      }),
+    (err) => err.status === 409,
+  )
+})
+
+await check("cancelling an order cancels the payment submitted for it", async () => {
+  const db = await getMerchantDb()
+  const entry = await db.merchantEntry.findFirst({ where: { shopifyOrderId: "solo-2" } })
+  await svc.payEntry(store, entry.id, {
+    paymentMethod: "RAAST",
+    transactionRef: "TXN-SOLO-0003",
+    paymentProof: "https://res.cloudinary.com/demo/image/upload/solo-3.png",
+  })
+  const ledger = payments.rows.find((p) => p.transactionId === `MCH-${entry.ticketNumber}`)
+  assert.equal(ledger.status, "PENDING")
+
+  const cancelled = await svc.cancelOrderEntries(store, "solo-2", "Customer refunded")
+  assert.equal(cancelled.cancelled, 1)
+  assert.equal(cancelled.locked, 0)
+  assert.equal(payments.rows.find((p) => p.id === ledger.id).status, "CANCELLED")
+  const view = await svc.lookupTickets("#solo-2")
+  assert.equal(view[0].stage, "VOIDED")
+})
+
+await check("a batch invoice only bills tickets that are still unpaid", async () => {
+  const preview = await svc.previewInvoice(store, soloCampaign.id)
+  assert.equal(preview.totalEntries, 0) // one paid directly, one cancelled
+  assert.equal(preview.canGenerate, false)
+
+  // Stop this campaign minting so the sections below land in their own campaigns.
+  const paused = await svc.updateCampaign(store, soloCampaign.id, { action: "pause" })
+  assert.equal(paused.status, "PAUSED")
+})
+
+await check("an ended campaign whose tickets are all paid becomes draw-ready", async () => {
+  const closing = await svc.createCampaign(store, {
+    title: "Ended Batch",
+    raffleId: "prize-1",
+    ruleType: "ALL_ORDERS",
+    maxEntries: 10,
+    endDate: new Date(Date.now() + 2 * 24 * 3600_000),
+  })
+  const entry = await mintSolo("ended-1", "Sana Malik", "03451112222", "sana@example.com")
+  assert.equal(entry.campaignId, closing.id)
+
+  const db = await getMerchantDb()
+  // Close the window without invoicing: this campaign no longer accepts entries.
+  await db.merchantCampaign.update({ where: { id: closing.id }, data: { endDate: new Date(Date.now() - 60_000) } })
+
+  const paid = await svc.payEntry(store, entry.id, {
+    paymentMethod: "RAAST",
+    transactionRef: "TXN-ENDED-0001",
+    paymentProof: "https://res.cloudinary.com/demo/image/upload/ended.png",
+  })
+  const settled = await svc.settleMerchantPayment(paid.payment.id)
+  assert.equal(settled.settled, true)
+  assert.equal(settled.campaignStatus, "DRAW_READY")
+  assert.equal((await db.merchantCampaign.findUnique({ where: { id: closing.id } })).status, "DRAW_READY")
+})
+
 console.log("\ncancellations + public lookup")
 
 await check("cancelling an order voids its unpaid ticket and nets the invoice", async () => {
@@ -324,6 +530,7 @@ await check("cancelling an order voids its unpaid ticket and nets the invoice", 
     maxEntries: 50,
     endDate: new Date(Date.now() + 14 * 24 * 3600_000),
   })
+  assert.equal(open.ticketPrice, MERCHANT_ENTRY_FEE_PKR) // no linked raffle → flat platform fee
   assert.equal(await mintCount(3, "rolling-1"), 1)
   assert.equal(await mintCount(2, "rolling-2"), 1)
   const batch = await svc.generateInvoice(store, { campaignId: open.id })

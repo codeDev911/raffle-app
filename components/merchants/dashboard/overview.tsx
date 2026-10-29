@@ -50,7 +50,7 @@ export function OverviewTab({
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <Metric label="Active campaigns" value={formatNumber(active.length)} hint={`${formatNumber(campaigns.length)} total`} accent />
         <Metric label="Tickets unbilled" value={formatNumber(unbilledTickets)} hint="settled per batch" />
-        <Metric label="Unbilled amount" value={formatPKR(unbilledAmount)} hint={`at ${formatPKR(me.integration.entryFee)} / ticket`} />
+        <Metric label="Unbilled amount" value={formatPKR(unbilledAmount)} hint="at each raffle's ticket price" />
         <Metric label="Awaiting settlement" value={formatNumber(outstanding.length)} hint={formatPKR(outstandingAmount) + " due"} />
         <Metric label="Tickets in draw pool" value={formatNumber(ticketsPaid)} hint="paid & verified" />
       </div>

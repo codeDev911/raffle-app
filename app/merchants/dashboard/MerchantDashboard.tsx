@@ -226,7 +226,15 @@ export default function MerchantDashboard() {
             onOpenInvoices={() => changeTab("invoices")}
           />
         )}
-        {tab === "entries" && <EntriesTab campaigns={campaigns} refreshKey={feedKey} />}
+        {tab === "entries" && (
+          <EntriesTab
+            campaigns={campaigns}
+            settlementAccounts={me.settlementAccounts}
+            entryFee={me.integration.entryFee}
+            refreshKey={feedKey}
+            onSettled={refresh}
+          />
+        )}
         {tab === "invoices" && (
           <InvoicesTab
             invoices={invoices}

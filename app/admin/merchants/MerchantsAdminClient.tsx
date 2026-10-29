@@ -7,7 +7,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import {
   AlertTriangle,
   CheckCircle2,
@@ -24,15 +23,8 @@ import {
   Store as StoreIcon,
   Ticket,
   Trophy,
-  XCircle,
 } from "lucide-react"
-import {
-  PAYMENT_METHOD_LABELS,
-  type CampaignDTO,
-  type EntryDTO,
-  type InvoiceDTO,
-  type StoreDTO,
-} from "@/components/merchants/dashboard/types"
+import { type CampaignDTO, type EntryDTO, type InvoiceDTO, type StoreDTO } from "@/components/merchants/dashboard/types"
 
 const TOKEN_KEY = "merchantsAdminToken"
 
@@ -60,13 +52,6 @@ interface Overview {
   stores: StoreRow[]
   campaigns: CampaignRow[]
   invoices: InvoiceDTO[]
-}
-
-interface InvoiceDetail {
-  invoice: InvoiceDTO
-  entries: EntryDTO[]
-  store: { id: string; name: string; storeUrl: string; contactEmail: string } | null
-  settlementAccounts: { key: string; label: string; accountName: string; accountNumber: string; iban?: string }[]
 }
 
 const formatPKR = (n: number | null | undefined) => `Rs. ${Math.round(Number(n) || 0).toLocaleString("en-PK")}`
@@ -100,7 +85,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 const TABS = [
-  { key: "review", label: "Settlement Review", icon: ClipboardList },
+  { key: "review", label: "Settlements", icon: ClipboardList },
   { key: "draws", label: "Draws", icon: Trophy },
   { key: "stores", label: "Stores", icon: StoreIcon },
 ] as const
@@ -119,7 +104,6 @@ export default function MerchantsAdminClient() {
   const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [tokenRequired, setTokenRequired] = useState(false)
-  const [reviewId, setReviewId] = useState<string | null>(null)
 
   useEffect(() => {
     if (paramTab && TABS.some((t) => t.key === paramTab)) setTab(paramTab)
@@ -218,7 +202,11 @@ export default function MerchantsAdminClient() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Merchant Connect</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Shopify lucky draw partners · verify settlements, run draws and control store access.
+            Shopify lucky draw partners · payments are confirmed in{" "}
+            <Link href="/admin/payments" className="text-red-700 hover:underline">
+              Payments
+            </Link>
+            , draws run here.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={load} className="rounded-xl gap-1.5">
@@ -260,7 +248,7 @@ export default function MerchantsAdminClient() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Stat label="Stores" value={formatNumber(stats.stores)} hint={`${formatNumber(stats.activeStores)} active`} />
           <Stat label="Tickets minted" value={formatNumber(stats.issuedEntries)} hint={`${formatNumber(stats.activeCampaigns)} active campaigns`} />
-          <Stat label="Awaiting review" value={formatNumber(stats.awaitingReview)} hint={formatPKR(stats.awaitingReviewAmount)} tone="sky" />
+          <Stat label="Awaiting confirmation" value={formatNumber(stats.awaitingReview)} hint={formatPKR(stats.awaitingReviewAmount)} tone="sky" />
           <Stat label="Revenue collected" value={formatPKR(stats.revenueCollected)} hint={`${formatPKR(stats.outstandingAmount)} outstanding`} tone="emerald" />
         </div>
       )}
@@ -289,7 +277,7 @@ export default function MerchantsAdminClient() {
       {tab === "review" && (
         <Card className="border-slate-200 shadow-2xs">
           <CardContent className="p-0">
-            <SectionTitle icon={ClipboardList} title="Batch invoices" note="newest first" />
+            <SectionTitle icon={ClipboardList} title="Batch invoices" note="confirm the matching payments in Admin → Payments" />
             {(data?.invoices || []).length === 0 ? (
               <EmptyRow text="No invoices generated yet." />
             ) : (
@@ -315,14 +303,12 @@ export default function MerchantsAdminClient() {
                       <span className="font-mono text-sm font-semibold tabular-nums text-slate-900">{formatPKR(inv.amountDue)}</span>
                       <StatusBadge status={inv.status} />
                       {inv.status === "UNDER_REVIEW" && (
-                        <Button size="sm" onClick={() => setReviewId(inv.id)} className="rounded-lg gap-1.5">
-                          Review payment
-                        </Button>
-                      )}
-                      {inv.status === "PENDING" && (
-                        <Button size="sm" variant="outline" onClick={() => setReviewId(inv.id)} className="rounded-lg gap-1.5">
-                          Open
-                        </Button>
+                        <Link
+                          href="/admin/payments"
+                          className="text-xs font-medium text-red-700 hover:underline inline-flex items-center gap-1"
+                        >
+                          Confirm payments <ExternalLink className="h-3.5 w-3.5" />
+                        </Link>
                       )}
                       {inv.status === "PAID" && inv.paymentProof && (
                         <a href={inv.paymentProof} target="_blank" rel="noopener noreferrer" className="text-xs text-slate-500 hover:text-slate-900 inline-flex items-center gap-1">
@@ -476,20 +462,6 @@ export default function MerchantsAdminClient() {
         <span>·</span>
         <span className="inline-flex items-center gap-1"><ShoppingBag className="h-3.5 w-3.5" /> data served from the merchant store</span>
       </p>
-
-      {reviewId && (
-        <ReviewDialog
-          invoiceId={reviewId}
-          request={request}
-          busy={busy === reviewId}
-          onClose={() => setReviewId(null)}
-          onDone={async (message) => {
-            setReviewId(null)
-            setNotice(message)
-            await load()
-          }}
-        />
-      )}
     </div>
   )
 }
@@ -526,167 +498,3 @@ function EmptyRow({ text }: { text: string }) {
   return <p className="px-4 py-10 text-center text-sm text-slate-500">{text}</p>
 }
 
-function ReviewDialog({
-  invoiceId,
-  request,
-  busy,
-  onClose,
-  onDone,
-}: {
-  invoiceId: string
-  request: <T>(path: string, init?: RequestInit) => Promise<T>
-  busy: boolean
-  onClose: () => void
-  onDone: (message: string) => Promise<void>
-}) {
-  const [detail, setDetail] = useState<InvoiceDetail | null>(null)
-  const [notes, setNotes] = useState("")
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    request<InvoiceDetail>(`/api/admin/merchants/invoices/${invoiceId}`)
-      .then(setDetail)
-      .catch((err) => setError(err.message))
-  }, [invoiceId, request])
-
-  const review = async (action: "approve" | "reject") => {
-    setError(null)
-    try {
-      await request(`/api/admin/merchants/invoices/${invoiceId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ action, adminNotes: notes.trim() || null }),
-      })
-      await onDone(
-        action === "approve"
-          ? `Payment approved · ${detail?.invoice.campaignTitle || "campaign"} is now draw-ready`
-          : "Payment rejected and returned to the merchant",
-      )
-    } catch (err: any) {
-      setError(err.message)
-    }
-  }
-
-  const invoice = detail?.invoice
-
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 overflow-y-auto">
-      <Card className="w-full max-w-2xl my-auto border-slate-200 shadow-lg">
-        <CardContent className="p-5 space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900 font-mono tabular-nums">{invoice?.invoiceNumber || "Invoice"}</h2>
-              <p className="text-xs text-slate-500">
-                {invoice?.storeName} <span className="text-slate-300">·</span> {invoice?.campaignTitle}
-              </p>
-            </div>
-            <Button variant="ghost" size="sm" onClick={onClose} className="text-slate-500">
-              <XCircle className="h-5 w-5" />
-            </Button>
-          </div>
-
-          {error && <p className="text-sm text-rose-700 bg-rose-50 rounded-lg px-3 py-2">{error}</p>}
-          {!detail && !error && <p className="py-8 text-center text-sm text-slate-500">Loading invoice…</p>}
-
-          {detail && invoice && (
-            <>
-              <div className="grid grid-cols-3 gap-3">
-                <MiniStat label="Tickets" value={formatNumber(invoice.totalEntries)} />
-                <MiniStat label="Rate" value={formatPKR(invoice.unitPrice)} />
-                <MiniStat label="Amount due" value={formatPKR(invoice.amountDue)} strong />
-              </div>
-
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm space-y-1">
-                <p className="text-slate-700">
-                  <span className="text-slate-500">Method:</span>{" "}
-                  <span className="font-semibold">{PAYMENT_METHOD_LABELS[invoice.paymentMethod || ""] || invoice.paymentMethod || "—"}</span>
-                </p>
-                <p className="text-slate-700">
-                  <span className="text-slate-500">Transaction ref:</span>{" "}
-                  <span className="font-mono">{invoice.transactionRef || "—"}</span>
-                </p>
-                {detail.store && (
-                  <p className="text-slate-700">
-                    <span className="text-slate-500">Merchant:</span> {detail.store.name}
-                    <span className="text-slate-300"> · </span>
-                    <a href={`mailto:${detail.store.contactEmail}`} className="text-red-700 hover:underline">
-                      {detail.store.contactEmail}
-                    </a>
-                  </p>
-                )}
-                {invoice.paymentProof && (
-                  <a
-                    href={invoice.paymentProof}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-red-700 font-semibold hover:underline"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" /> Open uploaded receipt
-                  </a>
-                )}
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
-                  Itemised tickets <span className="font-mono normal-case text-slate-400">({detail.entries.length})</span>
-                </p>
-                <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 divide-y divide-slate-100">
-                  {detail.entries.map((e) => (
-                    <div key={e.id} className="flex items-center justify-between gap-3 px-3 py-2 text-xs">
-                      <span className="font-mono tabular-nums text-violet-700 font-semibold">{e.ticketNumber}</span>
-                      <span className="font-mono tabular-nums text-slate-500">{e.orderName || `#${e.shopifyOrderId}`}</span>
-                      <span className="truncate text-slate-700">{e.customerName}</span>
-                      <span className="font-mono tabular-nums text-slate-500">
-                        {e.itemCount}× · {formatPKR(e.orderAmount)}
-                      </span>
-                    </div>
-                  ))}
-                  {detail.entries.length === 0 && <p className="px-3 py-6 text-center text-slate-500">No tickets on this invoice.</p>}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-700">Admin notes (required to reject)</label>
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g. Transaction ID not found in our Meezan statement"
-                  className="rounded-xl border-slate-300"
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-2 justify-end pt-1">
-                <Button variant="outline" onClick={onClose} className="rounded-xl">
-                  Close
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={busy || invoice.status !== "UNDER_REVIEW"}
-                  onClick={() => review("reject")}
-                  className="rounded-xl border-rose-300 text-rose-700 hover:bg-rose-50 gap-1.5"
-                >
-                  <XCircle className="h-4 w-4" /> Reject
-                </Button>
-                <Button
-                  disabled={busy || !["PENDING", "UNDER_REVIEW"].includes(invoice.status)}
-                  onClick={() => review("approve")}
-                  className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
-                >
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Approve & unlock draw
-                </Button>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-function MiniStat({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
-  return (
-    <div className="rounded-xl border border-slate-200 px-3 py-2">
-      <p className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">{label}</p>
-      <p className={`font-mono text-base font-bold tabular-nums ${strong ? "text-emerald-700" : "text-slate-900"}`}>{value}</p>
-    </div>
-  )
-}
