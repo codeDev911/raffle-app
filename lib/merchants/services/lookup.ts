@@ -41,8 +41,10 @@ export async function lookupTickets(rawQuery: string) {
 
   return entries.map((entry) => {
     const campaign = campaignById.get(entry.campaignId) ?? null
+    const store = storeById.get(entry.storeId)
     return toPublicTicketDTO(entry, {
-      storeName: storeById.get(entry.storeId)?.name ?? "Partner Store",
+      storeName: store?.name ?? "Partner Store",
+      storeUrl: store?.storeUrl ?? null,
       campaign,
       prize: campaign?.raffleId ? prizes.get(campaign.raffleId) ?? null : null,
       paymentStatus: payments.get(entry.ticketNumber) ?? null,

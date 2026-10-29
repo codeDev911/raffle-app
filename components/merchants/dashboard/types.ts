@@ -110,6 +110,8 @@ export interface InvoiceDTO {
   createdAt: string
   campaignTitle: string | null
   storeName: string | null
+  /** A transfer on this batch was rejected and has to be resubmitted. */
+  paymentFailed: boolean
 }
 
 export interface InvoiceDetail {

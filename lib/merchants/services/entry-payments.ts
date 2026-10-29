@@ -235,6 +235,11 @@ export async function payEntry(store: MerchantStore, entryId: string, input: unk
   if (entry.status === "CANCELLED") throw conflict("This ticket was voided")
   if (entry.invoiceId) throw conflict("This ticket is on a batch invoice — settle the invoice instead")
 
+  // A rejected transfer can still be sitting on INVOICED (marked failed before the release hook
+  // existed, or outside /api/payments/[id]/status): reopen it so the merchant can pay again.
+  // A still-pending submission is left alone and simply re-arms its payment row below.
+  if (entry.status === "INVOICED") await reopenFailedEntry(entry)
+
   const campaign = await loadCampaign(entry.campaignId)
   if (campaign.status === "COMPLETED") throw conflict("This campaign's draw has already been run")
 
@@ -289,6 +294,9 @@ export async function voidOpenEntryPayment(entry: MerchantEntry): Promise<boolea
 }
 
 // ───────────────────────── admin rejection ─────────────────────────
+
+/** Payment states that make a ticket payable again (PakRaffle could not verify the money). */
+const REJECTED_PAYMENT_STATUSES = new Set(["FAILED", "REFUNDED", "CANCELLED"])
 
 export interface ReleaseResult {
   released: boolean
@@ -349,6 +357,20 @@ export async function releaseMerchantPayment(paymentId: string): Promise<Release
 
   const fresh: MerchantEntry = await db.merchantEntry.findUnique({ where: { id: entry.id } })
   return { released, entry: toEntryDTO(fresh), invoiceReopened }
+}
+
+/**
+ * Releases a ticket whose last transfer was rejected, with or without the admin hook having run.
+ * Returns false when the ticket is not a rejected standalone payment (nothing to reopen).
+ */
+export async function reopenFailedEntry(entry: MerchantEntry): Promise<boolean> {
+  if (entry.invoiceId) return false
+  const payment: Payment | null = await prisma.payment.findFirst({
+    where: { transactionId: entryPaymentTransactionId(entry.ticketNumber) },
+  })
+  if (!payment || !REJECTED_PAYMENT_STATUSES.has(payment.status)) return false
+  const result = await releaseMerchantPayment(payment.id)
+  return result.released
 }
 
 // ───────────────────────── admin confirmation ─────────────────────────

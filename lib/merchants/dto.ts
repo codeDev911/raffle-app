@@ -91,7 +91,10 @@ export function toEntryDTO(entry: MerchantEntry, extras: { paymentStatus?: strin
   }
 }
 
-export function toInvoiceDTO(invoice: MerchantInvoice, extras: { campaignTitle?: string; storeName?: string } = {}) {
+export function toInvoiceDTO(
+  invoice: MerchantInvoice,
+  extras: { campaignTitle?: string; storeName?: string; paymentFailed?: boolean } = {},
+) {
   return {
     id: invoice.id,
     campaignId: invoice.campaignId,
@@ -110,6 +113,8 @@ export function toInvoiceDTO(invoice: MerchantInvoice, extras: { campaignTitle?:
     createdAt: invoice.createdAt,
     campaignTitle: extras.campaignTitle ?? null,
     storeName: extras.storeName ?? null,
+    /** PakRaffle rejected a transfer on this batch: it has to be paid and resubmitted. */
+    paymentFailed: extras.paymentFailed ?? false,
   }
 }
 
@@ -127,11 +132,22 @@ function publicStage(entry: MerchantEntry, paymentStatus?: string | null): Publi
   return "PAYMENT_PENDING"
 }
 
+/** Merchant storefront as a browser-safe URL (stored rows hold a bare domain). */
+function storefrontUrl(value?: string | null): string | null {
+  const domain = String(value || "")
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/.*$/, "")
+  return domain ? `https://${domain}` : null
+}
+
 /** Public, privacy-safe view of a ticket for the customer lookup page. */
 export function toPublicTicketDTO(
   entry: MerchantEntry,
   ctx: {
     storeName: string
+    /** Storefront domain — the shopper needs to know which store raised this ticket. */
+    storeUrl?: string | null
     campaign?: MerchantCampaign | null
     prize?: PrizeSummary | null
     /** Status of this ticket's PakRaffle payment row, when one exists. */
@@ -147,6 +163,7 @@ export function toPublicTicketDTO(
     customerName: maskName(entry.customerName),
     customerPhone: maskPhone(entry.customerPhone),
     storeName: ctx.storeName,
+    storeUrl: storefrontUrl(ctx.storeUrl),
     campaignTitle: campaign?.title ?? "Lucky Draw",
     campaignStatus: campaign?.status ?? null,
     ruleSummary: campaign ? describeRule(campaign) : null,

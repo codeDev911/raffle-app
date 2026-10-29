@@ -104,7 +104,24 @@ export async function listInvoices(store: MerchantStore) {
     orderBy: { createdAt: "desc" },
   })
   const titles = await campaignTitles(db, invoices.map((i) => i.campaignId))
-  return invoices.map((i) => toInvoiceDTO(i, { campaignTitle: titles.get(i.campaignId), storeName: store.name }))
+  const failed = await invoicesWithFailedPayment(db, invoices)
+  return invoices.map((i) =>
+    toInvoiceDTO(i, { campaignTitle: titles.get(i.campaignId), storeName: store.name, paymentFailed: failed.has(i.id) }),
+  )
+}
+
+/** Invoices holding a ticket whose transfer PakRaffle rejected — the batch must be paid again. */
+async function invoicesWithFailedPayment(db: MerchantDb, invoices: MerchantInvoice[]): Promise<Set<string>> {
+  const open = invoices.filter((i) => i.status !== "PAID").map((i) => i.id)
+  if (open.length === 0) return new Set()
+  const entries: MerchantEntry[] = await db.merchantEntry.findMany({ where: { invoiceId: { in: open } } })
+  const statuses = await ticketPaymentStatuses(entries.map((entry) => entry.ticketNumber))
+  const failed = new Set<string>()
+  for (const entry of entries) {
+    const status = statuses.get(entry.ticketNumber)
+    if (entry.invoiceId && (status === "FAILED" || status === "REFUNDED")) failed.add(entry.invoiceId)
+  }
+  return failed
 }
 
 /** Itemized invoice with its ledger lines and the accounts the merchant should pay into. */
@@ -123,9 +140,13 @@ export async function getInvoiceDetail(invoiceId: string, storeId?: string) {
 
   const rows = entries as MerchantEntry[]
   const payments = await ticketPaymentStatuses(rows.map((entry) => entry.ticketNumber))
+  const paymentFailed = rows.some((entry) => {
+    const status = payments.get(entry.ticketNumber)
+    return status === "FAILED" || status === "REFUNDED"
+  })
 
   return {
-    invoice: toInvoiceDTO(invoice, { campaignTitle: campaign?.title, storeName: store?.name }),
+    invoice: toInvoiceDTO(invoice, { campaignTitle: campaign?.title, storeName: store?.name, paymentFailed }),
     entries: rows.map((entry) => toEntryDTO(entry, { paymentStatus: payments.get(entry.ticketNumber) ?? null })),
     store: store ? { id: store.id, name: store.name, storeUrl: store.storeUrl, contactEmail: store.contactEmail } : null,
     settlementAccounts: getSettlementAccounts(),

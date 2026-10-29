@@ -13,6 +13,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock,
+  ExternalLink,
   Gift,
   Hourglass,
   Loader2,
@@ -36,6 +37,7 @@ interface PublicTicket {
   customerName: string
   customerPhone: string | null
   storeName: string
+  storeUrl: string | null
   campaignTitle: string
   campaignStatus: string | null
   ruleSummary: string | null
@@ -210,6 +212,8 @@ function TicketCard({ ticket }: { ticket: PublicTicket }) {
           <Cell label="Draw date" value={voided ? "—" : formatDate(ticket.drawDate)} />
         </div>
 
+        <StoreDetails ticket={ticket} />
+
         {ticket.ruleSummary && !voided && (
           <p className="text-xs text-gray-600 bg-gray-100 rounded-lg px-3 py-2">
             Qualified with rule: <span className="font-medium text-gray-900">{ticket.ruleSummary}</span>
@@ -281,6 +285,47 @@ function TicketCard({ ticket }: { ticket: PublicTicket }) {
         )}
       </CardContent>
     </Card>
+  )
+}
+
+function StoreDetails({ ticket }: { ticket: PublicTicket }) {
+  const domain = ticket.storeUrl?.replace(/^https?:\/\//, "") || null
+  return (
+    <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 space-y-2">
+      <p className="text-[11px] uppercase tracking-wider text-gray-500 font-bold">Where this ticket came from</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="inline-flex min-w-0 items-center gap-1.5 text-sm font-semibold text-gray-900">
+          <Store className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
+          <span className="truncate">{ticket.storeName}</span>
+        </p>
+        {ticket.storeUrl && domain && (
+          <a
+            href={ticket.storeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-50"
+          >
+            {domain} <ExternalLink className="w-3 h-3" />
+          </a>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 sm:grid-cols-3">
+        <p>
+          Order <span className="font-mono font-semibold text-gray-900">{ticket.orderName || "—"}</span>
+        </p>
+        <p>
+          Issued <span className="font-semibold text-gray-900">{formatDate(ticket.issuedAt)}</span>
+        </p>
+        <p>
+          Campaign <span className="font-semibold text-gray-900">{ticket.campaignTitle}</span>
+        </p>
+      </div>
+      <p className="text-[11px] leading-relaxed text-gray-500">
+        {ticket.storeName} raised this ticket from your fulfilled order {ticket.orderName || ""} on their own store. It is
+        their lucky draw entry on PakRaffle — nothing extra was charged to you for it. Order, delivery or refund questions
+        go to the store, not PakRaffle.
+      </p>
+    </div>
   )
 }
 

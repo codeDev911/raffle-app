@@ -93,10 +93,10 @@ export function InvoicesTab({
                     <td className="px-3 py-3 text-right font-mono tabular-nums text-slate-100">{formatPKR(inv.amountDue)}</td>
                     <td className="whitespace-nowrap px-3 py-3">
                       <StatusText status={inv.status} />
-                      {inv.status === "PENDING" && inv.adminNotes && (
+                      {inv.status !== "PAID" && inv.adminNotes && (
                         <p className="mt-0.5 text-[11px] text-rose-300">Payment rejected · resubmit</p>
                       )}
-                      {inv.status === "PENDING" && !inv.adminNotes && inv.submittedAt && (
+                      {inv.status !== "PAID" && !inv.adminNotes && (inv.paymentFailed || (inv.status === "PENDING" && inv.submittedAt)) && (
                         <p className="mt-0.5 text-[11px] text-rose-300">Transfer failed · resubmit</p>
                       )}
                     </td>
@@ -256,7 +256,7 @@ function InvoiceDetailDialog({
               </Alert>
             )}
 
-            {invoice.status === "UNDER_REVIEW" && (
+            {invoice.status === "UNDER_REVIEW" && !invoice.paymentFailed && (
               <Alert tone="info">
                 Payment submitted {formatDate(invoice.submittedAt, true)}
                 <Sep />
@@ -267,7 +267,7 @@ function InvoiceDetailDialog({
               </Alert>
             )}
 
-            {invoice.status === "PENDING" && invoice.submittedAt && (
+            {(invoice.paymentFailed || (invoice.status === "PENDING" && invoice.submittedAt)) && (
               <Alert>
                 <span className="inline-flex items-start gap-2">
                   <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
@@ -363,7 +363,7 @@ function InvoiceDetailDialog({
                 {submitError && <Alert>{submitError}</Alert>}
 
                 <Btn type="submit" className="w-full" loading={submitting} disabled={uploading}>
-                  {invoice.status === "UNDER_REVIEW" || invoice.submittedAt
+                  {invoice.status === "UNDER_REVIEW" || invoice.submittedAt || invoice.paymentFailed
                     ? "Resubmit payment details"
                     : "Submit payment for verification"}
                 </Btn>

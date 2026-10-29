@@ -311,6 +311,7 @@ await check("a failed batch transfer reopens the invoice for resubmission", asyn
   // The ticket is still on the batch (never silently re-billed) and the shopper sees the retry.
   const detail = await svc.getInvoiceDetail(invoice.id, store.id)
   assert.equal(detail.entries.find((e) => e.id === released.entry.id).paymentStatus, "FAILED")
+  assert.equal(detail.invoice.paymentFailed, true) // the dialog can explain why the form is back
   const failedView = await svc.lookupTickets(released.entry.ticketNumber)
   assert.equal(failedView[0].stage, "PAYMENT_FAILED")
 
@@ -322,6 +323,7 @@ await check("a failed batch transfer reopens the invoice for resubmission", asyn
     paymentProof: "https://res.cloudinary.com/demo/image/upload/receipt-2.png",
   })
   assert.equal(resubmitted.invoice.status, "UNDER_REVIEW")
+  assert.equal(resubmitted.invoice.paymentFailed, false) // the batch is waiting for confirmation again
   assert.equal(payments.rows.length, before)
   assert.equal(payments.rows.find((p) => p.id === target.id).status, "PENDING")
 })
@@ -545,6 +547,34 @@ await check("a rejected transfer reopens the ticket for payment", async () => {
   assert.equal((await svc.lookupTickets("#solo-3"))[0].stage, "CONFIRMED")
 })
 
+await check("a ticket still parked on invoiced after a rejection can be paid again", async () => {
+  const entry = await mintSolo("solo-4", "Hina Raza", "03451234567", "hina@example.com")
+  const first = await svc.payEntry(store, entry.id, {
+    paymentMethod: "IBFT",
+    transactionRef: "TXN-STUCK-0001",
+    paymentProof: "https://res.cloudinary.com/demo/image/upload/stuck.png",
+  })
+
+  // Marked failed before the release hook existed: the ledger row is still INVOICED.
+  await payments.update({ where: { id: first.payment.id }, data: { status: "FAILED" } })
+  const feed = await svc.listEntries(store, { campaignId: soloCampaign.id, includeTest: false })
+  const stuck = feed.entries.find((e) => e.id === entry.id)
+  assert.equal(stuck.status, "INVOICED")
+  assert.equal(stuck.paymentStatus, "FAILED")
+
+  // Paying again heals it instead of telling the merchant the ticket is awaiting confirmation.
+  const before = payments.rows.length
+  const again = await svc.payEntry(store, entry.id, {
+    paymentMethod: "SADAPAY",
+    transactionRef: "TXN-STUCK-0002",
+    paymentProof: "https://res.cloudinary.com/demo/image/upload/stuck-2.png",
+  })
+  assert.equal(payments.rows.length, before)
+  assert.equal(again.payment.status, "PENDING")
+  assert.equal(again.entry.status, "INVOICED")
+  assert.equal((await svc.settleMerchantPayment(again.payment.id)).settled, true)
+})
+
 await check("a confirmed transfer is never rolled back by a stale failure", async () => {
   const ledger = payments.rows.find((p) => p.transactionId === `MCH-${soloEntry.ticketNumber}`)
   const result = await svc.releaseMerchantPayment(ledger.id)
@@ -667,6 +697,7 @@ await check("customers find masked tickets by order name or phone", async () => 
   assert.equal(byOrder.length, 1)
   assert.equal(byOrder[0].ticketNumber, await ticketFor("big"))
   assert.equal(byOrder[0].storeName, "Harness Store")
+  assert.equal(byOrder[0].storeUrl, `https://${DOMAIN}`) // shopper sees which store raised the ticket
   assert.equal(byOrder[0].customerName, "Bilal A.")
   assert.match(byOrder[0].customerPhone, /••••/)
   assert.equal(byOrder[0].isWinner, (await ticketFor("big")) === (await winnerTicket()))

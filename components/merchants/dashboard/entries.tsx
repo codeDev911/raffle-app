@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { RefreshCw, Search, Ticket, Wallet } from "lucide-react"
+import { ReceiptText, RefreshCw, Search, Ticket, Wallet } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Alert, Btn, EmptyState, Panel, PanelHeader, SelectInput, TextInput, formatNumber, merchantApi } from "../ui"
 import { EntryPaymentDialog } from "./entry-payment"
@@ -52,12 +52,15 @@ export function EntriesTab({
   entryFee,
   refreshKey,
   onSettled,
+  onOpenInvoice,
 }: {
   campaigns: CampaignDTO[]
   settlementAccounts: SettlementAccount[]
   entryFee: number
   refreshKey: number
   onSettled: () => Promise<void> | void
+  /** Jump to the batch invoice that has to be paid again. */
+  onOpenInvoice: (invoiceId: string) => void
 }) {
   const [campaignId, setCampaignId] = useState("")
   const [status, setStatus] = useState("")
@@ -79,11 +82,14 @@ export function EntriesTab({
   const titles = Object.fromEntries(campaigns.map((c) => [c.id, c.title]))
   const prices = Object.fromEntries(campaigns.map((c) => [c.id, c.ticketPrice]))
 
-  // Tickets still waiting for money: not on a batch invoice, not simulated, not yet settled.
-  // A rejected transfer drops the ticket back to ISSUED, so the same button turns into "Pay again".
-  const canPay = (entry: EntryDTO) => entry.status === "ISSUED" && !entry.invoiceId && !entry.isTest
+  // PakRaffle could not verify the last transfer: the ticket is payable again, whether the ledger
+  // already dropped it back to ISSUED or it is still parked on INVOICED.
   const rejected = (entry: EntryDTO) =>
-    entry.paymentStatus === "FAILED" || entry.paymentStatus === "REFUNDED" || entry.paymentStatus === "CANCELLED"
+    entry.status !== "PAID" &&
+    entry.status !== "CANCELLED" &&
+    (entry.paymentStatus === "FAILED" || entry.paymentStatus === "REFUNDED" || entry.paymentStatus === "CANCELLED")
+  const canPay = (entry: EntryDTO) =>
+    !entry.isTest && !entry.invoiceId && (entry.status === "ISSUED" || rejected(entry))
 
   return (
     <Panel>
@@ -156,6 +162,15 @@ export function EntriesTab({
               onClick={() => setPaying(entry)}
             >
               <Wallet className="h-3.5 w-3.5 text-emerald-400" /> {rejected(entry) ? "Pay again" : "Pay now"}
+            </Btn>
+          ) : rejected(entry) && entry.invoiceId ? (
+            // A batch ticket stays on its invoice: reopening the invoice is the way to pay again.
+            <Btn
+              variant="primary"
+              className="min-h-0 px-3 py-1.5 text-xs"
+              onClick={() => onOpenInvoice(entry.invoiceId as string)}
+            >
+              <ReceiptText className="h-3.5 w-3.5 text-emerald-400" /> Resubmit invoice
             </Btn>
           ) : entry.paymentStatus === "PENDING" || entry.paymentStatus === "PROCESSING" ? (
             <span className="text-[11px] text-slate-500">Waiting for PakRaffle</span>

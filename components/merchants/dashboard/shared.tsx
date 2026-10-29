@@ -58,7 +58,11 @@ export function entryStatusKey(entry: EntryDTO): string {
 
 /** A rejected transfer the merchant can re-send on its own (batch tickets go through the invoice). */
 export function paymentFailed(entry: EntryDTO) {
-  return entry.status !== "PAID" && (entry.paymentStatus === "FAILED" || entry.paymentStatus === "REFUNDED")
+  return (
+    entry.status !== "PAID" &&
+    entry.status !== "CANCELLED" &&
+    (entry.paymentStatus === "FAILED" || entry.paymentStatus === "REFUNDED")
+  )
 }
 
 export function EntriesTable({

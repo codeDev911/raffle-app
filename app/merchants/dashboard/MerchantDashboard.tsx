@@ -233,6 +233,11 @@ export default function MerchantDashboard() {
             entryFee={me.integration.entryFee}
             refreshKey={feedKey}
             onSettled={refresh}
+            onOpenInvoice={(invoiceId) => {
+              // A failed batch ticket sends the merchant straight to its invoice's resubmit form.
+              setOpenInvoiceId(invoiceId)
+              changeTab("invoices")
+            }}
           />
         )}
         {tab === "invoices" && (
