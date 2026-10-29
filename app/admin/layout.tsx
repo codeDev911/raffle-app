@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   ChevronRight,
   ClipboardList,
+  Store,
 } from "lucide-react"
 
 const navigation = [
@@ -25,6 +26,7 @@ const navigation = [
   { name: "Product Requests", href: "/admin/requests", icon: ClipboardList },
   { name: "Customers", href: "/admin/customers", icon: Users },
   { name: "Payments", href: "/admin/payments", icon: CreditCard },
+  { name: "Merchants", href: "/admin/merchants", icon: Store },
 ]
 
 export default function AdminLayout({

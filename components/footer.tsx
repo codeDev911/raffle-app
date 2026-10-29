@@ -168,6 +168,17 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/merchants" className="text-emerald-700 font-semibold hover:underline flex items-center gap-1">
+                  <span>Merchant Connect (Shopify)</span>
+                  <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded font-bold">Sellers</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/lookup/store-ticket" className="hover:text-emerald-700 transition-colors">
+                  Store Ticket Lookup
+                </Link>
+              </li>
+              <li>
                 <Link href="/list-product" className="text-emerald-700 font-semibold hover:underline flex items-center gap-1">
                   <span>List Your Product</span>
                   <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1 py-0.2 rounded font-bold">8% Fee</span>

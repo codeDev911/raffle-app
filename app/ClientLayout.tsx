@@ -19,7 +19,8 @@ export default function ClientLayout({
   const isStandaloneRoute =
     pathname?.startsWith("/admin") ||
     pathname?.startsWith("/payment") ||
-    pathname?.startsWith("/application/")
+    pathname?.startsWith("/application/") ||
+    pathname?.startsWith("/merchants/dashboard")
   useEffect(() => {
     if (typeof window !== "undefined") {
       const key = "client_browse_id"

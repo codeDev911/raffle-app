@@ -20,6 +20,9 @@ yarn-error.log*
 # env files
 .env*
 
+# merchant connect file store (contains webhook secrets when no database is configured)
+/data/merchant-connect.json
+
 # vercel
 .vercel
 

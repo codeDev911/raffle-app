@@ -53,8 +53,9 @@ model Raffle {
   updatedAt       DateTime    @updatedAt
 
   // Relations
-  entries Entry[]
-  winners Winner[]
+  entries           Entry[]
+  winners           Winner[]
+  merchantCampaigns MerchantCampaign[]
 
   @@map("raffles")
 }
@@ -180,4 +181,160 @@ enum ListingStatus {
   UNDER_REVIEW
   APPROVED
   REJECTED
+}
+
+// ─────────────────────────────────────────────────────────────
+// Merchant Connect: Shopify / independent store lucky draw engine
+// All money fields on merchant models are whole PKR (not paisa).
+// ─────────────────────────────────────────────────────────────
+
+model MerchantStore {
+  id            String              @id @default(cuid())
+  name          String
+  storeUrl      String              @unique // normalized shop domain, e.g. mystore.myshopify.com
+  platform      String              @default("SHOPIFY")
+  apiKeyHash    String              @unique // sha256 of the merchant API key (raw key is shown once)
+  apiKeyPrefix  String              // first characters of the key, for display only
+  webhookSecret String              // HMAC signing secret used to verify incoming webhooks
+  contactEmail  String
+  contactPhone  String
+  payoutDetails String?
+  status        MerchantStoreStatus @default(ACTIVE)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  campaigns MerchantCampaign[]
+  entries   MerchantEntry[]
+  invoices  MerchantInvoice[]
+
+  @@map("merchant_stores")
+}
+
+model MerchantCampaign {
+  id             String                 @id @default(cuid())
+  storeId        String
+  raffleId       String?
+  title          String
+  ruleType       MerchantRuleType       @default(MIN_QUANTITY)
+  minQuantity    Int?
+  minAmount      Int? // PKR
+  productFilters String[]               @default([]) // SKU / product id / title keyword restrictions
+  ticketPrice    Int // PKR billed to merchant per issued entry
+  maxEntries     Int? // null = continuous campaign
+  currentEntries Int                    @default(0) // live (non-test, non-cancelled) entries
+  status         MerchantCampaignStatus @default(ACTIVE)
+  startDate      DateTime               @default(now())
+  endDate        DateTime
+  winnerEntryId  String?
+  drawnAt        DateTime?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  store    MerchantStore     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  raffle   Raffle?           @relation(fields: [raffleId], references: [id], onDelete: SetNull)
+  entries  MerchantEntry[]
+  invoices MerchantInvoice[]
+
+  @@index([storeId, status])
+  @@map("merchant_campaigns")
+}
+
+model MerchantEntry {
+  id              String              @id @default(cuid())
+  campaignId      String
+  storeId         String
+  invoiceId       String?
+  shopifyOrderId  String
+  orderName       String? // human order number, e.g. #1042
+  customerName    String
+  customerEmail   String?
+  customerPhone   String?
+  phoneNormalized String? // digits-only 92XXXXXXXXXX for lookups
+  ticketNumber    String              @unique
+  orderAmount     Int // PKR (qualifying subtotal)
+  itemCount       Int
+  isTest          Boolean             @default(false) // minted by the dashboard simulator; never billed or drawn
+  status          MerchantEntryStatus @default(ISSUED)
+  cancelledReason String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  campaign MerchantCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  store    MerchantStore    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  invoice  MerchantInvoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@unique([campaignId, shopifyOrderId])
+  @@index([storeId, status])
+  @@index([phoneNormalized])
+  @@index([shopifyOrderId])
+  @@map("merchant_entries")
+}
+
+model MerchantInvoice {
+  id             String                 @id @default(cuid())
+  campaignId     String
+  storeId        String
+  invoiceNumber  String                 @unique
+  totalEntries   Int
+  unitPrice      Int // PKR per entry at time of invoicing
+  amountDue      Int // PKR
+  paymentMethod  MerchantPaymentMethod?
+  paymentProof   String? // receipt screenshot URL
+  transactionRef String?
+  adminNotes     String?
+  status         MerchantInvoiceStatus  @default(PENDING)
+  submittedAt    DateTime?
+  paidAt         DateTime?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  campaign MerchantCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  store    MerchantStore    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  entries  MerchantEntry[]
+
+  @@index([storeId, status])
+  @@map("merchant_invoices")
+}
+
+enum MerchantStoreStatus {
+  ACTIVE
+  PAUSED
+}
+
+enum MerchantRuleType {
+  ALL_ORDERS
+  MIN_QUANTITY
+  MIN_AMOUNT
+  MIN_QUANTITY_AND_AMOUNT
+}
+
+enum MerchantCampaignStatus {
+  ACTIVE
+  PAUSED
+  PENDING_INVOICE
+  DRAW_READY
+  COMPLETED
+}
+
+enum MerchantEntryStatus {
+  ISSUED
+  INVOICED
+  PAID
+  CANCELLED
+}
+
+enum MerchantInvoiceStatus {
+  PENDING
+  UNDER_REVIEW
+  PAID
+}
+
+enum MerchantPaymentMethod {
+  RAAST
+  IBFT
+  NAYAPAY
+  SADAPAY
+  JAZZCASH
+  EASYPAISA
+  CARD
 }

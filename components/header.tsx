@@ -42,6 +42,7 @@ import {
   Search,
   Clock,
   ArrowRight,
+  Store,
 } from "lucide-react"
 
 export const WHATSAPP_CLEAN = "923377155722"
@@ -329,7 +330,9 @@ export function Header() {
                   className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-colors cursor-pointer outline-none font-semibold ${
                     pathname === "/list-product" ||
                     pathname?.startsWith("/application") ||
-                    pathname === "/become-a-partner"
+                    pathname === "/become-a-partner" ||
+                    pathname?.startsWith("/merchants") ||
+                    pathname?.startsWith("/lookup")
                       ? "text-emerald-700 bg-emerald-50 font-bold"
                       : "text-gray-700 hover:text-emerald-600 hover:bg-gray-50"
                   }`}
@@ -479,7 +482,52 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
 
-                  {/* Link 6: Live WhatsApp Support */}
+                  {/* Link 6: Merchant Connect (Shopify lucky draws) */}
+                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-emerald-50">
+                    <Link
+                      href="/merchants"
+                      className="p-3 rounded-2xl border border-emerald-100 bg-emerald-50/40 hover:bg-emerald-50 transition-colors flex items-start gap-3 w-full group"
+                    >
+                      <div className="p-2 rounded-xl bg-emerald-600 text-white shrink-0 group-hover:scale-105 transition-transform">
+                        <Store className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-xs font-bold text-gray-900 group-hover:text-emerald-700">
+                            Merchant Connect
+                          </span>
+                          <span className="text-[9px] font-extrabold bg-emerald-600 text-white px-1.5 py-0.2 rounded-full">
+                            Shopify
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
+                          Boost cart size with guaranteed prize draws on fulfilled orders.
+                        </p>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {/* Link 7: Store Ticket Lookup */}
+                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-violet-50">
+                    <Link
+                      href="/lookup/store-ticket"
+                      className="p-3 rounded-2xl border border-gray-100 hover:border-violet-200 hover:bg-violet-50/40 transition-colors flex items-start gap-3 w-full group"
+                    >
+                      <div className="p-2 rounded-xl bg-violet-100 text-violet-700 shrink-0 group-hover:scale-105 transition-transform">
+                        <Search className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-bold text-gray-900 group-hover:text-violet-700 block">
+                          Store Ticket Lookup
+                        </span>
+                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
+                          Check your draw entry with an order number, ticket or phone.
+                        </p>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  {/* Link 8: Live WhatsApp Support */}
                   <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-green-50">
                     <a
                       href={waInquiryUrl}
@@ -838,6 +886,32 @@ export function Header() {
                       <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full">
                         Earn PKR
                       </span>
+                    </Link>
+
+                    <Link
+                      href="/merchants"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 border border-transparent"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Store className="h-4 w-4 text-emerald-600" />
+                        <span>Merchant Connect (Shopify)</span>
+                      </div>
+                      <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded-full">
+                        Sellers
+                      </span>
+                    </Link>
+
+                    <Link
+                      href="/lookup/store-ticket"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:bg-violet-50 hover:text-violet-700 border border-transparent"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Search className="h-4 w-4 text-violet-600" />
+                        <span>Store Ticket Lookup</span>
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
                     </Link>
 
                     {/* Mobile Quick Track Input */}
