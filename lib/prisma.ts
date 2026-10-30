@@ -17,9 +17,12 @@ export interface User {
   name: string
   phone?: string | null
   city?: string | null
-  password: string
-  role: "USER" | "ADMIN"
+  password?: string | null
+  role: "USER" | "ADMIN" | "MERCHANT"
   isActive: boolean
+  image?: string | null
+  googleId?: string | null
+  emailVerified?: Date | null
   createdAt: Date
   updatedAt: Date
 }
@@ -73,6 +76,7 @@ export interface Payment {
     | "RAAST"
     | "IBFT"
     | "SADAPAY"
+    | "SAFEPAY"
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED"
   transactionId?: string | null
   gatewayRef?: string | null

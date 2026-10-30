@@ -11,7 +11,7 @@ export default function MerchantDashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#0B0F19] animate-pulse" aria-label="Loading dashboard" />
+        <div className="min-h-screen bg-slate-50 animate-pulse" aria-label="Loading dashboard" />
       }
     >
       <MerchantDashboard />

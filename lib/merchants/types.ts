@@ -1,19 +1,24 @@
 // Merchant Connect domain types.
 // Mirrors the Merchant* models in prisma/schema.prisma. All money values are whole PKR.
+import type { IntakeAnswers } from "./intake"
 
 export const STORE_STATUSES = ["ACTIVE", "PAUSED"] as const
 export const RULE_TYPES = ["ALL_ORDERS", "MIN_QUANTITY", "MIN_AMOUNT", "MIN_QUANTITY_AND_AMOUNT"] as const
 export const CAMPAIGN_STATUSES = ["ACTIVE", "PAUSED", "PENDING_INVOICE", "DRAW_READY", "COMPLETED"] as const
 export const ENTRY_STATUSES = ["ISSUED", "INVOICED", "PAID", "CANCELLED"] as const
 export const INVOICE_STATUSES = ["PENDING", "UNDER_REVIEW", "PAID"] as const
+/** Methods a merchant can claim on the manual transfer form (verified by PakRaffle). */
 export const PAYMENT_METHODS = ["RAAST", "IBFT", "NAYAPAY", "SADAPAY", "JAZZCASH", "EASYPAISA", "CARD"] as const
+/** Everything the ledger stores, including the hosted checkout that settles itself. */
+export const MERCHANT_PAYMENT_METHODS = [...PAYMENT_METHODS, "SAFEPAY"] as const
 
 export type MerchantStoreStatus = (typeof STORE_STATUSES)[number]
 export type MerchantRuleType = (typeof RULE_TYPES)[number]
 export type MerchantCampaignStatus = (typeof CAMPAIGN_STATUSES)[number]
 export type MerchantEntryStatus = (typeof ENTRY_STATUSES)[number]
 export type MerchantInvoiceStatus = (typeof INVOICE_STATUSES)[number]
-export type MerchantPaymentMethod = (typeof PAYMENT_METHODS)[number]
+export type ManualPaymentMethod = (typeof PAYMENT_METHODS)[number]
+export type MerchantPaymentMethod = (typeof MERCHANT_PAYMENT_METHODS)[number]
 
 export interface MerchantStore {
   id: string
@@ -27,6 +32,19 @@ export interface MerchantStore {
   contactPhone: string
   payoutDetails?: string | null
   status: MerchantStoreStatus
+  /** Shopify OAuth install state — the offline token stays on the server. */
+  shopifyAccessToken?: string | null
+  shopifyScope?: string | null
+  shopifyConnectedAt?: Date | null
+  shopifyWebhooksReady?: boolean
+  shopifyScriptTagId?: string | null
+  /** Post-signup welcome wizard progress. */
+  onboardingStep?: string
+  onboardingCompletedAt?: Date | null
+  tallySubmissionId?: string | null
+  /** Answers to the six intake questions, keyed by question (see intake.ts). */
+  intakeAnswers?: IntakeAnswers | null
+  intakeSubmittedAt?: Date | null
   createdAt: Date
   updatedAt: Date
 }
@@ -68,6 +86,8 @@ export interface MerchantEntry {
   ticketNumber: string
   orderAmount: number
   itemCount: number
+  /** Browser nonce from the cart, used by the storefront popup. */
+  claimToken?: string | null
   isTest: boolean
   status: MerchantEntryStatus
   cancelledReason?: string | null
@@ -90,6 +110,12 @@ export interface MerchantInvoice {
   status: MerchantInvoiceStatus
   submittedAt?: Date | null
   paidAt?: Date | null
+  /** Safepay tracker of the hosted checkout session opened for this batch. */
+  gatewayRef?: string | null
+  /** Amount in paisa we asked Safepay to collect — the figure a capture must match. */
+  gatewayAmount?: number | null
+  /** Hosted checkout URL the merchant can re-open while the session is alive. */
+  checkoutUrl?: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -114,6 +140,8 @@ export interface NormalizedOrder {
   customerCity?: string | null
   subtotal: number // PKR, may contain decimals
   lineItems: NormalizedLineItem[]
+  /** Browser nonce stamped on the cart by the storefront widget (arrives as a note attribute). */
+  claimToken?: string | null
   fulfilled: boolean
   cancelled: boolean
   financialStatus?: string | null

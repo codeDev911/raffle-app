@@ -65,7 +65,7 @@ export function OverviewTab({
               </>
             }
             action={
-              <Link href="/merchants/dashboard?tab=entries" className="text-xs text-emerald-400 hover:underline">
+              <Link href="/merchants/dashboard?tab=entries" className="text-xs text-emerald-600 hover:underline">
                 View all
               </Link>
             }
@@ -90,15 +90,15 @@ export function OverviewTab({
                 Close a campaign batch with “Review & Settle Batch Invoice”.
               </EmptyState>
             ) : (
-              <div className="divide-y divide-slate-800">
+              <div className="divide-y divide-slate-200">
                 {outstanding.slice(0, 4).map((inv) => (
-                  <button key={inv.id} type="button" onClick={onOpenInvoices} className="flex w-full items-center justify-between gap-3 px-5 py-3 text-left transition hover:bg-slate-800/30">
+                  <button key={inv.id} type="button" onClick={onOpenInvoices} className="flex w-full items-center justify-between gap-3 px-5 py-3 text-left transition hover:bg-slate-100">
                     <div className="min-w-0">
-                      <p className="truncate font-mono text-xs tabular-nums text-slate-200">{inv.invoiceNumber}</p>
+                      <p className="truncate font-mono text-xs tabular-nums text-slate-800">{inv.invoiceNumber}</p>
                       <p className="mt-0.5 truncate text-xs text-slate-500">{inv.campaignTitle}</p>
                       <StatusText status={inv.status} className="mt-1" />
                     </div>
-                    <span className="shrink-0 font-mono text-sm tabular-nums text-emerald-400">{formatPKR(inv.amountDue)}</span>
+                    <span className="shrink-0 font-mono text-sm tabular-nums text-emerald-600">{formatPKR(inv.amountDue)}</span>
                   </button>
                 ))}
               </div>
@@ -110,11 +110,11 @@ export function OverviewTab({
               title="Campaigns"
               description={
                 <>
-                  <span className="font-mono tabular-nums text-slate-300">{formatNumber(active.length)}</span> minting
+                  <span className="font-mono tabular-nums text-slate-700">{formatNumber(active.length)}</span> minting
                   {drawReady.length > 0 && (
                     <>
                       <Sep />
-                      <span className="font-mono tabular-nums text-violet-300">{formatNumber(drawReady.length)}</span> draw-ready
+                      <span className="font-mono tabular-nums text-violet-700">{formatNumber(drawReady.length)}</span> draw-ready
                     </>
                   )}
                 </>
@@ -122,17 +122,17 @@ export function OverviewTab({
             />
             {campaigns.length === 0 ? (
               <div className="px-5 py-6">
-                <p className="text-sm text-slate-400">No campaigns yet.</p>
-                <button type="button" onClick={onOpenCampaigns} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-400 hover:underline">
+                <p className="text-sm text-slate-600">No campaigns yet.</p>
+                <button type="button" onClick={onOpenCampaigns} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:underline">
                   Build your first lucky draw <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
             ) : (
-              <div className="divide-y divide-slate-800">
+              <div className="divide-y divide-slate-200">
                 {campaigns.slice(0, 3).map((c) => (
                   <div key={c.id} className="px-5 py-4">
                     <div className="mb-2 flex items-center justify-between gap-3">
-                      <p className="truncate text-sm font-medium text-slate-100">{c.title}</p>
+                      <p className="truncate text-sm font-medium text-slate-900">{c.title}</p>
                       <StatusText status={c.ended ? "ENDED" : c.capReached ? "PAUSED" : c.status} />
                     </div>
                     <CampaignProgress campaign={c} compact />
@@ -145,7 +145,7 @@ export function OverviewTab({
           <Panel className="p-5">
             <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Next draw</p>
             {nextDraw ? (
-              <p className="mt-2 text-sm text-slate-200">
+              <p className="mt-2 text-sm text-slate-800">
                 {nextDraw.title}
                 <span className="block text-xs text-slate-500">
                   <span className="font-mono tabular-nums">{formatDate(nextDraw.endDate)}</span>
@@ -160,7 +160,7 @@ export function OverviewTab({
               href="/lookup/store-ticket"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:underline"
+              className="mt-4 inline-flex items-center gap-1.5 text-xs text-emerald-600 hover:underline"
             >
               <ExternalLink className="h-3.5 w-3.5" /> Share ticket lookup with customers
             </a>

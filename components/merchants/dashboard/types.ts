@@ -1,5 +1,7 @@
 // Client-side shapes of the Merchant Connect API responses (mirrors lib/merchants/dto.ts).
 
+import type { IntakeAnswers } from "@/lib/merchants/intake"
+
 export interface StoreDTO {
   id: string
   name: string
@@ -11,6 +13,15 @@ export interface StoreDTO {
   contactPhone: string
   payoutDetails: string | null
   status: "ACTIVE" | "PAUSED"
+  /** The merchant finished the manual Shopify setup (webhooks + widget snippet). */
+  shopifyConnected: boolean
+  shopifyConnectedAt: string | null
+  shopifyWebhooksReady: boolean
+  shopifyScriptInstalled: boolean
+  onboardingStep: string
+  onboardingCompletedAt: string | null
+  /** Answers to the six intake questions; submittedAt is null until the merchant submits. */
+  intake?: { answers: IntakeAnswers | null; submittedAt: string | null }
   createdAt: string
   updatedAt: string
 }
@@ -26,7 +37,17 @@ export interface SettlementAccount {
 
 export interface MeResponse {
   store: StoreDTO
-  integration: { webhookUrl: string; topics: string[]; entryFee: number; storage: string }
+  integration: {
+    webhookUrl: string
+    topics: string[]
+    entryFee: number
+    storage: string
+    safepay: boolean
+    /** Script tag src installed on the storefront. */
+    widgetUrl?: string
+    /** The same tag, ready to paste into theme.liquid. */
+    widgetSnippet?: string
+  }
   settlementAccounts: SettlementAccount[]
 }
 
@@ -104,6 +125,12 @@ export interface InvoiceDTO {
   paymentProof: string | null
   transactionRef: string | null
   adminNotes: string | null
+  /** Safepay tracker for a live/completed card session; null for manual transfers. */
+  gatewayRef: string | null
+  /** Amount in paisa handed to Safepay for this batch. */
+  gatewayAmount: number | null
+  /** Hosted checkout URL while a session is open, so the dialog can resume it. */
+  checkoutUrl: string | null
   status: "PENDING" | "UNDER_REVIEW" | "PAID"
   submittedAt: string | null
   paidAt: string | null
@@ -151,3 +178,9 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   EASYPAISA: "Easypaisa",
   CARD: "Card",
 }
+
+/** Safepay is not a transfer method; it is the hosted checkout the merchant is redirected to. */
+export const SAFEPAY_LABEL = "Card / wallet (Safepay)"
+
+export const paymentMethodLabel = (method: string | null | undefined) =>
+  method ? PAYMENT_METHOD_LABELS[method] || (method === "SAFEPAY" ? SAFEPAY_LABEL : method) : "—"

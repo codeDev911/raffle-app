@@ -23,9 +23,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Payment not found" }, { status: 404 })
     }
 
+    // Merchant Connect tickets are settled by the Safepay reporter, which proves the money moved.
+    // A legacy Paymob webhook must never confirm one: it would settle a ticket it did not collect.
+    if ((payment.metadata as any)?.kind === "merchant_entry") {
+      return NextResponse.json({ success: true, ignored: "merchant_payment" })
+    }
+
     if (transactionData.status === "successful") {
       // Payment successful
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: any) => {
         // Update payment status - KEEP IT SIMPLE
         await tx.payment.update({
           where: { id: payment.id },
@@ -35,27 +41,30 @@ export async function POST(request: NextRequest) {
           },
         })
 
-        // Create raffle entries
+        // One raffle entry per payment: a replayed webhook must not inflate the draw.
         const metadata = payment.metadata as any
-        await tx.entry.create({
-          data: {
-            userId: payment.userId,
-            raffleId: metadata.raffleId,
-            quantity: metadata.quantity,
-            totalCost: payment.amount,
-            paymentId: payment.id,
-          },
-        })
-
-        // Update raffle current entries
-        await tx.raffle.update({
-          where: { id: metadata.raffleId },
-          data: {
-            currentEntries: {
-              increment: metadata.quantity,
+        const alreadyMinted = await tx.entry.count({ where: { paymentId: payment.id } })
+        if (alreadyMinted === 0) {
+          await tx.entry.create({
+            data: {
+              userId: payment.userId,
+              raffleId: metadata.raffleId,
+              quantity: metadata.quantity,
+              totalCost: payment.amount,
+              paymentId: payment.id,
             },
-          },
-        })
+          })
+
+          // Update raffle current entries
+          await tx.raffle.update({
+            where: { id: metadata.raffleId },
+            data: {
+              currentEntries: {
+                increment: metadata.quantity,
+              },
+            },
+          })
+        }
       })
 
       console.log("Payment completed successfully:", transactionData.orderId)

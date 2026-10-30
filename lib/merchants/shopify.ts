@@ -3,7 +3,9 @@ import type { NormalizedOrder } from "./types"
 import { safeEqual } from "./utils"
 
 // Shopify webhook topics handled by the ingestion pipeline.
-export const MINT_TOPICS = new Set(["orders/fulfilled", "orders/updated"])
+// orders/create is the moment the shopper is congratulated; the fulfil/update topics keep the
+// ledger correct for stores that only enable post-fulfilment mints.
+export const MINT_TOPICS = new Set(["orders/create", "orders/paid", "orders/fulfilled", "orders/updated"])
 export const CANCEL_TOPICS = new Set(["orders/cancelled", "refunds/create"])
 
 /** Shopify signs the raw request body: base64(HMAC-SHA256(secret, body)). */
@@ -25,6 +27,16 @@ function str(value: unknown): string | null {
 function num(value: unknown): number {
   const n = parseFloat(String(value ?? ""))
   return Number.isFinite(n) ? n : 0
+}
+
+/** Cart attribute the storefront widget writes so the shopper's browser can claim the popup. */
+const CLAIM_ATTRIBUTE = "_pakraffle_token"
+
+function readClaimToken(payload: any): string | null {
+  const attrs = Array.isArray(payload?.note_attributes) ? payload.note_attributes : []
+  const match = attrs.find((attr: any) => String(attr?.name || "").toLowerCase() === CLAIM_ATTRIBUTE)
+  const token = str(match?.value)
+  return token && /^[A-Za-z0-9_-]{8,64}$/.test(token) ? token : null
 }
 
 /** Maps a Shopify order payload into the platform-agnostic order shape. */
@@ -63,6 +75,7 @@ export function normalizeShopifyOrder(payload: any): NormalizedOrder {
       str(payload?.customer?.addresses?.[0]?.city),
     subtotal: num(payload?.current_subtotal_price ?? payload?.subtotal_price ?? payload?.total_price),
     lineItems,
+    claimToken: readClaimToken(payload),
     fulfilled: String(payload?.fulfillment_status || "").toLowerCase() === "fulfilled",
     cancelled: Boolean(payload?.cancelled_at),
     financialStatus: str(payload?.financial_status),

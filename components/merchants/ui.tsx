@@ -1,7 +1,7 @@
 "use client"
 
-// Merchant Connect UI kit — deep slate workspace (#0B0F19 / #111827), emerald operational
-// highlights (#10B981), border-slate-800, monospace tabular figures for all numbers.
+// Merchant Connect UI kit — light workspace (white panels on slate-50), emerald operational
+// highlights (#059669), border-slate-200, monospace tabular figures for all numbers.
 import type React from "react"
 import { useState } from "react"
 import { Check, Copy, Loader2 } from "lucide-react"
@@ -73,25 +73,25 @@ export function timeAgo(value: string | Date | null | undefined) {
 // ───────────────────────── status (typographic, no pills) ─────────────────────────
 
 const STATUS_TONE: Record<string, { dot: string; text: string; label?: string }> = {
-  ACTIVE: { dot: "bg-emerald-400", text: "text-emerald-400" },
-  ISSUED: { dot: "bg-emerald-400", text: "text-emerald-400" },
-  PAID: { dot: "bg-emerald-400", text: "text-emerald-300" },
-  PAUSED: { dot: "bg-amber-400", text: "text-amber-300" },
-  PENDING: { dot: "bg-amber-400", text: "text-amber-300", label: "Awaiting payment" },
-  PENDING_INVOICE: { dot: "bg-amber-400", text: "text-amber-300", label: "Invoice pending" },
-  UNDER_REVIEW: { dot: "bg-sky-400", text: "text-sky-300", label: "Under review" },
-  INVOICED: { dot: "bg-sky-400", text: "text-sky-300", label: "Awaiting confirmation" },
-  DRAW_READY: { dot: "bg-violet-400", text: "text-violet-300", label: "Ready for draw" },
-  COMPLETED: { dot: "bg-slate-400", text: "text-slate-300", label: "Draw completed" },
-  CANCELLED: { dot: "bg-rose-400", text: "text-rose-300" },
-  ENDED: { dot: "bg-slate-500", text: "text-slate-400", label: "Ended" },
-  TEST: { dot: "bg-fuchsia-400", text: "text-fuchsia-300", label: "Test" },
+  ACTIVE: { dot: "bg-emerald-500", text: "text-emerald-700" },
+  ISSUED: { dot: "bg-emerald-500", text: "text-emerald-700" },
+  PAID: { dot: "bg-emerald-500", text: "text-emerald-700" },
+  PAUSED: { dot: "bg-amber-500", text: "text-amber-700" },
+  PENDING: { dot: "bg-amber-500", text: "text-amber-700", label: "Awaiting payment" },
+  PENDING_INVOICE: { dot: "bg-amber-500", text: "text-amber-700", label: "Invoice pending" },
+  UNDER_REVIEW: { dot: "bg-sky-500", text: "text-sky-700", label: "Under review" },
+  INVOICED: { dot: "bg-sky-500", text: "text-sky-700", label: "Awaiting confirmation" },
+  DRAW_READY: { dot: "bg-violet-500", text: "text-violet-700", label: "Ready for draw" },
+  COMPLETED: { dot: "bg-slate-400", text: "text-slate-600", label: "Draw completed" },
+  CANCELLED: { dot: "bg-rose-500", text: "text-rose-700" },
+  ENDED: { dot: "bg-slate-400", text: "text-slate-500", label: "Ended" },
+  TEST: { dot: "bg-fuchsia-500", text: "text-fuchsia-700", label: "Test" },
   // Merchant ticket states, derived from the ticket + its PakRaffle payment row.
-  UNPAID: { dot: "bg-amber-400", text: "text-amber-300", label: "Unpaid" },
-  ON_INVOICE: { dot: "bg-slate-500", text: "text-slate-400", label: "On invoice" },
-  AWAITING_CONFIRMATION: { dot: "bg-sky-400", text: "text-sky-300", label: "Awaiting confirmation" },
-  PAYMENT_FAILED: { dot: "bg-rose-400", text: "text-rose-300", label: "Payment failed" },
-  PAYMENT_CANCELLED: { dot: "bg-rose-400", text: "text-rose-300", label: "Payment cancelled" },
+  UNPAID: { dot: "bg-amber-500", text: "text-amber-700", label: "Unpaid" },
+  ON_INVOICE: { dot: "bg-slate-400", text: "text-slate-500", label: "On invoice" },
+  AWAITING_CONFIRMATION: { dot: "bg-sky-500", text: "text-sky-700", label: "Awaiting confirmation" },
+  PAYMENT_FAILED: { dot: "bg-rose-500", text: "text-rose-700", label: "Payment failed" },
+  PAYMENT_CANCELLED: { dot: "bg-rose-500", text: "text-rose-700", label: "Payment cancelled" },
 }
 
 export function statusLabel(status: string) {
@@ -101,7 +101,7 @@ export function statusLabel(status: string) {
 }
 
 export function StatusText({ status, className }: { status: string; className?: string }) {
-  const tone = STATUS_TONE[status] || { dot: "bg-slate-500", text: "text-slate-400" }
+  const tone = STATUS_TONE[status] || { dot: "bg-slate-400", text: "text-slate-500" }
   return (
     <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap", tone.text, className)}>
       <span className={cn("h-1.5 w-1.5 rounded-full", tone.dot)} />
@@ -111,13 +111,13 @@ export function StatusText({ status, className }: { status: string; className?: 
 }
 
 export function Sep() {
-  return <span className="text-slate-600 select-none px-1.5">·</span>
+  return <span className="text-slate-300 select-none px-1.5">·</span>
 }
 
 // ───────────────────────── layout primitives ─────────────────────────
 
 export function Panel({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn("rounded-2xl border border-slate-800 bg-[#111827]", className)}>{children}</div>
+  return <div className={cn("rounded-2xl border border-slate-200 bg-white shadow-sm", className)}>{children}</div>
 }
 
 export function PanelHeader({
@@ -130,10 +130,10 @@ export function PanelHeader({
   action?: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-slate-800 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
-        <h3 className="text-sm font-semibold text-slate-100">{title}</h3>
-        {description && <p className="mt-0.5 text-xs text-slate-400">{description}</p>}
+        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
       </div>
       {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
     </div>
@@ -154,7 +154,7 @@ export function Metric({
   return (
     <Panel className="p-4">
       <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">{label}</p>
-      <p className={cn("mt-2 font-mono text-2xl font-semibold tabular-nums", accent ? "text-emerald-400" : "text-slate-100")}>
+      <p className={cn("mt-2 font-mono text-2xl font-semibold tabular-nums", accent ? "text-emerald-600" : "text-slate-900")}>
         {value}
       </p>
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
@@ -165,10 +165,10 @@ export function Metric({
 export function EmptyState({ icon: Icon, title, children }: { icon: any; title: string; children?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
-      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl border border-slate-800 bg-[#0B0F19] text-slate-500">
+      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-400">
         <Icon className="h-5 w-5" />
       </div>
-      <p className="text-sm font-medium text-slate-200">{title}</p>
+      <p className="text-sm font-medium text-slate-800">{title}</p>
       {children && <div className="mt-1 max-w-sm text-xs text-slate-500">{children}</div>}
     </div>
   )
@@ -191,10 +191,10 @@ export function Field({
 }) {
   return (
     <label className={cn("block space-y-1.5", className)}>
-      <span className="text-xs font-medium text-slate-300">{label}</span>
+      <span className="text-xs font-medium text-slate-700">{label}</span>
       {children}
       {error ? (
-        <span className="block text-xs text-rose-400">{error}</span>
+        <span className="block text-xs text-rose-600">{error}</span>
       ) : hint ? (
         <span className="block text-[11px] text-slate-500">{hint}</span>
       ) : null}
@@ -203,7 +203,7 @@ export function Field({
 }
 
 const inputBase =
-  "w-full rounded-xl border border-slate-800 bg-[#0B0F19] px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none transition focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60"
+  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:bg-slate-50 disabled:text-slate-500"
 
 export function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cn(inputBase, props.className)} />
@@ -213,17 +213,32 @@ export function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
   return <textarea {...props} className={cn(inputBase, "min-h-[84px] resize-y", props.className)} />
 }
 
-export function SelectInput(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={cn(inputBase, "appearance-none pr-8", props.className)} />
+/** Native arrow removed so the chevron looks the same on every OS; drawn as an inline SVG. */
+const selectChevron: React.CSSProperties = {
+  backgroundImage:
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "right 0.75rem center",
+  backgroundSize: "16px",
+}
+
+export function SelectInput({ style, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select
+      {...props}
+      style={{ ...selectChevron, ...style }}
+      className={cn(inputBase, "cursor-pointer appearance-none pr-10", props.className)}
+    />
+  )
 }
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger"
 
 const buttonVariants: Record<ButtonVariant, string> = {
-  primary: "bg-emerald-500 text-[#0B0F19] hover:bg-emerald-400 shadow-sm shadow-emerald-500/20",
-  secondary: "border border-slate-700 bg-slate-800/60 text-slate-100 hover:bg-slate-800",
-  ghost: "text-slate-300 hover:bg-slate-800/70 hover:text-slate-100",
-  danger: "border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20",
+  primary: "bg-emerald-600 text-white hover:bg-emerald-500 shadow-sm shadow-emerald-600/20",
+  secondary: "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+  ghost: "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+  danger: "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100",
 }
 
 export function Btn({
@@ -252,14 +267,25 @@ export function Btn({
 
 export function Alert({ tone = "error", children }: { tone?: "error" | "info" | "success"; children: React.ReactNode }) {
   const tones = {
-    error: "border-rose-500/30 bg-rose-500/10 text-rose-200",
-    info: "border-sky-500/30 bg-sky-500/10 text-sky-200",
-    success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200",
+    error: "border-rose-200 bg-rose-50 text-rose-700",
+    info: "border-sky-200 bg-sky-50 text-sky-700",
+    success: "border-emerald-200 bg-emerald-50 text-emerald-700",
   }
   return <div className={cn("rounded-xl border px-3.5 py-2.5 text-xs leading-relaxed", tones[tone])}>{children}</div>
 }
 
-export function CopyField({ label, value, secret = false }: { label: string; value: string; secret?: boolean }) {
+export function CopyField({
+  label,
+  value,
+  secret = false,
+  wrap = false,
+}: {
+  label: string
+  value: string
+  secret?: boolean
+  /** Long snippets (e.g. a script tag) wrap instead of scrolling sideways. */
+  wrap?: boolean
+}) {
   const [copied, setCopied] = useState(false)
   const [revealed, setRevealed] = useState(!secret)
 
@@ -275,21 +301,23 @@ export function CopyField({ label, value, secret = false }: { label: string; val
 
   return (
     <div className="space-y-1.5">
-      <span className="text-xs font-medium text-slate-300">{label}</span>
+      <span className="text-xs font-medium text-slate-700">{label}</span>
       <div className="flex items-stretch gap-2">
         <code
           onClick={() => setRevealed(true)}
-          className="flex-1 cursor-text select-all overflow-x-auto whitespace-nowrap rounded-xl border border-slate-800 bg-[#0B0F19] px-3.5 py-2.5 font-mono text-xs text-emerald-300"
+          className={`flex-1 cursor-text select-all rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 font-mono text-xs text-emerald-700 ${
+            wrap ? "break-all whitespace-pre-wrap" : "overflow-x-auto whitespace-nowrap"
+          }`}
         >
           {revealed ? value : "•".repeat(Math.min(32, value.length))}
         </code>
         <button
           type="button"
           onClick={copy}
-          className="inline-flex w-11 shrink-0 items-center justify-center rounded-xl border border-slate-800 bg-slate-800/60 text-slate-300 transition hover:text-emerald-300"
+          className="inline-flex w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition hover:text-emerald-600"
           aria-label={`Copy ${label}`}
         >
-          {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+          {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
         </button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 // Response mappers. Raw rows never leave the service layer: hashes and secrets are
 // stripped, and derived fields (rule summary, billable amounts) are computed once here.
 import { describeRule } from "./rules"
+import type { IntakeAnswers } from "./intake"
 import type { MerchantCampaign, MerchantEntry, MerchantInvoice, MerchantStore } from "./types"
 import { maskName, maskPhone, maskSecret } from "./utils"
 
@@ -27,6 +28,18 @@ export function toStoreDTO(store: MerchantStore) {
     contactPhone: store.contactPhone,
     payoutDetails: store.payoutDetails ?? null,
     status: store.status,
+    // Shopify one-click connect state (the token itself never leaves the server).
+    shopifyConnected: Boolean(store.shopifyConnectedAt),
+    shopifyConnectedAt: store.shopifyConnectedAt ?? null,
+    shopifyWebhooksReady: Boolean(store.shopifyWebhooksReady),
+    shopifyScriptInstalled: Boolean(store.shopifyScriptTagId),
+    onboardingStep: store.onboardingStep ?? "WELCOME",
+    onboardingCompletedAt: store.onboardingCompletedAt ?? null,
+    /** Store-intake answers, so the wizard can resume where the merchant left off. */
+    intake: {
+      answers: (store.intakeAnswers as IntakeAnswers | null | undefined) ?? null,
+      submittedAt: store.intakeSubmittedAt ?? null,
+    },
     createdAt: store.createdAt,
     updatedAt: store.updatedAt,
   }
@@ -107,6 +120,12 @@ export function toInvoiceDTO(
     paymentProof: invoice.paymentProof ?? null,
     transactionRef: invoice.transactionRef ?? null,
     adminNotes: invoice.adminNotes ?? null,
+    /** Safepay tracker for a live/completed card session; null for manual transfers. */
+    gatewayRef: invoice.gatewayRef ?? null,
+    /** Amount in paisa that Safepay was asked to collect for this batch. */
+    gatewayAmount: invoice.gatewayAmount ?? null,
+    /** Hosted checkout URL while a session is open, so the dialog can resume it. */
+    checkoutUrl: invoice.checkoutUrl ?? null,
     status: invoice.status,
     submittedAt: invoice.submittedAt ?? null,
     paidAt: invoice.paidAt ?? null,

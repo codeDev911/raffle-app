@@ -3,12 +3,12 @@
 import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowRight, KeyRound, ShieldAlert, Store } from "lucide-react"
+import { ArrowRight, ShieldAlert, Store } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Alert, Btn, CopyField, Field, TextArea, TextInput, merchantApi } from "./ui"
 
 const dialogClass =
-  "max-h-[92vh] overflow-y-auto border-slate-800 bg-[#111827] text-slate-100 sm:max-w-xl sm:rounded-2xl [&>button]:text-slate-400"
+  "max-h-[92vh] overflow-y-auto border-slate-200 bg-white text-slate-900 sm:max-w-xl sm:rounded-2xl [&>button]:text-slate-600"
 
 interface Credentials {
   apiKey: string
@@ -17,11 +17,19 @@ interface Credentials {
   storeUrl: string
 }
 
-export function ConnectStoreDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function ConnectStoreDialog({
+  open,
+  onOpenChange,
+  initial,
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  initial?: { name?: string; storeUrl?: string }
+}) {
   const router = useRouter()
   const [form, setForm] = useState({
-    name: "",
-    storeUrl: "",
+    name: initial?.name || "",
+    storeUrl: initial?.storeUrl || "",
     contactEmail: "",
     contactPhone: "",
     payoutDetails: "",
@@ -62,9 +70,9 @@ export function ConnectStoreDialog({ open, onOpenChange }: { open: boolean; onOp
         {credentials ? (
           <div className="space-y-5">
             <DialogHeader>
-              <DialogTitle className="text-lg text-slate-100">Store connected</DialogTitle>
-              <DialogDescription className="text-slate-400">
-                <span className="font-mono text-emerald-300">{credentials.storeUrl}</span> is live on PakRaffle Merchant Connect.
+              <DialogTitle className="text-lg text-slate-900">Store connected</DialogTitle>
+              <DialogDescription className="text-slate-600">
+                <span className="font-mono text-emerald-700">{credentials.storeUrl}</span> is live on PakRaffle Merchant Connect.
               </DialogDescription>
             </DialogHeader>
 
@@ -79,16 +87,16 @@ export function ConnectStoreDialog({ open, onOpenChange }: { open: boolean; onOp
             <CopyField label="Webhook URL" value={credentials.webhookUrl} />
             <CopyField label="Webhook signing secret" value={credentials.webhookSecret} secret />
 
-            <div className="rounded-xl border border-slate-800 bg-[#0B0F19] p-4 text-xs leading-relaxed text-slate-400">
-              <p className="mb-1.5 font-semibold text-slate-200">Shopify setup · 2 minutes</p>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-600">
+              <p className="mb-1.5 font-semibold text-slate-800">Shopify setup · 2 minutes</p>
               <ol className="list-decimal space-y-1 pl-4">
                 <li>Shopify Admin → Settings → Notifications → Webhooks → Create webhook.</li>
                 <li>
-                  Event <span className="font-mono text-slate-200">Order fulfillment</span> · Format JSON · URL above.
+                  Event <span className="font-mono text-slate-800">Order fulfillment</span> · Format JSON · URL above.
                 </li>
                 <li>
-                  Add <span className="font-mono text-slate-200">Order cancellation</span> and{" "}
-                  <span className="font-mono text-slate-200">Refund create</span> to auto-void tickets.
+                  Add <span className="font-mono text-slate-800">Order cancellation</span> and{" "}
+                  <span className="font-mono text-slate-800">Refund create</span> to auto-void tickets.
                 </li>
                 <li>Copy Shopify&apos;s signing secret into Dashboard → Settings so signatures verify.</li>
               </ol>
@@ -101,10 +109,10 @@ export function ConnectStoreDialog({ open, onOpenChange }: { open: boolean; onOp
         ) : (
           <form onSubmit={submit} className="space-y-4">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-lg text-slate-100">
-                <Store className="h-5 w-5 text-emerald-400" /> Connect your Shopify store
+              <DialogTitle className="flex items-center gap-2 text-lg text-slate-900">
+                <Store className="h-5 w-5 text-emerald-600" /> Connect your Shopify store
               </DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogDescription className="text-slate-600">
                 Free to connect. You only pay per ticket on orders you actually ship.
               </DialogDescription>
             </DialogHeader>
@@ -146,57 +154,19 @@ export function ConnectStoreDialog({ open, onOpenChange }: { open: boolean; onOp
             <Btn type="submit" loading={loading} className="w-full">
               Connect store <ArrowRight className="h-4 w-4" />
             </Btn>
+
+            <p className="text-center text-[11px] text-slate-500">
+              Connecting while signed in links the store to your merchant account.{" "}
+              <button
+                type="button"
+                onClick={() => router.push("/auth/merchant/login")}
+                className="text-slate-600 transition hover:text-emerald-600"
+              >
+                Sign in first
+              </button>
+            </p>
           </form>
         )}
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-export function MerchantLoginDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  const router = useRouter()
-  const [apiKey, setApiKey] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    try {
-      await merchantApi("/api/merchants/login", { method: "POST", json: { apiKey } })
-      router.push("/merchants/dashboard")
-    } catch (err: any) {
-      setError(err.message)
-      setLoading(false)
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={dialogClass}>
-        <form onSubmit={submit} className="space-y-4">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg text-slate-100">
-              <KeyRound className="h-5 w-5 text-emerald-400" /> Merchant login
-            </DialogTitle>
-            <DialogDescription className="text-slate-400">Use the API key issued when you connected your store.</DialogDescription>
-          </DialogHeader>
-          {error && <Alert>{error}</Alert>}
-          <Field label="API key">
-            <TextInput
-              required
-              autoComplete="off"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="prk_live_…"
-              className="font-mono"
-            />
-          </Field>
-          <Btn type="submit" loading={loading} className="w-full">
-            Open dashboard <ArrowRight className="h-4 w-4" />
-          </Btn>
-        </form>
       </DialogContent>
     </Dialog>
   )

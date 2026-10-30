@@ -3,7 +3,7 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { KeyRound, LogOut, RefreshCw, Search, Webhook } from "lucide-react"
+import { CheckCircle2, KeyRound, LogOut, RefreshCw, Search, Webhook } from "lucide-react"
 import {
   Alert,
   Btn,
@@ -20,6 +20,7 @@ import {
   merchantApi,
 } from "../ui"
 import type { MeResponse, StoreDTO } from "./types"
+import { INTAKE_QUESTIONS, describeIntakeAnswer } from "@/lib/merchants/intake"
 
 export function SettingsTab({
   me,
@@ -38,6 +39,8 @@ export function SettingsTab({
   const [notice, setNotice] = useState<string | null>(null)
   const [revealedSecret, setRevealedSecret] = useState<string | null>(null)
   const [newApiKey, setNewApiKey] = useState<string | null>(null)
+  const [shopifyBusy, setShopifyBusy] = useState(false)
+  const [shopifyNotice, setShopifyNotice] = useState<string | null>(null)
 
   useEffect(() => {
     setForm({
@@ -97,6 +100,43 @@ export function SettingsTab({
     }
   }
 
+  const confirmShopify = async () => {
+    setShopifyBusy(true)
+    setError(null)
+    setShopifyNotice(null)
+    try {
+      const data = await merchantApi<{ store: StoreDTO }>("/api/merchants/me/shopify", {
+        method: "POST",
+        json: { action: "confirm" },
+      })
+      await onStoreChanged(data.store)
+      setShopifyNotice("Setup confirmed — qualifying orders will mint tickets.")
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setShopifyBusy(false)
+    }
+  }
+
+  const resetShopify = async () => {
+    if (!window.confirm("Reset the Shopify setup? The checklist comes back until you confirm it again.")) return
+    setShopifyBusy(true)
+    setError(null)
+    setShopifyNotice(null)
+    try {
+      const data = await merchantApi<{ store: StoreDTO }>("/api/merchants/me/shopify", {
+        method: "POST",
+        json: { action: "reset" },
+      })
+      await onStoreChanged(data.store)
+      setShopifyNotice("Setup reset")
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setShopifyBusy(false)
+    }
+  }
+
   const rotateKey = async () => {
     setRotating(true)
     setError(null)
@@ -112,40 +152,92 @@ export function SettingsTab({
     }
   }
 
+  const widgetTag =
+    me.integration.widgetSnippet ||
+    (me.integration.widgetUrl ? `<script async src="${me.integration.widgetUrl}"></script>` : "")
+
   return (
     <div className="grid gap-4 xl:grid-cols-2">
-      {/* Integration */}
+      {/* Shopify connection */}
       <Panel className="xl:col-span-2">
         <PanelHeader
-          title="Shopify Integration"
-          description="Point your store's webhooks here. PakRaffle only acts on requests signed with your secret."
+          title="Shopify setup"
+          description={
+            me.store.shopifyConnected
+              ? `Set up on ${me.store.storeUrl} — webhooks verify against your signing secret.`
+              : "Copy the webhook URL and the widget tag into your Shopify admin. Two minutes, one time."
+          }
+          action={
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700">
+              <span className={`h-1.5 w-1.5 rounded-full ${me.store.shopifyConnected ? "bg-emerald-500" : "bg-amber-500"}`} />
+              {me.store.shopifyConnected ? "Connected" : "Not connected"}
+            </span>
+          }
         />
-        <div className="grid gap-5 p-5 md:grid-cols-2">
-          <CopyField label="Webhook URL" value={me.integration.webhookUrl} />
-          <div className="space-y-2">
-            <span className="text-xs font-medium text-slate-300">Subscribe to these topics</span>
-            <div className="flex flex-wrap gap-1.5">
-              {me.integration.topics.map((topic) => (
-                <code key={topic} className="rounded-lg border border-slate-800 bg-[#0B0F19] px-2 py-1 font-mono text-[11px] text-emerald-300">
-                  {topic}
-                </code>
-              ))}
+
+        <div className="space-y-5 p-5">
+          {shopifyNotice && <Alert tone="success">{shopifyNotice}</Alert>}
+
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="space-y-3">
+              <CopyField label="Webhook URL" value={me.integration.webhookUrl} />
+              <div className="space-y-2">
+                <span className="text-xs font-medium text-slate-700">Create one webhook per topic</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {me.integration.topics.map((topic) => (
+                    <code key={topic} className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 font-mono text-[11px] text-emerald-700">
+                      {topic}
+                    </code>
+                  ))}
+                </div>
+                <p className="text-[11px] leading-relaxed text-slate-500">
+                  orders/create mints the ticket and fires the congratulations popup · orders/cancelled and refunds/create void
+                  it.
+                </p>
+              </div>
             </div>
-            <p className="text-[11px] leading-relaxed text-slate-500">
-              orders/fulfilled mints tickets · orders/cancelled and refunds/create void them before settlement.
-            </p>
+
+            <div className="space-y-3">
+              <CopyField label="Storefront widget" value={widgetTag} wrap />
+              <p className="text-[11px] leading-relaxed text-slate-500">
+                Online Store → Themes → Edit code → <span className="font-mono text-slate-600">theme.liquid</span> — paste it
+                just before <span className="font-mono text-slate-600">&lt;/head&gt;</span>.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-600">
+            <p className="mb-1.5 font-semibold text-slate-800">Shopify admin · 2 minutes</p>
+            <ol className="list-decimal space-y-1 pl-4">
+              <li>Settings → Notifications → Webhooks → Create webhook, one per topic above (JSON format).</li>
+              <li>Copy the signing secret Shopify shows and paste it into Store profile → Shopify webhook signing secret.</li>
+              <li>Add the widget tag to theme.liquid so shoppers see their free entry unlock in the cart.</li>
+            </ol>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {me.store.shopifyConnected ? (
+              <Btn variant="secondary" loading={shopifyBusy} onClick={resetShopify}>
+                <RefreshCw className="h-4 w-4" /> Reset setup
+              </Btn>
+            ) : (
+              <Btn loading={shopifyBusy} onClick={confirmShopify}>
+                <CheckCircle2 className="h-4 w-4" /> I&apos;ve added both
+              </Btn>
+            )}
           </div>
         </div>
-        <div className="grid gap-3 border-t border-slate-800 px-5 py-4 text-xs text-slate-500 sm:grid-cols-3">
+
+        <div className="grid gap-3 border-t border-slate-200 px-5 py-4 text-xs text-slate-500 sm:grid-cols-3">
           <p>
-            Base ticket fee <span className="font-mono tabular-nums text-slate-300">{formatPKR(me.integration.entryFee)}</span>
-            <span className="text-slate-600"> · linked raffles use their own price</span>
+            Base ticket fee <span className="font-mono tabular-nums text-slate-700">{formatPKR(me.integration.entryFee)}</span>
+            <span className="text-slate-400"> · linked raffles use their own price</span>
           </p>
           <p>
-            API key <span className="font-mono text-slate-300">{me.store.apiKeyPrefix}</span>
+            API key <span className="font-mono text-slate-700">{me.store.apiKeyPrefix}</span>
           </p>
           <p>
-            Records <span className="font-mono text-slate-300">{me.integration.storage}</span>
+            Records <span className="font-mono text-slate-700">{me.integration.storage}</span>
           </p>
         </div>
       </Panel>
@@ -205,17 +297,45 @@ export function SettingsTab({
         </form>
       </Panel>
 
+      {/* Store profile — answers collected by the welcome wizard */}
+      <Panel>
+        <PanelHeader
+          title="Store profile"
+          description="The answers you gave when you joined"
+          action={
+            <Link
+              href="/merchants/onboarding?step=tally"
+              className="text-xs font-medium text-emerald-700 transition hover:text-emerald-600"
+            >
+              Update answers
+            </Link>
+          }
+        />
+        <dl className="divide-y divide-slate-200">
+          {INTAKE_QUESTIONS.map((question) => (
+            <div key={question.key} className="flex items-start justify-between gap-4 px-5 py-3 text-sm">
+              <dt className="text-slate-600">
+                Q{question.number} · {question.label}
+              </dt>
+              <dd className="text-right font-medium text-slate-900">
+                {describeIntakeAnswer(question.key, me.store.intake?.answers)}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </Panel>
+
       {/* Account */}
       <Panel>
         <PanelHeader title="Account" description="Store status, credentials and session" />
         <div className="space-y-5 p-5">
           <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="text-slate-400">Store status</span>
+            <span className="text-slate-600">Store status</span>
             <StatusText status={me.store.status} />
           </div>
           <div className="flex items-center justify-between gap-3 text-sm">
-            <span className="text-slate-400">Connected</span>
-            <span className="font-mono tabular-nums text-slate-300">{formatDate(me.store.createdAt)}</span>
+            <span className="text-slate-600">Connected</span>
+            <span className="font-mono tabular-nums text-slate-700">{formatDate(me.store.createdAt)}</span>
           </div>
           {me.store.status === "PAUSED" && (
             <Alert>
@@ -227,9 +347,9 @@ export function SettingsTab({
             </Alert>
           )}
 
-          <div className="space-y-2 border-t border-slate-800 pt-5">
-            <p className="flex items-center gap-2 text-sm font-medium text-slate-200">
-              <KeyRound className="h-4 w-4 text-emerald-400" /> API key
+          <div className="space-y-2 border-t border-slate-200 pt-5">
+            <p className="flex items-center gap-2 text-sm font-medium text-slate-800">
+              <KeyRound className="h-4 w-4 text-emerald-600" /> API key
             </p>
             <p className="text-xs leading-relaxed text-slate-500">
               Your key logs you into this dashboard and authenticates the API. Rotating it immediately signs you out of every
@@ -241,9 +361,9 @@ export function SettingsTab({
             </Btn>
           </div>
 
-          <div className="space-y-2 border-t border-slate-800 pt-5">
-            <p className="flex items-center gap-2 text-sm font-medium text-slate-200">
-              <Webhook className="h-4 w-4 text-emerald-400" /> Customer-facing
+          <div className="space-y-2 border-t border-slate-200 pt-5">
+            <p className="flex items-center gap-2 text-sm font-medium text-slate-800">
+              <Webhook className="h-4 w-4 text-emerald-600" /> Customer-facing
             </p>
             <p className="text-xs text-slate-500">
               Share the ticket lookup so buyers can check their entry by order number or phone.
@@ -252,7 +372,7 @@ export function SettingsTab({
               <Link
                 href="/lookup/store-ticket"
                 target="_blank"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50"
               >
                 <Search className="h-3.5 w-3.5" /> Open ticket lookup
               </Link>

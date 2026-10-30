@@ -14,7 +14,7 @@ import { connectStoreSchema, updateSettingsSchema } from "../validators"
 
 const keyPrefix = (apiKey: string) => `${apiKey.slice(0, 13)}…`
 
-export async function connectStore(input: unknown) {
+export async function connectStore(input: unknown, owner?: { id: string; role: string } | null) {
   const data = connectStoreSchema.parse(input)
   const storeUrl = normalizeStoreDomain(data.storeUrl)
   if (!isValidStoreDomain(storeUrl)) {
@@ -40,8 +40,26 @@ export async function connectStore(input: unknown) {
         contactEmail: data.contactEmail,
         contactPhone: data.contactPhone,
         payoutDetails: data.payoutDetails,
+        ownerId: owner?.id || null,
       },
     })
+
+    // Connecting a store is the moment an account becomes a merchant.
+    if (owner && owner.role !== "MERCHANT") {
+      try {
+        await db.user.update({ where: { id: owner.id }, data: { role: "MERCHANT" } })
+      } catch (err) {
+        console.warn("[MerchantConnect] Could not promote account to MERCHANT:", err)
+      }
+      // Keep the session payload in sync so role checks see the new role immediately.
+      try {
+        const { createSession } = await import("@/lib/auth")
+        await createSession(owner.id, "MERCHANT")
+      } catch (err) {
+        console.warn("[MerchantConnect] Could not refresh session role:", err)
+      }
+    }
+
     // Plain-text credentials are returned exactly once; only the API key hash is persisted.
     return { store, dto: toStoreDTO(store), apiKey, webhookSecret }
   } catch (err) {

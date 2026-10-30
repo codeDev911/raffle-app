@@ -50,6 +50,7 @@ export function EntriesTab({
   campaigns,
   settlementAccounts,
   entryFee,
+  safepayEnabled,
   refreshKey,
   onSettled,
   onOpenInvoice,
@@ -57,6 +58,8 @@ export function EntriesTab({
   campaigns: CampaignDTO[]
   settlementAccounts: SettlementAccount[]
   entryFee: number
+  /** Hosted card checkout available — the primary way to pay a single ticket. */
+  safepayEnabled: boolean
   refreshKey: number
   onSettled: () => Promise<void> | void
   /** Jump to the batch invoice that has to be paid again. */
@@ -97,9 +100,9 @@ export function EntriesTab({
         title="Live Entry Feed"
         description={
           <>
-            <span className="font-mono tabular-nums text-slate-300">{formatNumber(total)}</span> ticket{total === 1 ? "" : "s"} match
-            <span className="px-1.5 text-slate-600">·</span>pay any ticket on its own, or settle the batch later
-            <span className="px-1.5 text-slate-600">·</span>auto-refreshes every 15s
+            <span className="font-mono tabular-nums text-slate-700">{formatNumber(total)}</span> ticket{total === 1 ? "" : "s"} match
+            <span className="px-1.5 text-slate-400">·</span>pay any ticket on its own, or settle the batch later
+            <span className="px-1.5 text-slate-400">·</span>auto-refreshes every 15s
           </>
         }
         action={
@@ -109,9 +112,9 @@ export function EntriesTab({
         }
       />
 
-      <div className="grid gap-3 border-b border-slate-800 px-5 py-4 md:grid-cols-[1fr_200px_160px_auto] md:items-center">
+      <div className="grid gap-3 border-b border-slate-200 px-5 py-4 md:grid-cols-[1fr_200px_160px_auto] md:items-center">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-600" />
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <TextInput
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
@@ -134,12 +137,12 @@ export function EntriesTab({
           <option value="PAID">Confirmed</option>
           <option value="CANCELLED">Voided</option>
         </SelectInput>
-        <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-slate-400">
+        <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-slate-600">
           <input
             type="checkbox"
             checked={includeTest}
             onChange={(e) => setIncludeTest(e.target.checked)}
-            className="h-4 w-4 rounded border-slate-700 bg-[#0B0F19] accent-emerald-500"
+            className="h-4 w-4 rounded border-slate-300 bg-slate-50 accent-emerald-500"
           />
           Show test tickets
         </label>
@@ -161,7 +164,7 @@ export function EntriesTab({
               className="min-h-0 px-3 py-1.5 text-xs"
               onClick={() => setPaying(entry)}
             >
-              <Wallet className="h-3.5 w-3.5 text-emerald-400" /> {rejected(entry) ? "Pay again" : "Pay now"}
+              <Wallet className="h-3.5 w-3.5 text-emerald-600" /> {rejected(entry) ? "Pay again" : "Pay now"}
             </Btn>
           ) : rejected(entry) && entry.invoiceId ? (
             // A batch ticket stays on its invoice: reopening the invoice is the way to pay again.
@@ -170,7 +173,7 @@ export function EntriesTab({
               className="min-h-0 px-3 py-1.5 text-xs"
               onClick={() => onOpenInvoice(entry.invoiceId as string)}
             >
-              <ReceiptText className="h-3.5 w-3.5 text-emerald-400" /> Resubmit invoice
+              <ReceiptText className="h-3.5 w-3.5 text-emerald-600" /> Resubmit invoice
             </Btn>
           ) : entry.paymentStatus === "PENDING" || entry.paymentStatus === "PROCESSING" ? (
             <span className="text-[11px] text-slate-500">Waiting for PakRaffle</span>
@@ -189,6 +192,7 @@ export function EntriesTab({
         entry={paying}
         amount={paying ? prices[paying.campaignId] ?? entryFee : entryFee}
         settlementAccounts={settlementAccounts}
+        safepayEnabled={safepayEnabled}
         onClose={() => setPaying(null)}
         onSubmitted={async () => {
           await onSettled()

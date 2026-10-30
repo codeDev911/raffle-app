@@ -1,12 +1,15 @@
 // Merchant + admin request authentication for Merchant Connect API routes.
 //
 // Merchants authenticate with either:
-//   - an httpOnly `merchant_session` JWT cookie (dashboard), bound to the current API key
-//     so rotating the key revokes every existing session, or
+//   - an httpOnly `merchant_session` JWT cookie (legacy API-key dashboard login), bound to the
+//     current API key so rotating the key revokes every existing session,
+//   - the unified `session` cookie issued by /auth/merchant/login or Google sign-in, which
+//     resolves the store owned by that account, or
 //   - `Authorization: Bearer prk_live_…` (server-to-server / custom integrations).
 import { cookies } from "next/headers"
 import { decrypt, encrypt, getSession } from "@/lib/auth"
 import { MERCHANT_SESSION_COOKIE } from "./config"
+import { getMerchantDb } from "./db"
 import { MerchantError, unauthorized } from "./errors"
 import { authenticateApiKey, getStoreById } from "./services/stores"
 import type { MerchantStore } from "./types"
@@ -14,7 +17,34 @@ import { safeEqual } from "./utils"
 
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000 // matches the JWT expiry set in lib/auth.encrypt
 
-const keyId = (store: MerchantStore) => store.apiKeyHash.slice(0, 16)
+const keyId = (store: MerchantStore) => store.apiKeyHash.slice(0, 16)     // first 16 hex chars
+
+/** The logged-in account behind the unified `session` cookie, if any. */
+export async function getMerchantAccount(): Promise<{ id: string; email: string; name: string; role: string } | null> {
+  try {
+    const session = await getSession()
+    if (!session || typeof session.userId !== "string") return null
+    return {
+      id: session.userId,
+      email: String(session.email || ""),
+      name: String(session.name || ""),
+      role: String(session.role || ""),
+    }
+  } catch {
+    return null // invalid / expired
+  }
+}
+
+/** Store owned by an account signed in with email/password or Google. */
+export async function getStoreForAccount(userId: string): Promise<MerchantStore | null> {
+  if (!userId) return null
+  try {
+    const db = await getMerchantDb()
+    return await db.merchantStore.findFirst({ where: { ownerId: userId } })
+  } catch {
+    return null // merchant tables not pushed yet
+  }
+}
 
 export async function createMerchantSession(store: MerchantStore) {
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS)
@@ -42,17 +72,22 @@ export async function getAuthenticatedStore(req: Request): Promise<MerchantStore
 
   const cookieStore = await cookies()
   const token = cookieStore.get(MERCHANT_SESSION_COOKIE)?.value
-  if (!token) return null
-
-  try {
-    const payload = await decrypt(token)
-    if (payload?.kind !== "merchant" || typeof payload.merchantStoreId !== "string") return null
-    const store = await getStoreById(payload.merchantStoreId)
-    if (!store || typeof payload.kid !== "string" || !safeEqual(payload.kid, keyId(store))) return null
-    return store
-  } catch {
-    return null // expired or tampered token
+  if (token) {
+    try {
+      const payload = await decrypt(token)
+      if (payload?.kind === "merchant" && typeof payload.merchantStoreId === "string") {
+        const store = await getStoreById(payload.merchantStoreId)
+        if (store && typeof payload.kid === "string" && safeEqual(payload.kid, keyId(store))) return store
+      }
+    } catch {
+      // expired or tampered token — fall through to the account session
+    }
   }
+
+  // Email/password or Google session: resolve the store this account owns.
+  const account = await getMerchantAccount()
+  if (account) return getStoreForAccount(account.id)
+  return null
 }
 
 export async function requireMerchant(req: Request): Promise<MerchantStore> {

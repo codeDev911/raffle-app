@@ -144,6 +144,18 @@ export async function PUT(request: NextRequest) {
     
 
 
+    // Merchant Connect tickets settle from the Safepay reporter; this legacy e-wallet callback must
+    // never mint a raffle entry for one.
+    if ((payment.metadata as any)?.kind === "merchant_entry") {
+      return NextResponse.json({ success: true, ignored: "merchant_payment" })
+    }
+
+    // A retried callback must not mint a second entry for the same payment.
+    const alreadyMinted = await prisma.entry.count({ where: { paymentId: payment.id } })
+    if (alreadyMinted > 0) {
+      return NextResponse.json({ success: true, message: "Payment already processed" })
+    }
+
     let raffle=await prisma.raffle.update({
       where: {
         id:body.raffleId,

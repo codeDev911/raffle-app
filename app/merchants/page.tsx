@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 import { MERCHANT_ENTRY_FEE_PKR } from "@/lib/merchants/config"
 import MerchantsLanding from "./MerchantsLanding"
 
@@ -9,5 +10,9 @@ export const metadata: Metadata = {
 }
 
 export default function MerchantsPage() {
-  return <MerchantsLanding entryFee={MERCHANT_ENTRY_FEE_PKR} />
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50" aria-label="Loading" />}>
+      <MerchantsLanding entryFee={MERCHANT_ENTRY_FEE_PKR} />
+    </Suspense>
+  )
 }

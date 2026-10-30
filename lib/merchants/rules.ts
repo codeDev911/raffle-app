@@ -41,7 +41,21 @@ export function qualifyingLineItems(order: NormalizedOrder, filters?: string[] |
   return order.lineItems.filter((item) => lineItemMatches(item, active))
 }
 
-export function evaluateOrder(campaign: RuleCampaign, order: NormalizedOrder, now = new Date()): RuleEvaluation {
+export interface EvaluateOptions {
+  /**
+   * orders/create fires before Shopify marks the order fulfilled. The shopper still needs the
+   * congratulations at that moment, so creation-triggered evaluations skip the fulfilment gate.
+   * Defaults to true (fulfilment-based mints).
+   */
+  requireFulfilled?: boolean
+}
+
+export function evaluateOrder(
+  campaign: RuleCampaign,
+  order: NormalizedOrder,
+  now = new Date(),
+  options: EvaluateOptions = {},
+): RuleEvaluation {
   const filters = cleanFilters(campaign.productFilters)
   const items = qualifyingLineItems(order, filters)
   const itemCount = items.reduce((sum, i) => sum + Math.max(0, i.quantity || 0), 0)
@@ -53,7 +67,7 @@ export function evaluateOrder(campaign: RuleCampaign, order: NormalizedOrder, no
   const reject = (reason: string): RuleEvaluation => ({ qualified: false, reason, itemCount, amount })
 
   if (order.cancelled) return reject("Order is cancelled")
-  if (!order.fulfilled) return reject("Order is not fulfilled / shipped yet")
+  if (options.requireFulfilled !== false && !order.fulfilled) return reject("Order is not fulfilled / shipped yet")
   if (order.financialStatus && BLOCKED_FINANCIAL_STATUSES.has(order.financialStatus.toLowerCase())) {
     return reject(`Order payment is ${order.financialStatus.toLowerCase()}`)
   }

@@ -34,11 +34,18 @@ export interface EntrySettlementInput {
   paymentMethod: MerchantPaymentMethod
   transactionRef: string
   paymentProof: string
+  /** Set when a gateway captured the money; a manual transfer leaves this out. */
+  gateway?: GatewayCapture
 }
 
 /** One payment record per ticket: also the idempotency key, so a replayed call can't double-bill. */
 export function entryPaymentTransactionId(ticketNumber: string): string {
   return `${ENTRY_PAYMENT_PREFIX}${ticketNumber}`
+}
+
+/** What one ticket costs the merchant, in paisa — the unit the payment ledger stores. */
+export function entryAmountPaisa(campaign: MerchantCampaign): number {
+  return Math.max(1, Math.round(campaign.ticketPrice)) * 100
 }
 
 /**
@@ -151,7 +158,7 @@ async function openEntryPayment(
 ): Promise<Payment> {
   const userId = await ensureCustomerUser(entry)
   // Campaign prices are whole PKR; payments and raffle entries are stored in paisa.
-  const amount = Math.max(1, Math.round(campaign.ticketPrice)) * 100
+  const amount = entryAmountPaisa(campaign)
   const transactionId = entryPaymentTransactionId(entry.ticketNumber)
   const metadata = {
     kind: ENTRY_PAYMENT_KIND,
@@ -168,10 +175,11 @@ async function openEntryPayment(
     customerName: entry.customerName,
     customerPhone: entry.customerPhone ?? null,
     transactionRef: data.transactionRef,
-    receiptUrl: data.paymentProof,
+    receiptUrl: data.paymentProof || null,
     quantity: 1,
     invoiceId: linkage.invoiceId ?? null,
     invoiceNumber: linkage.invoiceNumber ?? null,
+    ...(data.gateway ? { gateway: data.gateway } : {}),
   }
 
   const existing: Payment | null = await prisma.payment.findFirst({ where: { transactionId } })
@@ -211,6 +219,12 @@ async function loadCampaign(campaignId: string): Promise<MerchantCampaign> {
   const campaign: MerchantCampaign | null = await db.merchantCampaign.findUnique({ where: { id: campaignId } })
   if (!campaign) throw notFound("Campaign")
   return campaign
+}
+
+/** The campaign behind a ticket plus the label stamped on its payment row. */
+export async function entryCampaign(entry: MerchantEntry) {
+  const campaign = await loadCampaign(entry.campaignId)
+  return { campaign, raffleName: await raffleLabel(campaign) }
 }
 
 async function raffleLabel(campaign: MerchantCampaign): Promise<string> {
@@ -486,4 +500,128 @@ export async function settleMerchantPayment(paymentId: string): Promise<Settleme
 
   const fresh: MerchantEntry = await db.merchantEntry.findUnique({ where: { id: entry.id } })
   return { settled: true, entry: toEntryDTO(fresh), raffleEntryId, invoicePaid, campaignStatus }
+}
+
+// ───────────────────────── gateway capture ─────────────────────────
+
+/**
+ * Arms the ledger row for a hosted checkout that has not been paid yet.
+ * The row is what the callback/webhook resolves the tracker against, so it exists before the
+ * merchant is redirected; a session that never completes is released by the checkout service.
+ */
+export async function openGatewaySession(
+  store: MerchantStore,
+  entry: MerchantEntry,
+  campaign: MerchantCampaign,
+  session: {
+    tracker: string
+    amountPaisa: number
+    currency: string
+    startedAt?: string | null
+    /** Hosted page for this session, kept so a re-opened dialog can re-use it instead of a new one. */
+    checkoutUrl?: string | null
+  },
+  raffleName: string,
+): Promise<Payment> {
+  return openEntryPayment(
+    store,
+    entry,
+    campaign,
+    {
+      paymentMethod: "SAFEPAY",
+      transactionRef: session.tracker,
+      paymentProof: "",
+      gateway: {
+        provider: "safepay",
+        tracker: session.tracker,
+        amountPaisa: session.amountPaisa,
+        currency: session.currency,
+        startedAt: session.startedAt ?? new Date().toISOString(),
+        checkoutUrl: session.checkoutUrl ?? null,
+        paidAt: null,
+      },
+    },
+    { raffleName },
+  )
+}
+
+export interface GatewayCapture {
+  provider: "safepay"
+  tracker: string
+  /** Amount the gateway reports as collected, in paisa. */
+  amountPaisa: number
+  currency: string
+  /** Card / wallet reference reported by the gateway, for the audit trail. */
+  reference?: string | null
+  /** When the checkout session was opened (used to expire abandoned sessions). */
+  startedAt?: string | null
+  /** Hosted page for the session, so a retry can hand back the same tracker. */
+  checkoutUrl?: string | null
+  /** When the money was captured; absent while the session is still open. */
+  paidAt?: string | null
+}
+
+/**
+ * Books an already-captured gateway payment against one ticket.
+ *
+ * The money has moved, so the ledger row is committed as COMPLETED and the ticket settles in the
+ * same pass — no admin confirmation involved. Idempotent by construction: the transaction id is
+ * derived from the ticket, an already-captured ticket is re-settled (a no-op) rather than billed
+ * twice, and the PENDING → COMPLETED flip is a single conditional update so a webhook racing the
+ * redirect can only win once.
+ */
+export async function settleEntryViaGateway(
+  store: MerchantStore,
+  entry: MerchantEntry,
+  campaign: MerchantCampaign,
+  linkage: PaymentLinkage,
+  capture: GatewayCapture,
+) {
+  const existing: Payment | null = await prisma.payment.findFirst({
+    where: { transactionId: entryPaymentTransactionId(entry.ticketNumber) },
+  })
+
+  if (existing?.status === "COMPLETED") {
+    return { payment: existing, settlement: await settleMerchantPayment(existing.id), captured: false }
+  }
+  if (existing && REJECTED_PAYMENT_STATUSES.has(existing.status)) {
+    // Released earlier (a transfer PakRaffle rejected) but the gateway shows the money arrived.
+    await releaseMerchantPayment(existing.id)
+  }
+
+  const payment = await openEntryPayment(
+    store,
+    entry,
+    campaign,
+    { paymentMethod: "SAFEPAY", transactionRef: capture.tracker, paymentProof: "", gateway: capture },
+    linkage,
+  )
+
+  const now = new Date().toISOString()
+  const metadata = {
+    ...asRecord(payment.metadata),
+    gateway: {
+      ...asRecord(asRecord(payment.metadata).gateway),
+      provider: capture.provider,
+      tracker: capture.tracker,
+      amountPaisa: capture.amountPaisa,
+      currency: capture.currency,
+      reference: capture.reference ?? null,
+      paidAt: capture.paidAt ?? now,
+    },
+    capturedAt: now,
+  }
+
+  const { count } = await prisma.payment.updateMany({
+    where: { id: payment.id, status: { in: ["PENDING", "PROCESSING"] } },
+    data: { status: "COMPLETED", gatewayRef: capture.tracker, metadata },
+  })
+  if (count === 0) {
+    const fresh: Payment | null = await prisma.payment.findUnique({ where: { id: payment.id } })
+    if (fresh?.status !== "COMPLETED") {
+      throw conflict(`Ticket ${entry.ticketNumber} is already settled by another payment`)
+    }
+  }
+
+  return { payment, settlement: await settleMerchantPayment(payment.id), captured: count > 0 }
 }

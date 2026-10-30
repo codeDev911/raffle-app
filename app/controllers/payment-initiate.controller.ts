@@ -4,10 +4,15 @@ import { generateOrderId } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUser } from "@/lib/auth";
+import { safepaySettings } from "@/lib/merchants/safepay";
 
-const safepay = require('@sfpy/node-core')("78bdd39f4419d6f6061f9984778eaeeb0ba068d6147b321eae60a0a19588e514", {
+// Credentials and host come from the environment (see lib/merchants/safepay.ts), so switching
+// between sandbox and live is a config change and no key is ever committed.
+const USE_LIVE_SAFEPAY = process.env.SAFEPAY_ENV?.trim().toLowerCase() === "production";
+
+const safepay = require('@sfpy/node-core')(process.env.SAFEPAY_SECRET || "", {
   authType: 'secret',
-  host: 'https://sandbox.api.getsafepay.com' // for live payments use https://api.getsafepay.com
+  host: USE_LIVE_SAFEPAY ? 'https://api.getsafepay.com' : 'https://sandbox.api.getsafepay.com'
 });
   
 const initiatePaymentSchema = z.object({
@@ -265,12 +270,17 @@ const SafepayInitiate = async(body:any,user:any = null)=>{
 
 
 
+  const safepayConfig = safepaySettings()
+  if (!safepayConfig) {
+    return NextResponse.json({ error: "Card payments are not configured" }, { status: 503 })
+  }
+
   const response = safepay.payments.session.setup({
-    "merchant_api_key": "sec_4a07010a-c4b6-4f7f-8776-9e377ae97fa3",
+    "merchant_api_key": safepayConfig.apiKey,
     "intent": "CYBERSOURCE",
     "mode": "payment",
     "entry_mode": "raw",
-    "currency": "PKR",
+    "currency": safepayConfig.currency,
     "amount": totalAmount,
     "metadata": {
       "order_id": orderId
@@ -286,10 +296,10 @@ const SafepayInitiate = async(body:any,user:any = null)=>{
   method: 'POST',
   redirect: 'follow',
   headers:{
-    'X-SFPY-MERCHANT-SECRET':"78bdd39f4419d6f6061f9984778eaeeb0ba068d6147b321eae60a0a19588e514"
+    'X-SFPY-MERCHANT-SECRET': safepayConfig.secret
   }
 };
-  return fetch("https://sandbox.api.getsafepay.com/client/passport/v1/token", requestOptions)
+  return fetch(`${safepayConfig.apiHost}/client/passport/v1/token`, requestOptions)
   .then(response => response)
   .then(async(result) => {
     
@@ -300,7 +310,7 @@ const SafepayInitiate = async(body:any,user:any = null)=>{
     // the authentication token
     tbt: (await result.json()).data  ,
     // either production or sandbox
-    environment: "sandbox",
+    environment: safepayConfig.environment,
     // attach a source, like your website domain or mobile app bundle identifier (or "mobile" for mobile webview)
     source: "Pakraffle.com",
     // the success URL to redirect your customer to after payment complete

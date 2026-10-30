@@ -1,8 +1,10 @@
 import { requireMerchant } from "@/lib/merchants/session"
 import { toStoreDTO } from "@/lib/merchants/dto"
-import { handleRouteError, ok, webhookUrlFor } from "@/lib/merchants/http"
+import { handleRouteError, ok, publicBaseUrl, webhookUrlFor } from "@/lib/merchants/http"
 import { MERCHANT_ENTRY_FEE_PKR, getSettlementAccounts } from "@/lib/merchants/config"
 import { getMerchantDbMode } from "@/lib/merchants/db"
+import { isSafepayConfigured } from "@/lib/merchants/safepay"
+import { widgetSnippet, widgetScriptUrl } from "@/lib/shopify/server"
 
 export const dynamic = "force-dynamic"
 
@@ -10,13 +12,19 @@ export const dynamic = "force-dynamic"
 export async function GET(req: Request) {
   try {
     const store = await requireMerchant(req)
+    const base = publicBaseUrl(req)
     return ok({
       store: toStoreDTO(store),
       integration: {
         webhookUrl: webhookUrlFor(req, store.id),
-        topics: ["orders/fulfilled", "orders/cancelled", "refunds/create"],
+        topics: ["orders/create", "orders/fulfilled", "orders/cancelled", "refunds/create"],
         entryFee: MERCHANT_ENTRY_FEE_PKR,
         storage: await getMerchantDbMode(),
+        /** Card / wallet checkout is only offered when the gateway credentials are present. */
+        safepay: isSafepayConfigured(),
+        /** Paste-ready storefront widget tag for the merchant's theme.liquid. */
+        widgetUrl: widgetScriptUrl(base, store.id),
+        widgetSnippet: widgetSnippet(base, store.id),
       },
       settlementAccounts: getSettlementAccounts(),
     })

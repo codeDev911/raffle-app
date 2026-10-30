@@ -15,9 +15,12 @@ model User {
   name      String
   phone     String?
   city      String?
-  password  String
+  password  String?
   role      Role     @default(USER)
   isActive  Boolean  @default(true)
+  image     String?
+  googleId  String?  @unique
+  emailVerified DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -25,6 +28,7 @@ model User {
   entries   Entry[]
   payments  Payment[]
   winners   Winner[]
+  merchantStore MerchantStore?
 
   @@map("users")
 }
@@ -94,6 +98,7 @@ model Payment {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   entries Entry[]
 
+  @@index([gatewayRef]) // gateway callbacks resolve a payment from its tracker/reference
   @@map("payments")
 }
 
@@ -122,6 +127,7 @@ model Winner {
 enum Role {
   USER
   ADMIN
+  MERCHANT
 }
 
 enum RaffleStatus {
@@ -141,6 +147,7 @@ enum PaymentMethod {
   RAAST
   IBFT
   SADAPAY
+  SAFEPAY
 }
 
 enum PaymentStatus {
@@ -206,6 +213,25 @@ model MerchantStore {
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
+  ownerId       String?             @unique // User who owns this merchant account (email/password or Google)
+  owner         User?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  // Shopify one-click connect (OAuth app install). The access token is the offline token
+  // Shopify issues for this shop; it is used to register webhooks and the storefront widget.
+  shopifyAccessToken   String?
+  shopifyScope         String?
+  shopifyConnectedAt   DateTime?
+  shopifyWebhooksReady Boolean   @default(false) // webhooks + script tag registered
+  shopifyScriptTagId   String?
+
+  // Post-signup onboarding (welcome wizard + store intake form).
+  onboardingStep        String    @default("WELCOME")
+  onboardingCompletedAt DateTime?
+  tallySubmissionId     String?
+  // Answers to the six intake questions, keyed by question (see lib/merchants/intake.ts).
+  intakeAnswers         Json?
+  intakeSubmittedAt     DateTime?
+
   campaigns MerchantCampaign[]
   entries   MerchantEntry[]
   invoices  MerchantInvoice[]
@@ -257,6 +283,8 @@ model MerchantEntry {
   ticketNumber    String              @unique
   orderAmount     Int // PKR (qualifying subtotal)
   itemCount       Int
+  /** Browser nonce stamped on the Shopify cart, so the shopper's own browser can claim the popup. */
+  claimToken      String?
   isTest          Boolean             @default(false) // minted by the dashboard simulator; never billed or drawn
   status          MerchantEntryStatus @default(ISSUED)
   cancelledReason String?
@@ -271,6 +299,7 @@ model MerchantEntry {
   @@index([storeId, status])
   @@index([phoneNormalized])
   @@index([shopifyOrderId])
+  @@index([claimToken])
   @@map("merchant_entries")
 }
 
@@ -289,6 +318,11 @@ model MerchantInvoice {
   status         MerchantInvoiceStatus  @default(PENDING)
   submittedAt    DateTime?
   paidAt         DateTime?
+  // Hosted checkout (Safepay): the tracker identifies the session, the amount is what we asked
+  // for in paisa, so a callback can verify the exact figure before anything is confirmed.
+  gatewayRef     String?
+  gatewayAmount  Int?
+  checkoutUrl    String?
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
 
@@ -297,6 +331,8 @@ model MerchantInvoice {
   entries  MerchantEntry[]
 
   @@index([storeId, status])
+  // Every callback/webhook resolves a session by its tracker.
+  @@index([gatewayRef])
   @@map("merchant_invoices")
 }
 
@@ -341,4 +377,5 @@ enum MerchantPaymentMethod {
   JAZZCASH
   EASYPAISA
   CARD
+  SAFEPAY
 }

@@ -13,15 +13,15 @@ export function CampaignProgress({ campaign, compact = false }: { campaign: Camp
     <div className={cn("space-y-1.5", compact ? "min-w-[140px]" : "")}>
       <div className="flex items-baseline justify-between gap-3 text-xs">
         <span className="text-slate-500">Entries minted</span>
-        <span className="font-mono tabular-nums text-slate-200">
+        <span className="font-mono tabular-nums text-slate-800">
           {formatNumber(campaign.currentEntries)}
-          <span className="text-slate-600">/</span>
+          <span className="text-slate-400">/</span>
           {cap ? formatNumber(cap) : "∞"}
         </span>
       </div>
-      <div className="h-1 overflow-hidden rounded-full bg-slate-800">
+      <div className="h-1 overflow-hidden rounded-full bg-slate-100">
         <div
-          className={cn("h-full rounded-full transition-all", campaign.capReached ? "bg-amber-400" : "bg-emerald-500")}
+          className={cn("h-full rounded-full transition-all", campaign.capReached ? "bg-amber-500" : "bg-emerald-500")}
           style={{ width: pct === null ? (campaign.currentEntries > 0 ? "100%" : "0%") : `${pct}%`, opacity: pct === null ? 0.35 : 1 }}
         />
       </div>
@@ -34,8 +34,8 @@ export function CampaignStatus({ campaign }: { campaign: CampaignDTO }) {
   if (campaign.status === "ACTIVE" && campaign.ended) return <StatusText status="ENDED" />
   if (campaign.status === "ACTIVE" && campaign.capReached) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-300">
-        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700">
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
         Cap reached
       </span>
     )
@@ -84,7 +84,7 @@ export function EntriesTable({
     <div className="overflow-x-auto">
       <table className="w-full min-w-[720px] text-left text-sm">
         <thead>
-          <tr className="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-500">
+          <tr className="border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500">
             <th className="px-5 py-2.5 font-medium">Ticket</th>
             <th className="px-3 py-2.5 font-medium">Order</th>
             <th className="px-3 py-2.5 font-medium">Customer</th>
@@ -95,23 +95,23 @@ export function EntriesTable({
             {renderActions && <th className="px-5 py-2.5 text-right font-medium">Payment</th>}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-800/70">
+        <tbody className="divide-y divide-slate-200">
           {entries.map((entry) => (
-            <tr key={entry.id} className="text-slate-300 transition hover:bg-slate-800/30">
-              <td className="whitespace-nowrap px-5 py-3 font-mono text-xs tabular-nums text-emerald-300">
+            <tr key={entry.id} className="text-slate-700 transition hover:bg-slate-100">
+              <td className="whitespace-nowrap px-5 py-3 font-mono text-xs tabular-nums text-emerald-700">
                 {entry.ticketNumber}
               </td>
-              <td className="whitespace-nowrap px-3 py-3 font-mono text-xs tabular-nums text-slate-300">
+              <td className="whitespace-nowrap px-3 py-3 font-mono text-xs tabular-nums text-slate-700">
                 {entry.orderName || `#${entry.shopifyOrderId}`}
               </td>
               <td className="max-w-[180px] px-3 py-3">
-                <p className="truncate text-slate-200">{entry.customerName}</p>
+                <p className="truncate text-slate-800">{entry.customerName}</p>
                 {(entry.customerPhone || entry.customerCity) && (
                   <p className="truncate font-mono text-[11px] tabular-nums text-slate-500">
                     {entry.customerPhone || "—"}
                     {entry.customerCity && (
                       <>
-                        <span className="px-1 text-slate-600">·</span>
+                        <span className="px-1 text-slate-400">·</span>
                         <span className="font-sans">{entry.customerCity}</span>
                       </>
                     )}
@@ -119,12 +119,12 @@ export function EntriesTable({
                 )}
               </td>
               <td className="whitespace-nowrap px-3 py-3 text-right font-mono text-xs tabular-nums">
-                <span className="text-slate-400">{entry.itemCount} item{entry.itemCount === 1 ? "" : "s"}</span>
-                <span className="px-1.5 text-slate-600">·</span>
-                <span className="text-slate-200">{formatPKR(entry.orderAmount)}</span>
+                <span className="text-slate-600">{entry.itemCount} item{entry.itemCount === 1 ? "" : "s"}</span>
+                <span className="px-1.5 text-slate-400">·</span>
+                <span className="text-slate-800">{formatPKR(entry.orderAmount)}</span>
               </td>
               {!dense && (
-                <td className="max-w-[180px] truncate px-3 py-3 text-xs text-slate-400">
+                <td className="max-w-[180px] truncate px-3 py-3 text-xs text-slate-600">
                   {campaignTitles[entry.campaignId] || "—"}
                 </td>
               )}

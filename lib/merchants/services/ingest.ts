@@ -32,6 +32,8 @@ const MAX_TICKET_ATTEMPTS = 5
 export interface IngestOptions {
   /** Simulator traffic: flagged, never billed, never counted against caps, never drawn. */
   isTest?: boolean
+  /** orders/create qualifies before fulfilment; called order events keep the fulfilment gate. */
+  requireFulfilled?: boolean
 }
 
 // ───────────────────────── minting ─────────────────────────
@@ -92,6 +94,7 @@ async function mintEntry(
             ticketNumber,
             orderAmount: Math.round(evaluation.amount),
             itemCount: evaluation.itemCount,
+            claimToken: order.claimToken ?? null,
             isTest,
             status: "ISSUED",
           },
@@ -128,7 +131,7 @@ export async function ingestOrder(
   const outcomes: IngestOutcome[] = []
   for (const campaign of campaigns) {
     const base = { campaignId: campaign.id, campaignTitle: campaign.title }
-    const evaluation = evaluateOrder(campaign, order)
+    const evaluation = evaluateOrder(campaign, order, new Date(), { requireFulfilled: options.requireFulfilled })
     if (!evaluation.qualified) {
       outcomes.push({ ...base, result: "REJECTED", reason: evaluation.reason || "Order does not qualify" })
       continue
@@ -226,7 +229,8 @@ async function processWebhook(input: WebhookInput, options: IngestOptions): Prom
     (input.storeId ? await getStoreById(input.storeId) : null)
   if (!store) throw notFound("Connected store")
 
-  // Authenticate before revealing anything about the store or the payload.
+  // Authenticate before revealing anything about the store or the payload. The merchant pastes
+  // Shopify's signing secret into Settings, so every delivery is verified against the store secret.
   if (!verifyShopifyHmac(input.rawBody, input.hmac, store.webhookSecret)) {
     throw unauthorized("Invalid webhook signature")
   }
@@ -248,7 +252,10 @@ async function processWebhook(input: WebhookInput, options: IngestOptions): Prom
     if (topic === "orders/updated" && !order.fulfilled) {
       return { topic, action: "ignored", message: "Order not fulfilled yet" }
     }
-    const outcomes = await ingestOrder(store, order, options)
+    // orders/create is the shopper's "you just won an entry" moment, so it qualifies before the
+    // order is fulfilled. Fulfil/update deliveries only re-check already-issued entries.
+    const requireFulfilled = topic === "orders/fulfilled" || topic === "orders/updated"
+    const outcomes = await ingestOrder(store, order, { ...options, requireFulfilled })
     const issued = outcomes.filter((o) => o.result === "ISSUED").length
     return {
       topic,

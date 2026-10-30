@@ -26,7 +26,7 @@ import { CampaignProgress, CampaignStatus } from "./shared"
 import type { CampaignDTO, InvoiceDTO, InvoicePreview, PrizeDTO, RuleType } from "./types"
 
 export const dialogClass =
-  "max-h-[92vh] overflow-y-auto border-slate-800 bg-[#111827] text-slate-100 sm:max-w-xl sm:rounded-2xl [&>button]:text-slate-400"
+  "max-h-[92vh] overflow-y-auto border-slate-200 bg-white text-slate-900 sm:max-w-xl sm:rounded-2xl [&>button]:text-slate-600"
 
 const RULE_OPTIONS: { value: RuleType; label: string; hint: string }[] = [
   { value: "MIN_QUANTITY", label: "Minimum items", hint: "Buy 3+ items" },
@@ -109,7 +109,7 @@ export function CampaignsTab({
             Link a PakRaffle prize and set a spend rule. Tickets start minting on the next fulfilled order.
           </EmptyState>
         ) : (
-          <div className="divide-y divide-slate-800">
+          <div className="divide-y divide-slate-200">
             {campaigns.map((c) => {
               const editable = c.status === "ACTIVE" || c.status === "PAUSED"
               return (
@@ -118,10 +118,10 @@ export function CampaignsTab({
                     <PrizeThumb prize={c.prize} />
                     <div className="min-w-0 space-y-1">
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <h4 className="truncate font-semibold text-slate-100">{c.title}</h4>
+                        <h4 className="truncate font-semibold text-slate-900">{c.title}</h4>
                         <CampaignStatus campaign={c} />
                       </div>
-                      <p className="text-sm text-emerald-300">{c.ruleSummary}</p>
+                      <p className="text-sm text-emerald-700">{c.ruleSummary}</p>
                       <p className="text-xs text-slate-500">
                         {c.prize ? (
                           <>
@@ -138,12 +138,12 @@ export function CampaignsTab({
                         <span className="font-mono tabular-nums">{formatPKR(c.ticketPrice)}</span> / ticket
                       </p>
                       {editable && c.billableEntries > 0 && (
-                        <p className="text-xs text-slate-400">
-                          Unbilled <span className="font-mono tabular-nums text-slate-200">{formatNumber(c.billableEntries)}</span>
-                          <span className="text-slate-600"> × </span>
+                        <p className="text-xs text-slate-600">
+                          Unbilled <span className="font-mono tabular-nums text-slate-800">{formatNumber(c.billableEntries)}</span>
+                          <span className="text-slate-400"> × </span>
                           <span className="font-mono tabular-nums">{formatPKR(c.ticketPrice)}</span>
-                          <span className="text-slate-600"> = </span>
-                          <span className="font-mono tabular-nums text-slate-200">{formatPKR(c.billableAmount)}</span>
+                          <span className="text-slate-400"> = </span>
+                          <span className="font-mono tabular-nums text-slate-800">{formatPKR(c.billableAmount)}</span>
                           {c.testEntries > 0 && (
                             <>
                               <Sep />
@@ -183,11 +183,11 @@ export function CampaignsTab({
                       </Btn>
                     )}
                     {c.status === "DRAW_READY" && (
-                      <span className="text-xs text-slate-400">Paid · PakRaffle will run the draw on {formatDate(c.endDate)}</span>
+                      <span className="text-xs text-slate-600">Paid · PakRaffle will run the draw on {formatDate(c.endDate)}</span>
                     )}
                     {c.status === "COMPLETED" && (
-                      <span className="inline-flex items-center gap-1.5 text-xs text-slate-300">
-                        <Trophy className="h-4 w-4 text-amber-300" /> Drawn {formatDate(c.drawnAt)}
+                      <span className="inline-flex items-center gap-1.5 text-xs text-slate-700">
+                        <Trophy className="h-4 w-4 text-amber-700" /> Drawn {formatDate(c.drawnAt)}
                       </span>
                     )}
                   </div>
@@ -230,11 +230,11 @@ export function CampaignsTab({
 
 function PrizeThumb({ prize }: { prize: PrizeDTO | null }) {
   return (
-    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-800 bg-[#0B0F19]">
+    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
       {prize?.image ? (
         <Image src={prize.image} alt={prize.title} fill sizes="56px" className="object-cover" unoptimized />
       ) : (
-        <Gift className="h-5 w-5 text-slate-600" />
+        <Gift className="h-5 w-5 text-slate-400" />
       )}
     </div>
   )
@@ -343,10 +343,10 @@ function CampaignBuilderDialog({
       <DialogContent className={cn(dialogClass, "sm:max-w-2xl")}>
         <form onSubmit={submit} className="space-y-5">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg text-slate-100">
-              <Sparkles className="h-5 w-5 text-emerald-400" /> New lucky draw campaign
+            <DialogTitle className="flex items-center gap-2 text-lg text-slate-900">
+              <Sparkles className="h-5 w-5 text-emerald-600" /> New lucky draw campaign
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-slate-600">
               Customers who meet the rule get a ticket when their order is fulfilled.
             </DialogDescription>
           </DialogHeader>
@@ -365,10 +365,10 @@ function CampaignBuilderDialog({
           </Field>
 
           {selectedPrize && (
-            <div className="flex items-center gap-3 rounded-xl border border-slate-800 bg-[#0B0F19] p-3">
+            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
               <PrizeThumb prize={selectedPrize} />
               <div className="min-w-0 text-xs">
-                <p className="truncate text-sm font-medium text-slate-100">{selectedPrize.title}</p>
+                <p className="truncate text-sm font-medium text-slate-900">{selectedPrize.title}</p>
                 <p className="text-slate-500">
                   {selectedPrize.category || "Prize"}
                   <Sep />
@@ -376,7 +376,7 @@ function CampaignBuilderDialog({
                 </p>
                 <p className="mt-0.5 text-[11px] text-slate-500">
                   {selectedPrize.ticketPricePkr > 0 ? "Ticket price" : "Base ticket fee"}{" "}
-                  <span className="font-mono tabular-nums text-emerald-300">{formatPKR(ticketPrice)}</span>
+                  <span className="font-mono tabular-nums text-emerald-700">{formatPKR(ticketPrice)}</span>
                 </p>
               </div>
             </div>
@@ -387,7 +387,7 @@ function CampaignBuilderDialog({
           </Field>
 
           <div className="space-y-2">
-            <span className="text-xs font-medium text-slate-300">Qualification rule</span>
+            <span className="text-xs font-medium text-slate-700">Qualification rule</span>
             <div className="grid gap-2 sm:grid-cols-4">
               {RULE_OPTIONS.map((opt) => (
                 <button
@@ -397,11 +397,11 @@ function CampaignBuilderDialog({
                   className={cn(
                     "rounded-xl border px-3 py-2.5 text-left transition",
                     form.ruleType === opt.value
-                      ? "border-emerald-500/60 bg-emerald-500/10"
-                      : "border-slate-800 bg-[#0B0F19] hover:border-slate-700",
+                      ? "border-emerald-500 bg-emerald-50"
+                      : "border-slate-200 bg-slate-50 hover:border-slate-300",
                   )}
                 >
-                  <p className={cn("text-xs font-semibold", form.ruleType === opt.value ? "text-emerald-300" : "text-slate-200")}>
+                  <p className={cn("text-xs font-semibold", form.ruleType === opt.value ? "text-emerald-700" : "text-slate-800")}>
                     {opt.label}
                   </p>
                   <p className="mt-0.5 text-[11px] text-slate-500">{opt.hint}</p>
@@ -434,8 +434,8 @@ function CampaignBuilderDialog({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <span className="text-xs font-medium text-slate-300">Entry limit</span>
-              <div className="grid grid-cols-2 gap-1 rounded-xl border border-slate-800 bg-[#0B0F19] p-1">
+              <span className="text-xs font-medium text-slate-700">Entry limit</span>
+              <div className="grid grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
                 {[
                   { v: true, label: "Capped" },
                   { v: false, label: "Continuous" },
@@ -446,7 +446,7 @@ function CampaignBuilderDialog({
                     onClick={() => setForm((f) => ({ ...f, capped: opt.v }))}
                     className={cn(
                       "rounded-lg py-1.5 text-xs font-medium transition",
-                      form.capped === opt.v ? "bg-slate-800 text-slate-100" : "text-slate-500 hover:text-slate-300",
+                      form.capped === opt.v ? "bg-slate-100 text-slate-900" : "text-slate-500 hover:text-slate-700",
                     )}
                   >
                     {opt.label}
@@ -470,15 +470,15 @@ function CampaignBuilderDialog({
             </Field>
           </div>
 
-          <div className="rounded-xl border border-slate-800 bg-[#0B0F19] p-4 text-xs">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs">
             <p className="text-slate-500">Rule preview</p>
-            <p className="mt-1 text-sm font-medium text-emerald-300">{preview}</p>
+            <p className="mt-1 text-sm font-medium text-emerald-700">{preview}</p>
             <p className="mt-2 text-slate-500">
-              <span className="font-mono tabular-nums text-slate-300">{formatPKR(ticketPrice)}</span> per ticket
+              <span className="font-mono tabular-nums text-slate-700">{formatPKR(ticketPrice)}</span> per ticket
               <Sep />
               {form.capped && Number(form.maxEntries) > 0 ? (
                 <>
-                  max <span className="font-mono tabular-nums text-slate-300">{formatPKR(ticketPrice * Number(form.maxEntries))}</span> at cap
+                  max <span className="font-mono tabular-nums text-slate-700">{formatPKR(ticketPrice * Number(form.maxEntries))}</span> at cap
                 </>
               ) : (
                 "no entry cap"
@@ -553,10 +553,10 @@ function EditCampaignDialog({
       <DialogContent className={dialogClass}>
         <form onSubmit={submit} className="space-y-4">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg text-slate-100">
-              <CalendarClock className="h-5 w-5 text-emerald-400" /> Edit campaign
+            <DialogTitle className="flex items-center gap-2 text-lg text-slate-900">
+              <CalendarClock className="h-5 w-5 text-emerald-600" /> Edit campaign
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-slate-600">
               {campaign.ruleSummary}
               <Sep />
               rules and pricing are locked once a campaign launches.
@@ -657,10 +657,10 @@ function SettleInvoiceDialog({
       <DialogContent className={dialogClass}>
         <div className="space-y-5">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg text-slate-100">
-              <FileText className="h-5 w-5 text-emerald-400" /> Review & settle batch
+            <DialogTitle className="flex items-center gap-2 text-lg text-slate-900">
+              <FileText className="h-5 w-5 text-emerald-600" /> Review & settle batch
             </DialogTitle>
-            <DialogDescription className="text-slate-400">{campaign.title}</DialogDescription>
+            <DialogDescription className="text-slate-600">{campaign.title}</DialogDescription>
           </DialogHeader>
 
           {error && <Alert>{error}</Alert>}
@@ -669,16 +669,16 @@ function SettleInvoiceDialog({
 
           {preview && (
             <>
-              <div className="rounded-xl border border-slate-800 bg-[#0B0F19]">
+              <div className="rounded-xl border border-slate-200 bg-slate-50">
                 {lines.map((line) => (
-                  <div key={line.label} className="flex items-center justify-between border-b border-slate-800 px-4 py-3 text-sm">
-                    <span className="text-slate-400">{line.label}</span>
-                    <span className="font-mono tabular-nums text-slate-200">{line.value}</span>
+                  <div key={line.label} className="flex items-center justify-between border-b border-slate-200 px-4 py-3 text-sm">
+                    <span className="text-slate-600">{line.label}</span>
+                    <span className="font-mono tabular-nums text-slate-800">{line.value}</span>
                   </div>
                 ))}
                 <div className="flex items-center justify-between px-4 py-4">
-                  <span className="text-sm font-medium text-slate-200">Amount due</span>
-                  <span className="font-mono text-2xl font-semibold tabular-nums text-emerald-400">{formatPKR(preview.amountDue)}</span>
+                  <span className="text-sm font-medium text-slate-800">Amount due</span>
+                  <span className="font-mono text-2xl font-semibold tabular-nums text-emerald-600">{formatPKR(preview.amountDue)}</span>
                 </div>
               </div>
 

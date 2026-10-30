@@ -119,10 +119,10 @@ export function SimulatorTab({
                 onClick={() => choosePreset(p.key)}
                 className={cn(
                   "rounded-xl border px-3 py-2.5 text-left transition",
-                  preset === p.key ? "border-emerald-500/60 bg-emerald-500/10" : "border-slate-800 bg-[#0B0F19] hover:border-slate-700",
+                  preset === p.key ? "border-emerald-500 bg-emerald-50" : "border-slate-200 bg-slate-50 hover:border-slate-300",
                 )}
               >
-                <p className={cn("text-xs font-semibold", preset === p.key ? "text-emerald-300" : "text-slate-200")}>{p.label}</p>
+                <p className={cn("text-xs font-semibold", preset === p.key ? "text-emerald-700" : "text-slate-800")}>{p.label}</p>
                 <p className="mt-0.5 text-[11px] text-slate-500">{p.hint}</p>
               </button>
             ))}
@@ -137,7 +137,7 @@ export function SimulatorTab({
             </Field>
           </div>
           <p className="-mt-1 text-xs text-slate-500">
-            Subtotal <span className="font-mono tabular-nums text-slate-300">{formatPKR(subtotal)}</span>
+            Subtotal <span className="font-mono tabular-nums text-slate-700">{formatPKR(subtotal)}</span>
           </p>
 
           <div className="grid grid-cols-2 gap-3">
@@ -186,7 +186,7 @@ export function SimulatorTab({
           <div className="space-y-5 p-5">
             <div className="space-y-2">
               {(last.result.outcomes || []).length === 0 && (
-                <p className="text-sm text-slate-400">{last.result.message}</p>
+                <p className="text-sm text-slate-600">{last.result.message}</p>
               )}
               {(last.result.outcomes || []).map((o) => (
                 <OutcomeRow key={o.campaignId} outcome={o} />
@@ -216,20 +216,20 @@ function OutcomeRow({ outcome }: { outcome: IngestOutcome }) {
     <div
       className={cn(
         "flex items-start gap-3 rounded-xl border px-4 py-3",
-        issued ? "border-emerald-500/30 bg-emerald-500/5" : "border-slate-800 bg-[#0B0F19]",
+        issued ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-slate-50",
       )}
     >
-      <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", issued ? "text-emerald-400" : duplicate ? "text-sky-300" : "text-rose-300")} />
+      <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", issued ? "text-emerald-600" : duplicate ? "text-sky-700" : "text-rose-700")} />
       <div className="min-w-0 text-sm">
-        <p className="truncate font-medium text-slate-100">{outcome.campaignTitle}</p>
+        <p className="truncate font-medium text-slate-900">{outcome.campaignTitle}</p>
         {"ticketNumber" in outcome ? (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-600">
             {issued ? "Ticket minted" : "Already issued for this order"}
             <Sep />
-            <span className="font-mono tabular-nums text-emerald-300">{outcome.ticketNumber}</span>
+            <span className="font-mono tabular-nums text-emerald-700">{outcome.ticketNumber}</span>
           </p>
         ) : (
-          <p className="text-xs text-slate-400">{outcome.reason}</p>
+          <p className="text-xs text-slate-600">{outcome.reason}</p>
         )}
       </div>
     </div>
@@ -240,11 +240,11 @@ function JsonBlock({ title, value, collapsed = false }: { title: string; value: 
   const [open, setOpen] = useState(!collapsed)
   return (
     <div>
-      <button type="button" onClick={() => setOpen((v) => !v)} className="mb-2 text-xs font-medium text-slate-300 hover:text-slate-100">
+      <button type="button" onClick={() => setOpen((v) => !v)} className="mb-2 text-xs font-medium text-slate-700 hover:text-slate-900">
         {open ? "▾" : "▸"} {title}
       </button>
       {open && (
-        <pre className="max-h-72 overflow-auto rounded-xl border border-slate-800 bg-[#0B0F19] p-4 font-mono text-[11px] leading-relaxed text-slate-400">
+        <pre className="max-h-72 overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-4 font-mono text-[11px] leading-relaxed text-slate-600">
           {JSON.stringify(value, null, 2)}
         </pre>
       )}
