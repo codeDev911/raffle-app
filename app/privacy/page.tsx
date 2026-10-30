@@ -1,4 +1,4 @@
-import { Shield, Eye, Lock, Database, UserCheck, ArrowRight, CheckCircle2 } from "lucide-react"
+import { Shield, Eye, Lock, Database, UserCheck, ArrowRight, CheckCircle2, Store } from "lucide-react"
 import Link from "next/link"
 
 export const metadata = {
@@ -193,6 +193,97 @@ export default function PrivacyPage() {
             <p>
               <strong>Account Deletion:</strong> You may request the deletion of your account and personal records by contacting support, provided there are no active, pending draw entries under your name.
             </p>
+          </div>
+        </div>
+
+        {/* SECTION 6: MERCHANT CONNECT DATA */}
+        <div id="merchant-connect" className="scroll-mt-28 bg-white rounded-3xl p-6 sm:p-8 border border-emerald-500/30 shadow-xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+              <Store className="w-5 h-5 text-emerald-700" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                6. Merchant Connect — Shopify Store Data
+              </h3>
+              <p className="text-xs text-gray-500">
+                What PakRaffle receives from a connected store, and what the store receives back
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4 text-xs sm:text-sm text-gray-600 leading-relaxed">
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-1">A. Order data we receive from the store</h4>
+              <p className="mb-2">
+                When a store connects Shopify, its orders are delivered to us through signed webhooks. For each
+                qualifying order we receive:
+              </p>
+              <ul className="space-y-1.5 list-none">
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>Order number, order value, item count, currency and the date the order was placed.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>Customer name, email, phone number and delivery city, as supplied by the shopper at checkout.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>Fulfilment, cancellation and refund events, so a ticket can be voided when an order no longer qualifies.</span>
+                </li>
+              </ul>
+              <p className="mt-2">
+                We never receive or store card numbers, wallet PINs, OTPs or CVV codes from a store&apos;s checkout.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-gray-100">
+              <h4 className="font-semibold text-gray-900 mb-1">B. Why we process it</h4>
+              <p>
+                To evaluate the store&apos;s campaign rule, mint and void tickets, run the ticket lookup page, raise
+                itemised invoices to the store, and screen for duplicate or artificial orders. Customer contact details
+                are used for ticket confirmation and for prize delivery if that ticket wins.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-gray-100">
+              <h4 className="font-semibold text-gray-900 mb-1">C. Shopper accounts created on their behalf</h4>
+              <p>
+                Because a Shopify customer never signs in here, we create a login-less PakRaffle account keyed to their
+                order so their entry can be tracked and delivered. The shopper can claim that account at any time by
+                signing up with the same phone number or email; the entry history follows them rather than being lost.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-gray-100">
+              <h4 className="font-semibold text-gray-900 mb-1">D. Merchant account data</h4>
+              <p>
+                Store owners sign in with Google or an email and password. We store the account name, email, connected
+                store URL and the store&apos;s webhook/API secret, which is held server-side and used only to verify that
+                incoming Shopify events really came from that store. It is never shown to other users.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-gray-100">
+              <h4 className="font-semibold text-gray-900 mb-1">E. Retention and sharing</h4>
+              <p>
+                Ticket, order and invoice records are retained for as long as the draw and its settlement need them,
+                and afterwards for the period required by Pakistani tax and audit rules. Order data is not sold or
+                rented, and is shared only with the courier delivering a prize, the payment gateway processing a ticket
+                payment, or a competent authority acting under Pakistani law. A store may ask us to delete order data it
+                no longer needs once the related draw has closed and the invoice is settled.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-gray-100">
+              <h4 className="font-semibold text-gray-900 mb-1">F. What the store is responsible for</h4>
+              <p>
+                The store warrants that it is entitled to share the order details it forwards to us and that its own
+                privacy notice covers that transfer. Shopper requests about store-side order data are handled by the
+                store; requests about a ticket or a draw entry can be sent to us directly.
+              </p>
+            </div>
           </div>
         </div>
 

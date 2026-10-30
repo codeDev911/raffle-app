@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { settleMerchantPayment, releaseMerchantPayment } from "@/lib/merchants/services/entry-payments"
+import { settleMerchantPayment, releaseMerchantPayment, refundPayment } from "@/lib/merchants/services/entry-payments"
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -22,9 +22,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Payment not found" }, { status: 404 })
     }
 
-    // Prevent updating completed or refunded payments
-    if (["COMPLETED", "REFUNDED"].includes(existingPayment.status)) {
-      return NextResponse.json({ error: "Cannot update completed or refunded payments" }, { status: 400 })
+    // A verified payment is final except for one move: refunding it. Everything else stays locked
+    // so a stray dropdown change can never un-verify money that has already been banked.
+    if (existingPayment.status === "REFUNDED") {
+      return NextResponse.json({ error: "This payment has already been refunded" }, { status: 400 })
+    }
+    if (existingPayment.status === "COMPLETED" && status !== "REFUNDED") {
+      return NextResponse.json({ error: "A verified payment can only be refunded" }, { status: 400 })
     }
 
     // Merchant Connect payments settle their ticket *before* the status flips: if confirmation
@@ -41,9 +45,23 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       }
     }
 
+    // A refund withdraws the customer from the draw: the raffle entry is deleted (and the raffle
+    // counter put back) before the status flips, so a failure leaves a verified payment intact.
+    if (status === "REFUNDED") {
+      try {
+        await refundPayment(params.id)
+      } catch (error) {
+        console.error("[Payments] refund failed:", error)
+        return NextResponse.json(
+          { error: "Could not withdraw this entry from the raffle. Please retry." },
+          { status: 500 },
+        )
+      }
+    }
+
     // A failed transfer hands the ticket back to the merchant: the entry returns to payable and
     // a batch invoice reopens, so the dashboard never sits on "Awaiting confirmation" forever.
-    if (status === "FAILED" || status === "REFUNDED") {
+    if (status === "FAILED") {
       try {
         await releaseMerchantPayment(params.id)
       } catch (error) {

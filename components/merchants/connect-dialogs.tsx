@@ -92,11 +92,12 @@ export function ConnectStoreDialog({
               <ol className="list-decimal space-y-1 pl-4">
                 <li>Shopify Admin → Settings → Notifications → Webhooks → Create webhook.</li>
                 <li>
-                  Event <span className="font-mono text-slate-800">Order fulfillment</span> · Format JSON · URL above.
+                  Event <span className="font-mono text-slate-800">Order creation</span> · JSON · URL above. That is the
+                  ticket-minting moment and the congratulations popup.
                 </li>
                 <li>
                   Add <span className="font-mono text-slate-800">Order cancellation</span> and{" "}
-                  <span className="font-mono text-slate-800">Refund create</span> to auto-void tickets.
+                  <span className="font-mono text-slate-800">Refund creation</span> to auto-void tickets.
                 </li>
                 <li>Copy Shopify&apos;s signing secret into Dashboard → Settings so signatures verify.</li>
               </ol>

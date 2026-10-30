@@ -2,11 +2,10 @@ import crypto from "crypto"
 import type { NormalizedOrder } from "./types"
 import { safeEqual } from "./utils"
 
-// Shopify webhook topics handled by the ingestion pipeline.
-// orders/create is the moment the shopper is congratulated; the fulfil/update topics keep the
-// ledger correct for stores that only enable post-fulfilment mints.
-export const MINT_TOPICS = new Set(["orders/create", "orders/paid", "orders/fulfilled", "orders/updated"])
-export const CANCEL_TOPICS = new Set(["orders/cancelled", "refunds/create"])
+// Shopify webhook plumbing. Topic names live in ./webhook-topics so the docs, the wizard and
+// the pipeline can never disagree: orders/create is the moment the shopper is congratulated,
+// while the fulfil/update topics keep the ledger correct for post-fulfilment mints.
+export { MINT_TOPICS, CANCEL_TOPICS } from "./webhook-topics"
 
 /** Shopify signs the raw request body: base64(HMAC-SHA256(secret, body)). */
 export function signShopifyPayload(rawBody: string, secret: string): string {

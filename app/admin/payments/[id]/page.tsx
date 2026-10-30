@@ -92,7 +92,8 @@ export default async function PaymentDetailsPage({
   const resolvedParams = await Promise.resolve(params)
   const payment = await getPaymentDetails(resolvedParams.id)
 
-  const canUpdateStatus = !["COMPLETED", "REFUNDED"].includes(payment.status)
+  // A verified payment still needs one control: refunding it. Only a refunded row is truly final.
+  const canUpdateStatus = payment.status !== "REFUNDED"
   const receiptUrl = payment.metadataObj?.receiptUrl as string | undefined
   const referralLinkId = payment.metadataObj?.referralLinkId ?? null
 
@@ -425,7 +426,7 @@ export default async function PaymentDetailsPage({
             </CardHeader>
             <CardContent className="p-5 space-y-4">
               {/* Payment Verification Button */}
-              {payment.status !== "COMPLETED" && (
+              {payment.status !== "COMPLETED" && payment.status !== "REFUNDED" && (
                 <div className="space-y-2 p-4 rounded-xl bg-emerald-50/70 border border-emerald-200/60">
                   <span className="text-xs font-bold text-emerald-900 block">
                     Fast Verification
@@ -450,6 +451,11 @@ export default async function PaymentDetailsPage({
                     Change Payment Status
                   </label>
                   <UpdatePaymentStatus paymentId={payment.id} currentStatus={payment.status} />
+                </div>
+              ) : payment.status === "REFUNDED" ? (
+                <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
+                  This payment was refunded. The customer&apos;s raffle entry has been withdrawn and the ticket
+                  counter adjusted — re-verifying is not possible.
                 </div>
               ) : (
                 <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600">

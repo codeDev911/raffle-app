@@ -15,12 +15,14 @@ import {
   StatusText,
   TextArea,
   TextInput,
+  TopicList,
   formatDate,
   formatPKR,
   merchantApi,
 } from "../ui"
 import type { MeResponse, StoreDTO } from "./types"
 import { INTAKE_QUESTIONS, describeIntakeAnswer } from "@/lib/merchants/intake"
+import { WEBHOOK_TOPICS } from "@/lib/merchants/webhook-topics"
 
 export function SettingsTab({
   me,
@@ -182,17 +184,11 @@ export function SettingsTab({
             <div className="space-y-3">
               <CopyField label="Webhook URL" value={me.integration.webhookUrl} />
               <div className="space-y-2">
-                <span className="text-xs font-medium text-slate-700">Create one webhook per topic</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {me.integration.topics.map((topic) => (
-                    <code key={topic} className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 font-mono text-[11px] text-emerald-700">
-                      {topic}
-                    </code>
-                  ))}
-                </div>
+                <span className="text-xs font-medium text-slate-700">One webhook per event</span>
+                <TopicList topics={WEBHOOK_TOPICS} />
                 <p className="text-[11px] leading-relaxed text-slate-500">
-                  orders/create mints the ticket and fires the congratulations popup · orders/cancelled and refunds/create void
-                  it.
+                  Pick the dropdown label on the left; Shopify delivers the topic on the right. Order creation mints the
+                  ticket and fires the congratulations popup · cancellations and refunds void it.
                 </p>
               </div>
             </div>

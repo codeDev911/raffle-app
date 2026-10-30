@@ -23,6 +23,7 @@ import type {
 } from "../types"
 import { generateTicketNumber, normalizePhone } from "../utils"
 import { simulateOrderSchema } from "../validators"
+import { canonicalTopic } from "../webhook-topics"
 import { ticketPaymentStatuses, voidOpenEntryPayment } from "./entry-payments"
 import { findStoreByDomain, getStoreById } from "./stores"
 
@@ -235,7 +236,9 @@ async function processWebhook(input: WebhookInput, options: IngestOptions): Prom
     throw unauthorized("Invalid webhook signature")
   }
 
-  const topic = String(input.topic || "").trim().toLowerCase()
+  // Accept every spelling of an event ("orders/creation", "order/cancellation", …) and switch
+  // it to the canonical topic before the pipeline looks at it.
+  const topic = canonicalTopic(input.topic)
   if (store.status !== "ACTIVE") {
     return { topic, action: "ignored", message: "Store is paused on PakRaffle" }
   }

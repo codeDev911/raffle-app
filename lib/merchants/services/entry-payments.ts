@@ -502,6 +502,90 @@ export async function settleMerchantPayment(paymentId: string): Promise<Settleme
   return { settled: true, entry: toEntryDTO(fresh), raffleEntryId, invoicePaid, campaignStatus }
 }
 
+// ───────────────────────── refunds ─────────────────────────
+
+/**
+ * Deletes the raffle entries a payment produced and puts the raffle's counter back, so a
+ * refunded customer is genuinely out of the draw instead of holding a paid-looking ticket.
+ * Safe to re-run: a second pass simply finds nothing to delete.
+ */
+export async function withdrawPaymentEntries(
+  paymentId: string,
+): Promise<{ withdrawn: number; raffleIds: string[] }> {
+  const entryClient = prisma.entry as any
+  // The in-memory client used when no database is configured has no delete; refunds only ever
+  // run against real data, so there is nothing to withdraw in that mode.
+  if (typeof entryClient?.deleteMany !== "function") return { withdrawn: 0, raffleIds: [] }
+
+  const ours: Array<{ id: string; raffleId: string }> = await prisma.entry.findMany({ where: { paymentId } })
+  if (ours.length === 0) return { withdrawn: 0, raffleIds: [] }
+
+  await entryClient.deleteMany({ where: { id: { in: ours.map((entry) => entry.id) } } })
+
+  // One payment can sit behind several entries in the same raffle, so count per raffle before
+  // decrementing, and never let the counter go below zero.
+  const perRaffle = new Map<string, number>()
+  for (const entry of ours) perRaffle.set(entry.raffleId, (perRaffle.get(entry.raffleId) ?? 0) + 1)
+
+  if (isUsingRealDatabase()) {
+    for (const [raffleId, count] of perRaffle) {
+      try {
+        await prisma.raffle.updateMany({
+          where: { id: raffleId, currentEntries: { gt: 0 } },
+          data: { currentEntries: { decrement: count } },
+        })
+      } catch (err) {
+        // The entry is already gone; a counter hiccup must not resurrect it.
+        console.warn("[Payments] could not adjust raffle entry counter:", err)
+      }
+    }
+  }
+
+  return { withdrawn: ours.length, raffleIds: Array.from(perRaffle.keys()) }
+}
+
+/**
+ * Refunds a confirmed ticket.
+ *
+ * This is the one path that unwinds a *paid* ticket: the merchant ticket is cancelled so it can
+ * never be re-submitted, the raffle entry the customer received is withdrawn, and the refund is
+ * stamped on the payment row for the audit trail. The money itself (ticket price minus the 2.9%
+ * + Rs. 30 gateway charge) is settled by finance; the ledger records that it happened.
+ */
+export async function refundPayment(paymentId: string): Promise<{ ticketVoided: boolean; withdrawn: number }> {
+  const payment: Payment | null = await prisma.payment.findUnique({ where: { id: paymentId } })
+  if (!payment) throw notFound("Payment")
+
+  const metadata = asRecord(payment.metadata)
+  let ticketVoided = false
+
+  if (metadata.kind === ENTRY_PAYMENT_KIND && typeof metadata.merchantEntryId === "string") {
+    const db = await getMerchantDb()
+    const { count } = await db.merchantEntry.updateMany({
+      where: { id: metadata.merchantEntryId, status: { in: ["ISSUED", "INVOICED", "PAID"] } },
+      data: { status: "CANCELLED" },
+    })
+    ticketVoided = count > 0
+  }
+
+  const { withdrawn } = await withdrawPaymentEntries(paymentId)
+
+  await prisma.payment.update({
+    where: { id: paymentId },
+    data: {
+      metadata: {
+        ...asRecord(payment.metadata),
+        refundedAt: new Date().toISOString(),
+        withdrawnEntries: withdrawn,
+        // Cleared so a stale pointer can never put the customer back in a draw.
+        raffleEntryId: null,
+      },
+    },
+  })
+
+  return { ticketVoided, withdrawn }
+}
+
 // ───────────────────────── gateway capture ─────────────────────────
 
 /**

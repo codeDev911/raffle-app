@@ -156,6 +156,8 @@ enum PaymentStatus {
   COMPLETED
   FAILED
   CANCELLED
+  // Money returned to the payer: the raffle entry behind it is withdrawn.
+  REFUNDED
 }
 
 model ProductListingRequest {

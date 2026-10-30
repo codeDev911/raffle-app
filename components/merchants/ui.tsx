@@ -6,6 +6,7 @@ import type React from "react"
 import { useState } from "react"
 import { Check, Copy, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { WebhookTopic } from "@/lib/merchants/webhook-topics"
 
 // ───────────────────────── client API helper ─────────────────────────
 
@@ -272,6 +273,31 @@ export function Alert({ tone = "error", children }: { tone?: "error" | "info" | 
     success: "border-emerald-200 bg-emerald-50 text-emerald-700",
   }
   return <div className={cn("rounded-xl border px-3.5 py-2.5 text-xs leading-relaxed", tones[tone])}>{children}</div>
+}
+
+/**
+ * The webhook checklist. Shopify's admin dropdown lists friendly event names while the topic
+ * it actually sends is a path like orders/create — both are shown so nobody has to guess.
+ */
+export function TopicList({ topics, className }: { topics: WebhookTopic[]; className?: string }) {
+  return (
+    <ul className={cn("divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200", className)}>
+      {topics.map((entry) => (
+        <li key={entry.topic} className="flex flex-col gap-1.5 bg-white px-3.5 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-slate-800">
+              {entry.adminLabel}
+              {!entry.required && <span className="ml-1.5 font-normal text-slate-400">optional</span>}
+            </p>
+            <p className="text-[11px] leading-relaxed text-slate-500">{entry.purpose}</p>
+          </div>
+          <code className="w-fit shrink-0 rounded-md bg-slate-50 px-2 py-1 font-mono text-[11px] text-emerald-700 ring-1 ring-inset ring-slate-200">
+            {entry.topic}
+          </code>
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 export function CopyField({

@@ -5,14 +5,12 @@ import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight, Check, Loader2, PartyPopper, Rocket, Store, Zap } from "lucide-react"
-import { Alert, Btn, CopyField, Field, Panel, TextInput, merchantApi } from "@/components/merchants/ui"
+import { Alert, Btn, CopyField, Field, Panel, TextInput, TopicList, merchantApi } from "@/components/merchants/ui"
 import { IntakeForm } from "@/components/merchants/IntakeForm"
 import type { IntakeAnswers } from "@/lib/merchants/intake"
+import { WEBHOOK_TOPICS } from "@/lib/merchants/webhook-topics"
 
 type StepKey = "store" | "shopify" | "tally" | "done"
-
-/** Shown when the API payload is missing the list (older deployments). */
-const DEFAULT_TOPICS = ["orders/create", "orders/fulfilled", "orders/cancelled", "refunds/create"]
 
 const STEP_LABELS: Array<{ key: StepKey; label: string }> = [
   { key: "store", label: "Your store" },
@@ -70,7 +68,6 @@ export default function OnboardingWizard() {
   const [secretSaved, setSecretSaved] = useState(false)
 
   const shopifyConnected = Boolean(me?.store.shopifyConnected)
-  const topics = me?.integration.topics?.length ? me.integration.topics : DEFAULT_TOPICS
   const widgetTag =
     me?.integration.widgetSnippet ||
     (me?.integration.widgetUrl ? `<script async src="${me.integration.widgetUrl}"></script>` : "")
@@ -377,20 +374,14 @@ export default function OnboardingWizard() {
 
               <CopyField label="1 · Webhook URL" value={me?.integration.webhookUrl || ""} />
               <div className="space-y-2">
-                <span className="text-xs font-medium text-slate-700">Create one webhook per topic · JSON format</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {topics.map((topic) => (
-                    <code
-                      key={topic}
-                      className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 font-mono text-[11px] text-emerald-700"
-                    >
-                      {topic}
-                    </code>
-                  ))}
-                </div>
+                <span className="text-xs font-medium text-slate-700">
+                  Create one webhook per event · Settings → Notifications → Webhooks · JSON format
+                </span>
+                <TopicList topics={WEBHOOK_TOPICS} />
                 <p className="text-[11px] leading-relaxed text-slate-500">
-                  Settings → Notifications → Webhooks → Create webhook. orders/create mints the ticket and shows the
-                  congratulations popup; cancellations and refunds void it.
+                  The dropdown calls the event <span className="font-medium text-slate-700">Order creation</span>; Shopify
+                  sends it as <span className="font-mono text-slate-600">orders/create</span>, which mints the ticket and
+                  fires the congratulations popup. Cancellations and refunds void it.
                 </p>
               </div>
 

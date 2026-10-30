@@ -13,31 +13,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import {
   Menu,
   Trophy,
   Gift,
-  Users,
-  FileText,
   LogOut,
   Settings,
   HomeIcon,
   TrendingUp,
-  Smartphone,
-  Bike,
-  Banknote,
-  Gamepad2,
-  Tv,
   ChevronDown,
   ChevronRight,
-  Phone,
   Sparkles,
-  ExternalLink,
   ShieldCheck,
   LucideUser,
-  X,
-  Layers,
   Tag,
   Search,
   Clock,
@@ -56,58 +44,65 @@ function WhatsAppIcon({ className = "w-4 h-4" }: { className?: string }) {
   )
 }
 
-export const CATEGORIES_LIST = [
+/** Small helper links that live behind the "More" menu, grouped by intent. */
+const MORE_LINKS = [
   {
-    name: "Electronics",
-    slug: "Electronics",
-    href: "/raffles?category=Electronics",
-    icon: Smartphone,
-    description: "iPhone 16 Pro, MacBooks, iPads & Gadgets",
-    badge: "Hot",
-    badgeColor: "bg-red-500 text-white",
-    highlight: "Latest 2025 Flagships",
+    href: "/list-product",
+    title: "List Your Product",
+    body: "Sell phones, bikes or electronics with a 92% bank payout.",
+    icon: Tag,
+    tone: "emerald",
+    badge: "8% Fee",
   },
   {
-    name: "Vehicles & Bikes",
-    slug: "Vehicles",
-    href: "/raffles?category=Vehicles",
-    icon: Bike,
-    description: "Honda CG 125, YBR 125, Scooters",
-    badge: "Popular",
-    badgeColor: "bg-blue-600 text-white",
-    highlight: "Zero-Meter Delivery",
+    href: "/merchants",
+    title: "Merchant Connect",
+    body: "Turn fulfilled Shopify orders into guaranteed prize draws.",
+    icon: Store,
+    tone: "emerald",
+    badge: "Shopify",
   },
   {
-    name: "Instant Cash",
-    slug: "Cash",
-    href: "/raffles?category=Cash",
-    icon: Banknote,
-    description: "Instant JazzCash / EasyPaisa / Bank Transfer",
-    badge: "Instant",
-    badgeColor: "bg-amber-600 text-white",
-    highlight: "15-Min Payout",
+    href: "/lookup/store-ticket",
+    title: "Store Ticket Lookup",
+    body: "Find a draw entry with an order number, ticket or phone.",
+    icon: Search,
+    tone: "violet",
+    badge: null,
   },
   {
-    name: "Gaming & Consoles",
-    slug: "Gaming",
-    href: "/raffles?category=Gaming",
-    icon: Gamepad2,
-    description: "PlayStation 5 Slim, Consoles & Bundles",
-    badge: "Trending",
-    badgeColor: "bg-purple-600 text-white",
-    highlight: "Sealed Bundles",
+    href: "/application/status/req-101",
+    title: "Track Application",
+    body: "Review progress, inspection and escrow custody hold.",
+    icon: Clock,
+    tone: "sky",
+    badge: null,
   },
   {
-    name: "Home Appliances",
-    slug: "Appliances",
-    href: "/raffles?category=Appliances",
-    icon: Tv,
-    description: "Smart 4K TVs, Kitchen & Washing Packages",
-    badge: "New",
-    badgeColor: "bg-teal-600 text-white",
-    highlight: "Full Home Packages",
+    href: "/become-a-partner",
+    title: "Partner & Affiliates",
+    body: "Earn commission sharing verified draws on social channels.",
+    icon: TrendingUp,
+    tone: "amber",
+    badge: "Earn PKR",
   },
-]
+  {
+    href: "/#how-it-works",
+    title: "How It Works",
+    body: "Fair quota mechanism, live draws and insured TCS delivery.",
+    icon: ShieldCheck,
+    tone: "slate",
+    badge: null,
+  },
+] as const
+
+const TONE_STYLES: Record<string, { tile: string; badge: string }> = {
+  emerald: { tile: "bg-emerald-50 text-emerald-700 ring-emerald-200/70", badge: "bg-emerald-600 text-white" },
+  violet: { tile: "bg-violet-50 text-violet-700 ring-violet-200/70", badge: "bg-violet-100 text-violet-700" },
+  sky: { tile: "bg-sky-50 text-sky-700 ring-sky-200/70", badge: "bg-sky-100 text-sky-700" },
+  amber: { tile: "bg-amber-50 text-amber-700 ring-amber-200/70", badge: "bg-amber-100 text-amber-800" },
+  slate: { tile: "bg-slate-100 text-slate-700 ring-slate-200", badge: "bg-slate-100 text-slate-700" },
+}
 
 interface UserType {
   id: string
@@ -118,10 +113,10 @@ interface UserType {
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
-  const [categoriesOpen, setCategoriesOpen] = useState(true)
   const [user, setUser] = useState<UserType | null>(null)
   const [loading, setLoading] = useState(true)
   const [trackIdInput, setTrackIdInput] = useState("")
+  const [elevated, setElevated] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -134,9 +129,10 @@ export function Header() {
   }
 
   const navigation = [
-    { name: "Home", href: "/", icon: HomeIcon },
-    { name: "All Draws", href: "/raffles", icon: Gift },
+    { name: "Home", href: "/", icon: HomeIcon, badge: null as string | null },
+    { name: "All Draws", href: "/raffles", icon: Gift, badge: null as string | null },
     { name: "Winners", href: "/winners", icon: Trophy, badge: "Live" },
+    { name: "Merchants", href: "/merchants", icon: Store, badge: null as string | null },
   ]
 
   useEffect(() => {
@@ -157,56 +153,10 @@ export function Header() {
     checkAuth()
   }, [])
 
-  // Categories nav scroll hide/show: hidden when scrolling down, shown when scrolling up
-  const [showCategoryBar, setShowCategoryBar] = useState(true)
-
+  // The bar sits on the page content until the reader scrolls, then lifts on a soft shadow.
   useEffect(() => {
-    let lastScrollY = typeof window !== "undefined" ? window.scrollY : 0
-    let lastToggleTime = 0
-    let ticking = false
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY
-      const now = Date.now()
-
-      // Always show when near the top of the page
-      if (currentScrollY <= 80) {
-        setShowCategoryBar(true)
-        lastScrollY = currentScrollY
-        ticking = false
-        return
-      }
-
-      // Cooldown guard (400ms): prevents layout oscillation / blinking feedback loop
-      if (now - lastToggleTime < 400) {
-        lastScrollY = currentScrollY
-        ticking = false
-        return
-      }
-
-      const delta = currentScrollY - lastScrollY
-
-      // Substantial scroll down (> 35px) and past top threshold
-      if (delta > 35 && currentScrollY > 120) {
-        setShowCategoryBar(false)
-        lastToggleTime = now
-      } else if (delta < -25) {
-        // Deliberate scroll up (> 25px)
-        setShowCategoryBar(true)
-        lastToggleTime = now
-      }
-
-      lastScrollY = currentScrollY
-      ticking = false
-    }
-
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(handleScroll)
-        ticking = true
-      }
-    }
-
+    const onScroll = () => setElevated(window.scrollY > 8)
+    onScroll()
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
@@ -235,35 +185,47 @@ export function Header() {
     "Salam PakRaffle! I have an inquiry about lucky draw tickets and upcoming draws.",
   )}`
 
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : Boolean(pathname?.startsWith(href))
+
+  const isMoreActive = ["/list-product", "/application", "/become-a-partner", "/merchants", "/lookup"].some(
+    (prefix) => pathname?.startsWith(prefix),
+  )
+
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-xs">
-      {/* 1. TOP ANNOUNCEMENT & WHATSAPP BAR (DESKTOP & TABLET) */}
-      <div className="bg-gradient-to-r from-emerald-900 via-green-900 to-emerald-950 text-white text-[11px] sm:text-xs py-1.5 px-3 sm:px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 truncate">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <span className="font-medium truncate">
-              🇵🇰 Pakistan's #1 Transparent Lucky Draw Platform
+    <header className="sticky top-0 z-50">
+      {/* Announcement strip */}
+      <div className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-teal-900 text-emerald-50">
+        <div className="mx-auto flex h-8 max-w-7xl items-center justify-between gap-3 px-4 text-[11px] sm:px-6">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="relative flex h-1.5 w-1.5 shrink-0">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-300" />
             </span>
-            <span className="hidden lg:inline text-emerald-200">
-              • Free Insured TCS Doorstep Delivery Nationwide
+            <span className="truncate font-medium tracking-wide">
+              Pakistan&apos;s #1 transparent lucky draw platform
+            </span>
+            <span className="hidden shrink-0 text-emerald-300/70 lg:inline">·</span>
+            <span className="hidden shrink-0 text-emerald-200/80 lg:inline">
+              Free insured TCS delivery nationwide
             </span>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex shrink-0 items-center gap-3 font-semibold">
             <a
               href={waInquiryUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 font-bold hover:text-emerald-300 transition-colors"
+              className="flex items-center gap-1.5 transition-colors hover:text-emerald-300"
             >
-              <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
-              <span>WhatsApp Support</span>
+              <WhatsAppIcon className="h-3.5 w-3.5 text-[#25D366]" />
+              <span className="hidden sm:inline">WhatsApp Support</span>
+              <span className="sm:hidden">Support</span>
             </a>
-            <span className="hidden md:inline text-emerald-500">|</span>
+            <span className="hidden h-3 w-px bg-emerald-400/30 md:block" />
             <Link
               href="/winners"
-              className="hidden md:inline text-emerald-200 hover:text-white transition-colors"
+              className="hidden text-emerald-200/90 transition-colors hover:text-white md:inline"
             >
               Verify Winners
             </Link>
@@ -271,293 +233,127 @@ export function Header() {
         </div>
       </div>
 
-      {/* 2. MAIN NAVBAR ROW */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6">
-        <div className="flex items-center justify-between h-16 sm:h-18 gap-2 sm:gap-4">
-          {/* Left: Brand Logo */}
-          <Link href="/" className="flex items-center space-x-2 shrink-0 group">
-            <div className="bg-green-600 p-2 rounded-xl group-hover:bg-green-500 transition-colors shadow-xs">
-              <Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-            </div>
-            <span className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
-              Pak<span className="text-green-600">Raffle</span>
+      {/* Main bar */}
+      <div
+        className={`border-b bg-white/85 backdrop-blur-xl transition-shadow duration-200 supports-[backdrop-filter]:bg-white/70 ${
+          elevated ? "border-slate-200 shadow-sm" : "border-transparent"
+        }`}
+      >
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:h-[70px]">
+          {/* Brand */}
+          <Link href="/" className="group flex shrink-0 items-center gap-2.5">
+            <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-sm shadow-emerald-600/30 transition-transform group-hover:-translate-y-0.5 sm:h-10 sm:w-10">
+              <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
+            </span>
+            <span className="flex flex-col leading-none">
+              <span className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+                Pak<span className="text-emerald-600">Raffle</span>
+              </span>
+              <span className="mt-0.5 hidden text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400 sm:block">
+                Verified draws
+              </span>
             </span>
           </Link>
 
-          {/* Center: Desktop Navigation (Decluttered & Clean) */}
-          <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2 text-sm font-medium">
-            <Link
-              href="/"
-              className={`px-3.5 py-2 rounded-xl transition-colors ${
-                pathname === "/"
-                  ? "text-emerald-700 bg-emerald-50 font-bold"
-                  : "text-gray-700 hover:text-emerald-600 hover:bg-gray-50"
-              }`}
-            >
-              Home
-            </Link>
+          {/* Desktop navigation */}
+          <nav className="hidden items-center gap-0.5 lg:flex">
+            {navigation.map((item) => {
+              const active = isActive(item.href)
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors ${
+                    active
+                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/70"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  {item.name === "Winners" && <Trophy className="h-3.5 w-3.5 text-amber-500" />}
+                  <span>{item.name}</span>
+                  {item.badge && (
+                    <span className="rounded-full bg-emerald-600 px-1.5 py-px text-[9px] font-extrabold uppercase text-white">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              )
+            })}
 
-            <Link
-              href="/raffles"
-              className={`px-3.5 py-2 rounded-xl transition-colors ${
-                pathname === "/raffles" && !pathname.includes("category")
-                  ? "text-emerald-700 bg-emerald-50 font-bold"
-                  : "text-gray-700 hover:text-emerald-600 hover:bg-gray-50"
-              }`}
-            >
-              All Draws
-            </Link>
-
-            <Link
-              href="/winners"
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-colors ${
-                pathname?.startsWith("/winners")
-                  ? "text-emerald-700 bg-emerald-50 font-bold"
-                  : "text-gray-700 hover:text-emerald-600 hover:bg-gray-50"
-              }`}
-            >
-              <Trophy className="h-4 w-4 text-amber-500" />
-              <span>Winners</span>
-              <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                Live
-              </span>
-            </Link>
-
-            {/* "More" Helpful Links Popup Dropdown */}
+            {/* More menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl transition-colors cursor-pointer outline-none font-semibold ${
-                    pathname === "/list-product" ||
-                    pathname?.startsWith("/application") ||
-                    pathname === "/become-a-partner" ||
-                    pathname?.startsWith("/merchants") ||
-                    pathname?.startsWith("/lookup")
-                      ? "text-emerald-700 bg-emerald-50 font-bold"
-                      : "text-gray-700 hover:text-emerald-600 hover:bg-gray-50"
+                  className={`group flex cursor-pointer items-center gap-1 rounded-full px-3.5 py-2 text-[13px] font-semibold outline-none transition-colors ${
+                    isMoreActive
+                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/70"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <span>More</span>
-                  <ChevronDown className="h-3.5 w-3.5 text-gray-400 transition-transform duration-200" />
+                  <ChevronDown className="h-3.5 w-3.5 text-slate-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="center"
-                className="w-[92vw] sm:w-[580px] max-w-xl p-4 sm:p-5 rounded-3xl shadow-2xl border border-gray-200 bg-white space-y-4"
+                className="w-[92vw] max-w-xl space-y-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-900/5 sm:w-[600px] sm:p-5"
               >
-                {/* Header inside popup */}
-                <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 rounded-lg bg-emerald-100 text-emerald-800">
-                      <Sparkles className="w-4 h-4" />
+                <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/70">
+                      <Sparkles className="h-4 w-4" />
                     </span>
                     <div>
-                      <h4 className="text-xs font-black text-gray-900 uppercase tracking-wider">
-                        Helpful Links &amp; Seller Services
-                      </h4>
-                      <p className="text-[11px] text-gray-500">
-                        Sell your products, track applications, and platform transparency
+                      <p className="text-[11px] font-black uppercase tracking-wider text-slate-900">
+                        Helpful links &amp; seller services
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        Sell, track applications and check our transparency
                       </p>
                     </div>
                   </div>
-                  <Badge variant="outline" className="text-[10px] bg-slate-50 font-semibold text-slate-600">
+                  <span className="hidden rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 sm:inline">
                     PakRaffle Hub
-                  </Badge>
+                  </span>
                 </div>
 
-                {/* 2-Column Grid of Helpful Links */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {/* Link 1: List Product */}
-                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-emerald-50">
-                    <Link
-                      href="/list-product"
-                      className="p-3 rounded-2xl border border-emerald-100 bg-emerald-50/40 hover:bg-emerald-50 transition-colors flex items-start gap-3 w-full group"
-                    >
-                      <div className="p-2 rounded-xl bg-emerald-600 text-white shrink-0 group-hover:scale-105 transition-transform">
-                        <Tag className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="text-xs font-bold text-gray-900 group-hover:text-emerald-700">
-                            List Your Product
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {MORE_LINKS.map((link) => {
+                    const tone = TONE_STYLES[link.tone]
+                    const Icon = link.icon
+                    return (
+                      <DropdownMenuItem key={link.href + link.title} asChild className="cursor-pointer p-0 focus:bg-transparent">
+                        <Link
+                          href={link.href}
+                          className="group flex w-full items-start gap-3 rounded-2xl border border-slate-200/70 p-3 transition-colors hover:border-emerald-300 hover:bg-emerald-50/40"
+                        >
+                          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ${tone.tile}`}>
+                            <Icon className="h-4 w-4" />
                           </span>
-                          <span className="text-[9px] font-extrabold bg-emerald-600 text-white px-1.5 py-0.2 rounded-full">
-                            8% Fee
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-center justify-between gap-1.5">
+                              <span className="truncate text-xs font-bold text-slate-900">{link.title}</span>
+                              {link.badge && (
+                                <span className={`shrink-0 rounded-full px-1.5 py-px text-[9px] font-extrabold ${tone.badge}`}>
+                                  {link.badge}
+                                </span>
+                              )}
+                            </span>
+                            <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">{link.body}</span>
                           </span>
-                        </div>
-                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
-                          Sell phones, bikes or electronics with guaranteed 92% bank payout.
-                        </p>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  {/* Link 2: Track Application Status */}
-                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-blue-50">
-                    <Link
-                      href="/application/status/req-101"
-                      className="p-3 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 transition-colors flex items-start gap-3 w-full group"
-                    >
-                      <div className="p-2 rounded-xl bg-blue-100 text-blue-700 shrink-0 group-hover:scale-105 transition-transform">
-                        <Clock className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-xs font-bold text-gray-900 group-hover:text-blue-700 block">
-                          Track Application Status
-                        </span>
-                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
-                          Check review progress, inspection, and escrow custody hold.
-                        </p>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  {/* Link 3: How It Works */}
-                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-emerald-50">
-                    <Link
-                      href="/#how-it-works"
-                      className="p-3 rounded-2xl border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/40 transition-colors flex items-start gap-3 w-full group"
-                    >
-                      <div className="p-2 rounded-xl bg-amber-100 text-amber-700 shrink-0 group-hover:scale-105 transition-transform">
-                        <ShieldCheck className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-xs font-bold text-gray-900 group-hover:text-emerald-700 block">
-                          How It Works
-                        </span>
-                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
-                          Fair quota mechanism, live draws &amp; insured TCS delivery.
-                        </p>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  {/* Link 4: Winner Verification */}
-                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-amber-50">
-                    <Link
-                      href="/winners"
-                      className="p-3 rounded-2xl border border-gray-100 hover:border-amber-200 hover:bg-amber-50/40 transition-colors flex items-start gap-3 w-full group"
-                    >
-                      <div className="p-2 rounded-xl bg-amber-500 text-white shrink-0 group-hover:scale-105 transition-transform">
-                        <Trophy className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="text-xs font-bold text-gray-900 group-hover:text-amber-800">
-                            Verify Winners
-                          </span>
-                          <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded-full">
-                            CNIC Proof
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
-                          Hall of fame, delivery photos &amp; live video call archives.
-                        </p>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  {/* Link 5: Partner / Affiliate */}
-                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-purple-50">
-                    <Link
-                      href="/become-a-partner"
-                      className="p-3 rounded-2xl border border-gray-100 hover:border-purple-200 hover:bg-purple-50/40 transition-colors flex items-start gap-3 w-full group"
-                    >
-                      <div className="p-2 rounded-xl bg-purple-100 text-purple-700 shrink-0 group-hover:scale-105 transition-transform">
-                        <TrendingUp className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="text-xs font-bold text-gray-900 group-hover:text-purple-700">
-                            Partner &amp; Affiliates
-                          </span>
-                          <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded-full">
-                            Earn PKR
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
-                          Earn commission sharing verified draws on social channels.
-                        </p>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  {/* Link 6: Merchant Connect (Shopify lucky draws) */}
-                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-emerald-50">
-                    <Link
-                      href="/merchants"
-                      className="p-3 rounded-2xl border border-emerald-100 bg-emerald-50/40 hover:bg-emerald-50 transition-colors flex items-start gap-3 w-full group"
-                    >
-                      <div className="p-2 rounded-xl bg-emerald-600 text-white shrink-0 group-hover:scale-105 transition-transform">
-                        <Store className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="text-xs font-bold text-gray-900 group-hover:text-emerald-700">
-                            Merchant Connect
-                          </span>
-                          <span className="text-[9px] font-extrabold bg-emerald-600 text-white px-1.5 py-0.2 rounded-full">
-                            Shopify
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
-                          Boost cart size with guaranteed prize draws on fulfilled orders.
-                        </p>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  {/* Link 7: Store Ticket Lookup */}
-                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-violet-50">
-                    <Link
-                      href="/lookup/store-ticket"
-                      className="p-3 rounded-2xl border border-gray-100 hover:border-violet-200 hover:bg-violet-50/40 transition-colors flex items-start gap-3 w-full group"
-                    >
-                      <div className="p-2 rounded-xl bg-violet-100 text-violet-700 shrink-0 group-hover:scale-105 transition-transform">
-                        <Search className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-xs font-bold text-gray-900 group-hover:text-violet-700 block">
-                          Store Ticket Lookup
-                        </span>
-                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
-                          Check your draw entry with an order number, ticket or phone.
-                        </p>
-                      </div>
-                    </Link>
-                  </DropdownMenuItem>
-
-                  {/* Link 8: Live WhatsApp Support */}
-                  <DropdownMenuItem asChild className="p-0 cursor-pointer focus:bg-green-50">
-                    <a
-                      href={waInquiryUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-3 rounded-2xl border border-[#25D366]/30 bg-green-50/40 hover:bg-green-50 transition-colors flex items-start gap-3 w-full group"
-                    >
-                      <div className="p-2 rounded-xl bg-[#25D366] text-white shrink-0 group-hover:scale-105 transition-transform">
-                        <WhatsAppIcon className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-xs font-bold text-gray-900 group-hover:text-green-700 block">
-                          WhatsApp Help Desk
-                        </span>
-                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">
-                          Direct assistance for tickets, payments &amp; general inquiries.
-                        </p>
-                      </div>
-                    </a>
-                  </DropdownMenuItem>
+                        </Link>
+                      </DropdownMenuItem>
+                    )
+                  })}
                 </div>
 
-                {/* Bottom Quick Application Search */}
-                <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                      <Search className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Quick Application Lookup</span>
+                    <span className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
+                      <Search className="h-3.5 w-3.5 text-emerald-600" />
+                      Quick application lookup
                     </span>
-                    <span className="text-[10px] text-slate-400">Enter Reference ID</span>
+                    <span className="text-[10px] text-slate-400">Reference ID</span>
                   </div>
                   <form onSubmit={handleQuickTrack} className="flex gap-2">
                     <input
@@ -565,12 +361,12 @@ export function Header() {
                       placeholder="e.g. req-1793003835516-456w"
                       value={trackIdInput}
                       onChange={(e) => setTrackIdInput(e.target.value)}
-                      className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-mono font-medium focus:outline-hidden focus:border-emerald-500"
+                      className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 font-mono text-xs font-medium outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                     />
                     <Button
                       type="submit"
                       size="sm"
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl h-8 px-3.5 shrink-0"
+                      className="h-8 shrink-0 rounded-xl bg-emerald-600 px-3.5 text-xs font-bold text-white hover:bg-emerald-500"
                     >
                       Track
                     </Button>
@@ -580,161 +376,151 @@ export function Header() {
             </DropdownMenu>
           </nav>
 
-          {/* Right: Actions & User Auth */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Desktop WhatsApp Direct Action Button */}
+          {/* Actions */}
+          <div className="flex items-center gap-2">
             <a
               href={waInquiryUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] active:bg-[#1caa52] text-white text-xs font-bold shadow-2xs transition-colors shrink-0"
+              className="hidden items-center gap-1.5 rounded-full bg-[#25D366] px-3 py-2 text-xs font-bold text-white shadow-sm shadow-[#25D366]/30 transition-colors hover:bg-[#20ba59] sm:inline-flex"
               title="Chat with PakRaffle on WhatsApp"
             >
-              <WhatsAppIcon className="w-4 h-4" />
-              <span>WhatsApp Help</span>
+              <WhatsAppIcon className="h-4 w-4" />
+              <span className="hidden xl:inline">WhatsApp Help</span>
             </a>
 
-            {/* Auth Buttons / Profile */}
             {loading ? (
-              <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+              <div className="h-9 w-9 animate-pulse rounded-full bg-slate-200" />
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 sm:h-10 sm:w-10 rounded-full p-0">
-                    <Avatar className="h-9 w-9 sm:h-10 sm:w-10 border border-green-300">
-                      <AvatarFallback className="bg-green-600 text-white font-bold text-xs sm:text-sm">
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 hover:bg-transparent">
+                    <Avatar className="h-9 w-9 border-2 border-white ring-2 ring-emerald-200">
+                      <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-emerald-700 text-xs font-bold text-white">
                         {getInitials(user.name)}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-60 rounded-2xl p-1.5" align="end" forceMount>
-                  <div className="p-2 border-b border-gray-100">
-                    <p className="font-bold text-gray-900 text-sm">{user.name}</p>
-                    <p className="truncate text-xs text-gray-500">{user.email}</p>
-                    <span className="inline-block mt-1 text-[10px] uppercase font-bold px-2 py-0.5 bg-green-50 text-green-700 rounded-md">
+                  <div className="border-b border-slate-100 p-2">
+                    <p className="text-sm font-bold text-slate-900">{user.name}</p>
+                    <p className="truncate text-xs text-slate-500">{user.email}</p>
+                    <span className="mt-1 inline-block rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-700">
                       {user.role}
                     </span>
                   </div>
                   <DropdownMenuItem asChild>
                     <Link href="/profile" className="cursor-pointer py-2 text-xs">
-                      <LucideUser className="mr-2 h-4 w-4 text-gray-500" />
+                      <LucideUser className="mr-2 h-4 w-4 text-slate-500" />
                       Profile Dashboard
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/profile/entries" className="cursor-pointer py-2 text-xs">
-                      <Gift className="mr-2 h-4 w-4 text-green-600" />
+                      <Gift className="mr-2 h-4 w-4 text-emerald-600" />
                       My Active Tickets
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/profile/settings" className="cursor-pointer py-2 text-xs">
-                      <Settings className="mr-2 h-4 w-4 text-gray-500" />
+                      <Settings className="mr-2 h-4 w-4 text-slate-500" />
                       Account Settings
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 py-2 text-xs">
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer py-2 text-xs text-rose-600">
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="hidden sm:flex items-center gap-2">
+              <div className="hidden items-center gap-1.5 sm:flex">
                 <Button
                   asChild
                   variant="ghost"
                   size="sm"
-                  className="rounded-xl text-gray-700 hover:text-green-600 hover:bg-green-50 text-xs font-semibold"
+                  className="rounded-full text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900"
                 >
                   <Link href="/auth/login">Login</Link>
                 </Button>
                 <Button
                   asChild
                   size="sm"
-                  className="bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold shadow-2xs"
+                  className="rounded-full bg-emerald-600 text-xs font-bold text-white shadow-sm shadow-emerald-600/25 hover:bg-emerald-500"
                 >
                   <Link href="/auth/register">Sign Up</Link>
                 </Button>
               </div>
             )}
 
-            {/* Mobile Hamburger Trigger (Opens Comprehensive Sidebar Drawer) */}
+            {/* Mobile drawer */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="lg:hidden rounded-xl h-10 w-10 text-gray-700 hover:bg-gray-100"
-                  aria-label="Open Navigation Menu"
+                  className="h-10 w-10 rounded-xl text-slate-700 hover:bg-slate-100 lg:hidden"
+                  aria-label="Open navigation menu"
                 >
-                  <Menu className="h-6 w-6" />
+                  <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
 
-              {/* 3. MOBILE SIDEBAR DRAWER (FIT FOR 100% MOBILE & TABLET SCREENS) */}
               <SheetContent
                 side="left"
-                className="w-[85vw] max-w-sm sm:max-w-md p-0 flex flex-col h-full bg-white border-r border-gray-200"
+                className="flex h-full w-[85vw] max-w-sm flex-col border-r border-slate-200 bg-white p-0 sm:max-w-md"
               >
-                {/* Drawer Header */}
-                <div className="p-4 sm:p-5 border-b border-gray-100 bg-gradient-to-r from-emerald-900 to-green-900 text-white flex items-center justify-between">
-                  <Link
-                    href="/"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center space-x-2"
-                  >
-                    <div className="bg-white/20 p-1.5 rounded-xl">
-                      <Trophy className="h-5 w-5 text-amber-300" />
-                    </div>
-                    <span className="text-xl font-black tracking-tight text-white">
-                      Pak<span className="text-emerald-300">Raffle</span>
+                <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-emerald-950 to-emerald-900 p-4 text-white sm:p-5">
+                  <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 ring-1 ring-inset ring-white/20">
+                      <Trophy className="h-4 w-4 text-amber-300" />
+                    </span>
+                    <span className="flex flex-col leading-none">
+                      <span className="text-lg font-black tracking-tight text-white">
+                        Pak<span className="text-emerald-300">Raffle</span>
+                      </span>
+                      <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-emerald-200/70">
+                        Verified draws
+                      </span>
                     </span>
                   </Link>
-
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] bg-emerald-700 text-emerald-100 font-bold px-2 py-0.5 rounded-full">
-                      Pakistan
-                    </span>
-                  </div>
+                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-emerald-100">
+                    Pakistan
+                  </span>
                 </div>
 
-                {/* Drawer Scrollable Content */}
-                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 divide-y divide-gray-100">
-                  {/* User Status / Profile Card in Mobile */}
-                  <div className="pt-1">
+                <div className="flex-1 divide-y divide-slate-100 overflow-y-auto px-4 py-4">
+                  {/* Account */}
+                  <div className="pb-4">
                     {user ? (
-                      <div className="flex items-center justify-between p-3.5 bg-green-50 rounded-2xl border border-green-200/80">
-                        <div className="flex items-center space-x-3 min-w-0">
-                          <Avatar className="h-10 w-10 border border-green-400 shrink-0">
-                            <AvatarFallback className="bg-green-600 text-white font-bold text-xs">
+                      <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-3.5">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <Avatar className="h-10 w-10 shrink-0 border border-emerald-300">
+                            <AvatarFallback className="bg-emerald-600 text-xs font-bold text-white">
                               {getInitials(user.name)}
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">
-                            <p className="font-bold text-gray-900 text-xs truncate">{user.name}</p>
-                            <p className="text-[11px] text-gray-500 truncate">{user.email}</p>
+                            <p className="truncate text-xs font-bold text-slate-900">{user.name}</p>
+                            <p className="truncate text-[11px] text-slate-500">{user.email}</p>
                           </div>
                         </div>
-                        <Button
-                          asChild
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs text-green-700 font-bold hover:bg-green-100 rounded-xl"
+                        <Link
+                          href="/profile"
+                          onClick={() => setIsOpen(false)}
+                          className="shrink-0 rounded-lg px-2 py-1 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
                         >
-                          <Link href="/profile" onClick={() => setIsOpen(false)}>
-                            Profile
-                          </Link>
-                        </Button>
+                          Profile
+                        </Link>
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 gap-2">
                         <Button
                           asChild
                           variant="outline"
-                          className="rounded-xl border-green-500 text-green-700 hover:bg-green-50 text-xs font-bold h-11"
+                          className="h-11 rounded-xl border-emerald-300 text-xs font-bold text-emerald-700 hover:bg-emerald-50"
                         >
                           <Link href="/auth/login" onClick={() => setIsOpen(false)}>
                             Login
@@ -742,7 +528,7 @@ export function Header() {
                         </Button>
                         <Button
                           asChild
-                          className="rounded-xl bg-green-600 hover:bg-green-700 text-white text-xs font-bold h-11 shadow-2xs"
+                          className="h-11 rounded-xl bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-500"
                         >
                           <Link href="/auth/register" onClick={() => setIsOpen(false)}>
                             Sign Up
@@ -752,182 +538,79 @@ export function Header() {
                     )}
                   </div>
 
-                  {/* CATEGORIES SECTION (REQUESTED BY USER) */}
-                  <div className="pt-4 space-y-2">
-                    <div className="flex items-center justify-between px-1">
-                      <span className="text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
-                        <Layers className="w-3.5 h-3.5 text-green-600" />
-                        Browse by Category
-                      </span>
-                      <Link
-                        href="/raffles"
-                        onClick={() => setIsOpen(false)}
-                        className="text-[11px] font-bold text-green-600 hover:text-green-700"
-                      >
-                        All ({CATEGORIES_LIST.length})
-                      </Link>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-1.5 pt-1">
-                      {CATEGORIES_LIST.map((cat) => (
-                        <Link
-                          key={cat.slug}
-                          href={cat.href}
-                          onClick={() => setIsOpen(false)}
-                          className="flex items-center justify-between p-2.5 rounded-xl hover:bg-gray-50 active:bg-green-50 transition-colors border border-gray-100"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="p-2 rounded-xl bg-green-50 text-green-700 shrink-0">
-                              <cat.icon className="h-4 w-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-semibold text-gray-900 text-xs truncate">
-                                  {cat.name}
-                                </span>
-                                <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${cat.badgeColor}`}>
-                                  {cat.badge}
-                                </span>
-                              </div>
-                              <span className="text-[10px] text-gray-500 block truncate">
-                                {cat.highlight}
-                              </span>
-                            </div>
-                          </div>
-                          <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* MAIN SITE NAVIGATION IN MOBILE SIDEBAR */}
-                  <div className="pt-4 space-y-1">
-                    <span className="text-xs font-black text-gray-900 uppercase tracking-wider px-1 block mb-2">
-                      Main Navigation
+                  {/* Main navigation */}
+                  <div className="space-y-1 py-4">
+                    <span className="mb-2 block px-1 text-[11px] font-black uppercase tracking-wider text-slate-400">
+                      Navigation
                     </span>
-
                     {navigation.map((item) => (
                       <Link
-                        key={item.name}
+                        key={item.href}
                         href={item.href}
                         onClick={() => setIsOpen(false)}
-                        className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
-                          pathname === item.href
-                            ? "bg-emerald-50 text-emerald-800 font-bold"
-                            : "text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
+                        className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-colors ${
+                          isActive(item.href)
+                            ? "bg-emerald-50 text-emerald-800"
+                            : "text-slate-700 hover:bg-slate-50 hover:text-emerald-700"
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <item.icon className="h-4 w-4 text-gray-500" />
+                        <span className="flex items-center gap-3">
+                          <item.icon className="h-4 w-4 text-slate-500" />
                           <span>{item.name}</span>
-                        </div>
-                        {item.badge && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                        </span>
+                        {item.badge ? (
+                          <span className="rounded-full bg-emerald-600 px-1.5 py-0.5 text-[9px] font-bold text-white">
                             {item.badge}
                           </span>
+                        ) : (
+                          <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
                         )}
                       </Link>
                     ))}
                   </div>
 
-                  {/* HELPFUL LINKS & SELLER SERVICES IN MOBILE */}
-                  <div className="pt-4 space-y-1">
-                    <span className="text-xs font-black text-gray-900 uppercase tracking-wider px-1 block mb-2">
-                      Helpful Links &amp; Seller Hub
+                  {/* Seller & support links */}
+                  <div className="space-y-1 py-4">
+                    <span className="mb-2 block px-1 text-[11px] font-black uppercase tracking-wider text-slate-400">
+                      Helpful links
                     </span>
+                    {MORE_LINKS.filter((link) => link.href !== "/merchants").map((link) => {
+                      const Icon = link.icon
+                      return (
+                        <Link
+                          key={link.href + link.title}
+                          href={link.href}
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-emerald-700"
+                        >
+                          <span className="flex items-center gap-3">
+                            <Icon className="h-4 w-4 text-slate-500" />
+                            <span>{link.title}</span>
+                          </span>
+                          {link.badge ? (
+                            <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">
+                              {link.badge}
+                            </span>
+                          ) : (
+                            <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+                          )}
+                        </Link>
+                      )
+                    })}
 
-                    <Link
-                      href="/list-product"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-emerald-900 bg-emerald-50/80 hover:bg-emerald-100/80 border border-emerald-200"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Tag className="h-4 w-4 text-emerald-600" />
-                        <span className="font-bold">List Your Product</span>
-                      </div>
-                      <span className="text-[9px] font-extrabold text-white bg-emerald-600 px-1.5 py-0.5 rounded-full">
-                        8% Fee
-                      </span>
-                    </Link>
-
-                    <Link
-                      href="/application/status/req-101"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Clock className="h-4 w-4 text-blue-600" />
-                        <span>Track Application Status</span>
-                      </div>
-                      <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
-                    </Link>
-
-                    <Link
-                      href="/#how-it-works"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
-                    >
-                      <div className="flex items-center gap-3">
-                        <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                        <span>How It Works &amp; Rules</span>
-                      </div>
-                      <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
-                    </Link>
-
-                    <Link
-                      href="/become-a-partner"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 hover:text-emerald-600"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Sparkles className="h-4 w-4 text-amber-500" />
-                        <span>Earn with Us (Affiliates)</span>
-                      </div>
-                      <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full">
-                        Earn PKR
-                      </span>
-                    </Link>
-
-                    <Link
-                      href="/merchants"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 border border-transparent"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Store className="h-4 w-4 text-emerald-600" />
-                        <span>Merchant Connect (Shopify)</span>
-                      </div>
-                      <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded-full">
-                        Sellers
-                      </span>
-                    </Link>
-
-                    <Link
-                      href="/lookup/store-ticket"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:bg-violet-50 hover:text-violet-700 border border-transparent"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Search className="h-4 w-4 text-violet-600" />
-                        <span>Store Ticket Lookup</span>
-                      </div>
-                      <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
-                    </Link>
-
-                    {/* Mobile Quick Track Input */}
-                    <div className="pt-2 px-1">
+                    <div className="px-1 pt-3">
                       <form onSubmit={handleQuickTrack} className="flex gap-1.5">
                         <input
                           type="text"
                           placeholder="Application ID (e.g. req-101)"
                           value={trackIdInput}
                           onChange={(e) => setTrackIdInput(e.target.value)}
-                          className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1.5 text-xs font-mono font-medium focus:outline-hidden focus:border-emerald-500"
+                          className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 font-mono text-xs font-medium outline-none transition focus:border-emerald-500"
                         />
                         <Button
                           type="submit"
                           size="sm"
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl h-8 px-3 shrink-0"
+                          className="h-8 shrink-0 rounded-xl bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-500"
                         >
                           Track
                         </Button>
@@ -935,132 +618,66 @@ export function Header() {
                     </div>
                   </div>
 
-                  {/* WHATSAPP HELPLINE SECTION IN MOBILE SIDEBAR */}
-                  <div className="pt-4 space-y-2.5">
-                    <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200">
+                  {/* Support */}
+                  <div className="py-4">
+                    <div className="rounded-2xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 to-teal-50 p-3.5">
                       <div className="flex items-start gap-2.5">
-                        <div className="p-2 rounded-xl bg-[#25D366] text-white shrink-0">
-                          <WhatsAppIcon className="w-5 h-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">
-                            Direct Support & Alerts
-                          </span>
-                          <span className="text-xs font-bold text-gray-900 block">
-                            Live WhatsApp Help Desk
-                          </span>
-                          <p className="text-[11px] text-gray-600 mt-0.5 leading-tight">
-                            Live chat, ticket assistance & live stream links.
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#25D366] text-white">
+                          <WhatsAppIcon className="h-5 w-5" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">
+                            Direct support
+                          </p>
+                          <p className="text-xs font-bold text-slate-900">Live WhatsApp help desk</p>
+                          <p className="mt-0.5 text-[11px] leading-tight text-slate-600">
+                            Ticket help, draw alerts and live stream links.
                           </p>
                         </div>
                       </div>
-
-                      <div className="mt-3">
-                        <a
-                          href={waInquiryUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-2 w-full py-2.5 px-3 rounded-xl bg-[#25D366] hover:bg-[#20ba59] active:bg-[#1caa52] text-white text-xs font-bold shadow-2xs text-center transition-colors"
-                        >
-                          <WhatsAppIcon className="w-4 h-4" />
-                          Chat on WhatsApp
-                        </a>
-                      </div>
+                      <a
+                        href={waInquiryUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-3 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#20ba59]"
+                      >
+                        <WhatsAppIcon className="h-4 w-4" />
+                        Chat on WhatsApp
+                      </a>
                     </div>
                   </div>
 
-                  {/* USER LOGGED IN QUICK ACTIONS */}
+                  {/* Logged-in shortcuts */}
                   {user && (
-                    <div className="pt-4 space-y-1.5">
-                      <Button
-                        asChild
-                        variant="outline"
-                        className="w-full justify-start rounded-xl text-xs font-medium h-10"
+                    <div className="space-y-1.5 pt-4">
+                      <Link
+                        href="/profile/entries"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
                       >
-                        <Link href="/profile/entries" onClick={() => setIsOpen(false)}>
-                          <Gift className="mr-2 h-4 w-4 text-green-600" />
-                          My Tickets & Entries
-                        </Link>
-                      </Button>
-                      <Button
+                        <Gift className="h-4 w-4 text-emerald-600" />
+                        My tickets &amp; entries
+                        <ArrowRight className="ml-auto h-3.5 w-3.5 text-slate-300" />
+                      </Link>
+                      <button
                         onClick={() => {
                           handleLogout()
                           setIsOpen(false)
                         }}
-                        variant="ghost"
-                        className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl text-xs font-medium h-10"
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-medium text-rose-600 hover:bg-rose-50"
                       >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Log Out Account
-                      </Button>
+                        <LogOut className="h-4 w-4" />
+                        Log out
+                      </button>
                     </div>
                   )}
                 </div>
 
-                {/* Drawer Footer Trust Indicator */}
-                <div className="p-3 bg-gray-50 border-t border-gray-100 text-center text-[10px] text-gray-500">
-                  <span>🇵🇰 PakRaffle Pakistan • 100% Transparent Draws</span>
+                <div className="border-t border-slate-100 bg-slate-50 p-3 text-center text-[10px] text-slate-500">
+                  🇵🇰 PakRaffle Pakistan · 100% transparent draws
                 </div>
               </SheetContent>
             </Sheet>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. FAST CATEGORY BAR (HIDDEN ON SCROLL DOWN, SHOWN ON SCROLL UP) */}
-      <div
-        className={`border-t border-gray-100 bg-gray-50/95 backdrop-blur-xs transition-all duration-300 ease-in-out overflow-hidden ${
-          showCategoryBar
-            ? "max-h-16 opacity-100 transform translate-y-0"
-            : "max-h-0 opacity-0 pointer-events-none transform -translate-y-1"
-        }`}
-      >
-        <div className="overflow-x-auto no-scrollbar">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex items-center gap-2 sm:gap-3 text-xs whitespace-nowrap">
-            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider hidden sm:inline-block pr-1">
-              Categories:
-            </span>
-
-            <Link
-              href="/raffles"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors shrink-0 ${
-                pathname === "/raffles" && !pathname.includes("category")
-                  ? "bg-green-600 text-white shadow-2xs"
-                  : "bg-white text-gray-700 border border-gray-200 hover:border-green-400 hover:text-green-700"
-              }`}
-            >
-              <Gift className="w-3.5 h-3.5" />
-              <span>All Draws</span>
-            </Link>
-
-            {CATEGORIES_LIST.map((cat) => {
-              const isSelected = pathname?.includes(`category=${cat.slug}`)
-              return (
-                <Link
-                  key={cat.slug}
-                  href={cat.href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors shrink-0 ${
-                    isSelected
-                      ? "bg-green-600 text-white shadow-2xs"
-                      : "bg-white text-gray-700 border border-gray-200 hover:border-green-400 hover:text-green-700"
-                  }`}
-                >
-                  <cat.icon className="w-3.5 h-3.5" />
-                  <span>{cat.name}</span>
-                  {cat.badge === "Hot" && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                  )}
-                </Link>
-              )
-            })}
-
-            <Link
-              href="/winners"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors shrink-0 ml-auto"
-            >
-              <Trophy className="w-3.5 h-3.5 text-amber-600" />
-              <span>Hall of Fame</span>
-            </Link>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { FileText, Shield, Users, AlertTriangle, CheckCircle2, Trophy, Truck, ArrowRight } from "lucide-react"
+import { FileText, Shield, Users, AlertTriangle, CheckCircle2, Trophy, Truck, ArrowRight, Store } from "lucide-react"
 import Link from "next/link"
 
 export const metadata = {
@@ -241,6 +241,86 @@ export default function TermsPage() {
                 All community product raffles must be completed within <strong>3 months (90 days)</strong> from their official launch date. If the required ticket goal is not met within 3 months, PakRaffle will automatically cancel the raffle, process full 100% refunds to all ticket buyers, charge/deduct the 8% platform fee, and securely return the physical item to the verified owner.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* SECTION 8: MERCHANT CONNECT — SHOPIFY STORE PROGRAMME */}
+        <div id="merchant-connect" className="scroll-mt-28 bg-white rounded-3xl p-6 sm:p-8 border border-emerald-500/30 shadow-xs space-y-4">
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+              <Store className="w-5 h-5 text-emerald-700" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                8. Merchant Connect — Shopify Store Programme
+              </h3>
+              <p className="text-xs text-gray-500">
+                Terms for businesses that reward their customers with PakRaffle draw entries
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3.5 text-xs sm:text-sm text-gray-600 leading-relaxed">
+            <p>
+              <strong>What the programme is:</strong> Merchant Connect lets a Shopify store attach a PakRaffle campaign
+              to its own orders. Qualifying orders mint a ticket for the shopper, and PakRaffle — not the store — acts
+              as the raffle operator, supplies the prize, runs the draw and delivers to the winner. The store is a
+              promoter of the draw, never the organiser of a lottery.
+            </p>
+
+            <p>
+              <strong>Eligibility &amp; account security:</strong> You must be authorised to act for the store you
+              connect and able to fulfil the orders that generate tickets. You are responsible for keeping your store
+              credentials and webhook signing secret private; any event signed with your secret is treated as originating
+              from your store.
+            </p>
+
+            <p>
+              <strong>Ticket pricing &amp; billing:</strong> Each raffle publishes a per-ticket price, which is locked for
+              your campaign at launch. You are billed once per ticket minted from a fulfilled, non-cancelled order. Test
+              tickets created in the simulator are never billed. Batches are closed by you, invoiced item by item, and
+              paid by Raast or IBFT with an uploaded payment receipt. An unpaid or unverifiable invoice keeps its
+              campaign out of the draw.
+            </p>
+
+            <p>
+              <strong>Webhooks &amp; order data:</strong> The programme depends on the order-created, order-cancelled
+              and order-refunded webhooks registered in your Shopify admin. If you remove or break those webhooks, we
+              cannot void tickets or detect cancellations, and billing will follow the last state we received.
+            </p>
+
+            <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-amber-950 space-y-2">
+              <p className="font-bold text-xs uppercase tracking-wider text-amber-900">
+                Ticket refunds — 2.9% + Rs. 30 gateway charge:
+              </p>
+              <p className="text-xs leading-relaxed">
+                A ticket may be refunded at your request at any time <strong>before its draw has been run</strong>. The
+                refund equals the ticket price minus the card and wallet charge already incurred on that transaction —
+                <strong> 2.9% of the ticket price plus Rs. 30</strong> per ticket. Refunding a ticket voids it, withdraws
+                the shopper&apos;s entry from the draw, and reverses the ticket on your invoice. Refunded tickets are
+                never re-billed, and no refund is possible once the draw has taken place.
+              </p>
+            </div>
+
+            <p>
+              <strong>Your shoppers:</strong> A ticket bought through your store must be free to the shopper — you may
+              not charge for it, sell it separately, or describe it as a product. You are responsible for the
+              accuracy of the customer details your Shopify order supplies, and for displaying your own store policies
+              alongside the draw promotion.
+            </p>
+
+            <p>
+              <strong>Fair use:</strong> Artificial orders, self-orders, refund loops, or campaigns structured to
+              convert tickets into cash equivalents are prohibited. We may pause a campaign, withhold a draw, void
+              tickets or close an account that breaches these terms, and unpaid invoices remain due.
+            </p>
+
+            <p>
+              <strong>Suspension &amp; termination:</strong> You may disconnect your store at any time; tickets already
+              minted stay valid for their draw and outstanding invoices stay payable. We may suspend the programme for
+              a store if billing repeatedly fails, if a prize cannot be delivered because of information held by the
+              store, or if these terms are breached.
+            </p>
           </div>
         </div>
 
