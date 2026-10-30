@@ -92,3 +92,12 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/*
+ * FAQ rows are native <details> so the homepage stays a server component. The open state has no
+ * Tailwind variant that survives compilation for "details[open] > summary > svg", so the chevron
+ * rotation is one plain rule keyed off a data attribute.
+ */
+details[data-faq][open] > summary > svg {
+  transform: rotate(180deg);
+}

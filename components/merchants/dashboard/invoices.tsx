@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { CheckCircle2, FileText, ImageUp, Receipt, ShieldAlert } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
@@ -145,6 +146,7 @@ function InvoiceDetailDialog({
   const [manualOpen, setManualOpen] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
 
   useEffect(() => {
     if (!invoiceId) return
@@ -165,11 +167,16 @@ function InvoiceDetailDialog({
     setStarting(true)
     setSubmitError(null)
     try {
-      const data = await merchantApi<{ checkoutUrl: string }>(`/api/merchants/me/invoices/${invoiceId}/checkout`, {
-        method: "POST",
-      })
+      const data = await merchantApi<{ checkoutUrl: string; tracker?: string }>(
+        `/api/merchants/me/invoices/${invoiceId}/checkout`,
+        { method: "POST" },
+      )
+      if (data.tracker) {
+        router.push(`/merchants/checkout/${data.tracker}`)
+        return // the route is changing; keep the spinner until it does
+      }
       window.location.href = data.checkoutUrl
-      return // the browser is leaving; keep the spinner until it does
+      return
     } catch (err: any) {
       setStarting(false)
       setSubmitError(err?.message || "Could not open the card checkout. Use the bank transfer option below.")
@@ -333,11 +340,10 @@ function InvoiceDetailDialog({
                     <Btn type="button" className="w-full" loading={starting} onClick={startCheckout}>
                       {starting ? "Opening secure checkout…" : `Pay ${formatPKR(invoice.amountDue)} now`}
                     </Btn>
-                    {invoice.checkoutUrl && (
+                    {invoice.gatewayRef && (
                       <a
-                        href={invoice.checkoutUrl}
+                        href={`/merchants/checkout/${invoice.gatewayRef}`}
                         className="inline-flex text-xs text-emerald-600 hover:underline"
-                        rel="noopener noreferrer"
                       >
                         Resume the checkout you already opened
                       </a>

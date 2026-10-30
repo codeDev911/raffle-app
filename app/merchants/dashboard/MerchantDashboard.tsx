@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { AlertTriangle, ExternalLink, KeyRound, LayoutDashboard, Receipt, RefreshCw, Settings, Ticket, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { BrandMark } from "@/components/brand"
 import { ApiError, Alert, Btn, Panel, Sep, StatusText, formatNumber, merchantApi } from "@/components/merchants/ui"
 import { CampaignsTab } from "@/components/merchants/dashboard/campaigns"
 import { EntriesTab } from "@/components/merchants/dashboard/entries"
@@ -150,7 +151,8 @@ export default function MerchantDashboard() {
       {/* Top bar */}
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link href="/merchants/dashboard" className="flex items-baseline gap-2 whitespace-nowrap">
+          <Link href="/merchants/dashboard" className="flex items-center gap-2 whitespace-nowrap">
+            <BrandMark className="h-8 w-8 rounded-lg" />
             <span className="text-base font-bold tracking-tight text-slate-900">PakRaffle</span>
             <span className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-600">Merchant</span>
           </Link>

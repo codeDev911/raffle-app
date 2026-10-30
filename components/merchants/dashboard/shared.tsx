@@ -53,6 +53,9 @@ export function entryStatusKey(entry: EntryDTO): string {
   if (entry.paymentStatus === "FAILED" || entry.paymentStatus === "REFUNDED") return "PAYMENT_FAILED"
   if (entry.paymentStatus === "CANCELLED") return "PAYMENT_CANCELLED"
   if (entry.paymentStatus === "PENDING" || entry.paymentStatus === "PROCESSING") return "AWAITING_CONFIRMATION"
+  // Opening the card page created no payment, so the ticket is simply payable again — until the
+  // session's own lifetime runs out.
+  if (entry.checkoutOpen) return "CHECKOUT_OPEN"
   return entry.invoiceId ? "ON_INVOICE" : "UNPAID"
 }
 

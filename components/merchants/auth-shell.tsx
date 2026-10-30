@@ -3,7 +3,8 @@
 // Shared frame for the merchant auth screens: light workspace, emerald accents.
 import type React from "react"
 import Link from "next/link"
-import { ShieldCheck, Store } from "lucide-react"
+import { ShieldCheck } from "lucide-react"
+import { BrandMark } from "@/components/brand"
 import { Panel, Sep } from "./ui"
 
 export function GoogleIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -69,9 +70,7 @@ export function MerchantAuthShell({
 
       <header className="relative mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
         <Link href="/merchants" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-emerald-600">
-            <Store className="h-4 w-4" />
-          </span>
+          <BrandMark className="h-8 w-8 rounded-lg" />
           PakRaffle <span className="text-slate-500">Merchant</span>
         </Link>
         <Link href="/merchants" className="text-xs text-slate-600 transition hover:text-emerald-600">

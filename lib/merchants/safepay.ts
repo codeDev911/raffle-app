@@ -251,6 +251,35 @@ function buildCheckoutUrl(
   return `${settings.checkoutHost}?${query.toString()}`
 }
 
+// ───────────────────────── presentation of a live session ─────────────────────────
+
+/**
+ * Safepay's checkout reads `source` from its own URL: `hosted` is a full page, `embedded` is the
+ * same session laid out to sit inside a frame. Only the query changes — the tracker stays the one
+ * we stored, so both URLs settle through the same callback and the same reporter lookup.
+ */
+export type SafepaySource = "hosted" | "embedded"
+
+export function withCheckoutSource(checkoutUrl: string, source: SafepaySource): string {
+  try {
+    const url = new URL(checkoutUrl)
+    url.searchParams.set("source", source)
+    return url.toString()
+  } catch {
+    return checkoutUrl
+  }
+}
+
+/** The session rendered for an iframe inside our own checkout page. */
+export function embeddedCheckoutUrl(checkoutUrl: string): string {
+  return withCheckoutSource(checkoutUrl, "embedded")
+}
+
+/** The top-level page for the same session — the fallback when a frame cannot be used. */
+export function hostedCheckoutUrl(checkoutUrl: string): string {
+  return withCheckoutSource(checkoutUrl, "hosted")
+}
+
 // ───────────────────────── outcome (reporter) ─────────────────────────
 
 /** Three outcomes only: money arrived, money did not arrive, or we cannot tell yet. */

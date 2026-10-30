@@ -6,10 +6,11 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { BrandMark } from "@/components/brand"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { LogIn, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import Head from "next/head"
 
@@ -76,9 +77,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <Card className="w-full max-w-md rounded-2xl shadow-lg border-0">
         <CardHeader className="text-center">
-          <div className="bg-green-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <LogIn className="w-8 h-8 text-white" />
-          </div>
+          <BrandMark className="mx-auto mb-4 h-16 w-16 rounded-2xl shadow-sm" />
           <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
           <CardDescription>Sign in to your PakRaffle account</CardDescription>
         </CardHeader>

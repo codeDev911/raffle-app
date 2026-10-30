@@ -14,10 +14,13 @@ import { toEntryDTO } from "../dto"
 import { MerchantError, conflict, notFound } from "../errors"
 import {
   createSafepayCheckout,
+  embeddedCheckoutUrl,
   fetchSafepayTracker,
+  hostedCheckoutUrl,
   isSafepayConfigured,
   SafepayError,
   safepaySettings,
+  type SafepayEnvironment,
   type SafepayTrackerSnapshot,
 } from "../safepay"
 import type { MerchantCampaign, MerchantEntry, MerchantInvoice, MerchantStore } from "../types"
@@ -26,7 +29,8 @@ import {
   entryCampaign,
   entryPaymentTransactionId,
   ENTRY_PAYMENT_KIND,
-  openGatewaySession,
+  armEntryCheckout,
+  releaseEntryCheckout,
   releaseMerchantPayment,
   settleEntryViaGateway,
   settleMerchantPayment,
@@ -123,12 +127,39 @@ function isExpired(startedAt: number | null): boolean {
   return startedAt !== null && Date.now() - startedAt > SESSION_TTL_MS
 }
 
+function entrySessionStartedAt(entry: MerchantEntry): number | null {
+  if (!entry.gatewayStartedAt) return null
+  const when = new Date(entry.gatewayStartedAt).getTime()
+  return Number.isNaN(when) ? null : when
+}
+
 /**
  * A second click must not open a second tracker: the merchant may still be paying in another tab,
  * and a tracker we stopped pointing at could never be matched when the money lands. While a
  * session for the same amount is live, hand it back untouched.
  */
 async function liveEntrySession(entry: MerchantEntry, amountPaisa: number): Promise<CheckoutStartResult | null> {
+  const tracker = entry.gatewayRef || ""
+  const checkoutUrl = entry.checkoutUrl || ""
+  // A price change invalidates the open session: hand out a new one at the current amount instead.
+  if (tracker && checkoutUrl && Number(entry.gatewayAmount || 0) === amountPaisa) {
+    if (!isExpired(entrySessionStartedAt(entry))) {
+      return {
+        checkoutUrl,
+        tracker,
+        environment: safepaySettings()?.environment ?? "sandbox",
+        amount: amountPaisa / 100,
+        amountPaisa,
+        paymentId: null,
+      }
+    }
+    return null
+  }
+  // Sessions opened before sessions moved onto the ticket still live on a PENDING payment row.
+  return liveLegacyEntrySession(entry, amountPaisa)
+}
+
+async function liveLegacyEntrySession(entry: MerchantEntry, amountPaisa: number): Promise<CheckoutStartResult | null> {
   const row = await prisma.payment.findFirst({
     where: { transactionId: entryPaymentTransactionId(entry.ticketNumber), method: "SAFEPAY", status: "PENDING" },
   })
@@ -137,7 +168,6 @@ async function liveEntrySession(entry: MerchantEntry, amountPaisa: number): Prom
   const gateway = asRecord(asRecord(row.metadata).gateway)
   const checkoutUrl = typeof gateway.checkoutUrl === "string" ? gateway.checkoutUrl : ""
   const billedPaisa = typeof gateway.amountPaisa === "number" ? gateway.amountPaisa : row.amount
-  // A price change invalidates the open session: hand out a new one at the current amount instead.
   if (!checkoutUrl || !row.gatewayRef || billedPaisa !== amountPaisa) return null
   if (isExpired(sessionStartedAt({ metadata: row.metadata, createdAt: row.createdAt }))) return null
 
@@ -190,12 +220,14 @@ export async function startEntryCheckout(
   // A rejected transfer is payable again; a still-live session simply gets a fresh tracker.
   if (entry.status === "INVOICED") await reopenFailedEntry(entry)
 
-  const { campaign, raffleName } = await entryCampaign(entry)
+  const { campaign } = await entryCampaign(entry)
   if (campaign.status === "COMPLETED") throw conflict("This campaign's draw has already been run")
 
   const amountPaisa = entryAmountPaisa(campaign)
   const live = await liveEntrySession(entry, amountPaisa)
   if (live) return live
+  // A dead session is dropped before a new tracker replaces it, so no tracker is left dangling.
+  if (entry.gatewayRef || entry.checkoutUrl) await releaseEntryCheckout(entry)
 
   const urls = callbackUrls(opts.baseUrl, "entry")
 
@@ -208,14 +240,11 @@ export async function startEntryCheckout(
     }),
   )
 
-  const payment = await openGatewaySession(
-    store,
-    entry,
-    campaign,
-    { tracker: session.tracker, amountPaisa, currency: session.currency, checkoutUrl: session.checkoutUrl },
-    raffleName,
-  )
-  await db.merchantEntry.updateMany({ where: { id: entry.id, status: "ISSUED" }, data: { status: "INVOICED" } })
+  await armEntryCheckout(entry, {
+    tracker: session.tracker,
+    amountPaisa,
+    checkoutUrl: session.checkoutUrl,
+  })
 
   return {
     checkoutUrl: session.checkoutUrl,
@@ -223,7 +252,8 @@ export async function startEntryCheckout(
     environment: session.environment,
     amount: amountPaisa / 100,
     amountPaisa,
-    paymentId: payment.id,
+    // No ledger row yet: it is written when the gateway confirms the capture.
+    paymentId: null,
   }
 }
 
@@ -300,6 +330,12 @@ async function findEntryPayment(trackers: string[]): Promise<Payment | null> {
   return rows.find((row) => asRecord(row.metadata).kind === ENTRY_PAYMENT_KIND) ?? null
 }
 
+/** The ticket that owns a live session — the tracker is stamped on the entry itself. */
+async function findEntrySession(trackers: string[]): Promise<MerchantEntry | null> {
+  const db = await getMerchantDb()
+  return db.merchantEntry.findFirst({ where: { gatewayRef: { in: trackers } } })
+}
+
 async function findInvoice(trackers: string[]): Promise<MerchantInvoice | null> {
   const db = await getMerchantDb()
   return db.merchantInvoice.findFirst({ where: { gatewayRef: { in: trackers } } })
@@ -319,8 +355,12 @@ export async function syncTracker(tracker: string): Promise<CheckoutSyncResult> 
   const invoice = await findInvoice(trackers)
   if (invoice) return syncInvoiceSession(invoice, snapshot)
 
+  const session = await findEntrySession(trackers)
+  if (session) return syncEntrySession(session, snapshot)
+
+  // Rows armed before sessions moved onto the ticket are still resolved from the ledger.
   const payment = await findEntryPayment(trackers)
-  if (payment) return syncEntrySession(payment, snapshot)
+  if (payment) return syncLegacyEntrySession(payment, snapshot)
 
   return { status: "unknown", tracker: snapshot.tracker, gatewayState: snapshot.state, reason: "no_matching_session" }
 }
@@ -336,7 +376,65 @@ function capturedBy(snapshot: SafepayTrackerSnapshot): GatewayCapture {
   }
 }
 
-async function syncEntrySession(payment: Payment, snapshot: SafepayTrackerSnapshot): Promise<CheckoutSyncResult> {
+/**
+ * Applies a tracker outcome to a ticket that carries its own session. Nothing is written to the
+ * ledger until the gateway confirms the money moved — that is the point of keeping the session on
+ * the ticket: opening the checkout page is not a payment, and closing it must leave no trace.
+ */
+async function syncEntrySession(entry: MerchantEntry, snapshot: SafepayTrackerSnapshot): Promise<CheckoutSyncResult> {
+  const base = { tracker: snapshot.tracker, gatewayState: snapshot.state, entryId: entry.id }
+
+  if (entry.status === "PAID") {
+    // A replayed callback must never bill the same ticket twice.
+    return { ...base, status: "paid", settled: 0, reason: "already_settled" }
+  }
+  if (entry.status === "CANCELLED") return { ...base, status: "failed", reason: "entry_cancelled" }
+
+  if (snapshot.outcome === "pending") {
+    if (!isExpired(entrySessionStartedAt(entry))) return { ...base, status: "pending" }
+    // Unpaid past its lifetime: hand the ticket back instead of leaving it locked.
+    const released = await releaseEntryCheckout(entry)
+    return { ...base, status: "failed", reason: "session_expired", entry: released }
+  }
+
+  if (snapshot.outcome === "failed") {
+    const released = await releaseEntryCheckout(entry)
+    return { ...base, status: "failed", reason: "gateway_failed", entry: released }
+  }
+
+  // Money arrived: verify the figure we billed before a single row is written.
+  const expected = {
+    amount: Number(entry.gatewayAmount || 0),
+    currency: safepaySettings()?.currency || "PKR",
+  }
+  if (!expected.amount) {
+    return { ...base, status: "mismatch", reason: "no_expected_amount", amountPaisa: snapshot.amountPaisa }
+  }
+  const mismatch = amountMismatch(snapshot, expected)
+  if (mismatch) return { ...base, status: "mismatch", reason: mismatch, amountPaisa: snapshot.amountPaisa }
+
+  const db = await getMerchantDb()
+  const store: MerchantStore | null = await db.merchantStore.findUnique({ where: { id: entry.storeId } })
+  if (!store) throw notFound("Store")
+  const { campaign, raffleName } = await entryCampaign(entry)
+
+  const { settlement, captured } = await settleEntryViaGateway(
+    store,
+    entry,
+    campaign,
+    { raffleName },
+    capturedBy(snapshot),
+  )
+  return {
+    ...base,
+    status: "paid",
+    entry: settlement.entry ?? toEntryDTO(entry),
+    settled: settlement.settled ? 1 : 0,
+    reason: captured ? undefined : "already_captured",
+  }
+}
+
+async function syncLegacyEntrySession(payment: Payment, snapshot: SafepayTrackerSnapshot): Promise<CheckoutSyncResult> {
   const metadata = asRecord(payment.metadata)
   const entryId = typeof metadata.merchantEntryId === "string" ? metadata.merchantEntryId : null
   const base = { tracker: snapshot.tracker, gatewayState: snapshot.state, entryId }
@@ -511,10 +609,18 @@ export async function syncStoreCheckouts(store: MerchantStore) {
     where: { storeId: store.id, status: { in: ["PENDING", "UNDER_REVIEW"] } },
   })
   const payments: Payment[] = await prisma.payment.findMany({ where: { method: "SAFEPAY", status: "PENDING" }, take: 100 })
+  // Ticket sessions carry their own tracker now; an expired one is released by the pass below.
+  const sessions: MerchantEntry[] = await db.merchantEntry.findMany({
+    where: { storeId: store.id, status: "INVOICED", gatewayRef: { not: null } },
+    take: 100,
+  })
 
   const trackers = new Set<string>()
   for (const invoice of invoices) {
     if (invoice.gatewayRef) trackers.add(invoice.gatewayRef)
+  }
+  for (const session of sessions) {
+    if (session.gatewayRef) trackers.add(session.gatewayRef)
   }
   for (const payment of payments) {
     const metadata = asRecord(payment.metadata)
@@ -539,4 +645,212 @@ export async function syncStoreCheckouts(store: MerchantStore) {
     mismatch: results.filter((r) => r.status === "mismatch").length,
     results,
   }
+}
+
+// ───────────────────────── describing a session for the checkout page ─────────────────────────
+
+/** What the branded checkout page needs to draw itself; nothing here is trusted from the client. */
+export type CheckoutDisplayStatus = "pending" | "paid" | "failed" | "expired" | "cancelled"
+
+export interface CheckoutItem {
+  label: string
+  detail: string | null
+  quantity: number
+  unitPricePaisa: number
+  amountPaisa: number
+}
+
+export interface CheckoutView {
+  tracker: string
+  scope: "entry" | "invoice"
+  scopeLabel: string
+  status: CheckoutDisplayStatus
+  /** Ticket number or invoice number — the merchant's own reference for this payment. */
+  reference: string
+  items: CheckoutItem[]
+  amountPaisa: number
+  currency: string
+  environment: SafepayEnvironment
+  /** Same session laid out for our iframe, and the full page used as the fallback. */
+  embeddedUrl: string | null
+  hostedUrl: string | null
+  /** When the tracker stops being payable, so the page can say so before it fails. */
+  expiresAt: string | null
+  entryId: string | null
+  invoiceId: string | null
+  backTab: "entries" | "invoices"
+}
+
+/**
+ * Resolves a tracker our own records already know about into a displayable checkout.
+ * Read-only on purpose: the page polls this while the merchant pays, and only the reporter lookup
+ * (`syncTracker`) is allowed to decide that money arrived.
+ */
+export async function describeCheckoutSession(store: MerchantStore, tracker: string): Promise<CheckoutView> {
+  const id = String(tracker || "").trim()
+  if (!id) throw notFound("Checkout session")
+
+  const db = await getMerchantDb()
+  const settings = safepaySettings()
+  const common = {
+    tracker: id,
+    currency: settings?.currency || "PKR",
+    environment: (settings?.environment ?? "sandbox") as SafepayEnvironment,
+  }
+
+  const invoice: MerchantInvoice | null = await db.merchantInvoice.findFirst({
+    where: { gatewayRef: id, storeId: store.id },
+  })
+  if (invoice) {
+    const campaign: MerchantCampaign | null = await db.merchantCampaign.findUnique({
+      where: { id: invoice.campaignId },
+    })
+    const amountPaisa = Number(invoice.gatewayAmount || 0) || Math.round(Number(invoice.amountDue || 0) * 100)
+    const startedAt = sessionStartedAt({ createdAt: invoice.createdAt, updatedAt: invoice.updatedAt })
+    const checkoutUrl = invoice.checkoutUrl || null
+    const paid = invoice.status === "PAID"
+    const status: CheckoutDisplayStatus = paid
+      ? "paid"
+      : checkoutUrl
+        ? isExpired(startedAt)
+          ? "expired"
+          : "pending"
+        : "cancelled"
+
+    return {
+      ...common,
+      scope: "invoice",
+      scopeLabel: "Ticket batch",
+      status,
+      reference: invoice.invoiceNumber,
+      items: [
+        {
+          label: campaign?.title || "Ticket batch",
+          detail: `Invoice ${invoice.invoiceNumber}`,
+          quantity: invoice.totalEntries,
+          unitPricePaisa: Math.round(Number(invoice.unitPrice || 0) * 100),
+          amountPaisa,
+        },
+      ],
+      amountPaisa,
+      embeddedUrl: !paid && checkoutUrl ? embeddedCheckoutUrl(checkoutUrl) : null,
+      hostedUrl: !paid && checkoutUrl ? hostedCheckoutUrl(checkoutUrl) : null,
+      expiresAt: expiresAtOf(startedAt),
+      entryId: null,
+      invoiceId: invoice.id,
+      backTab: "invoices",
+    }
+  }
+
+  // A ticket session is recorded on the ticket itself: an abandoned checkout has no ledger row to
+  // describe, and a settled one is read straight off the ticket.
+  const ticket: MerchantEntry | null = await db.merchantEntry.findFirst({
+    where: { gatewayRef: id, storeId: store.id },
+  })
+  if (ticket) {
+    let campaignTitle = "Raffle entry"
+    try {
+      campaignTitle = (await entryCampaign(ticket)).campaign.title || campaignTitle
+    } catch {
+      // A campaign removed after the session opened must not blank the page.
+    }
+
+    const amountPaisa = Number(ticket.gatewayAmount || 0)
+    const startedAt = entrySessionStartedAt(ticket)
+    const checkoutUrl = ticket.checkoutUrl || null
+    const status: CheckoutDisplayStatus =
+      ticket.status === "PAID"
+        ? "paid"
+        : ticket.status === "CANCELLED"
+          ? "cancelled"
+          : checkoutUrl
+            ? isExpired(startedAt)
+              ? "expired"
+              : "pending"
+            : "failed"
+
+    return {
+      ...common,
+      scope: "entry",
+      scopeLabel: "Single ticket",
+      status,
+      reference: ticket.ticketNumber,
+      items: [
+        {
+          label: campaignTitle,
+          detail: ticket.orderName ? `Order ${ticket.orderName}` : null,
+          quantity: 1,
+          unitPricePaisa: amountPaisa,
+          amountPaisa,
+        },
+      ],
+      amountPaisa,
+      embeddedUrl: status === "pending" && checkoutUrl ? embeddedCheckoutUrl(checkoutUrl) : null,
+      hostedUrl: status === "pending" && checkoutUrl ? hostedCheckoutUrl(checkoutUrl) : null,
+      expiresAt: expiresAtOf(startedAt),
+      entryId: ticket.id,
+      invoiceId: null,
+      backTab: "entries",
+    }
+  }
+
+  const payment = await findEntryPayment([id])
+  const metadata = payment ? asRecord(payment.metadata) : {}
+  // The ledger row is shared across stores, so ownership is read from the row that opened it.
+  if (!payment || metadata.storeId !== store.id) throw notFound("Checkout session")
+
+  const entryId = typeof metadata.merchantEntryId === "string" ? metadata.merchantEntryId : null
+  const entry: MerchantEntry | null = entryId ? await db.merchantEntry.findUnique({ where: { id: entryId } }) : null
+  let campaignTitle = "Raffle entry"
+  if (entry) {
+    try {
+      campaignTitle = (await entryCampaign(entry)).campaign.title || campaignTitle
+    } catch {
+      // A campaign removed after the session opened must not blank the page.
+    }
+  }
+
+  const gateway = asRecord(metadata.gateway)
+  const amountPaisa = Number(gateway.amountPaisa) || Number(payment.amount || 0)
+  const startedAt = sessionStartedAt({ metadata, createdAt: payment.createdAt })
+  const status: CheckoutDisplayStatus =
+    payment.status === "COMPLETED" || entry?.status === "PAID"
+      ? "paid"
+      : payment.status === "PENDING" || payment.status === "PROCESSING"
+        ? isExpired(startedAt)
+          ? "expired"
+          : "pending"
+        : payment.status === "FAILED"
+          ? "failed"
+          : "cancelled"
+  const checkoutUrl = typeof gateway.checkoutUrl === "string" ? gateway.checkoutUrl : null
+  const reference = entry?.ticketNumber || payment.transactionId || id
+
+  return {
+    ...common,
+    scope: "entry",
+    scopeLabel: "Single ticket",
+    status,
+    reference,
+    items: [
+      {
+        label: campaignTitle,
+        detail: entry?.orderName ? `Order ${entry.orderName}` : null,
+        quantity: 1,
+        unitPricePaisa: amountPaisa,
+        amountPaisa,
+      },
+    ],
+    amountPaisa,
+    embeddedUrl: status === "pending" && checkoutUrl ? embeddedCheckoutUrl(checkoutUrl) : null,
+    hostedUrl: status === "pending" && checkoutUrl ? hostedCheckoutUrl(checkoutUrl) : null,
+    expiresAt: expiresAtOf(startedAt),
+    entryId,
+    invoiceId: null,
+    backTab: "entries",
+  }
+}
+
+function expiresAtOf(startedAt: number | null): string | null {
+  return startedAt === null ? null : new Date(startedAt + SESSION_TTL_MS).toISOString()
 }

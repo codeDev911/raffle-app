@@ -109,6 +109,8 @@ export interface EntryDTO {
   status: "ISSUED" | "INVOICED" | "PAID" | "CANCELLED"
   /** PakRaffle payment row status for this ticket (null when nothing was submitted). */
   paymentStatus: string | null
+  /** A card checkout is still open for this ticket. */
+  checkoutOpen: boolean
   cancelledReason: string | null
   createdAt: string
 }

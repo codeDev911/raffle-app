@@ -1,14 +1,13 @@
 import Link from "next/link"
-import { Trophy, ArrowLeft } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
+import { BrandMark } from "@/components/brand"
 import { Button } from "@/components/ui/button"
 
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center space-y-6 bg-white p-8 rounded-3xl border border-gray-200/80 shadow-xs">
-        <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto">
-          <Trophy className="w-8 h-8" />
-        </div>
+        <BrandMark className="mx-auto h-16 w-16 rounded-3xl" />
         <div className="space-y-2">
           <h1 className="text-4xl font-black text-gray-900">404</h1>
           <h2 className="text-lg font-bold text-gray-800">Page Not Found</h2>

@@ -290,6 +290,13 @@ model MerchantEntry {
   isTest          Boolean             @default(false) // minted by the dashboard simulator; never billed or drawn
   status          MerchantEntryStatus @default(ISSUED)
   cancelledReason String?
+  // Live card checkout (Safepay) for this ticket. The session lives here rather than on a Payment
+  // row, so an abandoned checkout leaves no payment behind: the ledger row is written the moment
+  // the money is captured, never when the page is merely opened.
+  gatewayRef       String? // tracker of the open session
+  gatewayAmount    Int? // paisa we asked for — the figure a capture must match
+  checkoutUrl      String? // same session, for re-opening it while it is alive
+  gatewayStartedAt DateTime? // when the session opened; its age decides when we release the ticket
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 
@@ -302,6 +309,8 @@ model MerchantEntry {
   @@index([phoneNormalized])
   @@index([shopifyOrderId])
   @@index([claimToken])
+  // Callbacks and webhooks resolve a ticket session by its tracker.
+  @@index([gatewayRef])
   @@map("merchant_entries")
 }
 

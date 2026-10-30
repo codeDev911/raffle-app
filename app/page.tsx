@@ -1,813 +1,677 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import type { Metadata } from "next"
+import Link from "next/link"
 import {
-  Trophy,
-  Users,
-  Shield,
-  Smartphone,
-  Star,
-  CheckCircle,
   ArrowRight,
-  Play,
-  TrendingUp,
-  Clock,
-  Target,
-  Zap,
+  Check,
+  ChevronDown,
   CreditCard,
-  Lock,
-  Sparkles,
   Eye,
-  Heart,
+  Gift,
+  Lock,
+  ShieldCheck,
+  Star,
+  Store,
+  Ticket,
+  Trophy,
+  Truck,
+  Zap,
 } from "lucide-react"
+import { prisma } from "@/lib/prisma"
+import { formatCurrency } from "@/lib/utils"
 import Video_Mockup from "@/components/Video_Mockup"
-import PinterestRaffleGrid from "@/components/PinterestRaffleGrid"
 
-export const metadata = {
-  title: 'PakRaffle - Win Big with Just a Few Coins!',
-  description: 'Join Pakistan’s most exciting online lucky draw platform. Win iPhones, gadgets, and other amazing prizes by entering with just a few coins!',
-  keywords: ['PakRaffle', 'lucky draw Pakistan', 'online raffle', 'win iPhone', 'Pak raffle coins'],
-  robots: 'index, follow',
+export const metadata: Metadata = {
+  title: "PakRaffle - Win Big with Just a Few Coins!",
+  description:
+    "Join Pakistan's most exciting online lucky draw platform. Win iPhones, gadgets, and other amazing prizes by entering with just a few coins!",
+  keywords: ["PakRaffle", "lucky draw Pakistan", "online raffle", "win iPhone", "Pak raffle coins"],
+  robots: "index, follow",
   openGraph: {
-    title: 'PakRaffle - Win Big with Just a Few Coins!',
-    description: 'Enter lucky draws using coins and win exciting prizes daily — powered by transparency and fairness.',
-    url: 'https://pakraffle.com',
-    siteName: 'PakRaffle',
+    title: "PakRaffle - Win Big with Just a Few Coins!",
+    description: "Enter lucky draws using coins and win exciting prizes daily — powered by transparency and fairness.",
+    url: "https://pakraffle.com",
+    siteName: "PakRaffle",
     images: [
       {
-        url: 'https://pakraffle.com/images/og-home.jpg',
+        url: "https://pakraffle.com/images/og-home.jpg",
         width: 1200,
         height: 630,
-        alt: 'PakRaffle Home Banner',
+        alt: "PakRaffle Home Banner",
       },
     ],
-    type: 'website',
+    type: "website",
   },
   twitter: {
-    card: 'summary_large_image',
-    title: 'PakRaffle - Win Big with Just a Few Coins!',
-    description: 'Join exciting lucky draws and win prizes like iPhones, AirPods, and more!',
-    images: ['https://pakraffle.com/images/og-home.jpg'],
+    card: "summary_large_image",
+    title: "PakRaffle - Win Big with Just a Few Coins!",
+    description: "Join exciting lucky draws and win prizes like iPhones, AirPods, and more!",
+    images: ["https://pakraffle.com/images/og-home.jpg"],
   },
 }
 
 export const viewport = {
-  themeColor: '#10B981',
+  themeColor: "#10B981",
 }
 
-export default function LandingPage() {
+// The prize wall changes whenever a draw opens or sells out, so the page is refreshed every
+// minute instead of being frozen at build time.
+export const revalidate = 60
+
+/**
+ * Same shell as the Merchant Connect pages: white panels on a slate canvas, 1px slate borders,
+ * emerald for anything operational, monospace tabular figures for anything numeric. Kept local
+ * to the marketing page so it does not drag the merchant console kit into the public bundle.
+ */
+const PANEL = "rounded-2xl border border-slate-200 bg-white shadow-sm"
+const BTN_PRIMARY =
+  "inline-flex min-h-[40px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-emerald-600/20 transition hover:bg-emerald-500"
+const BTN_SECONDARY =
+  "inline-flex min-h-[40px] items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+const ICON_TILE =
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700"
+
+const STEPS = [
+  {
+    icon: Gift,
+    title: "Pick the prize",
+    body: "Every draw publishes the exact prize, its market value and the number of tickets on sale. No mystery boxes.",
+  },
+  {
+    icon: Ticket,
+    title: "Buy your tickets",
+    body: "One ticket or ten — more tickets mean more chances in that same draw, at the same listed price.",
+  },
+  {
+    icon: CreditCard,
+    title: "Pay in seconds",
+    body: "Easypaisa, JazzCash or any debit and credit card on a hosted, encrypted checkout page.",
+  },
+  {
+    icon: Trophy,
+    title: "Wait for the last ticket",
+    body: "The draw runs live once the target is sold out. The winner is called, texted and messaged within two hours.",
+  },
+]
+
+const PAY_NOTES = [
+  {
+    icon: Zap,
+    title: "Confirmed in seconds",
+    body: "Your ticket is issued the moment the wallet or card approves the payment — no manual approval queue.",
+  },
+  {
+    icon: Lock,
+    title: "Card details never touch us",
+    body: "Payments are captured on the gateway's hosted page. We store the reference, never the card.",
+  },
+  {
+    icon: Check,
+    title: "No hidden charges",
+    body: "The ticket price you see is the amount that leaves your wallet. Delivery is free on physical prizes.",
+  },
+]
+
+const TRUST = [
+  {
+    icon: ShieldCheck,
+    title: "Funded before anyone wins",
+    body: "A draw cannot run before every target ticket is sold, so the prize is fully funded before a single entry is entered.",
+  },
+  {
+    icon: Eye,
+    title: "Drawn in public",
+    body: "The randomiser is a certified CSPRNG and each draw is streamed unedited on YouTube and Facebook.",
+  },
+  {
+    icon: Truck,
+    title: "Delivered on us",
+    body: "Physical prizes ship free by TCS or courier nationwide. Cash prizes are paid to your verified account.",
+  },
+]
+
+const WINNERS = [
+  {
+    initial: "A",
+    quote:
+      "Won Rs 500,000 in my second week. The payout reached my JazzCash the same day and the draw video is still up.",
+    name: "Ahmed Hassan",
+    detail: "Karachi · cash prize",
+  },
+  {
+    initial: "S",
+    quote:
+      "The most straightforward platform I have used in Pakistan. Every ticket, price and draw time was exactly what the page said.",
+    name: "Sara Khan",
+    detail: "Lahore · multiple winner",
+  },
+  {
+    initial: "M",
+    quote:
+      "Won an iPhone and it arrived sealed and PTA approved. The live draw was unedited, which is why I entered again.",
+    name: "Muhammad Ali",
+    detail: "Islamabad · iPhone 15 Pro",
+  },
+]
+
+const FAQ = [
+  {
+    q: "When does a draw actually happen?",
+    a: "Only when every ticket in that raffle is sold. The target ticket count is published on the draw page and no draw runs before it is reached, so the prize is fully funded and every entry has the same chance.",
+  },
+  {
+    q: "How is the winner picked?",
+    a: "A certified cryptographically secure randomiser picks the winning ticket, and the run is streamed unedited on YouTube and Facebook. Nothing about the result depends on how early or late you bought.",
+  },
+  {
+    q: "Which payment methods can I use?",
+    a: "Easypaisa, JazzCash, and any debit or credit card, all settled in Pakistani rupees on a hosted checkout page. Your card details are entered on the gateway's page, not ours.",
+  },
+  {
+    q: "What happens if a draw is cancelled?",
+    a: "If a raffle is cancelled — by us or by the seller — 100% of the ticket price is refunded to every buyer's original payment method. Community draws also close automatically if the ticket goal is not met within 90 days.",
+  },
+  {
+    q: "How do I receive the prize?",
+    a: "Winners are contacted by call, SMS and WhatsApp within two hours of the draw and have seven business days to confirm their address and CNIC. Physical prizes ship free nationwide; cash prizes are paid to your verified account.",
+  },
+  {
+    q: "Who can enter?",
+    a: "Residents of Pakistan aged 18 or over, one account per person. The full eligibility, draw and refund rules are in our terms and refund policy.",
+  },
+]
+
+interface LiveDraw {
+  id: string
+  title: string
+  category: string
+  image: string | null
+  gallery: string[]
+  price: number
+  totalEntries: number
+  currentEntries: number
+}
+
+/**
+ * The homepage is the shop window, so a database hiccup shows an honest empty state instead of
+ * taking the whole page down with it. `prisma` is a proxy over the real client and the in-memory
+ * store, so the row shape is declared here rather than inferred.
+ */
+async function getLiveDraws(): Promise<LiveDraw[]> {
+  try {
+    return await prisma.raffle.findMany({
+      where: { status: "ACTIVE" },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: {
+        id: true,
+        title: true,
+        category: true,
+        image: true,
+        gallery: true,
+        price: true,
+        totalEntries: true,
+        currentEntries: true,
+      },
+    })
+  } catch (error) {
+    console.error("Home live draws error:", error)
+    return []
+  }
+}
+
+export default async function LandingPage() {
+  const draws = await getLiveDraws()
+
   return (
-    <div className="min-h-screen bg-white text-gray-900 overflow-hidden">
-      {/* Geometric Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-green-500/10 to-emerald-600/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-gradient-to-tr from-green-400/5 to-teal-500/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-gradient-to-tl from-green-600/8 to-lime-500/8 rounded-full blur-2xl"></div>
-      </div>
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      {/* Hero */}
+      <section className="relative overflow-hidden border-b border-slate-200">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.14),transparent_60%)]" />
+        <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-14 sm:px-6 md:pb-24 md:pt-20">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-600">
+            PakRaffle <span className="text-slate-400">/</span> Verified lucky draws, Pakistan
+          </p>
+          <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl">
+            A few coins. Real prizes.
+            <span className="mt-1 block text-emerald-600">Drawn in public.</span>
+          </h1>
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+            iPhones, motorbikes, laptops and cash — funded before a single ticket is sold. Pick a draw, buy a
+            ticket with Easypaisa, JazzCash or any card, and watch the winner get picked live.
+          </p>
 
-      {/* Hero Section */}
-      <section className="relative      min-h-screen flex flex-col justify-center">
-        <div className="container mx-auto">
-         
-
-          {/* Pinterest Grid at the top */}
-          <div className="mb-16 ">
-            <PinterestRaffleGrid />
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link href="/raffles" className="w-full sm:w-auto">
+              <span className={`${BTN_PRIMARY} w-full sm:w-auto`}>
+                Browse open draws <ArrowRight className="h-4 w-4" />
+              </span>
+            </Link>
+            <Link href="/winners" className="w-full sm:w-auto">
+              <span className={`${BTN_SECONDARY} w-full sm:w-auto`}>
+                <Trophy className="h-4 w-4 text-amber-500" /> Recent winners
+              </span>
+            </Link>
           </div>
 
-          {/* Centered Content Below Pinterest Grid */}
-          <div className="text-center px-6 space-y-8">
-            <div className="space-y-6">
-              <h1 className="text-6xl lg:text-7xl font-bold leading-tight">
-                <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent">
-                  MAKE DREAMS
-                </span>
-                <br />
-                <span className="bg-gradient-to-r from-green-500 to-green-600 bg-clip-text text-transparent">
-                  COME TRUE
-                </span>
-              </h1>
+          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500">
+            {[
+              "Draw runs only when every ticket is sold",
+              "Free insured delivery",
+              "PTA-approved, sealed prizes",
+            ].map((chip) => (
+              <span key={chip} className="inline-flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                {chip}
+              </span>
+            ))}
+          </div>
 
-              <p className="text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto">
-                Pakistan's most sophisticated raffle platform. Where every ticket is a chance to transform your life
-                with instant wins and life-changing prizes.
+          <p className="mt-4 text-sm text-slate-500">
+            <span className="font-mono font-semibold tabular-nums text-slate-800">Rs 2.5M+</span> paid out
+            <Sep />
+            50,000+ players
+            <Sep />
+            every draw streamed live
+          </p>
+
+          {/* Mechanics, not adjectives */}
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
+            <div className={`${PANEL} p-5`}>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Rule</p>
+              <p className="mt-2 text-sm text-slate-800">
+                Tickets sold out <span className="font-mono tabular-nums text-emerald-600">→</span> draw runs
+              </p>
+              <p className="mt-1 text-xs text-slate-500">No early draws, no skipped weeks</p>
+            </div>
+            <div className={`${PANEL} p-5`}>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Randomiser</p>
+              <p className="mt-2 flex items-center gap-2 text-sm text-slate-800">
+                <ShieldCheck className="h-4 w-4 text-emerald-600" /> CSPRNG, streamed live
+              </p>
+              <p className="mt-1 text-xs text-slate-500">YouTube &amp; Facebook broadcast</p>
+            </div>
+            <div className={`${PANEL} border-emerald-200 p-5`}>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Your ticket</p>
+              <p className="mt-2 font-mono text-lg font-semibold tabular-nums text-emerald-600">PKR-7Q4K-21</p>
+              <p className="mt-1 text-xs text-slate-500">One ticket · one entry · same odds</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Open draws */}
+      <section className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-20">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Open draws</h2>
+              <p className="mt-2 max-w-2xl text-slate-600">
+                Live raffles with the prize already funded. The price on each card is per ticket — buy more tickets
+                for more chances in the same draw.
               </p>
             </div>
+            <Link
+              href="/raffles"
+              className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-emerald-700 transition hover:text-emerald-800"
+            >
+              All draws <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-0 shadow-xl shadow-green-500/25 text-lg px-8 py-4 transition-all duration-300 transform hover:scale-105"
-              >
-                Start Playing Now
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button> 
+          {draws.length === 1 ? (
+            <FeaturedDraw draw={draws[0]} />
+          ) : draws.length > 1 ? (
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {draws.map((draw: LiveDraw) => (
+                <DrawCard key={draw.id} draw={draw} />
+              ))}
             </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-8 pt-8 max-w-2xl mx-auto">
-              <div>
-                <div className="text-3xl font-bold text-green-500 mb-1">₨2M+</div>
-                <div className="text-sm text-gray-500">Prizes Won</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-green-500 mb-1">50K+</div>
-                <div className="text-sm text-gray-500">Active Players</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-green-500 mb-1">24/7</div>
-                <div className="text-sm text-gray-500">Live Draws</div>
-              </div>
+          ) : (
+            <div className={`${PANEL} mt-10 px-6 py-14 text-center`}>
+              <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-400">
+                <Ticket className="h-5 w-5" />
+              </span>
+              <p className="mt-3 text-sm font-medium text-slate-800">No draws are open this minute</p>
+              <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500">
+                New prizes are listed weekly. The winners gallery shows what has already been won and delivered.
+              </p>
+              <Link href="/winners" className={`${BTN_SECONDARY} mt-5`}>
+                See past winners <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
+          )}
+        </div>
+      </section>
 
-           
+      {/* How it works */}
+      <section id="how-it-works" className="border-b border-slate-200">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-20">
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">How a draw runs</h2>
+          <p className="mt-2 max-w-2xl text-slate-600">
+            Four steps, no account gymnastics and no waiting on a moderator to confirm you.
+          </p>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {STEPS.map((step, i) => (
+              <div key={step.title} className={`${PANEL} p-5`}>
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-emerald-600">
+                    <step.icon className="h-4 w-4" />
+                  </span>
+                  <span className="font-mono text-xs tabular-nums text-slate-500">0{i + 1}</span>
+                </div>
+                <h3 className="mt-4 font-semibold text-slate-900">{step.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{step.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Modern Bento Grid Stats Section */}
-      <section className="relative py-32 px-6 bg-gradient-to-br from-gray-50 via-white to-green-50/30">
-        <div className="container mx-auto">
-          <div className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-green-500/10 text-green-600 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Sparkles className="w-4 h-4" />
-              Live Statistics
+      {/* Payments */}
+      <section className="border-b border-slate-200 bg-white">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-16 sm:px-6 md:py-20 lg:grid-cols-2">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Pay the way you already do</h2>
+            <p className="mt-2 max-w-xl text-slate-600">
+              No foreign wallet and no currency conversion. Checkout is hosted by our Pakistani payment partner and
+              settles in rupees, so the amount you approve is the amount you pay.
+            </p>
+
+            <div className="mt-8 grid grid-cols-3 gap-3">
+              <div className={`${PANEL} flex h-16 items-center justify-center px-3`}>
+                <img src="/assets/easypaisa-logo.png" alt="Easypaisa" className="h-6 w-auto object-contain" />
+              </div>
+              <div className={`${PANEL} flex h-16 items-center justify-center px-3`}>
+                <img src="/assets/jazzcash-logo.png" alt="JazzCash" className="h-6 w-auto object-contain" />
+              </div>
+              <div className={`${PANEL} flex h-16 flex-col items-center justify-center gap-1`}>
+                <CreditCard className="h-4 w-4 text-slate-500" />
+                <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Card</span>
+              </div>
             </div>
-            <h2 className="text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent">
-              Real-Time Impact
-            </h2>
+            <p className="mt-3 text-xs text-slate-500">
+              Debit and credit cards are accepted through the same checkout, secured by the gateway.
+            </p>
+
+            <div className="mt-8 space-y-4">
+              {PAY_NOTES.map((note) => (
+                <div key={note.title} className="flex gap-3">
+                  <span className={ICON_TILE}>
+                    <note.icon className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900">{note.title}</h3>
+                    <p className="mt-0.5 text-sm leading-relaxed text-slate-600">{note.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Bento Grid Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-            {/* Large Card - Total Winnings */}
-            <div className="lg:col-span-2 lg:row-span-2">
-              <Card className="h-full bg-gradient-to-br from-green-500 to-green-600 border-0 text-white overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
-                <CardContent className="p-8 h-full flex flex-col justify-between relative z-10">
-                  <div>
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="p-3 bg-white/20 rounded-2xl">
-                        <TrendingUp className="w-8 h-8" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold opacity-90">Total Winnings</h3>
-                        <p className="text-sm opacity-70">All time payouts</p>
-                      </div>
-                    </div>
-                    <div className="text-5xl lg:text-6xl font-bold mb-4">₨2.5M+</div>
-                    <div className="flex items-center gap-2 text-green-100">
-                      <TrendingUp className="w-4 h-4" />
-                      <span className="text-sm">+₨125K this week</span>
-                    </div>
-                  </div>
-                  <div className="mt-8">
-                    <div className="text-sm opacity-70 mb-2">Weekly Growth</div>
-                    <div className="w-full bg-white/20 rounded-full h-2">
-                      <div className="bg-white h-2 rounded-full w-4/5"></div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Active Players */}
-            <Card className="bg-white border-gray-200 hover:shadow-xl transition-all duration-500 group">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-blue-500/10 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                    <Users className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">50K+</div>
-                    <div className="text-sm text-gray-500">Active Players</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-green-600">
-                  <TrendingUp className="w-4 h-4" />
-                  <span className="text-sm font-medium">+12% this month</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Daily Winners */}
-            <Card className="bg-white border-gray-200 hover:shadow-xl transition-all duration-500 group">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-yellow-500/10 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                    <Trophy className="w-6 h-6 text-yellow-600" />
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">1,200+</div>
-                    <div className="text-sm text-gray-500">Daily Winners</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-green-600">
-                  <Heart className="w-4 h-4" />
-                  <span className="text-sm font-medium">98% satisfaction</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Live Draws */}
-            <Card className="bg-gradient-to-br from-purple-500 to-pink-600 border-0 text-white">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-white/20 rounded-xl">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-lg font-semibold">Live Now</div>
-                    <div className="text-sm opacity-80">24/7 Draws</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mt-4">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-sm">Next draw in 15 min</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Success Rate */}
-            <Card className="bg-white border-gray-200 hover:shadow-xl transition-all duration-500 group">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-green-500/10 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                    <Target className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">1:50</div>
-                    <div className="text-sm text-gray-500">Win Rate</div>
-                  </div>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full w-1/2"></div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Revolutionary Payment Section */}
-      <section className="relative py-32 px-6 bg-white overflow-hidden">
-        <div className="absolute"></div>
-        <div className="container max-w-7xl  mx-auto relative">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-            {/* Content Side */}
-            <div className="space-y-10">
-              <div className="space-y-6">
-                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500/10 to-blue-500/10 text-green-600 px-4 py-2 rounded-full text-sm font-medium">
-                  <CreditCard className="w-4 h-4" />
-                  Instant Payments
-                </div>
-                <h2 className="text-5xl lg:text-6xl font-bold leading-tight">
-                  <span className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                    Lightning Fast
-                  </span>
-                  <br />
-                  <span className="bg-gradient-to-r from-green-500 to-blue-600 bg-clip-text text-transparent">
-                    Payments
-                  </span>
-                </h2>
-                <p className="text-xl text-gray-600 leading-relaxed">
-                  Experience the future of payments with our integrated system. Secure, instant, and hassle-free
-                  transactions with Pakistan's most trusted payment partners.
-                </p>
-              </div>
-
-              {/* Payment Methods Grid */}
-              <div className="grid grid-cols-3 gap-4">
-                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg hover:scale-105 transition-all duration-300 group">
-                  <CardContent className="p-6 text-center">
-                    <img
-                      className="w-24 mx-auto"
-                      src="    https://crystalpng.com/wp-content/uploads/2024/10/Easypaisa-logo.png"
-                      alt="Easypaisa"
-                    />
-                    <h3 className="font-bold text-sm text-gray-900">EasyPaisa</h3>
-                    <p className="text-xs text-gray-600 mt-1">Instant</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-orange-50 to-red-100 border-orange-200 hover:shadow-lg hover:scale-105 transition-all duration-300 group">
-                  <CardContent className="p-6 text-center">
-                    <img
-                      className="w-24 mx-auto"
-                      src="https://crystalpng.com/wp-content/uploads/2024/12/new-Jazzcash-logo.png"
-                      alt="Jazzcash"
-                    />
-                    <h3 className="font-bold text-sm text-gray-900">JazzCash</h3>
-                    <p className="text-xs text-gray-600 mt-1">Reliable</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-purple-50 to-pink-100 border-purple-200 hover:shadow-lg hover:scale-105 transition-all duration-300 group">
-                  <CardContent className="p-6 text-center">
-                    <img
-                      className="w-24 mx-auto"
-                      src=" https://vectorseek.com/wp-content/uploads/2023/09/NayaPay-Icon-Logo-Vector.svg-.png"
-                      alt="Nayapay"
-                    />
-                    <h3 className="font-bold text-sm text-gray-900">NayaPay</h3>
-                    <p className="text-xs text-gray-600 mt-1">Modern</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Features List */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors duration-300">
-                  <div className="p-2 bg-green-500 rounded-xl">
-                    <Zap className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Instant Processing</h4>
-                    <p className="text-sm text-gray-600">Payments processed in under 5 seconds</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors duration-300">
-                  <div className="p-2 bg-blue-500 rounded-xl">
-                    <Lock className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Bank-Level Security</h4>
-                    <p className="text-sm text-gray-600">256-bit SSL encryption for all transactions</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors duration-300">
-                  <div className="p-2 bg-purple-500 rounded-xl">
-                    <CheckCircle className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Zero Hidden Fees</h4>
-                    <p className="text-sm text-gray-600">What you see is what you pay</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Mockup Side */}
-            <div className="relative">
+          <div className={`${PANEL} flex flex-col self-start p-4`}>
+            {/* The walkthrough is a portrait screen recording, so it gets a phone-shaped stage. */}
+            <div
+              className="mx-auto w-full max-w-[300px] overflow-hidden rounded-xl bg-slate-900"
+              style={{ aspectRatio: "1210 / 1712" }}
+            >
               <Video_Mockup />
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section id="how-it-works" className="relative py-32 px-6 bg-white">
-        <div className="container max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500/10 to-blue-500/10 text-green-600 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Target className="w-4 h-4" />
-              Simple Process
-            </div>
-            <h2 className="text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent">
-              How It Works
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Getting started with PakRaffle is incredibly simple. Follow these three easy steps to join thousands of
-              winners.
-            </p>
-          </div>
-
-          {/* Steps Container */}
-          <div className="relative max-w-6xl mx-auto">
-            {/* Connection Lines */}
-            <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-green-200 via-blue-200 to-purple-200 transform -translate-y-1/2 z-0"></div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 relative z-10">
-              {/* Step 1 - Buy Entry */}
-              <div className="group">
-                <Card className="bg-white border-gray-200 hover:shadow-2xl hover:-translate-y-4 transition-all duration-500 overflow-hidden relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <CardContent className="p-8 text-center relative">
-                    {/* Step Number */}
-                    <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold shadow-lg shadow-green-500/25 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 relative">
-                      1
-                      <div className="absolute -inset-2 bg-green-500/20 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    </div>
-
-                    {/* Icon */}
-                    <div className="w-20 h-20 bg-gradient-to-br from-green-50 to-green-100 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform duration-300">
-                      <div className="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center">
-                        <Trophy className="w-7 h-7 text-white" />
-                      </div>
-                    </div>
-
-                    <h3 className="text-2xl font-bold mb-4 text-gray-900">Click Buy Entry</h3>
-                    <p className="text-gray-600 leading-relaxed mb-6">
-                      Browse our exciting raffles and choose your favorite prize. Click "Buy Entry" to select the number
-                      of tickets you want to purchase.
-                    </p>
-
-                    {/* Features */}
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center justify-center gap-2 text-green-600">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Multiple raffles available</span>
-                      </div>
-                      <div className="flex items-center justify-center gap-2 text-green-600">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Choose ticket quantity</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Step 2 - Payment */}
-              <div className="group">
-                <Card className="bg-white border-gray-200 hover:shadow-2xl hover:-translate-y-4 transition-all duration-500 overflow-hidden relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <CardContent className="p-8 text-center relative">
-                    {/* Step Number */}
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold shadow-lg shadow-blue-500/25 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 relative">
-                      2
-                      <div className="absolute -inset-2 bg-blue-500/20 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    </div>
-
-                    {/* Icon */}
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-blue-100 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform duration-300">
-                      <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center">
-                        <CreditCard className="w-7 h-7 text-white" />
-                      </div>
-                    </div>
-
-                    <h3 className="text-2xl font-bold mb-4 text-gray-900">Make Payment</h3>
-                    <p className="text-gray-600 leading-relaxed mb-6">
-                      Choose your preferred payment method from EasyPaisa, JazzCash, or NayaPay. Complete the secure
-                      payment process in seconds.
-                    </p>
-
-                    {/* Payment Methods */}
-                    <div className="flex justify-center gap-3 mb-4">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">EP</span>
-                      </div>
-                      <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">JC</span>
-                      </div>
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">NP</span>
-                      </div>
-                    </div>
-
-                    {/* Features */}
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center justify-center gap-2 text-blue-600">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Secure encryption</span>
-                      </div>
-                      <div className="flex items-center justify-center gap-2 text-blue-600">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Instant processing</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Step 3 - Wait for Approval */}
-              <div className="group">
-                <Card className="bg-white border-gray-200 hover:shadow-2xl hover:-translate-y-4 transition-all duration-500 overflow-hidden relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <CardContent className="p-8 text-center relative">
-                    {/* Step Number */}
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold shadow-lg shadow-purple-500/25 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 relative">
-                      3
-                      <div className="absolute -inset-2 bg-purple-500/20 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    </div>
-
-                    {/* Icon */}
-                    <div className="w-20 h-20 bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-105 transition-transform duration-300">
-                      <div className="w-12 h-12 bg-purple-500 rounded-2xl flex items-center justify-center">
-                        <Clock className="w-7 h-7 text-white" />
-                      </div>
-                    </div>
-
-                    <h3 className="text-2xl font-bold mb-4 text-gray-900">Payment Approval</h3>
-                    <p className="text-gray-600 leading-relaxed mb-6">
-                      Wait for payment confirmation and approval. You'll receive instant notification once your entry is
-                      confirmed and you're in the draw!
-                    </p>
-
-                    {/* Status Indicator */}
-                    <div className="flex items-center justify-center gap-2 mb-4">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm text-green-600 font-medium">Usually under 30 seconds</span>
-                    </div>
-
-                    {/* Features */}
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center justify-center gap-2 text-purple-600">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>SMS & Email alerts</span>
-                      </div>
-                      <div className="flex items-center justify-center gap-2 text-purple-600">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Entry confirmation</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            {/* Bottom CTA */}
-            <div className="text-center mt-16">
-              <div className="inline-flex items-center gap-4 bg-gradient-to-r from-gray-50 to-green-50 px-8 py-4 rounded-2xl border border-gray-200">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-green-600" />
-                  <span className="text-gray-700 font-medium">Average completion time: 2 minutes</span>
-                </div>
-                <div className="w-px h-6 bg-gray-300"></div>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-blue-600" />
-                  <span className="text-gray-700 font-medium">100% secure process</span>
-                </div>
-              </div>
+            <div className="mt-4 border-t border-slate-200 px-1 pt-3">
+              <p className="text-sm font-semibold text-slate-900">A real ticket purchase, start to finish</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                Wallet payment, confirmation and ticket issue — recorded in the live checkout, not a mock-up.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Modern Features Section */}
-      <section className="relative py-32 px-6 bg-gradient-to-br from-gray-50 via-white to-green-50/20">
-        <div className="container max-w-7xl  mx-auto">
-          <div className="text-center  mb-20">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500/10 to-blue-500/10 text-green-600 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Shield className="w-4 h-4" />
-              Why Choose Us
+      {/* Trust + winners */}
+      <section className="border-b border-slate-200">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-20">
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Why the draw is worth trusting</h2>
+          <p className="mt-2 max-w-2xl text-slate-600">
+            The rules are boring on purpose: funded prizes, a public randomiser and a delivery promise in writing.
+          </p>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {TRUST.map((item) => (
+              <div key={item.title} className="flex gap-4">
+                <item.icon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                <div>
+                  <h3 className="font-semibold text-slate-900">{item.title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">{item.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-14 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h3 className="text-lg font-bold tracking-tight text-slate-900">Played and won</h3>
+              <p className="mt-1 text-sm text-slate-600">Recent winners, in their own words.</p>
             </div>
-            <h2 className="text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent">
-              Built for Winners
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Experience next-generation raffle technology with unmatched security, transparency, and user experience.
-            </p>
+            <Link
+              href="/winners"
+              className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-emerald-700 transition hover:text-emerald-800"
+            >
+              All winners <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
 
-          {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <Card className="group bg-white border-gray-200 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <CardContent className="p-8 relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-green-500/25">
-                  <Shield className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-900">Military-Grade Security</h3>
-                <p className="text-gray-600 leading-relaxed mb-6">
-                  Your data and transactions are protected with the same encryption used by banks and government
-                  institutions.
-                </p>
-                <div className="flex items-center text-green-600 font-medium">
-                  <span>Learn more</span>
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform duration-300" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Feature 2 */}
-            <Card className="group bg-white border-gray-200 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <CardContent className="p-8 relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-blue-500/25">
-                  <Eye className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-900">Complete Transparency</h3>
-                <p className="text-gray-600 leading-relaxed mb-6">
-                  Every draw is live-streamed and recorded. Blockchain verification ensures fairness and builds trust
-                  with our community.
-                </p>
-                <div className="flex items-center text-blue-600 font-medium">
-                  <span>View live draws</span>
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform duration-300" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Feature 3 */}
-            <Card className="group bg-white border-gray-200 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <CardContent className="p-8 relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-purple-500/25">
-                  <Zap className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-900">Lightning Payouts</h3>
-                <p className="text-gray-600 leading-relaxed mb-6">
-                  Winners receive their prizes instantly through automated systems. No waiting, no delays, just instant
-                  gratification.
-                </p>
-                <div className="flex items-center text-purple-600 font-medium">
-                  <span>See payout speed</span>
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform duration-300" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Feature 4 */}
-            <Card className="group bg-white border-gray-200 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <CardContent className="p-8 relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-yellow-500/25">
-                  <Trophy className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-900">Premium Prizes</h3>
-                <p className="text-gray-600 leading-relaxed mb-6">
-                  From luxury cars to million-rupee cash prizes. We partner with top brands to offer life-changing
-                  rewards.
-                </p>
-                <div className="flex items-center text-yellow-600 font-medium">
-                  <span>Browse prizes</span>
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform duration-300" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Feature 5 */}
-            <Card className="group bg-white border-gray-200 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <CardContent className="p-8 relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-pink-500/25">
-                  <Users className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-900">Community First</h3>
-                <p className="text-gray-600 leading-relaxed mb-6">
-                  Join 50,000+ happy players in Pakistan's most trusted raffle community. Real people, real wins, real
-                  stories.
-                </p>
-                <div className="flex items-center text-pink-600 font-medium">
-                  <span>Join community</span>
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform duration-300" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Feature 6 */}
-            <Card className="group bg-white border-gray-200 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <CardContent className="p-8 relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg shadow-indigo-500/25">
-                  <Smartphone className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4 text-gray-900">Mobile Excellence</h3>
-                <p className="text-gray-600 leading-relaxed mb-6">
-                  Optimized for mobile with intuitive design, offline capabilities, and push notifications for live
-                  draws.
-                </p>
-                <div className="flex items-center text-indigo-600 font-medium">
-                  <span>Download app</span>
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform duration-300" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials with Modern Design */}
-      <section className="relative py-32 px-6 bg-white overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-green-500/3 via-transparent to-blue-500/3"></div>
-        <div className="container mx-auto relative">
-          <div className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500/10 to-blue-500/10 text-green-600 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Star className="w-4 h-4" />
-              Success Stories
-            </div>
-            <h2 className="text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent">
-              Life-Changing Wins
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Real stories from real winners who transformed their lives with PakRaffle.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Testimonial 1 */}
-            <Card className="group bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-2xl hover:-translate-y-4 transition-all duration-500 overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full -translate-y-16 translate-x-16"></div>
-              <CardContent className="p-8 relative">
-                <div className="flex items-center mb-6">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {WINNERS.map((winner) => (
+              <div key={winner.name} className={`${PANEL} flex flex-col p-5`}>
+                <div className="flex items-center gap-1">
+                  {[0, 1, 2, 3, 4].map((star) => (
+                    <Star key={star} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <blockquote className="text-lg text-gray-700 leading-relaxed mb-6 italic">
-                  "Won ₨500,000 in my second week! The instant payout through JazzCash was incredible. PakRaffle
-                  completely changed my life."
+                <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-slate-700">
+                  &ldquo;{winner.quote}&rdquo;
                 </blockquote>
-                <div className="flex items-center">
-                  <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4 shadow-lg">
-                    A
-                  </div>
+                <div className="mt-4 flex items-center gap-3 border-t border-slate-200 pt-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-sm font-semibold text-emerald-700">
+                    {winner.initial}
+                  </span>
                   <div>
-                    <div className="font-bold text-gray-900 text-lg">Ahmed Hassan</div>
-                    <div className="text-gray-600">Karachi • Software Engineer</div>
-                    <div className="text-sm text-green-600 font-medium mt-1">Won ₨500,000</div>
+                    <p className="text-sm font-semibold text-slate-900">{winner.name}</p>
+                    <p className="text-[11px] text-slate-500">{winner.detail}</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Testimonial 2 */}
-            <Card className="group bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-2xl hover:-translate-y-4 transition-all duration-500 overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -translate-y-16 translate-x-16"></div>
-              <CardContent className="p-8 relative">
-                <div className="flex items-center mb-6">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <blockquote className="text-lg text-gray-700 leading-relaxed mb-6 italic">
-                  "The most trustworthy platform in Pakistan. Won multiple prizes and every payout was instant. Highly
-                  recommended to everyone!"
-                </blockquote>
-                <div className="flex items-center">
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4 shadow-lg">
-                    S
-                  </div>
-                  <div>
-                    <div className="font-bold text-gray-900 text-lg">Sara Khan</div>
-                    <div className="text-gray-600">Lahore • Teacher</div>
-                    <div className="text-sm text-blue-600 font-medium mt-1">Multiple Winner</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Testimonial 3 */}
-            <Card className="group bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-2xl hover:-translate-y-4 transition-all duration-500 overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full -translate-y-16 translate-x-16"></div>
-              <CardContent className="p-8 relative">
-                <div className="flex items-center mb-6">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <blockquote className="text-lg text-gray-700 leading-relaxed mb-6 italic">
-                  "Won a brand new iPhone 15 Pro Max! The live draw was transparent and the prize delivery was perfect.
-                  Amazing experience!"
-                </blockquote>
-                <div className="flex items-center">
-                  <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4 shadow-lg">
-                    M
-                  </div>
-                  <div>
-                    <div className="font-bold text-gray-900 text-lg">Muhammad Ali</div>
-                    <div className="text-gray-600">Islamabad • Business Owner</div>
-                    <div className="text-sm text-purple-600 font-medium mt-1">Won iPhone 15 Pro</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Modern CTA Section */}
-      <section className="relative py-32 px-6 bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full -translate-x-48 -translate-y-48"></div>
-        <div className="absolute bottom-0 right-0 w-80 h-80 bg-white/5 rounded-full translate-x-40 translate-y-40"></div>
-        <div className="container mx-auto text-center relative z-10">
-          <div className="max-w-4xl mx-auto space-y-8">
-            <div className="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Sparkles className="w-4 h-4" />
-              Start Your Journey
+      {/* FAQ */}
+      <section className="mx-auto max-w-3xl px-4 pb-16 pt-16 sm:px-6 md:pb-20 md:pt-20">
+        <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Questions</h2>
+        <div className="mt-6 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+          {FAQ.map((item) => (
+            <details key={item.q} data-faq>
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium text-slate-900 [&::-webkit-details-marker]:hidden">
+                {item.q}
+                <ChevronDown className="h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200" />
+              </summary>
+              <p className="px-5 pb-4 text-sm leading-relaxed text-slate-600">{item.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* Legal */}
+      <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 md:pb-20">
+        <div className={`${PANEL} p-6`}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-semibold text-slate-900">The fine print, in writing</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Draw rules, the refund policy and how we handle your data live on our legal pages.
+              </p>
             </div>
-            <h2 className="text-6xl lg:text-7xl font-bold text-white leading-tight mb-8">
-              Your Dreams Are
-              <br />
-              <span className="text-green-100">One Ticket Away</span>
-            </h2>
-            <p className="text-xl text-green-100 max-w-2xl mx-auto leading-relaxed mb-12">
-              Join thousands of winners today and start your journey to life-changing prizes. The next big win could be
-              yours!
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Button
-                size="lg"
-                className="bg-white text-green-600 hover:bg-gray-100 border-0 shadow-2xl text-xl px-12 py-6 transition-all duration-300 transform hover:scale-105 font-semibold"
+            <div className="flex flex-wrap gap-2 text-xs font-medium">
+              <Link
+                href="/terms"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-700 transition hover:bg-slate-50"
               >
-                <Trophy className="w-6 h-6 mr-3" />
-                Start Playing Now
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/30 text-white hover:bg-white/10 bg-transparent text-xl px-12 py-6 transition-all duration-300 backdrop-blur-sm"
+                Terms &amp; conditions <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                href="/refund"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-700 transition hover:bg-slate-50"
               >
-                Watch Live Draws
-                <Play className="w-6 h-6 ml-3" />
-              </Button>
+                Refund policy <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                href="/privacy"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-700 transition hover:bg-slate-50"
+              >
+                Privacy <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="border-t border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 py-12 sm:px-6 md:flex-row md:items-center">
+          <div>
+            <h2 className="text-xl font-bold">Take a ticket — the draw does the rest.</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Browse the open draws, pay with the wallet already on your phone, and keep the live broadcast open.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/raffles" className={BTN_PRIMARY}>
+              Browse open draws <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link href="/merchants" className={BTN_SECONDARY}>
+              <Store className="h-4 w-4" /> Merchant Connect
+            </Link>
           </div>
         </div>
       </section>
     </div>
   )
+}
+
+/**
+ * One live draw gets a full-width feature panel instead of a lonely third of a grid — that is the
+ * common case when the calendar is between launches.
+ */
+function FeaturedDraw({ draw }: { draw: LiveDraw }) {
+  const image = draw.image || draw.gallery?.[0] || "/placeholder.svg"
+  const sold = draw.currentEntries || 0
+  const target = draw.totalEntries || 0
+  const percent = target > 0 ? Math.min(100, Math.round((sold / target) * 100)) : 0
+  const remaining = Math.max(0, target - sold)
+
+  return (
+    <Link
+      href={`/raffles/${draw.id}`}
+      className="group mt-10 grid overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-emerald-300 hover:shadow-md md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
+    >
+      <div className="relative flex min-h-[240px] items-center justify-center border-b border-slate-100 bg-slate-50 p-6 md:border-b-0 md:border-r">
+        <img
+          src={image}
+          alt={draw.title}
+          className="max-h-[280px] w-full object-contain transition duration-300 group-hover:scale-[1.02]"
+        />
+        <span className="absolute left-4 top-4 rounded-full border border-slate-200 bg-white/95 px-2.5 py-1 text-[11px] font-medium text-slate-700">
+          {draw.category}
+        </span>
+      </div>
+      <div className="flex flex-col justify-center gap-5 p-6 sm:p-8">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Live draw</p>
+          <h3 className="mt-1 text-xl font-bold tracking-tight text-slate-900 transition group-hover:text-emerald-700 sm:text-2xl">
+            {draw.title}
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Entry</p>
+            <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-emerald-700">
+              {formatCurrency(draw.price)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Tickets left</p>
+            <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-slate-900">
+              {remaining.toLocaleString("en-PK")}
+            </p>
+            <p className="text-[11px] text-slate-500">of {target.toLocaleString("en-PK")}</p>
+          </div>
+        </div>
+
+        <div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${percent}%` }} />
+          </div>
+          <p className="mt-2 font-mono text-[11px] tabular-nums text-slate-500">
+            {sold.toLocaleString("en-PK")} / {target.toLocaleString("en-PK")} tickets sold · draw runs when the pool
+            closes
+          </p>
+        </div>
+
+        <span className="inline-flex min-h-[40px] w-fit items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-600/20 transition group-hover:bg-emerald-500">
+          Enter this draw <ArrowRight className="h-4 w-4" />
+        </span>
+      </div>
+    </Link>
+  )
+}
+
+/** A prize card: photo, entry price and how far the ticket pool has sold. */
+function DrawCard({ draw }: { draw: LiveDraw }) {
+  const image = draw.image || draw.gallery?.[0] || "/placeholder.svg"
+  const sold = draw.currentEntries || 0
+  const target = draw.totalEntries || 0
+  const percent = target > 0 ? Math.min(100, Math.round((sold / target) * 100)) : 0
+
+  return (
+    <Link
+      href={`/raffles/${draw.id}`}
+      className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
+    >
+      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden border-b border-slate-100 bg-slate-50 p-4">
+        <img
+          src={image}
+          alt={draw.title}
+          loading="lazy"
+          className="h-full w-full object-contain transition duration-300 group-hover:scale-[1.03]"
+        />
+        <span className="absolute left-3 top-3 rounded-full border border-slate-200 bg-white/95 px-2.5 py-1 text-[11px] font-medium text-slate-700 backdrop-blur">
+          {draw.category}
+        </span>
+      </div>
+      <div className="flex flex-1 flex-col p-4">
+        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-slate-900 transition group-hover:text-emerald-700">
+          {draw.title}
+        </h3>
+        <div className="mt-auto pt-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Entry</span>
+            <span className="font-mono text-sm font-semibold tabular-nums text-emerald-700">
+              {formatCurrency(draw.price)}
+            </span>
+          </div>
+          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${percent}%` }} />
+          </div>
+          <p className="mt-2 font-mono text-[11px] tabular-nums text-slate-500">
+            {sold.toLocaleString("en-PK")} / {target.toLocaleString("en-PK")} tickets sold
+          </p>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+function Sep() {
+  return <span className="select-none px-1.5 text-slate-300">·</span>
 }

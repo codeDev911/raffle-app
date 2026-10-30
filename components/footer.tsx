@@ -1,6 +1,6 @@
 import Link from "next/link"
+import { BrandMark } from "@/components/brand"
 import {
-  Trophy,
   Facebook,
   Mail,
   MapPin,
@@ -68,9 +68,7 @@ export function Footer() {
           {/* Brand Info (Span 2 on lg) */}
           <div className="lg:col-span-2 space-y-4">
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-                <Trophy className="h-5 w-5" />
-              </div>
+              <BrandMark />
               <span className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
                 Pak<span className="text-emerald-700">Raffle</span>
               </span>
@@ -303,7 +301,7 @@ export function Footer() {
             <img
               src="/assets/nayapay.svg"
               alt="NayaPay"
-              className="h-4.5 w-auto object-contain inline-block"
+              className="h-6 w-auto object-contain inline-block"
               title="NayaPay"
             />
 

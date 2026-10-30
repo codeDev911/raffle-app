@@ -207,7 +207,7 @@ export function SettingsTab({
             <ol className="list-decimal space-y-1 pl-4">
               <li>Settings → Notifications → Webhooks → Create webhook, one per topic above (JSON format).</li>
               <li>Copy the signing secret Shopify shows and paste it into Store profile → Shopify webhook signing secret.</li>
-              <li>Add the widget tag to theme.liquid so shoppers see their free entry unlock in the cart.</li>
+              <li>Add the widget tag to theme.liquid so shoppers see their free entry unlock in the cart and under the product details.</li>
             </ol>
           </div>
 

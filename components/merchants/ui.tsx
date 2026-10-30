@@ -89,6 +89,7 @@ const STATUS_TONE: Record<string, { dot: string; text: string; label?: string }>
   TEST: { dot: "bg-fuchsia-500", text: "text-fuchsia-700", label: "Test" },
   // Merchant ticket states, derived from the ticket + its PakRaffle payment row.
   UNPAID: { dot: "bg-amber-500", text: "text-amber-700", label: "Unpaid" },
+  CHECKOUT_OPEN: { dot: "bg-sky-500", text: "text-sky-700", label: "Checkout open" },
   ON_INVOICE: { dot: "bg-slate-400", text: "text-slate-500", label: "On invoice" },
   AWAITING_CONFIRMATION: { dot: "bg-sky-500", text: "text-sky-700", label: "Awaiting confirmation" },
   PAYMENT_FAILED: { dot: "bg-rose-500", text: "text-rose-700", label: "Payment failed" },

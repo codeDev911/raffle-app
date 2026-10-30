@@ -4,6 +4,7 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
+import { BrandMark } from "@/components/brand"
 import { Button } from "@/components/ui/button"
 import {
   LayoutDashboard,
@@ -110,9 +111,7 @@ export default function AdminLayout({
         {/* Brand Header */}
         <div className="h-16 px-5 border-b border-slate-100 flex items-center justify-between">
           <Link href="/admin/dashboard" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-red-600 text-white flex items-center justify-center shadow-sm shadow-red-200 group-hover:bg-red-700 transition-colors">
-              <Gift className="w-5 h-5" />
-            </div>
+            <BrandMark className="h-9 w-9 shadow-sm" />
             <div className="flex flex-col">
               <span className="font-bold text-base tracking-tight text-slate-900 leading-none">
                 PakRaffle

@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { BrandMark } from "@/components/brand"
 import {
   Menu,
   Trophy,
@@ -242,9 +243,7 @@ export function Header() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:h-[70px]">
           {/* Brand */}
           <Link href="/" className="group flex shrink-0 items-center gap-2.5">
-            <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-sm shadow-emerald-600/30 transition-transform group-hover:-translate-y-0.5 sm:h-10 sm:w-10">
-              <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
-            </span>
+            <BrandMark priority className="transition-transform group-hover:-translate-y-0.5 sm:h-10 sm:w-10" />
             <span className="flex flex-col leading-none">
               <span className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">
                 Pak<span className="text-emerald-600">Raffle</span>
@@ -474,9 +473,7 @@ export function Header() {
               >
                 <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-emerald-950 to-emerald-900 p-4 text-white sm:p-5">
                   <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 ring-1 ring-inset ring-white/20">
-                      <Trophy className="h-4 w-4 text-amber-300" />
-                    </span>
+                    <BrandMark className="h-9 w-9 ring-white/20" />
                     <span className="flex flex-col leading-none">
                       <span className="text-lg font-black tracking-tight text-white">
                         Pak<span className="text-emerald-300">Raffle</span>

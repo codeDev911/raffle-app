@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight, Check, Loader2, PartyPopper, Rocket, Store, Zap } from "lucide-react"
 import { Alert, Btn, CopyField, Field, Panel, TextInput, TopicList, merchantApi } from "@/components/merchants/ui"
 import { IntakeForm } from "@/components/merchants/IntakeForm"
+import { BrandMark } from "@/components/brand"
 import type { IntakeAnswers } from "@/lib/merchants/intake"
 import { WEBHOOK_TOPICS } from "@/lib/merchants/webhook-topics"
 
@@ -235,7 +236,8 @@ export default function OnboardingWizard() {
 
       <div className="relative mx-auto max-w-3xl px-4 py-10 sm:py-14">
         <div className="mb-8 flex items-center justify-between gap-4">
-          <Link href="/merchants" className="flex items-baseline gap-2">
+          <Link href="/merchants" className="flex items-center gap-2">
+            <BrandMark className="h-8 w-8 rounded-lg" />
             <span className="text-base font-bold tracking-tight text-slate-900">PakRaffle</span>
             <span className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-600">Merchant</span>
           </Link>

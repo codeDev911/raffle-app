@@ -92,7 +92,9 @@ export function EntriesTab({
     entry.status !== "CANCELLED" &&
     (entry.paymentStatus === "FAILED" || entry.paymentStatus === "REFUNDED" || entry.paymentStatus === "CANCELLED")
   const canPay = (entry: EntryDTO) =>
-    !entry.isTest && !entry.invoiceId && (entry.status === "ISSUED" || rejected(entry))
+    !entry.isTest &&
+    !entry.invoiceId &&
+    (entry.status === "ISSUED" || rejected(entry) || entry.checkoutOpen)
 
   return (
     <Panel>
@@ -160,11 +162,12 @@ export function EntriesTab({
         renderActions={(entry) =>
           canPay(entry) ? (
             <Btn
-              variant={rejected(entry) ? "primary" : "secondary"}
+              variant={rejected(entry) || entry.checkoutOpen ? "primary" : "secondary"}
               className="min-h-0 px-3 py-1.5 text-xs"
               onClick={() => setPaying(entry)}
             >
-              <Wallet className="h-3.5 w-3.5 text-emerald-600" /> {rejected(entry) ? "Pay again" : "Pay now"}
+              <Wallet className="h-3.5 w-3.5 text-emerald-600" />{" "}
+              {rejected(entry) ? "Pay again" : entry.checkoutOpen ? "Resume payment" : "Pay now"}
             </Btn>
           ) : rejected(entry) && entry.invoiceId ? (
             // A batch ticket stays on its invoice: reopening the invoice is the way to pay again.

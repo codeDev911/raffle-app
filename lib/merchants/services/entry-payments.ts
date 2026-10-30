@@ -589,44 +589,54 @@ export async function refundPayment(paymentId: string): Promise<{ ticketVoided: 
 // ───────────────────────── gateway capture ─────────────────────────
 
 /**
- * Arms the ledger row for a hosted checkout that has not been paid yet.
- * The row is what the callback/webhook resolves the tracker against, so it exists before the
- * merchant is redirected; a session that never completes is released by the checkout service.
+ * Opens a live checkout session for one ticket.
+ *
+ * The session is recorded on the ticket itself and nothing is written to the payment ledger: a
+ * merchant who opens the checkout and walks away must not leave a "pending payment" behind. The
+ * ledger row appears later — through `settleEntryViaGateway` — and only once Safepay confirms the
+ * money was actually captured.
  */
-export async function openGatewaySession(
-  store: MerchantStore,
+export async function armEntryCheckout(
   entry: MerchantEntry,
-  campaign: MerchantCampaign,
-  session: {
-    tracker: string
-    amountPaisa: number
-    currency: string
-    startedAt?: string | null
-    /** Hosted page for this session, kept so a re-opened dialog can re-use it instead of a new one. */
-    checkoutUrl?: string | null
-  },
-  raffleName: string,
-): Promise<Payment> {
-  return openEntryPayment(
-    store,
-    entry,
-    campaign,
-    {
-      paymentMethod: "SAFEPAY",
-      transactionRef: session.tracker,
-      paymentProof: "",
-      gateway: {
-        provider: "safepay",
-        tracker: session.tracker,
-        amountPaisa: session.amountPaisa,
-        currency: session.currency,
-        startedAt: session.startedAt ?? new Date().toISOString(),
-        checkoutUrl: session.checkoutUrl ?? null,
-        paidAt: null,
-      },
+  session: { tracker: string; amountPaisa: number; checkoutUrl?: string | null },
+): Promise<boolean> {
+  const db = await getMerchantDb()
+  const { count } = await db.merchantEntry.updateMany({
+    where: { id: entry.id, status: { in: OPEN_STATUSES } },
+    data: {
+      status: "INVOICED",
+      gatewayRef: session.tracker,
+      gatewayAmount: session.amountPaisa,
+      checkoutUrl: session.checkoutUrl ?? null,
+      gatewayStartedAt: new Date(),
     },
-    { raffleName },
-  )
+  })
+  return count > 0
+}
+
+/**
+ * Ends a session that produced no money (expired, declined or cancelled): the tracker is forgotten
+ * and a standalone ticket becomes payable again. A ticket that settled in the meantime keeps its
+ * session record — only the checkout URL is dropped, so it can never be paid a second time.
+ */
+export async function releaseEntryCheckout(entry: MerchantEntry): Promise<ReturnType<typeof toEntryDTO> | null> {
+  const db = await getMerchantDb()
+  const { count } = await db.merchantEntry.updateMany({
+    where: { id: entry.id, status: "INVOICED", invoiceId: null },
+    data: {
+      status: "ISSUED",
+      gatewayRef: null,
+      gatewayAmount: null,
+      checkoutUrl: null,
+      gatewayStartedAt: null,
+    },
+  })
+  if (count === 0) {
+    await db.merchantEntry.updateMany({ where: { id: entry.id }, data: { checkoutUrl: null } })
+    return null
+  }
+  const fresh: MerchantEntry | null = await db.merchantEntry.findUnique({ where: { id: entry.id } })
+  return fresh ? toEntryDTO(fresh) : null
 }
 
 export interface GatewayCapture {

@@ -99,6 +99,8 @@ export function toEntryDTO(entry: MerchantEntry, extras: { paymentStatus?: strin
     status: entry.status,
     /** PakRaffle payment row status for this ticket (null when nothing was submitted). */
     paymentStatus: extras.paymentStatus ?? null,
+    /** A card checkout is open for this ticket, so the merchant can pick it up where they left. */
+    checkoutOpen: Boolean(entry.gatewayRef && entry.checkoutUrl && entry.status === "INVOICED"),
     cancelledReason: entry.cancelledReason ?? null,
     createdAt: entry.createdAt,
   }

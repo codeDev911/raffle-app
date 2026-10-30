@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { CheckCircle2, CreditCard, ImageUp, Wallet } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
@@ -36,6 +37,7 @@ export function EntryPaymentDialog({
   const [submitting, setSubmitting] = useState(false)
   const [starting, setStarting] = useState(false)
   const [manualOpen, setManualOpen] = useState(false)
+  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -56,18 +58,23 @@ export function EntryPaymentDialog({
     setStarting(false)
   }, [entryId])
 
-  // Primary path: hand the merchant to Safepay. The ticket is verified by the callback/webhook,
-  // never by anything the browser sends back, so there is nothing to wait for here.
+  // Primary path: our own checkout page, which frames Safepay's form. The ticket is verified by the
+  // callback/webhook, never by anything the browser sends back, so there is nothing to wait for here.
   const startSafepay = async () => {
     if (!entry) return
     setStarting(true)
     setError(null)
     try {
-      const data = await merchantApi<{ checkoutUrl: string }>(`/api/merchants/me/entries/${entry.id}/checkout`, {
-        method: "POST",
-      })
+      const data = await merchantApi<{ checkoutUrl: string; tracker?: string }>(
+        `/api/merchants/me/entries/${entry.id}/checkout`,
+        { method: "POST" },
+      )
+      if (data.tracker) {
+        router.push(`/merchants/checkout/${data.tracker}`)
+        return // the route is changing; keep the spinner until it does
+      }
       window.location.href = data.checkoutUrl
-      return // the browser is leaving; keep the spinner until it does
+      return
     } catch (err: any) {
       setStarting(false)
       setError(err?.message || "Could not open the card checkout. Try the bank transfer option below.")

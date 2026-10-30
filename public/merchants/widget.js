@@ -2,8 +2,9 @@
  * PakRaffle storefront widget (served to Shopify stores via a ScriptTag).
  *
  *  1. Reads the live cart from /cart.js and asks PakRaffle whether it qualifies for a free
- *     lucky-draw entry. A qualifying cart gets a loud congratulations card (inline above the
- *     checkout button on /cart, floating everywhere else); a near-miss gets progress.
+ *     lucky-draw entry. The card renders inline above the checkout button on /cart and below the
+ *     product details on /products/*, floating bottom-right everywhere else; a near-miss gets
+ *     progress.
  *  2. Re-checks on every cart mutation, so an AJAX cart drawer crossing the threshold updates
  *     the card immediately instead of waiting for a page reload.
  *  3. Stamps a browser nonce on the cart as a note attribute so the order webhook can tie the
@@ -184,10 +185,12 @@
 
   var BASE_CSS =
     "*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}" +
+    // Border only, no shadow: the card has to sit inside themes that style their own panels.
     ".card{position:relative;width:322px;max-width:calc(100vw - 32px);background:#FFFFFF;color:#0F172A;border:1px solid #E2E8F0;" +
-    "border-radius:16px;padding:14px 16px 15px;box-shadow:0 18px 50px rgba(15,23,42,.18);pointer-events:auto;animation:pakr-in .25s ease-out}" +
-    ".card.eligible{background:linear-gradient(135deg,#ECFDF5 0%,#F0FDFA 100%);border-color:#6EE7B7;box-shadow:0 18px 50px rgba(5,150,105,.22)}" +
-    ".card.inline{width:100%;max-width:none;margin:0 0 14px}" +
+    "border-radius:16px;padding:14px 16px 15px;pointer-events:auto;animation:pakr-in .25s ease-out}" +
+    ".card.eligible{background:linear-gradient(135deg,#ECFDF5 0%,#F0FDFA 100%);border-color:#6EE7B7}" +
+    // Inline cards fill their column but stop at 72rem, so a wide theme never stretches them edge to edge.
+    ".card.inline{width:100%;max-width:72rem;margin:0 auto 14px}" +
     ".head{display:flex;align-items:flex-start;gap:10px}" +
     ".seal{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:12px;" +
     "background:#D1FAE5;border:1px solid #6EE7B7;font-size:17px;line-height:1}" +
@@ -204,13 +207,19 @@
     ".pill.ghost{color:#475569;background:#F1F5F9;border-color:#E2E8F0}" +
     ".close{position:absolute;top:8px;right:10px;border:0;background:transparent;color:#94A3B8;font-size:16px;cursor:pointer;" +
     "line-height:1;padding:2px}" +
-    ".close:hover{color:#0F172A}"
+    ".close:hover{color:#0F172A}" +
+    ".foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding-top:10px;" +
+    "border-top:1px solid #E2E8F0}" +
+    ".brand{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:#64748B}" +
+    ".brand img{display:block;width:18px;height:18px;border-radius:5px}" +
+    ".terms{font-size:10.5px;color:#475569;text-decoration:underline;text-underline-offset:2px;white-space:nowrap}" +
+    ".terms:hover{color:#059669}"
 
   var MODAL_CSS =
     ".overlay{position:fixed;inset:0;background:rgba(2,6,23,.66);display:flex;align-items:center;justify-content:center;padding:20px;" +
     "pointer-events:auto;z-index:1}" +
     ".modal{position:relative;width:420px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:20px;padding:26px 24px;" +
-    "color:#0F172A;text-align:center;box-shadow:0 30px 80px rgba(2,6,23,.45);animation:pakr-in .3s ease-out}" +
+    "color:#0F172A;text-align:center;animation:pakr-in .3s ease-out}" +
     ".emoji{font-size:36px;line-height:1}" +
     ".modal h2{margin:12px 0 6px;font-size:20px;font-weight:800;color:#0F172A}" +
     ".modal p{margin:0;font-size:13px;line-height:1.6;color:#475569}" +
@@ -250,9 +259,16 @@
     return root
   }
 
+  /** Where the card belongs on this page: the cart, a product's details column, or nowhere. */
+  function pageKind() {
+    var path = window.location.pathname
+    if (path.indexOf("/cart") === 0) return "cart"
+    if (path.indexOf("/products/") === 0) return "product"
+    return null
+  }
+
   /** The theme's checkout button, when the shopper is on the cart page. */
   function cartAnchor() {
-    if (window.location.pathname.indexOf("/cart") !== 0) return null
     var selectors = [
       'form[action="/cart"] [name="checkout"]',
       'form[action="/cart"] button[type="submit"]',
@@ -265,6 +281,23 @@
       var found = document.querySelector(selectors[i])
       // Sit directly above the checkout button rather than at the top of the whole cart form.
       if (found && found.parentNode) return found.parentNode
+    }
+    return null
+  }
+
+  /** The product's details column, so the card lands under the price and the buy button. */
+  function productDetails() {
+    var selectors = [
+      ".product__info-container",
+      "[data-product-information]",
+      ".product-single__meta",
+      ".product__info-wrapper",
+      ".product-info",
+      'form[action^="/cart/add"]',
+    ]
+    for (var i = 0; i < selectors.length; i++) {
+      var found = document.querySelector(selectors[i])
+      if (found && found.parentNode) return found
     }
     return null
   }
@@ -300,7 +333,10 @@
 
   function mountCard(html, signature, options) {
     if (dismissed(signature)) return
-    var anchor = options.inline ? cartAnchor() : null
+    var kind = options.placement
+    var anchor = kind === "cart" ? cartAnchor() : kind === "product" ? productDetails() : null
+    // A product card goes below the details it belongs to; the cart card goes above the button.
+    var below = kind === "product" && Boolean(anchor)
     var wrapper = document.createElement("div")
     wrapper.id = "pakr-banner"
     wrapper.innerHTML =
@@ -310,7 +346,7 @@
       var style = document.createElement("style")
       style.textContent = BASE_CSS
       wrapper.insertBefore(style, wrapper.firstChild)
-      anchor.parentNode.insertBefore(wrapper, anchor)
+      anchor.parentNode.insertBefore(wrapper, below ? anchor.nextSibling : anchor)
       state.inline = wrapper
     } else {
       shadowRoot().appendChild(wrapper)
@@ -326,6 +362,16 @@
   }
 
   // ── banners ────────────────────────────────────────────────────────────────
+
+  /** Our mark and the terms link that closes every card — served from our origin, not the theme. */
+  function footHtml() {
+    return (
+      '<div class="foot">' +
+      '<span class="brand"><img src="' + API + '/brand/logo-64.png" alt="" width="18" height="18" />PakRaffle</span>' +
+      '<a class="terms" href="' + API + '/terms" target="_blank" rel="noopener noreferrer">Terms &amp; conditions</a>' +
+      "</div>"
+    )
+  }
 
   function eligibleHtml(status) {
     var campaign = status.campaign || {}
@@ -345,7 +391,8 @@
       '<p class="body">' + prizeLine + " Complete checkout to claim it — no code needed.</p>" +
       '<div class="bar"><i style="width:100%"></i></div>' +
       '<div class="row"><span class="pill">' + (status.tickets || 1) + " free ticket</span>" +
-      '<span class="pill ghost">' + escapeHtml(campaign.ruleSummary || "Lucky draw") + "</span>" + drawLine + "</div>"
+      '<span class="pill ghost">' + escapeHtml(campaign.ruleSummary || "Lucky draw") + "</span>" + drawLine + "</div>" +
+      footHtml()
     )
   }
 
@@ -367,7 +414,8 @@
       '<p class="title">' + escapeHtml(reason) + "</p>" +
       '<p class="body">' + body + "</p>" +
       '<div class="bar"><i style="width:' + Math.max(4, Math.min(99, Number(status.progress) || 0)) + '%"></i></div>' +
-      '<div class="row"><span class="pill">' + escapeHtml(campaign.ruleSummary || "Lucky draw") + "</span>" + gapPill + "</div>"
+      '<div class="row"><span class="pill">' + escapeHtml(campaign.ruleSummary || "Lucky draw") + "</span>" + gapPill + "</div>" +
+      footHtml()
     )
   }
 
@@ -388,17 +436,17 @@
       return
     }
 
-    var onCart = window.location.pathname.indexOf("/cart") === 0
+    var kind = pageKind()
     var signature = bannerSignature(status)
 
     if (status.state === "eligible") {
       // Good news travels: the congratulations card follows the shopper around the store.
-      mountCard(eligibleHtml(status), signature, { inline: onCart, celebrate: true })
+      mountCard(eligibleHtml(status), signature, { placement: kind, celebrate: true })
       return
     }
-    if (status.state === "progress" && onCart) {
-      // The nudge only earns its space where the shopper is about to check out.
-      mountCard(progressHtml(status), signature, { inline: onCart, celebrate: false })
+    if (status.state === "progress" && kind) {
+      // The nudge only earns its space where the shopper is about to buy: the cart and the product page.
+      mountCard(progressHtml(status), signature, { placement: kind, celebrate: false })
       return
     }
     log("nothing to show", status.state, status.reason)

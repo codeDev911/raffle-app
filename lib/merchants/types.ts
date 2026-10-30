@@ -91,6 +91,14 @@ export interface MerchantEntry {
   isTest: boolean
   status: MerchantEntryStatus
   cancelledReason?: string | null
+  /** Safepay tracker of the ticket's live checkout session, cleared once it ends. */
+  gatewayRef?: string | null
+  /** Amount in paisa we asked for — the figure a capture must match. */
+  gatewayAmount?: number | null
+  /** Same session, re-openable while it is alive. */
+  checkoutUrl?: string | null
+  /** When the session opened; its age decides when the ticket is released again. */
+  gatewayStartedAt?: Date | null
   createdAt: Date
   updatedAt: Date
 }
