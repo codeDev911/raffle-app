@@ -1,18 +1,37 @@
 import Link from "next/link"
 import {
-  ShieldCheck,
-  Trophy,
-  Target,
-  Truck,
-  CheckCircle2,
-  XCircle,
-  ArrowRight,
+  BadgeCheck,
+  Check,
   Eye,
-  Lock,
   HeartHandshake,
+  Lock,
   MessageSquare,
+  Minus,
+  ShieldCheck,
   Sparkles,
+  Target,
+  Trophy,
+  Truck,
+  Wallet,
 } from "lucide-react"
+import {
+  CheckList,
+  CONTAINER,
+  Cta,
+  GhostNumeral,
+  INK_PANEL,
+  Kicker,
+  LiveDot,
+  Marquee,
+  Mesh,
+  PANEL,
+  Pill,
+  SectionHead,
+  SHELL,
+  StatTile,
+  TicketCard,
+} from "@/components/marketing/kit"
+import { Counter, Reveal } from "@/components/marketing/motion"
 
 export const metadata = {
   title: "About Us — Pakistan's Trusted Lucky Draw Platform | PakRaffle",
@@ -36,358 +55,517 @@ export const metadata = {
   },
 }
 
+const STANDARDS = [
+  "Physical inventory first",
+  "100% target ticket rule",
+  "Uncut live broadcast",
+  "Free nationwide delivery",
+  "No staff entries",
+  "Public ticket ledger",
+  "Cryptographic RNG",
+  "Identity-verified handover",
+]
+
+const PASS_ROWS = [
+  { label: "Prize custody", value: "In hand before launch", icon: Lock },
+  { label: "Ticket pool", value: "Locked at 100% sold", icon: Target },
+  { label: "Winner selection", value: "256-bit random seed", icon: Sparkles },
+  { label: "Broadcast", value: "Live, no cuts", icon: Eye },
+  { label: "Prize delivery", value: "Insured · Rs 0 to winner", icon: Truck },
+]
+
+const GUARANTEE = [
+  <>
+    <strong className="text-white">Physical inventory first.</strong> We never launch a raffle for an item that is not
+    already in our secured custody.
+  </>,
+  <>
+    <strong className="text-white">Zero premature draws.</strong> The draw executes strictly when 100% of target tickets
+    are sold.
+  </>,
+  <>
+    <strong className="text-white">Free nationwide delivery.</strong> TCS, Leopard, or an in-person ceremony handover
+    with all taxes covered.
+  </>,
+  <>
+    <strong className="text-white">Zero staff participation.</strong> Staff, directors and immediate family are barred
+    from entering.
+  </>,
+]
+
+const INDUSTRY = [
+  {
+    title: "Arbitrary delays",
+    body: "Draw dates pushed repeatedly whenever ticket targets are missed.",
+  },
+  {
+    title: "Phantom winners",
+    body: "Names announced in text stories with no live video or proof of handover.",
+  },
+  {
+    title: "Hidden courier charges",
+    body: "Winners asked to transfer thousands in shipping or processing fees.",
+  },
+  {
+    title: "No audit trail",
+    body: "No public ticket ledgers and no disclosure of the random seed.",
+  },
+]
+
+const OURS = [
+  {
+    title: "100% target ticket rule",
+    body: "The draw executes only when every ticket is sold. No guesswork, no early close.",
+  },
+  {
+    title: "Live 4K broadcast",
+    body: "Uncut YouTube and Facebook stream with an on-air call to the winner.",
+  },
+  {
+    title: "Free doorstep delivery",
+    body: "Insured courier or an in-person ceremony at Rs 0 cost to the winner.",
+  },
+  {
+    title: "Hashed public ledger",
+    body: "Cryptographic random number generator with transparent ticket pool records.",
+  },
+]
+
+const STEPS = [
+  {
+    icon: Target,
+    title: "Pick your prize",
+    body: "Flagship smartphones, motorbikes, luxury sedans or gold bars — entries starting from Rs 50.",
+  },
+  {
+    icon: Wallet,
+    title: "Instant local payment",
+    body: "JazzCash, Easypaisa or Pakistani bank transfer. Receipts are audited within 5–15 minutes.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Target met, then draw",
+    body: "The pool locks when the final ticket sells. The draw streams live with an uncut camera and cryptographic RNG.",
+  },
+  {
+    icon: Truck,
+    title: "Insured delivery",
+    body: "After identity verification the prize ships insured, or is handed over in person with full registration documents.",
+  },
+]
+
+const WINNERS = [
+  {
+    quote:
+      "I entered with 2 tickets for Rs. 300 while having tea in Saddar, Rawalpindi. When they phoned me live during the YouTube stream, I couldn't believe it. 3 days later, my iPhone 16 Pro arrived via TCS without paying a single rupee for shipping.",
+    name: "Daniyal Khan",
+    place: "Rawalpindi, Punjab",
+    prize: "iPhone 16 Pro",
+  },
+  {
+    quote:
+      "The 100% target ticket rule gives complete peace of mind. The progress bar is public, the live draw is totally uncut, and Rs. 500,000 cash was transferred directly into my Meezan bank account within 24 hours of verification.",
+    name: "Fatima Zahra",
+    place: "Gulshan-e-Iqbal, Karachi",
+    prize: "Rs 500,000 cash",
+  },
+  {
+    quote:
+      "Visited their regional office in Lahore to collect my Yamaha YBR 125G. The team handed over all registration paperwork, keys, and warranty card on camera. Professional, polite, and completely genuine.",
+    name: "Usman Tariq",
+    place: "Faisalabad, Punjab",
+    prize: "Yamaha YBR 125G",
+  },
+]
+
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-slate-50 text-gray-900 py-12 sm:py-20">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-24">
-        
-        {/* HERO SECTION */}
-        <div className="text-center space-y-6 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-700">
-            <ShieldCheck className="w-4 h-4" />
-            <span>Pakistan&apos;s Sovereign Lucky Draw Platform</span>
-          </div>
-
-          <h1 className="text-4xl sm:text-6xl font-black text-gray-900 tracking-tight leading-[1.1]">
-            Democratizing life-changing moments across <span className="text-emerald-700">Pakistan.</span>
-          </h1>
-
-          <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
-            PakRaffle was built on a simple conviction: every Pakistani deserves a 100% honest, mathematically fair shot at luxury lifestyle prizes — backed by verified physical inventory, uncut live broadcasts, and zero hidden costs.
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-            <Link
-              href="/raffles"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-sm transition-colors"
-            >
-              <span>Explore Active Draws</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/winners"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm transition-colors shadow-xs"
-            >
-              <Trophy className="w-4 h-4 text-emerald-700" />
-              <span>Winners Gallery &amp; Proof</span>
-            </Link>
-          </div>
-
-          <div className="pt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-gray-500 font-medium">
-            <span>Established 2024</span>
-            <span aria-hidden="true">·</span>
-            <span>Serving All 4 Provinces, AJK &amp; GB</span>
-            <span aria-hidden="true">·</span>
-            <span>100% Target Ticket Rule</span>
-          </div>
-        </div>
-
-        {/* KEY PERFORMANCE METRICS */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-xs text-center space-y-1">
-            <div className="text-3xl sm:text-4xl font-black text-emerald-700 tracking-tight">₨ 25M+</div>
-            <div className="text-xs font-bold uppercase tracking-wider text-gray-500">Prizes Distributed</div>
-            <p className="text-xs text-gray-400 pt-1">PTA phones, bikes, gold &amp; cash</p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-xs text-center space-y-1">
-            <div className="text-3xl sm:text-4xl font-black text-emerald-700 tracking-tight">100%</div>
-            <div className="text-xs font-bold uppercase tracking-wider text-gray-500">Target Ticket Rule</div>
-            <p className="text-xs text-gray-400 pt-1">Zero premature or rigged draws</p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-xs text-center space-y-1">
-            <div className="text-3xl sm:text-4xl font-black text-emerald-700 tracking-tight">65,000+</div>
-            <div className="text-xs font-bold uppercase tracking-wider text-gray-500">Active Participants</div>
-            <p className="text-xs text-gray-400 pt-1">Across 120+ Pakistani cities</p>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-xs text-center space-y-1">
-            <div className="text-3xl sm:text-4xl font-black text-emerald-700 tracking-tight">₨ 0</div>
-            <div className="text-xs font-bold uppercase tracking-wider text-gray-500">Winner Fees</div>
-            <p className="text-xs text-gray-400 pt-1">100% free delivery nationwide</p>
-          </div>
-        </div>
-
-        {/* THE STORY: WHY WE BUILT PAKRAFFLE */}
-        <div className="bg-white rounded-3xl p-8 sm:p-12 border border-gray-200/80 shadow-xs">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-            <div className="lg:col-span-7 space-y-5">
-              <div className="text-xs font-bold uppercase tracking-widest text-emerald-700">
-                Our Purpose
-              </div>
-              <h2 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tight leading-tight">
-                Rebuilding trust in Pakistani giveaways through radical transparency.
-              </h2>
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                For years, online giveaways in Pakistan were plagued by empty promises: social media pages that never drew winners, arbitrary deadline extensions when ticket sales fell short, and surprise &quot;customs clearance&quot; or &quot;delivery&quot; fees demanded from winners.
-              </p>
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                PakRaffle was engineered to eliminate doubt. We operate under strict corporate governance: every prize is physically procured and verified before launch, every entry is stamped with an immutable alphanumeric ID, draws occur only when 100% of tickets sell, and selection is broadcast live without camera cuts.
-              </p>
+    <div className={SHELL}>
+      {/* ---------------------------------------------------------------- Hero */}
+      <section className="relative overflow-hidden border-b border-slate-900/5">
+        <Mesh tone="emerald" />
+        <div
+          className={`${CONTAINER} relative pb-14 pt-24 sm:pt-24 lg:grid lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14 lg:pb-24 lg:pt-28`}
+        >
+          <div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Pill className="border-emerald-600/20 bg-emerald-600/10 text-emerald-800">
+                <LiveDot />
+                Pakistan&apos;s lucky draw platform
+              </Pill>
+              <Pill className="hidden sm:inline-flex">
+                <BadgeCheck className="h-3 w-3 text-emerald-600" />
+                Established 2024
+              </Pill>
             </div>
 
-            <div className="lg:col-span-5 bg-slate-50 rounded-2xl p-6 border border-gray-200/80 space-y-4">
-              <div className="flex items-center gap-3 border-b border-gray-200 pb-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 text-sm">The PakRaffle Guarantee</h3>
-                  <p className="text-xs text-gray-500">Unbroken platform standards</p>
-                </div>
-              </div>
-              <div className="space-y-3 text-xs text-gray-600">
-                <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Physical Inventory First:</strong> We never launch a raffle for an item that is not already in our secured custody.</span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Zero Premature Draws:</strong> The draw executes strictly when 100% of target tickets are sold.</span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Free Nationwide Delivery:</strong> TCS, Leopard, or in-person ceremony handover with all taxes covered.</span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Zero Staff Participation:</strong> Staff, directors, and immediate family members are barred from entering.</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+            <h1 className="mt-6 font-display text-[2.7rem] font-semibold leading-[0.96] tracking-[-0.035em] text-slate-900 sm:text-[3.5rem] lg:text-[3.9rem]">
+              A raffle you can
+              <span className="block bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 bg-clip-text text-transparent">
+                actually audit.
+              </span>
+            </h1>
 
-        {/* COMPARISON: THE INDUSTRY VS PAKRAFFLE */}
-        <div className="space-y-6">
-          <div className="text-center space-y-2 max-w-2xl mx-auto">
-            <div className="text-xs font-bold uppercase tracking-widest text-emerald-700">
-              Honest Comparison
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-              Why Pakistan Trusts PakRaffle
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-600">
-              A transparent look at how our institutional model compares to unregulated social giveaways.
+            <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-slate-600 sm:text-lg">
+              PakRaffle was built on one conviction: every Pakistani deserves an honest, mathematically fair shot at a
+              luxury prize — backed by inventory we already hold, broadcasts with no camera cuts, and zero hidden costs
+              for winners.
             </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* The Unregulated Way */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-red-200 shadow-xs space-y-5">
-              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                <div className="flex items-center gap-2.5 text-red-700 font-bold text-sm sm:text-base">
-                  <XCircle className="w-5 h-5 text-red-500" />
-                  <span>Unregulated Social Schemes</span>
-                </div>
-                <span className="text-[11px] font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-md">High Risk</span>
-              </div>
-
-              <div className="space-y-3.5 text-xs sm:text-sm text-gray-600">
-                <div className="flex items-start gap-3">
-                  <XCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                  <span><strong>Arbitrary Delays:</strong> Draw dates pushed repeatedly if ticket targets are missed.</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <XCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                  <span><strong>Phantom Winners:</strong> Winner names announced in text stories without live video or proof of handover.</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <XCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                  <span><strong>Hidden Courier Charges:</strong> Winners asked to transfer thousands in shipping or processing fees.</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <XCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                  <span><strong>No Audit Trail:</strong> No public ticket ledgers or mathematical random seed disclosures.</span>
-                </div>
-              </div>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Cta href="/raffles" arrow className="w-full sm:w-auto">
+                <Trophy className="h-4 w-4" />
+                Explore active draws
+              </Cta>
+              <Cta href="/winners" variant="ghost" className="w-full sm:w-auto">
+                <BadgeCheck className="h-4 w-4" />
+                Winners &amp; proof
+              </Cta>
             </div>
 
-            {/* The PakRaffle Standard */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-emerald-300 shadow-xs space-y-5">
-              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                <div className="flex items-center gap-2.5 text-emerald-800 font-bold text-sm sm:text-base">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                  <span>The PakRaffle Standard</span>
-                </div>
-                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">100% Verified</span>
-              </div>
-
-              <div className="space-y-3.5 text-xs sm:text-sm text-gray-700">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>100% Target Ticket Rule:</strong> The draw executes only when all tickets are sold. No guesswork.</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Live 4K Broadcast:</strong> Uncut YouTube/Facebook stream with real-time on-air phone calls to the winner.</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>100% Free Doorstep Delivery:</strong> Delivered via insured courier or in-person ceremony at Rs 0 cost to winner.</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Public Hashed Ledger:</strong> Cryptographic random number generator with transparent ticket pool records.</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* HOW IT WORKS: 4 STEPS TO A VERIFIED DRAW */}
-        <div className="bg-white rounded-3xl p-8 sm:p-12 border border-gray-200/80 shadow-xs space-y-8">
-          <div className="text-center space-y-2 max-w-xl mx-auto">
-            <div className="text-xs font-bold uppercase tracking-widest text-emerald-700">
-              Draw Architecture
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-              How a PakRaffle Campaign Operates
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="p-5 rounded-2xl bg-slate-50 border border-gray-200/70 space-y-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
-                01
-              </div>
-              <h4 className="font-bold text-gray-900 text-sm">Pick Your Prize</h4>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                Choose from flagship smartphones, motorbikes, luxury sedans, or gold bars with ticket entries starting from Rs. 50.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-slate-50 border border-gray-200/70 space-y-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
-                02
-              </div>
-              <h4 className="font-bold text-gray-900 text-sm">Instant Local Payment</h4>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                Pay securely with JazzCash, EasyPaisa, or Pakistani Bank Transfer. Our team audits receipts within 5–15 minutes.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-slate-50 border border-gray-200/70 space-y-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
-                03
-              </div>
-              <h4 className="font-bold text-gray-900 text-sm">100% Target Met &amp; Draw</h4>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                Once the final ticket is sold, the pool locks. The draw is streamed live with uncut cameras and cryptographic RNG.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-slate-50 border border-gray-200/70 space-y-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
-                04
-              </div>
-              <h4 className="font-bold text-gray-900 text-sm">Insured Doorstep Delivery</h4>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                After identity verification, your prize is shipped via insured couriers or handed over in person with full registration documents.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* VERIFIED WINNERS HIGHLIGHT */}
-        <div className="space-y-6">
-          <div className="text-center space-y-2 max-w-xl mx-auto">
-            <div className="text-xs font-bold uppercase tracking-widest text-emerald-700">
-              Real Experiences
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-              Verified Stories from Our Winners
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-600">
-              Authentic feedback from participants across Pakistan who won on PakRaffle.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs flex flex-col justify-between space-y-4">
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed italic">
-                &quot;I entered with 2 tickets for Rs. 300 while having tea in Saddar, Rawalpindi. When they phoned me live during the YouTube stream, I couldn&apos;t believe it. 3 days later, my iPhone 16 Pro arrived via TCS without paying a single rupee for shipping.&quot;
-              </p>
-              <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-gray-900 text-xs sm:text-sm">Daniyal Khan</div>
-                  <div className="text-[11px] text-gray-500">Rawalpindi, Punjab</div>
-                </div>
-                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                  iPhone 16 Pro
+            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-slate-500">
+              {["All 4 provinces, AJK & GB", "100% target ticket rule", "No winner fees, ever"].map((chip) => (
+                <span key={chip} className="inline-flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-600" strokeWidth={3} />
+                  {chip}
                 </span>
-              </div>
+              ))}
             </div>
+          </div>
 
-            <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs flex flex-col justify-between space-y-4">
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed italic">
-                &quot;The 100% target ticket rule gives complete peace of mind. The progress bar is public, the live draw is totally uncut, and Rs. 500,000 cash was transferred directly into my Meezan bank account within 24 hours of verification.&quot;
-              </p>
-              <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-gray-900 text-xs sm:text-sm">Fatima Zahra</div>
-                  <div className="text-[11px] text-gray-500">Gulshan-e-Iqbal, Karachi</div>
+          {/* Integrity pass: the standards, presented as a document you could hold. */}
+          <div className="relative mt-12 lg:mt-0">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-6 -z-10 rounded-[36px] bg-gradient-to-br from-emerald-300/25 via-white/40 to-amber-200/30 blur-2xl"
+            />
+            <Reveal>
+              <TicketCard className="shadow-[0_40px_90px_-50px_rgba(4,47,34,0.5)]">
+                <div className="flex items-center justify-between gap-3 border-b border-dashed border-slate-900/10 px-5 py-3.5">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-500">Draw integrity pass</p>
+                  <Pill className="border-emerald-600/20 bg-emerald-600/10 text-emerald-800">
+                    <ShieldCheck className="h-3 w-3" />
+                    No exceptions
+                  </Pill>
                 </div>
-                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                  Rs. 500,000 Cash
-                </span>
-              </div>
-            </div>
 
-            <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs flex flex-col justify-between space-y-4">
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed italic">
-                &quot;Visited their regional office in Lahore to collect my Yamaha YBR 125G. The team handed over all registration paperwork, keys, and warranty card on camera. Professional, polite, and completely genuine.&quot;
-              </p>
-              <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-gray-900 text-xs sm:text-sm">Usman Tariq</div>
-                  <div className="text-[11px] text-gray-500">Faisalabad, Punjab</div>
+                <dl className="divide-y divide-slate-900/5 px-5 sm:px-6">
+                  {PASS_ROWS.map((row) => (
+                    <div key={row.label} className="flex items-center justify-between gap-4 py-3.5">
+                      <dt className="inline-flex items-center gap-2.5 text-[12.5px] text-slate-500">
+                        <row.icon className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                        {row.label}
+                      </dt>
+                      <dd className="text-right font-mono text-[12px] font-semibold text-slate-900">{row.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+
+                <div className="mx-5 border-t border-dashed border-slate-900/15 sm:mx-6" />
+
+                <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4 sm:px-6">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
+                    Every draw · same rules
+                  </p>
+                  <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
+                    <Lock className="h-3 w-3" />
+                    Verified before launch
+                  </p>
                 </div>
-                <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                  Yamaha YBR 125G
-                </span>
+              </TicketCard>
+            </Reveal>
+
+            <div className="absolute -bottom-5 -left-3 hidden items-center gap-2 rounded-2xl border border-slate-900/10 bg-white/90 px-3.5 py-2.5 shadow-lg backdrop-blur sm:flex">
+              <HeartHandshake className="h-4 w-4 text-emerald-600" />
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-slate-500">Winner fees</p>
+                <p className="font-mono text-sm font-semibold tabular-nums text-slate-900">Rs 0</p>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* BOTTOM CALL TO ACTION */}
-        <div className="bg-white rounded-3xl p-8 sm:p-12 border border-gray-200/80 shadow-xs text-center space-y-5">
-          <div className="max-w-xl mx-auto space-y-2">
-            <h3 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-              Ready to claim your lucky entry?
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-600">
-              Browse active draws, participate starting from Rs. 50 via JazzCash or EasyPaisa, and follow the live draw when target tickets sell out.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <Link
-              href="/raffles"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-xs transition-colors"
-            >
-              <span>Explore Active Raffles</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <a
-              href="https://wa.me/923377155722?text=Hello%20PakRaffle%20Support%2C%20I%20have%20a%20question%20about%20a%20draw"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs sm:text-sm transition-colors shadow-xs"
-            >
-              <MessageSquare className="w-4 h-4 text-emerald-700" />
-              <span>Chat on WhatsApp</span>
-            </a>
-          </div>
-
-          <div className="pt-3 text-xs text-gray-400">
-            PakRaffle Institutional Profile • Pakistan&apos;s Verified Digital Lucky Draw Platform
-          </div>
+      {/* ------------------------------------------------------- Key numbers */}
+      <section className={`${CONTAINER} relative -mt-8 pb-4`}>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatTile
+            label="Prizes distributed"
+            value={<Counter to={25} prefix="Rs " suffix=" M+" />}
+            hint="Phones, bikes, gold & cash"
+            accent
+          />
+          <StatTile label="Target ticket rule" value={<Counter to={100} suffix="%" />} hint="Zero premature draws" />
+          <StatTile
+            label="Active participants"
+            value={<Counter to={65000} suffix="+" />}
+            hint="Across 120+ cities"
+          />
+          <StatTile label="Winner fees" value={<Counter to={0} prefix="Rs " />} hint="Free delivery nationwide" />
         </div>
+      </section>
 
+      {/* ------------------------------------------------------------- Ticker */}
+      <div className="border-y border-slate-900/5 bg-white/60 py-3">
+        <Marquee items={STANDARDS} speed="56s" />
       </div>
+
+      {/* --------------------------------------------------------------- Story */}
+      <section className={`${CONTAINER} py-16 sm:py-20`}>
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
+          <div>
+            <Kicker>Our purpose</Kicker>
+            <h2 className="mt-3 font-display text-[1.9rem] font-semibold leading-[1.04] tracking-tight text-slate-900 sm:text-[2.6rem]">
+              Rebuilding trust in Pakistani giveaways through radical transparency.
+            </h2>
+
+            <div className="mt-5 space-y-4 text-[14.5px] leading-relaxed text-slate-600">
+              <p>
+                For years, online giveaways in Pakistan were plagued by empty promises: social pages that never drew
+                winners, arbitrary deadline extensions when ticket sales fell short, and surprise
+                &ldquo;customs clearance&rdquo; or &ldquo;delivery&rdquo; fees demanded from winners.
+              </p>
+              <p>
+                PakRaffle was engineered to remove that doubt. Every prize is physically procured and verified before a
+                campaign opens, every entry carries an immutable alphanumeric ID, draws happen only at 100% of target
+                tickets, and the selection is broadcast live without camera cuts.
+              </p>
+            </div>
+
+            <div className="mt-7 grid gap-3 sm:grid-cols-3">
+              {[
+                { icon: Eye, label: "Uncut broadcast" },
+                { icon: Lock, label: "Locked ticket pool" },
+                { icon: Truck, label: "Insured delivery" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2.5 rounded-2xl border border-slate-900/10 bg-white px-3.5 py-3">
+                  <item.icon className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <p className="text-[12px] font-semibold text-slate-700">{item.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={`${INK_PANEL} relative overflow-hidden p-6 sm:p-7`}>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-500/25 blur-3xl"
+            />
+            <div className="relative">
+              <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
+                  <ShieldCheck className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="font-display text-base font-semibold text-white">The PakRaffle guarantee</h3>
+                  <p className="text-[11px] text-emerald-200/60">Unbroken platform standards</p>
+                </div>
+              </div>
+              <CheckList items={GUARANTEE} tone="light" className="mt-4 text-[13px]" />
+              <p className="mt-5 border-t border-white/10 pt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-emerald-200/50">
+                Written into the platform · not the marketing
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------- Comparison */}
+      <section className="border-y border-slate-900/5 bg-white/60 py-16 sm:py-20">
+        <div className={CONTAINER}>
+          <SectionHead
+            index="01"
+            kicker="Honest comparison"
+            title="Why Pakistan trusts PakRaffle."
+            body="A transparent look at how our institutional model compares to unregulated social giveaways."
+          />
+
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            <div className="rounded-3xl border border-rose-500/15 bg-rose-50/50 p-6 sm:p-7">
+              <div className="flex items-center gap-3 border-b border-rose-500/15 pb-4">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600">
+                  <Minus className="h-4 w-4" strokeWidth={3} />
+                </span>
+                <div>
+                  <h3 className="font-display text-base font-semibold text-rose-950">Unregulated social schemes</h3>
+                  <p className="text-[11px] text-rose-700/80">High risk, no recourse</p>
+                </div>
+              </div>
+              <ul className="mt-4 space-y-3.5">
+                {INDUSTRY.map((item) => (
+                  <li key={item.title} className="flex items-start gap-2.5">
+                    <span aria-hidden className="mt-0.5 font-mono text-xs font-bold text-rose-400">
+                      ✕
+                    </span>
+                    <span className="text-[13px] leading-relaxed text-rose-900/90">
+                      <span className="font-semibold text-rose-950">{item.title}.</span> {item.body}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="relative rounded-3xl border border-emerald-500/25 bg-emerald-50/50 p-6 shadow-[0_30px_80px_-60px_rgba(5,120,87,0.8)] sm:p-7">
+              <span className="absolute -top-2.5 right-6 rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+                100% verified
+              </span>
+              <div className="flex items-center gap-3 border-b border-emerald-500/15 pb-4">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-white">
+                  <Check className="h-4 w-4" strokeWidth={3} />
+                </span>
+                <div>
+                  <h3 className="font-display text-base font-semibold text-emerald-950">The PakRaffle standard</h3>
+                  <p className="text-[11px] text-emerald-700/80">Rules published, rules kept</p>
+                </div>
+              </div>
+              <ul className="mt-4 space-y-3.5">
+                {OURS.map((item) => (
+                  <li key={item.title} className="flex items-start gap-2.5">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" strokeWidth={3} />
+                    <span className="text-[13px] leading-relaxed text-emerald-900/90">
+                      <span className="font-semibold text-emerald-950">{item.title}.</span> {item.body}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* -------------------------------------------------------- Architecture */}
+      <section className={`${CONTAINER} py-16 sm:py-20`}>
+        <SectionHead
+          index="02"
+          kicker="Draw architecture"
+          title="How a campaign actually operates."
+          body="Four steps from a prize we already hold to a winner who holds it."
+        />
+
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {STEPS.map((step, i) => (
+            <div key={step.title} className={`${PANEL} relative overflow-hidden p-5 sm:p-6`}>
+              <GhostNumeral className="absolute right-4 top-2 opacity-40">{`0${i + 1}`}</GhostNumeral>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-700">
+                <step.icon className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 font-display text-[15px] font-semibold leading-snug tracking-tight text-slate-900">
+                {step.title}
+              </h3>
+              <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600">{step.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------- Winners */}
+      <section className="border-y border-slate-900/5 bg-white/60 py-16 sm:py-20">
+        <div className={CONTAINER}>
+          <SectionHead
+            index="03"
+            kicker="Real experiences"
+            title="Winners, with their prizes, on camera."
+            body="Authentic feedback from participants across Pakistan — and the item each one actually received."
+            action={
+              <Cta href="/winners" variant="ghost" arrow>
+                See all winners
+              </Cta>
+            }
+          />
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {WINNERS.map((w) => (
+              <figure key={w.name} className="flex flex-col rounded-3xl border border-slate-900/10 bg-white p-6">
+                <div className="flex gap-0.5 text-amber-400" aria-hidden>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Sparkles key={i} className="h-3.5 w-3.5 fill-amber-400" />
+                  ))}
+                </div>
+                <blockquote className="mt-4 flex-1 text-[13px] leading-relaxed text-slate-600">“{w.quote}”</blockquote>
+                <figcaption className="mt-5 flex items-center justify-between gap-3 border-t border-slate-900/5 pt-4">
+                  <div>
+                    <p className="text-[13px] font-semibold text-slate-900">{w.name}</p>
+                    <p className="text-[11px] text-slate-500">{w.place}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-emerald-600/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-800">
+                    {w.prize}
+                  </span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ----------------------------------------------------------- Final CTA */}
+      <section className={`${CONTAINER} py-16 sm:py-20`}>
+        <div className="relative overflow-hidden rounded-[32px] bg-[#07130f] px-6 py-12 text-center sm:px-12 sm:py-16">
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-emerald-500/25 blur-3xl" />
+            <div className="absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-teal-400/20 blur-3xl" />
+            <div className="absolute inset-0 grid-veil opacity-40" />
+          </div>
+
+          <div className="relative mx-auto max-w-2xl">
+            <Pill className="border-white/15 bg-white/10 text-emerald-50">
+              <LiveDot />
+              Entries from Rs 50
+            </Pill>
+            <h2 className="mt-5 font-display text-[2rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.9rem]">
+              Ready to claim
+              <span className="block bg-gradient-to-r from-emerald-300 via-teal-200 to-amber-200 bg-clip-text text-transparent">
+                your lucky entry?
+              </span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-slate-300">
+              Browse live draws, pay with JazzCash or Easypaisa, and watch the stream when the ticket pool closes.
+            </p>
+
+            <div className="mt-7 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
+              <Cta href="/raffles" variant="primary" className="w-full sm:w-auto">
+                <Trophy className="h-4 w-4" />
+                Explore active raffles
+              </Cta>
+              <Cta
+                href="https://wa.me/923377155722?text=Hello%20PakRaffle%20Support%2C%20I%20have%20a%20question%20about%20a%20draw"
+                variant="light"
+                className="w-full sm:w-auto"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Chat on WhatsApp
+              </Cta>
+            </div>
+
+            <p className="mt-7 font-mono text-[10px] uppercase tracking-[0.2em] text-emerald-200/50">
+              PakRaffle institutional profile · verified digital lucky draws
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Quiet internal links — useful, not decorative. */}
+      <section className={`${CONTAINER} pb-16`}>
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-900/10 bg-white/70 px-5 py-4 backdrop-blur">
+          <p className="text-[12px] font-semibold text-slate-700">Still reading? These answer the rest.</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-[12px] font-semibold text-emerald-700">
+            <Link href="/terms" className="hover:underline">
+              Terms
+            </Link>
+            <Link href="/refund" className="hover:underline">
+              Refunds
+            </Link>
+            <Link href="/privacy" className="hover:underline">
+              Privacy
+            </Link>
+            <Link href="/lookup/store-ticket" className="hover:underline">
+              Store ticket lookup
+            </Link>
+            <Link href="/contact" className="hover:underline">
+              Contact
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

@@ -10,6 +10,10 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			// `--font-display` is set by next/font in app/ClientLayout; Inter stays the body face.
+  			display: ['var(--font-display)', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',

@@ -18,6 +18,8 @@ const initialForm = {
   storeUrl: "",
 }
 
+const INPUT = "h-11 rounded-2xl border-slate-900/10"
+
 export default function MerchantRegisterPage() {
   const router = useRouter()
   const [form, setForm] = useState(initialForm)
@@ -80,7 +82,7 @@ export default function MerchantRegisterPage() {
       footer={
         <>
           Already have an account?{" "}
-          <Link href="/auth/merchant/login" className="font-medium text-emerald-600 hover:text-emerald-700">
+          <Link href="/auth/merchant/login" className="font-semibold text-emerald-700 hover:text-emerald-800">
             Sign in
           </Link>
         </>
@@ -100,6 +102,7 @@ export default function MerchantRegisterPage() {
               onChange={set("name")}
               placeholder="Zubair Ahmed"
               autoComplete="name"
+              className={INPUT}
             />
           </Field>
 
@@ -111,6 +114,7 @@ export default function MerchantRegisterPage() {
               onChange={set("email")}
               placeholder="owner@store.pk"
               autoComplete="email"
+              className={INPUT}
             />
           </Field>
 
@@ -121,62 +125,73 @@ export default function MerchantRegisterPage() {
               onChange={set("phone")}
               placeholder="0300 1234567"
               autoComplete="tel"
+              className={INPUT}
             />
           </Field>
 
-          <Field label="Password" hint="At least 8 characters">
-            <div className="relative">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Password" hint="At least 8 characters">
+              <div className="relative">
+                <TextInput
+                  required
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={set("password")}
+                  placeholder="Create a password"
+                  autoComplete="new-password"
+                  className={`${INPUT} pr-11`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-500 transition hover:text-slate-700"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </Field>
+
+            <Field label="Confirm password">
               <TextInput
                 required
-                type={showPassword ? "text" : "password"}
-                value={form.password}
-                onChange={set("password")}
-                placeholder="Create a password"
+                type="password"
+                value={form.confirmPassword}
+                onChange={set("confirmPassword")}
+                placeholder="Re-enter your password"
                 autoComplete="new-password"
-                className="pr-11"
+                className={INPUT}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-500 transition hover:text-slate-700"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </Field>
+            </Field>
+          </div>
 
-          <Field label="Confirm password">
-            <TextInput
-              required
-              type="password"
-              value={form.confirmPassword}
-              onChange={set("confirmPassword")}
-              placeholder="Re-enter your password"
-              autoComplete="new-password"
-            />
-          </Field>
-
-          <div className="rounded-xl border border-slate-200 bg-slate-50">
+          <div className="rounded-2xl border border-slate-900/10 bg-slate-50/70">
             <button
               type="button"
               onClick={() => setShowStore((v) => !v)}
-              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-xs font-medium text-slate-700"
+              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-xs font-semibold text-slate-700"
             >
               Add your Shopify store now (optional)
-              <ChevronDown className={`h-4 w-4 text-slate-500 transition ${showStore ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 text-slate-500 transition ${showStore ? "rotate-180" : ""}`}
+              />
             </button>
             {showStore && (
-              <div className="space-y-4 border-t border-slate-200 px-4 py-4">
+              <div className="space-y-4 border-t border-slate-900/10 px-4 py-4">
                 <Field label="Store name">
-                  <TextInput value={form.storeName} onChange={set("storeName")} placeholder="Zubair Apparel" />
+                  <TextInput
+                    value={form.storeName}
+                    onChange={set("storeName")}
+                    placeholder="Zubair Apparel"
+                    className={INPUT}
+                  />
                 </Field>
                 <Field label="Shopify domain">
                   <TextInput
                     value={form.storeUrl}
                     onChange={set("storeUrl")}
                     placeholder="mystore.myshopify.com"
-                    className="font-mono"
+                    className={`${INPUT} font-mono`}
                   />
                 </Field>
                 <p className="text-[11px] leading-relaxed text-slate-500">
@@ -186,7 +201,7 @@ export default function MerchantRegisterPage() {
             )}
           </div>
 
-          <Btn type="submit" loading={loading} className="w-full">
+          <Btn type="submit" loading={loading} className="w-full min-h-[46px] rounded-2xl">
             Create account <ArrowRight className="h-4 w-4" />
           </Btn>
 

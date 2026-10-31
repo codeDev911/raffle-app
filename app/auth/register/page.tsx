@@ -101,7 +101,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
       <Card className="w-full max-w-md rounded-2xl shadow-lg border-0">
         <CardHeader className="text-center">
-          <BrandMark className="mx-auto mb-4 h-16 w-16 rounded-2xl shadow-sm" />
+          <BrandMark className="mx-auto mb-4 h-16 w-16" />
           <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
           <CardDescription>Join PakRaffle and start winning amazing prizes</CardDescription>
         </CardHeader>

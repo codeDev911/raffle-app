@@ -1,38 +1,53 @@
 "use client"
 
-import React, { useState, useId } from "react"
+import React, { useState } from "react"
 import Link from "next/link"
 import {
-  Tag,
-  DollarSign,
-  Calculator,
-  ShieldCheck,
-  CheckCircle2,
-  Sparkles,
-  ArrowRight,
-  Upload,
   AlertCircle,
-  HelpCircle,
-  Clock,
-  Layers,
-  ChevronDown,
-  Building,
-  Smartphone,
+  ArrowRight,
+  ArrowUpRight,
   Bike,
-  Gamepad2,
-  Laptop,
-  Flame,
+  Building,
+  Calculator,
   Check,
-  ExternalLink,
+  CheckCircle2,
+  Clock,
   Copy,
+  Flame,
+  Gamepad2,
+  HelpCircle,
+  Laptop,
+  Layers,
   Lock,
   MessageCircle,
+  ShieldCheck,
+  Smartphone,
+  Sparkles,
+  Tag,
+  Upload,
+  Wallet,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
+import {
+  CONTAINER,
+  Cta,
+  FaqList,
+  GhostNumeral,
+  Kicker,
+  LiveDot,
+  Marquee,
+  Mesh,
+  PANEL,
+  Pill,
+  SectionHead,
+  SHELL,
+  StatTile,
+  TicketCard,
+} from "@/components/marketing/kit"
+import { Counter, Reveal } from "@/components/marketing/motion"
+
+const SUPPORT_WHATSAPP = "923377155722"
+const pkr = (value: number) => `Rs ${Math.round(value).toLocaleString("en-PK")}`
+const num = (value: number) => Math.round(value).toLocaleString("en-PK")
 
 const PRODUCT_CATEGORIES = [
   { id: "Electronics", name: "Smartphones & Tablets (iPhone, Samsung)", icon: Smartphone },
@@ -56,6 +71,55 @@ const CITIES_LIST = [
   "Sialkot",
   "Quetta",
   "Other City in Pakistan",
+]
+
+const FIELD =
+  "h-11 w-full rounded-xl border border-slate-900/10 bg-white px-3.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+
+const FAQS = [
+  {
+    q: "How and when will the PakRaffle team get in touch with me?",
+    a: "After you submit your product listing application, our review team inspects your submitted details. We will reach out directly to you using one of your provided contact channels (WhatsApp, phone call, or email) within 24 to 48 hours to confirm specifications, schedule physical verification, and discuss campaign launch timing.",
+  },
+  {
+    q: "Why must the item be shipped to PakRaffle for custody?",
+    a: "To protect the integrity of the platform and build 100% buyer trust, all listed items must be physically shipped or personally delivered to our authorized inspection facility (in Lahore, Islamabad, or Karachi). We perform an in-person physical inspection and hold the product securely in insured escrow custody until the raffle is either successfully completed or officially cancelled.",
+  },
+  {
+    q: "Can I cancel my raffle after it goes live? (Refunds & 8% fee rule)",
+    a: "Yes, you may request to cancel your raffle. However, to protect participants who purchased tickets in good faith: (1) All sold tickets will be refunded 100% to buyers immediately, and (2) The seller must pay the 8% platform fee (covering verification, payment gateway processing, and promotional costs) before the product is released and returned.",
+  },
+  {
+    q: "What is the 3-Month maximum campaign duration limit?",
+    a: "Every listed raffle must be completed within 3 months (90 days) from its launch date. If the required ticket threshold is not reached within 3 months, PakRaffle will cancel the raffle, issue full 100% refunds to all ticket buyers, charge/deduct the 8% platform fee, and return the item to the seller.",
+  },
+  {
+    q: "How does the 8% platform fee work on completed raffles?",
+    a: "Our flat 8% fee is deducted from the total raffle gross revenue upon successful completion. There are zero upfront listing fees and zero hidden charges. You receive 92% of the total revenue, covering your agreed market price directly into your bank account.",
+  },
+  {
+    q: "Why do I need to enter my full name as per CNIC?",
+    a: "In compliance with Pakistani anti-fraud regulations and NADRA verification protocols, all product hosts must be legal Pakistani residents holding a valid CNIC. Bank/Raast payouts and custody agreements must strictly match your verified legal name.",
+  },
+]
+
+const STEPS = [
+  {
+    title: "Submit the asset",
+    body: "Fill the dossier with your exact market price, product specs, photos and CNIC details.",
+  },
+  {
+    title: "Verify & escrow",
+    body: "Our desk checks authenticity, PTA status or vehicle documents, then takes physical custody.",
+  },
+  {
+    title: "Campaign goes live",
+    body: "Featured across PakRaffle web, Instagram and WhatsApp. Buyers purchase tickets instantly.",
+  },
+  {
+    title: "You receive 92%",
+    body: "Once the pool sells out and the draw runs, net cash is wired to your verified bank account.",
+  },
 ]
 
 export default function ListProductPage() {
@@ -85,7 +149,6 @@ export default function ListProductPage() {
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState("")
   const [successData, setSuccessData] = useState<any>(null)
-  const [openFaq, setOpenFaq] = useState<number | null>(0)
   const [copiedLink, setCopiedLink] = useState(false)
 
   const handleCopyLink = (url: string) => {
@@ -269,1238 +332,1209 @@ export default function ListProductPage() {
     }
   }
 
-  const faqs = [
-    {
-      q: "How and when will the PakRaffle team get in touch with me?",
-      a: "After you submit your product listing application, our review team inspects your submitted details. We will reach out directly to you using one of your provided contact channels (WhatsApp, phone call, or email) within 24 to 48 hours to confirm specifications, schedule physical verification, and discuss campaign launch timing.",
-    },
-    {
-      q: "Why must the item be shipped to PakRaffle for custody?",
-      a: "To protect the integrity of the platform and build 100% buyer trust, all listed items must be physically shipped or personally delivered to our authorized inspection facility (in Lahore, Islamabad, or Karachi). We perform an in-person physical inspection and hold the product securely in insured escrow custody until the raffle is either successfully completed or officially cancelled.",
-    },
-    {
-      q: "Can I cancel my raffle after it goes live? (Refunds & 8% fee rule)",
-      a: "Yes, you may request to cancel your raffle. However, to protect participants who purchased tickets in good faith: (1) All sold tickets will be refunded 100% to buyers immediately, and (2) The seller must pay the 8% platform fee (covering verification, payment gateway processing, and promotional costs) before the product is released and returned.",
-    },
-    {
-      q: "What is the 3-Month maximum campaign duration limit?",
-      a: "Every listed raffle must be completed within 3 months (90 days) from its launch date. If the required ticket threshold is not reached within 3 months, PakRaffle will cancel the raffle, issue full 100% refunds to all ticket buyers, charge/deduct the 8% platform fee, and return the item to the seller.",
-    },
-    {
-      q: "How does the 8% platform fee work on completed raffles?",
-      a: "Our flat 8% fee is deducted from the total raffle gross revenue upon successful completion. There are zero upfront listing fees and zero hidden charges. You receive 92% of the total revenue, covering your agreed market price directly into your bank account.",
-    },
-    {
-      q: "Why do I need to enter my full name as per CNIC?",
-      a: "In compliance with Pakistani anti-fraud regulations and NADRA verification protocols, all product hosts must be legal Pakistani residents holding a valid CNIC. Bank/Raast payouts and custody agreements must strictly match your verified legal name.",
-    },
-  ]
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-emerald-500 selection:text-white">
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 text-white text-xs py-2.5 px-4 border-b border-emerald-800/40">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="font-bold text-emerald-400">PAKRAFFLE ASSET LISTINGS:</span>
-            <span className="text-slate-300 hidden sm:inline">
-              List Flagships, Bikes, Consoles &amp; Luxury Assets
-            </span>
-          </div>
-          <div className="flex items-center gap-4 text-xs font-medium">
-            <span className="text-emerald-300 flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              Flat 8% Platform Fee Only
-            </span>
-            <span className="text-slate-500 hidden md:inline">•</span>
-            <span className="text-slate-300 hidden md:inline">Zero Upfront Cost</span>
-            <span className="text-slate-500 hidden md:inline">•</span>
-            <span className="text-amber-300 font-bold">100% Guaranteed Payout</span>
-          </div>
-        </div>
-      </div>
+    <div className={SHELL}>
+      {/* ---------------------------------------------------------------- Hero */}
+      <section className="relative overflow-hidden border-b border-slate-900/5">
+        <Mesh tone="amber" />
+        <div
+          className={`${CONTAINER} relative pb-14 pt-24 sm:pt-24 lg:grid lg:grid-cols-[1.04fr_0.96fr] lg:items-center lg:gap-14 lg:pb-24 lg:pt-28`}
+        >
+          <div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Pill className="border-amber-500/25 bg-amber-500/10 text-amber-900">
+                <LiveDot />
+                Asset listings · Pakistan
+              </Pill>
+              <Pill className="hidden sm:inline-flex">
+                <ShieldCheck className="h-3 w-3 text-emerald-600" />
+                Escrow custody
+              </Pill>
+            </div>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-emerald-50/40 to-slate-50 pt-12 pb-16 lg:pt-16 lg:pb-24 border-b border-slate-200/80">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-gradient-to-tr from-emerald-300/20 to-teal-200/20 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 relative text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 border border-emerald-300/80 text-emerald-900 text-xs sm:text-sm font-semibold mb-6 shadow-2xs">
-            <Flame className="w-4 h-4 text-emerald-600 fill-emerald-500" />
-            <span>Turn Any High-Value Product Into Full Market Cash</span>
-            <span className="bg-emerald-600 text-white text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full">
-              8% Low Fee
-            </span>
-          </div>
-
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
-            List Your Product as a <br className="hidden sm:inline" />
-            <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 bg-clip-text text-transparent">
-              Verified Public Raffle
-            </span>
-          </h1>
-
-          <p className="mt-5 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Stop dealing with lowballers, delayed payments, and classified scam risks. List your
-            phones, motorcycles, consoles, or gadgets. Thousands of Pakistani users buy small tickets,
-            and you receive full market value minus our modest 8% platform fee.
-          </p>
-
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
-            <a
-              href="#listing-form-section"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <span>Submit Listing Application</span>
-              <ArrowRight className="w-4 h-4" />
-            </a>
-
-            <a
-              href="#calculator-section"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-800 font-semibold text-sm border border-slate-300 shadow-2xs transition-colors"
-            >
-              <Calculator className="w-4 h-4 text-emerald-600" />
-              <span>Simulate 8% Fee &amp; Earnings</span>
-            </a>
-          </div>
-
-          {/* Quick Metrics Bar */}
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto text-left">
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                Platform Commission
+            <h1 className="mt-6 font-display text-[2.7rem] font-semibold leading-[0.96] tracking-[-0.035em] text-slate-900 sm:text-[3.6rem] lg:text-[4.05rem]">
+              Sell at full price.
+              <span className="block bg-gradient-to-r from-amber-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                In tickets, not bargains.
               </span>
-              <span className="text-2xl font-extrabold text-emerald-600">8% Flat</span>
-              <span className="text-xs text-slate-500 block mt-0.5">92% Net Seller Payout</span>
-            </div>
+            </h1>
 
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                Upfront Listing Cost
-              </span>
-              <span className="text-2xl font-extrabold text-slate-900">Rs. 0</span>
-              <span className="text-xs text-slate-500 block mt-0.5">Pay only when sold</span>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                Identity Safety
-              </span>
-              <span className="text-2xl font-extrabold text-slate-900">NADRA CNIC</span>
-              <span className="text-xs text-slate-500 block mt-0.5">Verified Legal Owners</span>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                Payout Channels
-              </span>
-              <span className="text-2xl font-extrabold text-slate-900">Instant</span>
-              <span className="text-xs text-slate-500 block mt-0.5">Bank / Raast / JazzCash</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Comparison: PakRaffle vs Traditional Selling */}
-      <section className="py-16 max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <Badge className="bg-slate-900 text-white px-3 py-1 text-xs mb-3">Why Raffle Selling?</Badge>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            Why Sell on PakRaffle vs Online Classifieds?
-          </h2>
-          <p className="text-sm text-slate-600 mt-2">
-            Traditional marketplaces force you into endless bargaining, meetups with strangers, and huge price cuts.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Classifieds Box */}
-          <div className="bg-red-50/50 border border-red-200/80 rounded-3xl p-6 sm:p-8 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg">
-                ✕
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-base sm:text-lg">Traditional Classifieds / OLX</h3>
-                <p className="text-xs text-red-700">High friction, slow turnaround, bargaining hassle</p>
-              </div>
-            </div>
-            <ul className="space-y-3 text-xs sm:text-sm text-slate-700">
-              <li className="flex items-start gap-2.5">
-                <span className="text-red-500 font-bold shrink-0">✕</span>
-                <span>Buyers demand 20% to 35% below genuine market value.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-red-500 font-bold shrink-0">✕</span>
-                <span>Dozens of spam calls, fake screenshots, and no-show meetings.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-red-500 font-bold shrink-0">✕</span>
-                <span>Takes weeks or months to find a single buyer with full cash in hand.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-red-500 font-bold shrink-0">✕</span>
-                <span>Risk of counterfeit currency or unverified bank transfers.</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* PakRaffle Box */}
-          <div className="bg-gradient-to-br from-emerald-50 via-teal-50/40 to-white border-2 border-emerald-500/40 rounded-3xl p-6 sm:p-8 space-y-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg">
-                ✓
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-base sm:text-lg">PakRaffle Community Listing</h3>
-                <p className="text-xs text-emerald-800 font-semibold">Fast sellouts, full market price, 100% escrow</p>
-              </div>
-            </div>
-            <ul className="space-y-3 text-xs sm:text-sm text-slate-800 font-medium">
-              <li className="flex items-start gap-2.5">
-                <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                <span>You set and receive your full desired market price without discounts.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                <span>Affordable tickets (Rs. 250 - Rs. 1,000) sell out rapidly across thousands of fans.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                <span>Clear, transparent 8% platform fee automatically covers marketing &amp; escrow.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                <span>Funds pre-collected in escrow — immediate bank transfer upon draw completion.</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Steps */}
-      <section className="py-12 bg-white border-y border-slate-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              Simple 4-Step Listing &amp; Payout Process
-            </h2>
-            <p className="text-sm text-slate-500 mt-2">
-              From submission to full bank payout in as little as 3 to 7 days
+            <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-slate-600 sm:text-lg">
+              Stop negotiating with lowballers. List your phone, bike, console or watch as a verified public draw — you
+              keep <span className="font-semibold text-slate-900">92% of gross</span>, and the money is collected before
+              the draw ever runs.
             </p>
-          </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 relative group hover:border-emerald-500 transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center text-sm mb-4 shadow-sm">
-                01
-              </div>
-              <h3 className="font-bold text-slate-900 text-sm mb-1.5">Submit Product &amp; CNIC</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Fill the application below with your exact market price, product specs, photos, and CNIC details.
-              </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Cta href="#listing-form-section" arrow className="w-full sm:w-auto">
+                Start a listing
+              </Cta>
+              <Cta href="#calculator-section" variant="ghost" className="w-full sm:w-auto">
+                <Calculator className="h-4 w-4 text-emerald-600" /> Model the payout
+              </Cta>
             </div>
 
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 relative group hover:border-emerald-500 transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-extrabold flex items-center justify-center text-sm mb-4 shadow-sm">
-                02
-              </div>
-              <h3 className="font-bold text-slate-900 text-sm mb-1.5">Verification &amp; Escrow</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Our verification desk checks authenticity, PTA status, or vehicle documents and locks the campaign agreement.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 relative group hover:border-emerald-500 transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-extrabold flex items-center justify-center text-sm mb-4 shadow-sm">
-                03
-              </div>
-              <h3 className="font-bold text-slate-900 text-sm mb-1.5">Live Draw Campaign</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Featured across PakRaffle web, Instagram, and WhatsApp channels. Participants purchase tickets instantly.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 relative group hover:border-emerald-500 transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-extrabold flex items-center justify-center text-sm mb-4 shadow-sm">
-                04
-              </div>
-              <h3 className="font-bold text-slate-900 text-sm mb-1.5">Receive 92% Payout</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Once tickets are filled and drawn, 92% net cash is wired directly to your verified Pakistani bank account.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Interactive 8% Fee & Ticket Calculator */}
-      <section id="calculator-section" className="py-16 max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-emerald-950 rounded-3xl p-6 sm:p-10 text-white border border-slate-800 shadow-xl">
-          <div className="max-w-3xl mx-auto text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold mb-3 border border-emerald-400/20">
-              <Calculator className="w-3.5 h-3.5" />
-              <span>Auto-Calculation Engine</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Interactive 8% Fee &amp; Ticket Price Calculator
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-300 mt-2">
-              Enter what you want in hand for your product. We automatically compute the suggested ticket price,
-              total tickets, gross revenue, and our 8% platform fee.
-            </p>
-          </div>
-
-          <div className="grid lg:grid-cols-12 gap-8 items-center">
-            {/* Input Controls */}
-            <div className="lg:col-span-7 space-y-6">
-              {/* 1. Market Price input */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs sm:text-sm font-semibold text-slate-200">
-                    1. Product Market Price (What You Want to Receive)
-                  </label>
-                  <span className="text-base sm:text-lg font-mono font-bold text-emerald-400">
-                    Rs. {cMarket.toLocaleString()}
-                  </span>
-                </div>
-                <Input
-                  type="number"
-                  min="1000"
-                  max="50000000"
-                  step="5000"
-                  value={calcMarketPrice}
-                  onChange={(e) => setCalcMarketPrice(e.target.value)}
-                  className="bg-slate-900/80 border-slate-700 text-white font-mono text-base h-12 rounded-xl focus:border-emerald-500"
-                />
-
-                {/* Preset Chips */}
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {[
-                    { label: "Rs. 75,000 (Console)", val: 75000 },
-                    { label: "Rs. 185,000 (Laptop)", val: 185000 },
-                    { label: "Rs. 350,000 (iPhone 16 Pro)", val: 350000 },
-                    { label: "Rs. 490,000 (Bike)", val: 490000 },
-                  ].map((preset) => (
-                    <button
-                      key={preset.val}
-                      type="button"
-                      onClick={() => setCalcMarketPrice(preset.val.toString())}
-                      className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all ${
-                        calcMarketPrice === preset.val.toString()
-                          ? "bg-emerald-600 text-white border-emerald-500"
-                          : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
-                      }`}
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 2. Target Tickets to Sold Out input (User enters any number freely) */}
-              <div className="space-y-2 bg-slate-900/90 p-4 rounded-2xl border border-emerald-500/40">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs sm:text-sm font-bold text-emerald-300 flex items-center gap-1.5">
-                    <span>🎯 2. Desired Target Tickets to Sold Out</span>
-                  </label>
-                  <span className="text-base sm:text-lg font-mono font-extrabold text-emerald-400">
-                    {cTickets.toLocaleString()} Tickets
-                  </span>
-                </div>
-                <Input
-                  type="number"
-                  min="1"
-                  max="50000"
-                  value={calcTargetTickets}
-                  onChange={(e) => setCalcTargetTickets(e.target.value)}
-                  placeholder="Enter desired tickets (e.g. 300, 400)"
-                  className="bg-slate-950 border-emerald-500/60 text-emerald-300 font-mono text-base font-bold h-12 rounded-xl focus:border-emerald-400"
-                />
-
-                {/* Preset Ticket Target Chips */}
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <span className="text-[11px] text-slate-400">Quick Targets:</span>
-                  {[100, 250, 300, 400, 500, 1000].map((tickets) => (
-                    <button
-                      key={tickets}
-                      type="button"
-                      onClick={() => setCalcTargetTickets(tickets.toString())}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
-                        calcTargetTickets === tickets.toString()
-                          ? "bg-emerald-500 text-slate-950 border-emerald-400 shadow-md font-extrabold"
-                          : "bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:border-slate-600"
-                      }`}
-                    >
-                      {tickets} Tickets
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[11px] text-slate-400 leading-snug">
-                  Type any number of tickets you desire (e.g. 300, 400). You have complete freedom to type your own values.
-                </p>
-              </div>
-
-              {/* 3. Ticket Price input (Completely independent typing) */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs sm:text-sm font-semibold text-slate-200">
-                    3. Ticket Price per Entry
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-base sm:text-lg font-mono font-bold text-amber-400">
-                      Rs. {cPrice.toLocaleString()}
-                    </span>
-                    {cTickets > 0 && cMarket > 0 && (
-                      <button
-                        type="button"
-                        onClick={handleAutoSuggestCalcTicketPrice}
-                        className="text-[11px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md transition-colors"
-                      >
-                        Auto-fill suggested: Rs. {suggestedTicketPriceForCalc.toLocaleString()}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="relative flex-1">
-                    <span className="absolute inset-y-0 left-3.5 flex items-center text-xs font-bold text-slate-400">
-                      Rs.
-                    </span>
-                    <Input
-                      type="number"
-                      min="1"
-                      step="50"
-                      value={calcTicketPrice}
-                      onChange={(e) => setCalcTicketPrice(e.target.value)}
-                      placeholder="e.g. 500, 1000, 1200"
-                      className="bg-slate-900/80 border-slate-700 text-amber-300 font-mono text-base font-bold h-12 pl-10 rounded-xl"
-                    />
-                  </div>
-                  <span className="text-xs text-slate-400 shrink-0">or presets:</span>
-                  <div className="flex gap-1.5">
-                    {[250, 500, 1000, 1200].map((price) => (
-                      <button
-                        key={price}
-                        type="button"
-                        onClick={() => setCalcTicketPrice(price.toString())}
-                        className={`px-2.5 py-2 rounded-lg text-xs font-bold border transition-all ${
-                          calcTicketPrice === price.toString()
-                            ? "bg-amber-500 text-slate-950 border-amber-400"
-                            : "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
-                        }`}
-                      >
-                        Rs. {price}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Calculated Breakdown Card */}
-            <div className="lg:col-span-5 bg-slate-900/90 rounded-2xl p-6 border border-emerald-500/30 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                  Campaign Financial Summary
+            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-slate-500">
+              {["8% flat fee", "Rs 0 upfront", "CNIC-verified sellers"].map((chip) => (
+                <span key={chip} className="inline-flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-600" strokeWidth={3} />
+                  {chip}
                 </span>
-                <span className="text-[11px] font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                  8% Flat Fee
-                </span>
+              ))}
+            </div>
+
+            <div className="mt-9 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <StatTile label="Platform fee" value="8%" hint="Flat, from gross" accent />
+              <StatTile label="Upfront cost" value="Rs 0" hint="Pay when sold" />
+              <StatTile label="Identity" value="CNIC" hint="NADRA verified" />
+              <StatTile label="Payout" value="Instant" hint="Bank · Raast" />
+            </div>
+          </div>
+
+          {/* Live payout preview driven by the calculator below. */}
+          <div className="relative mt-12 lg:mt-0">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-8 -z-10 rounded-[48px] bg-gradient-to-br from-amber-200/50 via-white/0 to-emerald-100/60 blur-2xl"
+            />
+            <TicketCard className="animate-floaty shadow-[0_40px_100px_-60px_rgba(4,47,34,0.7)] lg:rotate-[1.1deg]">
+              <div className="flex items-center justify-between gap-3 border-b border-dashed border-slate-200 px-5 py-3">
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">Listing preview</span>
+                <Pill className="border-emerald-600/20 bg-emerald-50 text-emerald-700">8% fee</Pill>
               </div>
 
-              <div className="space-y-2.5 text-xs">
-                <div className="flex justify-between items-center text-slate-300">
-                  <span>Product Market Value:</span>
-                  <span className="font-mono font-bold text-white text-sm">
-                    Rs. {cMarket.toLocaleString()}
-                  </span>
+              <div className="flex items-center gap-4 p-5">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-slate-900/5 bg-gradient-to-br from-slate-50 to-emerald-50 text-emerald-700">
+                  <Smartphone className="h-7 w-7" strokeWidth={1.5} />
                 </div>
-
-                <div className="flex justify-between items-center text-slate-300">
-                  <span className="font-semibold text-emerald-300">Target Tickets to Sold Out:</span>
-                  <span className="font-mono font-extrabold text-emerald-400 text-sm bg-emerald-950/70 border border-emerald-500/40 px-2.5 py-0.5 rounded-lg">
-                    {cTickets.toLocaleString()} Tickets
-                  </span>
+                <div className="min-w-0">
+                  <p className="truncate font-display text-base font-semibold text-slate-900">Your listed asset</p>
+                  <p className="font-mono text-[11px] text-slate-500">Condition · sealed, verified on handover</p>
+                  <p className="mt-1 font-mono text-lg font-semibold tabular-nums text-slate-900">{pkr(cMarket)}</p>
                 </div>
+              </div>
 
-                <div className="flex justify-between items-center text-slate-300">
-                  <span>Ticket Price per Entry:</span>
-                  <span className="font-mono font-bold text-amber-400">
-                    Rs. {cPrice.toLocaleString()}
-                  </span>
+              <div className="grid grid-cols-3 gap-px border-y border-dashed border-slate-200 bg-slate-900/5 text-center">
+                {[
+                  { label: "Tickets", value: num(cTickets) },
+                  { label: "Per ticket", value: pkr(cPrice) },
+                  { label: "Gross", value: pkr(calcActualGross) },
+                ].map((cell) => (
+                  <div key={cell.label} className="bg-white px-2 py-3">
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">{cell.label}</p>
+                    <p className="mt-0.5 font-mono text-[12px] font-semibold tabular-nums text-slate-900">{cell.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-2 p-5">
+                <div className="flex items-center justify-between text-[12px]">
+                  <span className="text-slate-500">PakRaffle fee · 8%</span>
+                  <span className="font-mono tabular-nums text-rose-600">- {pkr(calcPlatformFee)}</span>
                 </div>
-
-                <div className="text-[11px] text-emerald-300 bg-emerald-950/60 p-2.5 rounded-xl border border-emerald-500/30 leading-snug">
-                  🎯 <strong>Target to Sold Out:</strong> Exactly <strong>{cTickets.toLocaleString()} tickets</strong> must be sold out at Rs. {cPrice.toLocaleString()} each to reach 100% completion and disburse your Rs. {calcSellerPayout.toLocaleString()} net payout.
-                </div>
-
-                <div className="flex justify-between items-center text-slate-300">
-                  <span>Gross Campaign Revenue:</span>
-                  <span className="font-mono font-bold text-white">
-                    Rs. {calcActualGross.toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center text-red-300 pt-1 pb-1 border-t border-slate-800/80">
-                  <span className="flex items-center gap-1 font-semibold">
-                    <span>PakRaffle Fee (8%):</span>
-                  </span>
-                  <span className="font-mono font-bold text-red-400">
-                    - Rs. {calcPlatformFee.toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="bg-emerald-950/70 p-3.5 rounded-xl border border-emerald-500/40 flex justify-between items-center">
+                <div className="flex items-end justify-between gap-3 rounded-2xl bg-emerald-600 px-4 py-3 text-white">
                   <div>
-                    <span className="text-[11px] font-bold text-emerald-300 uppercase block tracking-wider">
-                      Net Seller Payout (92%)
-                    </span>
-                    <span className="text-[10px] text-emerald-400/80">Direct bank transfer upon draw</span>
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
+                      Your net payout
+                    </p>
+                    <p className="font-mono text-[11px] text-emerald-100/70">wired on draw completion</p>
                   </div>
-                  <span className="font-mono text-lg font-extrabold text-emerald-300">
-                    Rs. {calcSellerPayout.toLocaleString()}
-                  </span>
+                  <p className="font-mono text-lg font-semibold tabular-nums">{pkr(calcSellerPayout)}</p>
                 </div>
               </div>
+            </TicketCard>
 
-              <Button
-                type="button"
-                onClick={handleApplyCalculatorToForm}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-11 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
-              >
-                <span>Use These Values in Listing Form ({calcTargetTickets} Tickets @ Rs. {calcTicketPrice})</span>
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+            <div className="absolute -bottom-7 -left-2 rotate-[2deg] rounded-2xl border border-slate-900/10 bg-white px-3.5 py-2.5 shadow-[0_24px_50px_-30px_rgba(4,47,34,0.55)] sm:-left-5">
+              <p className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                <Lock className="h-3 w-3 text-emerald-600" /> Escrow custody
+              </p>
+              <p className="mt-1 font-mono text-[11px] tabular-nums text-slate-900">Item held · insured</p>
             </div>
+          </div>
+        </div>
+
+        <div className="relative border-t border-slate-900/5 bg-white/50 py-3 backdrop-blur">
+          <Marquee
+            items={[
+              "8% flat platform fee",
+              "92% net payout",
+              "No upfront listing cost",
+              "Physical verification before launch",
+              "3-month maximum campaign",
+              "100% buyer refunds on cancellation",
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* --------------------------------------------------------- Comparison */}
+      <section className="border-b border-slate-900/5 bg-white">
+        <div className={`${CONTAINER} py-16 md:py-24`}>
+          <Reveal>
+            <SectionHead
+              index="01"
+              kicker="Why a draw"
+              title="Classifieds reward the lowest bidder"
+              body="A private sale is a negotiation against people who do this for a living. A public draw is a fixed price that thousands of buyers can afford."
+              align="center"
+            />
+          </Reveal>
+
+          <div className="mt-12 grid gap-5 md:grid-cols-2">
+            <Reveal>
+              <div className="h-full rounded-3xl border border-rose-200/70 bg-rose-50/50 p-6 sm:p-8">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 font-bold text-rose-600">
+                    ✕
+                  </span>
+                  <div>
+                    <h3 className="font-display text-base font-semibold text-slate-900">Classifieds / OLX</h3>
+                    <p className="text-xs text-rose-700">High friction, slow turnaround</p>
+                  </div>
+                </div>
+                <ul className="mt-6 space-y-3 text-sm text-slate-700">
+                  {[
+                    "Buyers demand 20–35% below genuine market value.",
+                    "Dozens of spam calls, fake screenshots, no-show meetings.",
+                    "Weeks or months to find one buyer with cash in hand.",
+                    "Counterfeit currency and unverified transfer risk.",
+                  ].map((line) => (
+                    <li key={line} className="flex items-start gap-2.5">
+                      <span className="mt-0.5 shrink-0 font-bold text-rose-500">✕</span>
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Reveal>
+
+            <Reveal delay={90}>
+              <div className="relative h-full overflow-hidden rounded-3xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-50 via-white to-teal-50/40 p-6 shadow-[0_30px_80px_-60px_rgba(4,120,87,0.7)] sm:p-8">
+                <span className="absolute right-6 top-0 -translate-y-1/2 rounded-full bg-emerald-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                  The different way
+                </span>
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 font-bold text-white">
+                    ✓
+                  </span>
+                  <div>
+                    <h3 className="font-display text-base font-semibold text-slate-900">PakRaffle listing</h3>
+                    <p className="text-xs font-semibold text-emerald-800">Full market price, escrow custody</p>
+                  </div>
+                </div>
+                <ul className="mt-6 space-y-3 text-sm text-slate-700">
+                  {[
+                    "You set the market price and receive 92% of gross.",
+                    "Affordable tickets sell fast across thousands of buyers.",
+                    "Funds are collected in escrow before the draw runs.",
+                    "One transparent 8% fee covers marketing and processing.",
+                  ].map((line) => (
+                    <li key={line} className="flex items-start gap-2.5">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>
 
-      {/* Main Listing Application Form */}
-      <section id="listing-form-section" className="py-12 max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden">
-          {/* Form Header */}
-          <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-green-700 px-6 sm:px-8 py-6 text-white">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center border border-white/20 shrink-0">
-                <Tag className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
-                  Product Listing Application
-                </h2>
-                <p className="text-xs sm:text-sm text-emerald-100 mt-0.5">
-                  Complete this form to submit your asset for verification and draw scheduling
-                </p>
-              </div>
-            </div>
+      {/* -------------------------------------------------------------- Steps */}
+      <section className="relative overflow-hidden border-b border-slate-900/5">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(245,158,11,0.08),transparent_58%)]" />
+        <div className={`${CONTAINER} py-16 md:py-24`}>
+          <Reveal>
+            <SectionHead
+              index="02"
+              kicker="The process"
+              title="Four steps, then a bank transfer"
+              body="From dossier to payout in as little as three to seven days once the pool closes."
+            />
+          </Reveal>
+
+          <div className="relative mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+            <div
+              aria-hidden
+              className="absolute left-7 right-0 top-7 hidden h-px bg-gradient-to-r from-amber-500/50 via-emerald-500/25 to-transparent lg:block"
+            />
+            {STEPS.map((step, i) => (
+              <Reveal key={step.title} delay={i * 90}>
+                <div className="relative">
+                  <span className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-white font-display text-sm font-semibold text-amber-700 shadow-[0_18px_40px_-28px_rgba(4,47,34,0.7)]">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <GhostNumeral className="mt-5">{`0${i + 1}`}</GhostNumeral>
+                  <h3 className="mt-3 font-display text-lg font-semibold text-slate-900">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{step.body}</p>
+                </div>
+              </Reveal>
+            ))}
           </div>
+        </div>
+      </section>
 
-          {/* Form Body */}
-          <div className="p-6 sm:p-8">
-            {errorMsg && (
-              <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 flex items-start gap-3 text-red-800 text-xs sm:text-sm">
-                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold">Please check your inputs</p>
-                  <p className="text-red-700 mt-0.5">{errorMsg}</p>
-                </div>
-              </div>
-            )}
+      {/* --------------------------------------------------------- Calculator */}
+      <section id="calculator-section" className="border-b border-slate-900/5 bg-white">
+        <div className={`${CONTAINER} py-16 md:py-24`}>
+          <Reveal>
+            <SectionHead
+              index="03"
+              kicker="Payout planner"
+              title="Start from the cash you want"
+              body="Tell us what you expect in hand and how many tickets you want to sell, and the ticket price works itself out."
+            />
+          </Reveal>
 
-            {successData ? (
-              <div className="p-6 sm:p-8 space-y-6 text-center">
-                <div className="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center border-2 border-emerald-300 shadow-sm">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
+          <Reveal delay={80}>
+            <div className={`${PANEL} mt-10 overflow-hidden`}>
+              <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
+                <div className="border-b border-slate-900/5 p-6 sm:p-8 lg:border-b-0 lg:border-r">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">
+                    <Calculator className="h-3.5 w-3.5" /> Your numbers
+                  </div>
 
-                <div>
-                  <Badge className="bg-emerald-100 text-emerald-900 border-emerald-300 text-xs mb-2">
-                    Application Logged Successfully
-                  </Badge>
-                  <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                    Product Listing Request Submitted!
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto mt-2 leading-relaxed">
-                    Your reference ID is{" "}
-                    <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                      #{successData.id}
-                    </span>
-                    . Our verification team will review your specifications and contact your WhatsApp within 24-48 hours.
-                  </p>
-                </div>
-
-                {/* Secure Tracking Link Box - Requested Feature */}
-                <div className="bg-gradient-to-br from-emerald-50 via-teal-50/50 to-white border-2 border-emerald-500/50 rounded-3xl p-6 text-left space-y-4 shadow-sm max-w-2xl mx-auto">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                      <Lock className="w-5 h-5" />
-                    </div>
+                  <div className="mt-7 space-y-7">
                     <div>
-                      <h4 className="font-extrabold text-slate-900 text-base">
-                        Your Secure Application Status Page
-                      </h4>
-                      <p className="text-xs text-slate-600">
-                        Track live desk verification, physical custody hold, and raffle schedule.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
-                      Private Tracking URL:
-                    </span>
-                    <div className="flex flex-col sm:flex-row items-center gap-2">
-                      <div className="w-full bg-white border border-emerald-300 rounded-xl px-3.5 py-2.5 font-mono text-xs text-slate-800 select-all overflow-x-auto whitespace-nowrap shadow-2xs">
-                        {typeof window !== "undefined"
-                          ? `${window.location.origin}/application/status/${successData.id}?token=${successData.secureToken || ""}`
-                          : `/application/status/${successData.id}?token=${successData.secureToken || ""}`}
-                      </div>
-                      <Button
-                        type="button"
-                        onClick={() =>
-                          handleCopyLink(
-                            `/application/status/${successData.id}?token=${successData.secureToken || ""}`
-                          )
-                        }
-                        className={`w-full sm:w-auto h-10 px-5 rounded-xl text-xs font-bold shrink-0 transition-all ${
-                          copiedLink
-                            ? "bg-emerald-700 text-white"
-                            : "bg-slate-900 hover:bg-slate-800 text-white"
-                        }`}
-                      >
-                        {copiedLink ? (
-                          <>
-                            <Check className="w-3.5 h-3.5 mr-1.5" />
-                            <span>Copied!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3.5 h-3.5 mr-1.5" />
-                            <span>Copy Link</span>
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
-                    <Button
-                      asChild
-                      className="w-full sm:w-auto flex-1 h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-600/20"
-                    >
-                      <Link
-                        href={`/application/status/${successData.id}?token=${successData.secureToken || ""}`}
-                        className="flex items-center justify-center gap-2"
-                      >
-                        <span>View Application Status &amp; Timeline</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </Button>
-
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full sm:w-auto h-11 border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 font-extrabold text-xs rounded-xl"
-                    >
-                      <Link
-                        href={`/application/details/${successData.id}?token=${successData.secureToken || ""}`}
-                        className="flex items-center justify-center gap-2"
-                      >
-                        <Sparkles className="w-4 h-4 text-emerald-600" />
-                        <span>Partner Revenue Dashboard</span>
-                      </Link>
-                    </Button>
-                  </div>
-
-                  <p className="text-[11px] text-emerald-900/80 bg-emerald-100/60 p-2.5 rounded-xl flex items-start gap-2">
-                    <span className="font-bold">🔒 Note:</span>
-                    <span>
-                      Please bookmark this private tracking URL. Anyone with this link can check the verification progress and custody updates for this product.
-                    </span>
-                  </p>
-                </div>
-
-                {/* Application Snapshot Card */}
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 max-w-2xl mx-auto text-left space-y-2.5 text-xs">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                    <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
-                      Submitted Application Snapshot
-                    </span>
-                    <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full border border-amber-200">
-                      Pending Review
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Product Name:</span>
-                    <span className="font-semibold text-slate-900 text-right">{successData.productName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Legal Name (as per CNIC):</span>
-                    <span className="font-semibold text-slate-900">{successData.fullNameCnic}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Declared Market Price:</span>
-                    <span className="font-semibold text-slate-900">Rs. {successData.marketPrice.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between bg-emerald-100/60 p-2 rounded-lg">
-                    <span className="font-bold text-emerald-950">Target Tickets to Sold Out:</span>
-                    <span className="font-extrabold text-emerald-800 font-mono text-sm">
-                      {(successData.totalTickets || formTickets).toLocaleString()} Tickets
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Ticket Price per Entry:</span>
-                    <span className="font-semibold text-slate-900">Rs. {successData.ticketPrice.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">PakRaffle Platform Fee (8%):</span>
-                    <span className="font-semibold text-red-600">Rs. {successData.platformFee.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-sm">
-                    <span className="text-emerald-800">Your Net Payout (92%):</span>
-                    <span className="text-emerald-700 font-mono">Rs. {successData.sellerPayout.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                {/* Terms & Timeline Reminder */}
-                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 max-w-2xl mx-auto text-left text-[11px] text-amber-900 space-y-1.5">
-                  <p className="font-bold text-xs text-amber-950 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-amber-700" />
-                    <span>Next Steps &amp; Custody Reminder:</span>
-                  </p>
-                  <p>1. Our verification desk will contact your WhatsApp within 24-48 hours to confirm identity.</p>
-                  <p>2. You will be provided shipping/handover instructions to deliver the item for physical escrow custody.</p>
-                  <p>3. Campaign runs for a maximum of 3 months (90 days). If cancelled or expired, full ticket buyer refunds + 8% fee applies.</p>
-                </div>
-
-                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-2xl mx-auto">
-                  <Button
-                    type="button"
-                    onClick={() => setSuccessData(null)}
-                    className="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs px-6 h-11"
-                  >
-                    Submit Another Product
-                  </Button>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full sm:w-auto rounded-xl text-xs px-6 h-11 border-emerald-300 text-emerald-800 hover:bg-emerald-50"
-                  >
-                    <a
-                      href={`https://wa.me/923000000000?text=${encodeURIComponent(
-                        `Assalam o Alaikum PakRaffle, I submitted Product Listing Application #${successData.id} for "${successData.productName}".`
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Inquire on WhatsApp</span>
-                    </a>
-                  </Button>
-                  <Button asChild variant="outline" className="w-full sm:w-auto rounded-xl text-xs px-6 h-11">
-                    <Link href="/raffles">Browse Live Draws</Link>
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-8">
-                {/* Section 1: Seller Identity */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
-                      1
-                    </span>
-                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                      Seller Legal Identity &amp; Contact
-                    </h3>
-                  </div>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="fullNameCnic" className="text-xs font-bold text-slate-800">
-                        Full Legal Name (as per CNIC) <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="fullNameCnic"
-                        required
-                        placeholder="e.g. Muhammad Usman Nadeem"
-                        value={formData.fullNameCnic}
-                        onChange={(e) => setFormData({ ...formData, fullNameCnic: e.target.value })}
-                        className="rounded-xl h-11 text-xs sm:text-sm"
-                      />
-                      <span className="text-[11px] text-slate-500 block">
-                        Must match your Pakistani Bank / JazzCash account for payout.
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="cnicNumber" className="text-xs font-bold text-slate-800">
-                        CNIC Number (Optional for initial review)
-                      </Label>
-                      <Input
-                        id="cnicNumber"
-                        placeholder="e.g. 35201-1234567-1"
-                        value={formData.cnicNumber}
-                        onChange={(e) => setFormData({ ...formData, cnicNumber: e.target.value })}
-                        className="rounded-xl h-11 text-xs sm:text-sm font-mono"
-                      />
-                      <span className="text-[11px] text-slate-500 block">
-                        Will be formally verified before campaign launch.
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="phone" className="text-xs font-bold text-slate-800">
-                        WhatsApp Contact Number <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="phone"
-                        required
-                        placeholder="e.g. +92 300 1234567"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="rounded-xl h-11 text-xs sm:text-sm font-mono"
-                      />
-                      <span className="text-[11px] text-slate-500 block">
-                        Our verification team contacts you via WhatsApp.
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="email" className="text-xs font-bold text-slate-800">
-                        Email Address <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        required
-                        placeholder="e.g. yourname@example.com"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="rounded-xl h-11 text-xs sm:text-sm"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label htmlFor="city" className="text-xs font-bold text-slate-800">
-                        City / Physical Inspection Desk Location <span className="text-red-500">*</span>
-                      </Label>
-                      <select
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        className="w-full px-3.5 h-11 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-medium focus:outline-hidden focus:border-emerald-600"
-                      >
-                        {CITIES_LIST.map((city) => (
-                          <option key={city} value={city}>
-                            {city}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section 2: Product Information */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
-                      2
-                    </span>
-                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                      Product Specifications &amp; Condition
-                    </h3>
-                  </div>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="productType" className="text-xs font-bold text-slate-800">
-                        Product Category / Type <span className="text-red-500">*</span>
-                      </Label>
-                      <select
-                        id="productType"
-                        value={formData.productType}
-                        onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
-                        className="w-full px-3.5 h-11 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-medium focus:outline-hidden focus:border-emerald-600"
-                      >
-                        {PRODUCT_CATEGORIES.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="condition" className="text-xs font-bold text-slate-800">
-                        Item Physical Condition <span className="text-red-500">*</span>
-                      </Label>
-                      <select
-                        id="condition"
-                        value={formData.condition}
-                        onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-                        className="w-full px-3.5 h-11 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm font-medium focus:outline-hidden focus:border-emerald-600"
-                      >
-                        <option value="Brand New (Sealed)">Brand New (Factory Sealed)</option>
-                        <option value="Brand New (Zero Meter)">Brand New (Zero Meter / Vehicle)</option>
-                        <option value="Open Box - Like New">Open Box - 10/10 Mint Condition</option>
-                        <option value="Gently Used (With Box)">Gently Used (With Box &amp; Accessories)</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label htmlFor="productName" className="text-xs font-bold text-slate-800">
-                        Product Title &amp; Exact Model <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="productName"
-                        required
-                        placeholder="e.g. Apple iPhone 16 Pro Max 256GB Desert Titanium (PTA Approved)"
-                        value={formData.productName}
-                        onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
-                        className="rounded-xl h-11 text-xs sm:text-sm"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label htmlFor="description" className="text-xs font-bold text-slate-800">
-                        Detailed Description &amp; Included Accessories <span className="text-red-500">*</span>
-                      </Label>
-                      <Textarea
-                        id="description"
-                        required
-                        rows={4}
-                        placeholder="Detail storage, color, official warranty remaining, PTA approval status, original receipt availability, charger, box condition, etc."
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="rounded-xl text-xs sm:text-sm"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label htmlFor="imageUrl" className="text-xs font-bold text-slate-800">
-                        Photo or Verification Image URL (Optional)
-                      </Label>
-                      <Input
-                        id="imageUrl"
-                        placeholder="https://images.unsplash.com/... or Google Drive link"
-                        value={formData.imageUrl}
-                        onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                        className="rounded-xl h-11 text-xs sm:text-sm font-mono"
-                      />
-                      <span className="text-[11px] text-slate-500 block">
-                        You can also share high-resolution photos and video verification directly via WhatsApp after submitting.
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section 3: Financial & 8% Fee Auto-Calculation */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
-                      3
-                    </span>
-                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                      Pricing, Target Tickets to Sold Out &amp; 8% Platform Fee
-                    </h3>
-                  </div>
-
-                  <div className="grid sm:grid-cols-3 gap-4">
-                    {/* 1. Market Price */}
-                    <div className="space-y-1.5">
-                      <Label htmlFor="formMarketPrice" className="text-xs font-bold text-slate-800">
-                        Product Market Price (PKR) <span className="text-red-500">*</span>
-                      </Label>
-                      <div className="relative">
-                        <span className="absolute inset-y-0 left-3.5 flex items-center text-xs font-bold text-slate-400">
-                          Rs.
+                      <div className="flex items-baseline justify-between gap-3">
+                        <label htmlFor="calc-market" className="text-[13px] font-medium text-slate-700">
+                          1. Market price you want to receive
+                        </label>
+                        <span className="font-mono text-sm font-semibold tabular-nums text-slate-900">
+                          {pkr(cMarket)}
                         </span>
-                        <Input
-                          id="formMarketPrice"
+                      </div>
+                      <div className="relative mt-2">
+                        <span className="absolute inset-y-0 left-3.5 flex items-center text-xs font-semibold text-slate-400">
+                          Rs
+                        </span>
+                        <input
+                          id="calc-market"
                           type="number"
-                          required
                           min="1000"
-                          step="1000"
-                          value={formData.marketPrice}
-                          onChange={(e) => setFormData({ ...formData, marketPrice: e.target.value })}
-                          className="rounded-xl h-11 pl-10 text-xs sm:text-sm font-mono font-bold"
+                          max="50000000"
+                          step="5000"
+                          value={calcMarketPrice}
+                          onChange={(e) => setCalcMarketPrice(e.target.value)}
+                          className={`${FIELD} pl-10 font-mono tabular-nums`}
                         />
                       </div>
-                      <span className="text-[11px] text-slate-500 block">
-                        Net amount you expect to receive.
-                      </span>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {[
+                          { label: "Console · 75k", val: 75000 },
+                          { label: "Laptop · 185k", val: 185000 },
+                          { label: "iPhone · 350k", val: 350000 },
+                          { label: "Bike · 490k", val: 490000 },
+                        ].map((preset) => (
+                          <button
+                            key={preset.val}
+                            type="button"
+                            onClick={() => setCalcMarketPrice(preset.val.toString())}
+                            className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition ${
+                              calcMarketPrice === preset.val.toString()
+                                ? "border-emerald-600 bg-emerald-600 text-white"
+                                : "border-slate-900/10 bg-white text-slate-600 hover:border-emerald-300"
+                            }`}
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
-                    {/* 2. Target Tickets to Sold Out (User enters 300, 400, or any custom value) */}
-                    <div className="space-y-1.5">
-                      <Label htmlFor="formTargetTickets" className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                        <span>Desired Target Tickets <span className="text-red-500">*</span></span>
-                        <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
-                          {formTickets.toLocaleString()} Tickets
+                    <div>
+                      <div className="flex items-baseline justify-between gap-3">
+                        <label htmlFor="calc-tickets" className="text-[13px] font-medium text-slate-700">
+                          2. Tickets you want sold out
+                        </label>
+                        <span className="font-mono text-sm font-semibold tabular-nums text-emerald-700">
+                          {num(cTickets)} tickets
                         </span>
-                      </Label>
-                      <Input
-                        id="formTargetTickets"
+                      </div>
+                      <input
+                        id="calc-tickets"
                         type="number"
-                        required
                         min="1"
                         max="50000"
-                        placeholder="e.g. 300, 400"
-                        value={formData.targetTickets}
-                        onChange={(e) => setFormData({ ...formData, targetTickets: e.target.value })}
-                        className="rounded-xl h-11 text-xs sm:text-sm font-mono font-bold text-emerald-700 bg-emerald-50/50 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500"
+                        value={calcTargetTickets}
+                        onChange={(e) => setCalcTargetTickets(e.target.value)}
+                        className={`${FIELD} mt-2 font-mono tabular-nums`}
                       />
-                      <div className="flex flex-wrap gap-1 pt-0.5">
-                        {[100, 250, 300, 400, 500, 1000].map((tVal) => (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {[100, 250, 300, 400, 500, 1000].map((tickets) => (
                           <button
-                            key={tVal}
+                            key={tickets}
                             type="button"
-                            onClick={() => setFormData({ ...formData, targetTickets: tVal.toString() })}
-                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded border transition-all ${
-                              formData.targetTickets === tVal.toString()
-                                ? "bg-emerald-600 text-white border-emerald-500"
-                                : "bg-white text-slate-600 border-slate-300 hover:bg-slate-100"
+                            onClick={() => setCalcTargetTickets(tickets.toString())}
+                            className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition ${
+                              calcTargetTickets === tickets.toString()
+                                ? "border-emerald-600 bg-emerald-600 text-white"
+                                : "border-slate-900/10 bg-white text-slate-600 hover:border-emerald-300"
                             }`}
                           >
-                            {tVal}
+                            {tickets}
                           </button>
                         ))}
                       </div>
-                      <span className="text-[11px] text-slate-500 block">
-                        Enter any tickets you want sold out (e.g. 300, 400).
-                      </span>
                     </div>
 
-                    {/* 3. Ticket Price per Entry (Independent user typing) */}
-                    <div className="space-y-1.5">
-                      <Label htmlFor="formTicketPrice" className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                        <span>Ticket Price (PKR) <span className="text-red-500">*</span></span>
-                        {formTickets > 0 && formMarket > 0 && (
-                          <button
-                            type="button"
-                            onClick={handleAutoSuggestFormTicketPrice}
-                            className="text-[10px] text-emerald-700 hover:text-emerald-800 font-semibold underline cursor-pointer"
-                          >
-                            Auto-suggest: Rs. {suggestedTicketPriceForForm.toLocaleString()}
-                          </button>
-                        )}
-                      </Label>
-                      <div className="relative">
-                        <span className="absolute inset-y-0 left-3.5 flex items-center text-xs font-bold text-slate-400">
-                          Rs.
+                    <div>
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <label htmlFor="calc-price" className="text-[13px] font-medium text-slate-700">
+                          3. Ticket price per entry
+                        </label>
+                        <span className="font-mono text-sm font-semibold tabular-nums text-amber-600">
+                          {pkr(cPrice)}
                         </span>
-                        <Input
-                          id="formTicketPrice"
+                      </div>
+                      <div className="relative mt-2">
+                        <span className="absolute inset-y-0 left-3.5 flex items-center text-xs font-semibold text-slate-400">
+                          Rs
+                        </span>
+                        <input
+                          id="calc-price"
                           type="number"
-                          required
                           min="1"
                           step="50"
-                          value={formData.ticketPrice}
-                          onChange={(e) => setFormData({ ...formData, ticketPrice: e.target.value })}
-                          placeholder="e.g. 500, 1000, 1200"
-                          className="rounded-xl h-11 pl-10 text-xs sm:text-sm font-mono font-bold text-amber-600"
+                          value={calcTicketPrice}
+                          onChange={(e) => setCalcTicketPrice(e.target.value)}
+                          className={`${FIELD} pl-10 font-mono tabular-nums`}
                         />
                       </div>
-                      <div className="flex flex-wrap gap-1 pt-0.5">
-                        {[250, 500, 1000, 1200].map((pVal) => (
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        {[250, 500, 1000, 1200].map((price) => (
                           <button
-                            key={pVal}
+                            key={price}
                             type="button"
-                            onClick={() => setFormData({ ...formData, ticketPrice: pVal.toString() })}
-                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded border transition-all ${
-                              formData.ticketPrice === pVal.toString()
-                                ? "bg-amber-500 text-slate-950 border-amber-400"
-                                : "bg-white text-slate-600 border-slate-300 hover:bg-slate-100"
+                            onClick={() => setCalcTicketPrice(price.toString())}
+                            className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition ${
+                              calcTicketPrice === price.toString()
+                                ? "border-amber-500 bg-amber-500 text-slate-950"
+                                : "border-slate-900/10 bg-white text-slate-600 hover:border-amber-300"
                             }`}
                           >
-                            Rs. {pVal}
+                            Rs {price}
                           </button>
                         ))}
+                        {cTickets > 0 && cMarket > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleAutoSuggestCalcTicketPrice}
+                            className="rounded-lg border border-emerald-600/30 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 transition hover:bg-emerald-100"
+                          >
+                            Suggest {pkr(suggestedTicketPriceForCalc)}
+                          </button>
+                        )}
                       </div>
-                      <span className="text-[11px] text-slate-500 block">
-                        Enter your own ticket price freely.
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Dynamic Real-Time Math Card */}
-                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50/60 rounded-2xl p-5 border border-emerald-200 space-y-3">
-                    <div className="flex items-center justify-between pb-2 border-b border-emerald-200/80">
-                      <span className="text-xs font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
-                        <Calculator className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>Live Revenue &amp; 8% Fee Breakdown</span>
-                      </span>
-                      <span className="text-[11px] font-bold text-emerald-800 bg-emerald-200/60 px-2 py-0.5 rounded-md">
-                        Auto-Calculated
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                      <div className="bg-white p-3 rounded-xl border-2 border-emerald-500/50 shadow-2xs">
-                        <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider block">
-                          Target to Sold Out:
-                        </span>
-                        <span className="font-mono font-extrabold text-emerald-700 text-sm sm:text-base">
-                          {formTickets.toLocaleString()} Tickets
-                        </span>
-                        <span className="text-[10px] text-slate-500 block mt-0.5">100% Sold Out Target</span>
-                      </div>
-
-                      <div className="bg-white p-3 rounded-xl border border-emerald-100 shadow-2xs">
-                        <span className="text-[11px] text-slate-500 block">Gross Revenue:</span>
-                        <span className="font-mono font-extrabold text-slate-900 text-sm">
-                          Rs. {formActualGross.toLocaleString()}
-                        </span>
-                      </div>
-
-                      <div className="bg-white p-3 rounded-xl border border-red-200 shadow-2xs">
-                        <span className="text-[11px] text-red-600 font-semibold block">PakRaffle Fee (8%):</span>
-                        <span className="font-mono font-extrabold text-red-600 text-sm">
-                          Rs. {formPlatformFee.toLocaleString()}
-                        </span>
-                      </div>
-
-                      <div className="bg-emerald-600 p-3 rounded-xl text-white shadow-xs">
-                        <span className="text-[11px] text-emerald-100 font-semibold block">Your Net Payout (92%):</span>
-                        <span className="font-mono font-extrabold text-white text-sm">
-                          Rs. {formSellerPayout.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-3.5 rounded-xl bg-emerald-100/80 border border-emerald-300 text-xs text-emerald-950 font-medium flex items-start gap-2.5">
-                      <span className="text-lg shrink-0 leading-none">🎯</span>
-                      <span className="leading-relaxed">
-                        <strong>Target to Sold Out:</strong> Exactly <strong className="text-emerald-800 underline decoration-emerald-500">{formTickets.toLocaleString()} tickets</strong> must be sold out at <strong className="text-amber-800">Rs. {formTicket.toLocaleString()} each</strong> to reach 100% draw completion, guaranteeing your full <strong className="text-emerald-900">Rs. {formSellerPayout.toLocaleString()}</strong> net payout.
-                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Section 4: Mandatory Terms & Legal Agreement */}
-                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                      Mandatory Seller Agreement &amp; Escrow Policies
+                {/* Result */}
+                <div className="bg-slate-50/60 p-6 sm:p-8">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      Campaign summary
+                    </span>
+                    <span className="rounded-full border border-emerald-600/20 bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                      8% flat
                     </span>
                   </div>
 
-                  <ul className="space-y-2 text-xs text-slate-600">
-                    <li className="flex items-start gap-2">
-                      <span className="text-emerald-600 font-bold shrink-0 mt-0.5">•</span>
-                      <span>
-                        <strong>Contact Outreach:</strong> Our verification team will reach out via your verified contact details (WhatsApp, phone, or email) to review details within 24-48 hours.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-emerald-600 font-bold shrink-0 mt-0.5">•</span>
-                      <span>
-                        <strong>Physical Verification &amp; Custody Hold:</strong> The product must be shipped or delivered to PakRaffle for physical authentication and will be held in secure escrow custody until the raffle is either completed or officially cancelled.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-amber-600 font-bold shrink-0 mt-0.5">•</span>
-                      <span>
-                        <strong>Cancellation &amp; 8% Platform Fee:</strong> If you choose to cancel your raffle after launch, all sold tickets will be refunded 100% to buyers, and you agree to pay PakRaffle the 8% platform fee before your product is returned.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-amber-600 font-bold shrink-0 mt-0.5">•</span>
-                      <span>
-                        <strong>3-Month Maximum Duration:</strong> The raffle must complete within 3 months (90 days). If not completed within 3 months, PakRaffle will cancel the raffle, refund all ticket buyers in full, charge/deduct the 8% platform fee, and return your product.
-                      </span>
-                    </li>
-                  </ul>
+                  <div className="mt-5 space-y-2.5 text-sm">
+                    {[
+                      ["Sell-out gross", pkr(calcActualGross)],
+                      ["PakRaffle fee · 8%", `- ${pkr(calcPlatformFee)}`],
+                    ].map(([label, value]) => (
+                      <div key={label} className="flex items-center justify-between gap-3">
+                        <span className="text-slate-600">{label}</span>
+                        <span className="font-mono font-semibold tabular-nums text-slate-900">{value}</span>
+                      </div>
+                    ))}
+                  </div>
 
-                  <label className="flex items-start gap-3 pt-2 border-t border-slate-200 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.agreeTerms}
-                      onChange={(e) => setFormData({ ...formData, agreeTerms: e.target.checked })}
-                      className="mt-1 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
-                    />
-                    <span className="text-xs font-semibold text-slate-800 leading-relaxed">
-                      I have read, understood, and solemnly accept all the seller agreement terms above, including physical custody hold until completion or cancellation, 100% buyer refunds + 8% platform fee if cancelled, and the 3-month completion limit.
-                    </span>
-                  </label>
-                </div>
+                  <div className="mt-5 rounded-2xl bg-[#07130f] p-5 text-white">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-300">
+                      Net payout · 92%
+                    </p>
+                    <p className="mt-1 font-mono text-[1.9rem] font-semibold leading-none tabular-nums">
+                      {pkr(calcSellerPayout)}
+                    </p>
+                    <p className="mt-2 text-[11px] leading-relaxed text-emerald-100/60">
+                      {num(cTickets)} tickets at {pkr(cPrice)} must sell out to reach this figure.
+                    </p>
+                  </div>
 
-                {/* Submit Action */}
-                <div className="pt-2">
-                  <Button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full h-13 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  {calcSellerPayout < cMarket && cMarket > 0 && (
+                    <p className="mt-3 rounded-xl border border-amber-300/60 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
+                      This is {pkr(cMarket - calcSellerPayout)} short of your target. Raise the ticket price or the
+                      ticket count.
+                    </p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleApplyCalculatorToForm}
+                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-semibold text-white transition hover:bg-emerald-500"
                   >
-                    {submitting ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Submitting Application...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Submit Product for Raffle Listing</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </Button>
-                  <p className="text-center text-[11px] text-slate-500 mt-2.5">
-                    Zero upfront cost • Response guaranteed within 24 hours on WhatsApp
+                    Use these values in the listing form
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                  <p className="mt-3 flex items-start gap-1.5 text-[10px] leading-relaxed text-slate-500">
+                    <HelpCircle className="mt-0.5 h-3 w-3 shrink-0" />
+                    Estimate only. The fee is deducted from gross revenue once the raffle completes.
                   </p>
                 </div>
-              </form>
-            )}
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* -------------------------------------------------------------- Form */}
+      <section id="listing-form-section" className="relative overflow-hidden border-b border-slate-900/5">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.07),transparent_60%)]" />
+        <div className={`${CONTAINER} py-16 md:py-24`}>
+          <Reveal>
+            <SectionHead
+              index="04"
+              kicker="Listing dossier"
+              title="Tell us exactly what you are listing"
+              body="The more precise the dossier, the faster the verification desk can approve it. Nothing is published until we have physically inspected the item."
+            />
+          </Reveal>
+
+          <div className="mt-10 grid gap-6 lg:grid-cols-[1.55fr_0.85fr] lg:items-start">
+            <div className={`${PANEL} overflow-hidden`}>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-900/5 bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 px-6 py-5 text-white">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-white/15">
+                    <Tag className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <h3 className="font-display text-lg font-semibold">Product listing application</h3>
+                    <p className="text-[11px] text-emerald-100">Reviewed within 24–48 hours on WhatsApp</p>
+                  </div>
+                </div>
+                <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider">
+                  Step {successData ? "complete" : "1 of 1"}
+                </span>
+              </div>
+
+              <div className="p-6 sm:p-8">
+                {errorMsg && (
+                  <div className="mb-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                    <div>
+                      <p className="font-semibold">Please check your inputs</p>
+                      <p className="mt-0.5 text-rose-700">{errorMsg}</p>
+                    </div>
+                  </div>
+                )}
+
+                {successData ? (
+                  <div className="space-y-6 text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-emerald-600/20 bg-emerald-50 text-emerald-600">
+                      <CheckCircle2 className="h-8 w-8" />
+                    </div>
+
+                    <div>
+                      <Pill className="border-emerald-600/20 bg-emerald-50 text-emerald-800">
+                        Application logged
+                      </Pill>
+                      <h3 className="mt-3 font-display text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                        Submitted for verification
+                      </h3>
+                      <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-slate-600">
+                        Your reference is{" "}
+                        <span className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 font-mono text-[12px] font-semibold text-emerald-800">
+                          #{successData.id}
+                        </span>
+                        . The verification team reviews the specs and contacts your WhatsApp within 24–48 hours.
+                      </p>
+                    </div>
+
+                    <div className="mx-auto max-w-2xl space-y-4 rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-50 via-white to-teal-50/40 p-6 text-left">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-white">
+                          <Lock className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <h4 className="font-display text-base font-semibold text-slate-900">
+                            Your private status page
+                          </h4>
+                          <p className="text-xs text-slate-600">
+                            Track desk verification, custody hold and the raffle schedule.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                          Tracking URL
+                        </span>
+                        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+                          <div className="w-full overflow-x-auto whitespace-nowrap rounded-xl border border-emerald-300/70 bg-white px-3.5 py-2.5 font-mono text-[11px] text-slate-700">
+                            {typeof window !== "undefined"
+                              ? `${window.location.origin}/application/status/${successData.id}?token=${successData.secureToken || ""}`
+                              : `/application/status/${successData.id}?token=${successData.secureToken || ""}`}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleCopyLink(
+                                `/application/status/${successData.id}?token=${successData.secureToken || ""}`,
+                              )
+                            }
+                            className={`inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 text-xs font-semibold transition ${
+                              copiedLink ? "bg-emerald-700 text-white" : "bg-slate-900 text-white hover:bg-slate-800"
+                            }`}
+                          >
+                            {copiedLink ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                            {copiedLink ? "Copied" : "Copy link"}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <Link
+                          href={`/application/status/${successData.id}?token=${successData.secureToken || ""}`}
+                          className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                        >
+                          View status &amp; timeline <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                        <Link
+                          href={`/application/details/${successData.id}?token=${successData.secureToken || ""}`}
+                          className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-white px-4 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-50"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" /> Revenue dashboard
+                        </Link>
+                      </div>
+
+                      <p className="rounded-xl bg-emerald-100/60 p-2.5 text-[11px] leading-relaxed text-emerald-900">
+                        <strong>Bookmark this link.</strong> Anyone holding it can check verification progress and
+                        custody updates for this product.
+                      </p>
+                    </div>
+
+                    <div className="mx-auto max-w-2xl space-y-2.5 rounded-2xl border border-slate-900/5 bg-slate-50 p-5 text-left text-xs">
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                          Submitted snapshot
+                        </span>
+                        <span className="rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
+                          Pending review
+                        </span>
+                      </div>
+                      {[
+                        ["Product", successData.productName],
+                        ["Legal name", successData.fullNameCnic],
+                        ["Declared market price", pkr(successData.marketPrice)],
+                        ["Target tickets", `${num(successData.totalTickets || formTickets)} tickets`],
+                        ["Ticket price", pkr(successData.ticketPrice)],
+                        ["Platform fee · 8%", pkr(successData.platformFee)],
+                      ].map(([label, value]) => (
+                        <div key={label} className="flex items-center justify-between gap-4">
+                          <span className="text-slate-500">{label}</span>
+                          <span className="text-right font-medium text-slate-900">{value}</span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between gap-4 border-t border-slate-200 pt-2">
+                        <span className="font-semibold text-emerald-800">Net payout · 92%</span>
+                        <span className="font-mono text-sm font-semibold tabular-nums text-emerald-700">
+                          {pkr(successData.sellerPayout)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mx-auto max-w-2xl space-y-1.5 rounded-2xl border border-amber-200/80 bg-amber-50/70 p-4 text-left text-[11px] text-amber-900">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-950">
+                        <Clock className="h-3.5 w-3.5" /> Next steps
+                      </p>
+                      <p>1. Verification desk confirms identity on WhatsApp within 24–48 hours.</p>
+                      <p>2. You receive handover instructions for physical escrow custody.</p>
+                      <p>3. Campaign runs for at most 90 days; cancellation means full buyer refunds plus the 8% fee.</p>
+                    </div>
+
+                    <div className="mx-auto flex max-w-2xl flex-col gap-2 sm:flex-row">
+                      <button
+                        type="button"
+                        onClick={() => setSuccessData(null)}
+                        className="inline-flex h-11 flex-1 items-center justify-center rounded-xl bg-slate-900 px-5 text-xs font-semibold text-white transition hover:bg-slate-800"
+                      >
+                        Submit another product
+                      </button>
+                      <a
+                        href={`https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(
+                          `Assalam o Alaikum PakRaffle, I submitted Product Listing Application #${successData.id} for "${successData.productName}".`,
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-white px-5 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-50"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" /> Inquire on WhatsApp
+                      </a>
+                      <Link
+                        href="/raffles"
+                        className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-slate-900/10 bg-white px-5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        Browse draws
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-8">
+                    {/* 1. Identity */}
+                    <fieldset className="space-y-4">
+                      <legend className="flex w-full items-center gap-2.5 border-b border-slate-900/5 pb-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 font-mono text-[11px] font-bold text-white">
+                          1
+                        </span>
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
+                          Seller identity &amp; contact
+                        </span>
+                      </legend>
+
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <Field label="Full legal name (as per CNIC)" htmlFor="fullNameCnic" required hint="Must match your payout account.">
+                          <input
+                            id="fullNameCnic"
+                            required
+                            placeholder="e.g. Muhammad Usman Nadeem"
+                            value={formData.fullNameCnic}
+                            onChange={(e) => setFormData({ ...formData, fullNameCnic: e.target.value })}
+                            className={FIELD}
+                          />
+                        </Field>
+
+                        <Field label="CNIC number" htmlFor="cnicNumber" hint="Verified before campaign launch.">
+                          <input
+                            id="cnicNumber"
+                            placeholder="e.g. 35201-1234567-1"
+                            value={formData.cnicNumber}
+                            onChange={(e) => setFormData({ ...formData, cnicNumber: e.target.value })}
+                            className={`${FIELD} font-mono`}
+                          />
+                        </Field>
+
+                        <Field label="WhatsApp number" htmlFor="phone" required hint="The desk contacts you here.">
+                          <input
+                            id="phone"
+                            required
+                            placeholder="e.g. +92 300 1234567"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            className={`${FIELD} font-mono`}
+                          />
+                        </Field>
+
+                        <Field label="Email address" htmlFor="email" required>
+                          <input
+                            id="email"
+                            type="email"
+                            required
+                            placeholder="e.g. yourname@example.com"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            className={FIELD}
+                          />
+                        </Field>
+
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <label htmlFor="city" className="text-[12px] font-semibold text-slate-800">
+                            City / inspection desk <span className="text-rose-500">*</span>
+                          </label>
+                          <select
+                            id="city"
+                            value={formData.city}
+                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                            className={FIELD}
+                          >
+                            {CITIES_LIST.map((city) => (
+                              <option key={city} value={city}>
+                                {city}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </fieldset>
+
+                    {/* 2. Product */}
+                    <fieldset className="space-y-4">
+                      <legend className="flex w-full items-center gap-2.5 border-b border-slate-900/5 pb-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 font-mono text-[11px] font-bold text-white">
+                          2
+                        </span>
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
+                          Product specifications
+                        </span>
+                      </legend>
+
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                          <label htmlFor="productType" className="text-[12px] font-semibold text-slate-800">
+                            Category <span className="text-rose-500">*</span>
+                          </label>
+                          <select
+                            id="productType"
+                            value={formData.productType}
+                            onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
+                            className={FIELD}
+                          >
+                            {PRODUCT_CATEGORIES.map((cat) => (
+                              <option key={cat.id} value={cat.id}>
+                                {cat.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label htmlFor="condition" className="text-[12px] font-semibold text-slate-800">
+                            Physical condition <span className="text-rose-500">*</span>
+                          </label>
+                          <select
+                            id="condition"
+                            value={formData.condition}
+                            onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
+                            className={FIELD}
+                          >
+                            <option value="Brand New (Sealed)">Brand New (Factory Sealed)</option>
+                            <option value="Brand New (Zero Meter)">Brand New (Zero Meter / Vehicle)</option>
+                            <option value="Open Box - Like New">Open Box - 10/10 Mint Condition</option>
+                            <option value="Gently Used (With Box)">Gently Used (With Box &amp; Accessories)</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <label htmlFor="productName" className="text-[12px] font-semibold text-slate-800">
+                            Product title &amp; exact model <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            id="productName"
+                            required
+                            placeholder="e.g. Apple iPhone 16 Pro Max 256GB Desert Titanium (PTA Approved)"
+                            value={formData.productName}
+                            onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
+                            className={FIELD}
+                          />
+                        </div>
+
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <label htmlFor="description" className="text-[12px] font-semibold text-slate-800">
+                            Description &amp; included accessories <span className="text-rose-500">*</span>
+                          </label>
+                          <textarea
+                            id="description"
+                            required
+                            rows={4}
+                            placeholder="Storage, colour, warranty remaining, PTA status, original receipt, box and charger condition…"
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            className="w-full rounded-xl border border-slate-900/10 bg-white px-3.5 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <label htmlFor="imageUrl" className="text-[12px] font-semibold text-slate-800">
+                            Photo or verification image URL
+                          </label>
+                          <input
+                            id="imageUrl"
+                            placeholder="https://images.unsplash.com/… or a Drive link"
+                            value={formData.imageUrl}
+                            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                            className={`${FIELD} font-mono text-xs`}
+                          />
+                          <span className="block text-[11px] text-slate-500">
+                            You can also share high-resolution photos directly on WhatsApp after submitting.
+                          </span>
+                        </div>
+                      </div>
+                    </fieldset>
+
+                    {/* 3. Money */}
+                    <fieldset className="space-y-4">
+                      <legend className="flex w-full items-center gap-2.5 border-b border-slate-900/5 pb-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 font-mono text-[11px] font-bold text-white">
+                          3
+                        </span>
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
+                          Pricing &amp; 8% fee
+                        </span>
+                      </legend>
+
+                      <div className="grid gap-4 sm:grid-cols-3">
+                        <div className="space-y-1.5">
+                          <label htmlFor="formMarketPrice" className="text-[12px] font-semibold text-slate-800">
+                            Market price (PKR) <span className="text-rose-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <span className="absolute inset-y-0 left-3.5 flex items-center text-xs font-semibold text-slate-400">
+                              Rs
+                            </span>
+                            <input
+                              id="formMarketPrice"
+                              type="number"
+                              required
+                              min="1000"
+                              step="1000"
+                              value={formData.marketPrice}
+                              onChange={(e) => setFormData({ ...formData, marketPrice: e.target.value })}
+                              className={`${FIELD} pl-10 font-mono tabular-nums`}
+                            />
+                          </div>
+                          <span className="block text-[11px] text-slate-500">The net amount you expect.</span>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-1">
+                            <label htmlFor="formTargetTickets" className="text-[12px] font-semibold text-slate-800">
+                              Target tickets <span className="text-rose-500">*</span>
+                            </label>
+                            <span className="rounded bg-emerald-100 px-1.5 py-0.5 font-mono text-[10px] font-bold text-emerald-800">
+                              {num(formTickets)}
+                            </span>
+                          </div>
+                          <input
+                            id="formTargetTickets"
+                            type="number"
+                            required
+                            min="1"
+                            max="50000"
+                            placeholder="e.g. 300, 400"
+                            value={formData.targetTickets}
+                            onChange={(e) => setFormData({ ...formData, targetTickets: e.target.value })}
+                            className={`${FIELD} border-emerald-300 bg-emerald-50/40 font-mono tabular-nums text-emerald-800`}
+                          />
+                          <div className="flex flex-wrap gap-1">
+                            {[100, 250, 300, 400, 500, 1000].map((tVal) => (
+                              <button
+                                key={tVal}
+                                type="button"
+                                onClick={() => setFormData({ ...formData, targetTickets: tVal.toString() })}
+                                className={`rounded border px-1.5 py-0.5 font-mono text-[10px] font-bold transition ${
+                                  formData.targetTickets === tVal.toString()
+                                    ? "border-emerald-600 bg-emerald-600 text-white"
+                                    : "border-slate-900/10 bg-white text-slate-600 hover:bg-slate-50"
+                                }`}
+                              >
+                                {tVal}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-1">
+                            <label htmlFor="formTicketPrice" className="text-[12px] font-semibold text-slate-800">
+                              Ticket price <span className="text-rose-500">*</span>
+                            </label>
+                            {formTickets > 0 && formMarket > 0 && (
+                              <button
+                                type="button"
+                                onClick={handleAutoSuggestFormTicketPrice}
+                                className="text-[10px] font-semibold text-emerald-700 underline decoration-emerald-300 hover:text-emerald-800"
+                              >
+                                Suggest {pkr(suggestedTicketPriceForForm)}
+                              </button>
+                            )}
+                          </div>
+                          <div className="relative">
+                            <span className="absolute inset-y-0 left-3.5 flex items-center text-xs font-semibold text-slate-400">
+                              Rs
+                            </span>
+                            <input
+                              id="formTicketPrice"
+                              type="number"
+                              required
+                              min="1"
+                              step="50"
+                              placeholder="e.g. 1200"
+                              value={formData.ticketPrice}
+                              onChange={(e) => setFormData({ ...formData, ticketPrice: e.target.value })}
+                              className={`${FIELD} pl-10 font-mono tabular-nums text-amber-700`}
+                            />
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {[250, 500, 1000, 1200].map((pVal) => (
+                              <button
+                                key={pVal}
+                                type="button"
+                                onClick={() => setFormData({ ...formData, ticketPrice: pVal.toString() })}
+                                className={`rounded border px-1.5 py-0.5 font-mono text-[10px] font-bold transition ${
+                                  formData.ticketPrice === pVal.toString()
+                                    ? "border-amber-500 bg-amber-500 text-slate-950"
+                                    : "border-slate-900/10 bg-white text-slate-600 hover:bg-slate-50"
+                                }`}
+                              >
+                                Rs {pVal}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 rounded-2xl border border-emerald-600/15 bg-emerald-50/60 p-4 sm:grid-cols-4">
+                        {[
+                          { label: "Gross", value: pkr(formActualGross), tone: "text-slate-900" },
+                          { label: "Fee · 8%", value: pkr(formPlatformFee), tone: "text-rose-600" },
+                          { label: "Net · 92%", value: pkr(formSellerPayout), tone: "text-emerald-700" },
+                          { label: "Tickets", value: num(formTickets), tone: "text-slate-900" },
+                        ].map((cell) => (
+                          <div key={cell.label}>
+                            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                              {cell.label}
+                            </p>
+                            <p className={`mt-0.5 font-mono text-[13px] font-semibold tabular-nums ${cell.tone}`}>
+                              {cell.value}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </fieldset>
+
+                    {/* 4. Terms */}
+                    <div className="space-y-4 rounded-2xl border border-slate-900/5 bg-slate-50/80 p-5">
+                      <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
+                        <ShieldCheck className="h-4 w-4 text-emerald-600" /> Seller agreement &amp; escrow
+                      </p>
+                      <ul className="space-y-2 text-[12px] leading-relaxed text-slate-600">
+                        {[
+                          "Our desk contacts you on WhatsApp within 24–48 hours to review the details.",
+                          "The product is shipped to PakRaffle for physical verification and held in insured escrow.",
+                          "Cancelling after launch refunds every buyer in full; the 8% platform fee is then payable.",
+                          "The raffle must complete within 90 days or it is cancelled and the item returned.",
+                        ].map((line) => (
+                          <li key={line} className="flex items-start gap-2">
+                            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                            {line}
+                          </li>
+                        ))}
+                      </ul>
+                      <label className="flex cursor-pointer items-start gap-3 border-t border-slate-900/5 pt-3">
+                        <input
+                          type="checkbox"
+                          checked={formData.agreeTerms}
+                          onChange={(e) => setFormData({ ...formData, agreeTerms: e.target.checked })}
+                          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <span className="text-[12px] font-medium leading-relaxed text-slate-800">
+                          I have read and accept the custody hold, the 100% buyer refund plus 8% fee on cancellation,
+                          and the 90-day completion limit.
+                        </span>
+                      </label>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-sm font-semibold text-white shadow-[0_18px_40px_-20px_rgba(5,150,105,0.9)] transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {submitting ? (
+                        <>
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          Submitting…
+                        </>
+                      ) : (
+                        <>
+                          Submit for raffle listing <ArrowRight className="h-4 w-4" />
+                        </>
+                      )}
+                    </button>
+                    <p className="text-center text-[11px] text-slate-500">
+                      Zero upfront cost · response within 24 hours on WhatsApp
+                    </p>
+                  </form>
+                )}
+              </div>
+            </div>
+
+            {/* Sticky summary */}
+            <aside className="space-y-4 lg:sticky lg:top-24">
+              <div className={`${PANEL} p-5`}>
+                <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <Wallet className="h-3.5 w-3.5 text-emerald-600" /> Live payout
+                </p>
+                <p className="mt-3 font-mono text-3xl font-semibold tabular-nums text-slate-900">
+                  {pkr(formSellerPayout)}
+                </p>
+                <p className="mt-1 text-[11px] text-slate-500">if all {num(formTickets)} tickets sell</p>
+
+                <div className="mt-4 space-y-2 border-t border-slate-900/5 pt-3 text-[12px]">
+                  <div className="flex justify-between gap-3">
+                    <span className="text-slate-500">Gross</span>
+                    <span className="font-mono tabular-nums text-slate-900">{pkr(formActualGross)}</span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-slate-500">Fee · 8%</span>
+                    <span className="font-mono tabular-nums text-rose-600">- {pkr(formPlatformFee)}</span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-slate-500">Target</span>
+                    <span className="font-mono tabular-nums text-slate-900">{pkr(formMarket)}</span>
+                  </div>
+                </div>
+
+                {formSellerPayout >= formMarket && formMarket > 0 ? (
+                  <p className="mt-4 rounded-xl bg-emerald-600/10 px-3 py-2 text-[11px] font-medium leading-relaxed text-emerald-800">
+                    Hitting the target. Every ticket sold at {pkr(formTicket)} covers your market price.
+                  </p>
+                ) : formMarket > 0 ? (
+                  <p className="mt-4 rounded-xl bg-amber-500/10 px-3 py-2 text-[11px] font-medium leading-relaxed text-amber-900">
+                    {pkr(Math.max(0, formMarket - formSellerPayout))} short of target — adjust the ticket price or
+                    count.
+                  </p>
+                ) : null}
+              </div>
+
+              <div className={`${PANEL} p-5`}>
+                <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <Upload className="h-3.5 w-3.5 text-emerald-600" /> Before you submit
+                </p>
+                <ul className="mt-3 space-y-2 text-[12px] leading-relaxed text-slate-600">
+                  {[
+                    "Name matches your CNIC and payout account.",
+                    "Description covers storage, warranty and PTA status.",
+                    "You can deliver the item for physical custody.",
+                    "The target ticket count is realistic for 90 days.",
+                  ].map((line) => (
+                    <li key={line} className="flex items-start gap-2">
+                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" strokeWidth={3} />
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="rounded-3xl border border-slate-900/5 bg-[#07130f] p-5 text-white">
+                <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-300">
+                  <MessageCircle className="h-3.5 w-3.5" /> Talk to a human
+                </p>
+                <p className="mt-2 text-[12px] leading-relaxed text-emerald-50/70">
+                  Not sure the item qualifies or how to price it? The listing desk answers on WhatsApp.
+                </p>
+                <a
+                  href={`https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(
+                    "Hi PakRaffle, I want to list a product for a raffle. Can you help me price it?",
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-semibold text-emerald-900 transition hover:bg-emerald-50"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" /> WhatsApp the listing desk
+                </a>
+              </div>
+            </aside>
           </div>
         </div>
       </section>
 
-      {/* FAQ Accordion */}
-      <section className="py-16 max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <Badge className="bg-emerald-100 text-emerald-900 px-3 py-1 text-xs mb-2">FAQ</Badge>
-          <h2 className="text-2xl font-extrabold text-slate-900">
-            Frequently Asked Questions by Sellers
-          </h2>
-        </div>
+      {/* --------------------------------------------------------------- FAQ */}
+      <section className="bg-white">
+        <div className={`${CONTAINER} py-16 md:py-24`}>
+          <Reveal>
+            <SectionHead
+              index="05"
+              kicker="Seller questions"
+              title="The rules sellers ask about most"
+              body="Custody, cancellation and the 8% fee — answered the same way the contract states them."
+              align="center"
+            />
+          </Reveal>
+          <Reveal delay={80} className="mx-auto mt-10 max-w-3xl">
+            <FaqList items={FAQS} />
+          </Reveal>
 
-        <div className="space-y-3">
-          {faqs.map((faq, idx) => {
-            const isOpen = openFaq === idx
-            return (
-              <div
-                key={idx}
-                className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs transition-colors"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(isOpen ? null : idx)}
-                  className="w-full px-5 py-4 text-left flex items-center justify-between gap-4 font-bold text-slate-900 text-sm"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${
-                      isOpen ? "rotate-180 text-emerald-600" : ""
-                    }`}
-                  />
-                </button>
-                {isOpen && (
-                  <div className="px-5 pb-4 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
-                    {faq.a}
-                  </div>
-                )}
+          <Reveal delay={120}>
+            <div className={`${PANEL} mx-auto mt-8 flex max-w-3xl flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between`}>
+              <div className="flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-700">
+                  <Building className="h-4 w-4" />
+                </span>
+                <div>
+                  <h3 className="font-display text-sm font-semibold text-slate-900">Inspection desks</h3>
+                  <p className="mt-0.5 text-xs text-slate-600">Lahore · Islamabad · Karachi</p>
+                </div>
               </div>
-            )
-          })}
+              <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                <Link
+                  href="/terms"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-900/10 bg-white px-3 py-2 text-slate-700 transition hover:border-emerald-300"
+                >
+                  Seller terms <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
+                <Link
+                  href="/refund"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-900/10 bg-white px-3 py-2 text-slate-700 transition hover:border-emerald-300"
+                >
+                  Refund policy <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
+
+      {/* --------------------------------------------------------------- CTA */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-amber-600 via-emerald-700 to-[#052e23] text-white">
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-amber-300/25 blur-3xl animate-drift" />
+          <div className="absolute -bottom-32 left-0 h-96 w-96 rounded-full bg-emerald-300/15 blur-3xl animate-drift [animation-delay:-9s]" />
+        </div>
+        <div className={`${CONTAINER} relative flex flex-col items-start justify-between gap-8 py-14 md:flex-row md:items-center md:py-16`}>
+          <div className="max-w-xl">
+            <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-100">
+              <Flame className="h-3.5 w-3.5" /> Full market value, no haggling
+            </p>
+            <h2 className="mt-3 font-display text-2xl font-semibold leading-tight sm:text-4xl">
+              Your asset deserves a price, not a negotiation.
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-emerald-50/80 sm:text-base">
+              Submit the dossier now — verification replies within 48 hours with custody instructions.
+            </p>
+          </div>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <Cta
+              href="#listing-form-section"
+              variant="light"
+              arrow
+              className="w-full border-white/30 bg-white text-emerald-900 hover:bg-emerald-50 sm:w-auto"
+            >
+              Start a listing
+            </Cta>
+            <Cta href="#calculator-section" variant="light" className="w-full sm:w-auto">
+              <Calculator className="h-4 w-4" /> Model the payout
+            </Cta>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function Field({
+  label,
+  htmlFor,
+  required = false,
+  hint,
+  children,
+}: {
+  label: string
+  htmlFor: string
+  required?: boolean
+  hint?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={htmlFor} className="text-[12px] font-semibold text-slate-800">
+        {label} {required && <span className="text-rose-500">*</span>}
+      </label>
+      {children}
+      {hint && <span className="block text-[11px] text-slate-500">{hint}</span>}
     </div>
   )
 }

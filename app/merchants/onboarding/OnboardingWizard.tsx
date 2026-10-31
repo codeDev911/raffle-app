@@ -237,7 +237,7 @@ export default function OnboardingWizard() {
       <div className="relative mx-auto max-w-3xl px-4 py-10 sm:py-14">
         <div className="mb-8 flex items-center justify-between gap-4">
           <Link href="/merchants" className="flex items-center gap-2">
-            <BrandMark className="h-8 w-8 rounded-lg" />
+            <BrandMark className="h-8 w-8" />
             <span className="text-base font-bold tracking-tight text-slate-900">PakRaffle</span>
             <span className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-600">Merchant</span>
           </Link>

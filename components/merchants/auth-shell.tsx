@@ -1,11 +1,11 @@
 "use client"
 
-// Shared frame for the merchant auth screens: light workspace, emerald accents.
+// Shared frame for the merchant auth screens: porcelain canvas, a light form column and a
+// dark "workspace" panel that explains the programme while the form is being filled in.
 import type React from "react"
 import Link from "next/link"
-import { ShieldCheck } from "lucide-react"
+import { ArrowRight, Check, ShieldCheck } from "lucide-react"
 import { BrandMark } from "@/components/brand"
-import { Panel, Sep } from "./ui"
 
 export function GoogleIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -35,7 +35,7 @@ export function GoogleAuthButton({ next, label }: { next: string; label: string 
   return (
     <a
       href={href}
-      className="inline-flex min-h-[40px] w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+      className="inline-flex min-h-[46px] w-full items-center justify-center gap-2.5 rounded-2xl border border-slate-900/10 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-slate-900/20 hover:bg-white"
     >
       <GoogleIcon />
       {label}
@@ -46,12 +46,24 @@ export function GoogleAuthButton({ next, label }: { next: string; label: string 
 export function AuthDivider({ label = "or" }: { label?: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="h-px flex-1 bg-slate-200" />
-      <span className="text-[11px] uppercase tracking-wider text-slate-500">{label}</span>
-      <span className="h-px flex-1 bg-slate-200" />
+      <span className="h-px flex-1 bg-slate-900/10" />
+      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</span>
+      <span className="h-px flex-1 bg-slate-900/10" />
     </div>
   )
 }
+
+const STEPS = [
+  { title: "Connect your store", body: "Paste the webhook secret and install the widget snippet in Shopify." },
+  { title: "Attach a campaign", body: "Pick a live PakRaffle prize and the order value that mints a ticket." },
+  { title: "Pay per ticket", body: "Billed only on fulfilled orders. Close a batch, pay by Raast or IBFT." },
+]
+
+const LEDGER = [
+  { label: "Ticket minted", value: "ORD-1042 · 1 ticket" },
+  { label: "Invoice period", value: "October 2026" },
+  { label: "Draw status", value: "Awaiting target" },
+]
 
 export function MerchantAuthShell({
   title,
@@ -65,33 +77,135 @@ export function MerchantAuthShell({
   footer?: React.ReactNode
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col bg-slate-50 text-slate-900">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.14),transparent_65%)]" />
+    <div className="relative isolate min-h-screen overflow-x-clip bg-[#f8f9f6] text-slate-900 antialiased selection:bg-emerald-500 selection:text-white">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[28rem] bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.16),transparent_65%)]"
+      />
 
-      <header className="relative mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
-        <Link href="/merchants" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
-          <BrandMark className="h-8 w-8 rounded-lg" />
-          PakRaffle <span className="text-slate-500">Merchant</span>
+      <header className="relative mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-5 py-5 sm:px-6 lg:px-8">
+        <Link href="/merchants" className="inline-flex items-center gap-2.5">
+          <BrandMark className="h-8 w-8" />
+          <span className="text-sm font-semibold tracking-tight text-slate-900">
+            PakRaffle <span className="font-normal text-slate-400">/</span> Merchant
+          </span>
         </Link>
-        <Link href="/merchants" className="text-xs text-slate-600 transition hover:text-emerald-600">
-          Back to overview
-        </Link>
+        <div className="flex items-center gap-5 text-xs font-semibold text-slate-500">
+          <Link href="/" className="transition hover:text-slate-900">
+            Storefront
+          </Link>
+          <Link href="/contact" className="hidden transition hover:text-slate-900 sm:inline">
+            Support
+          </Link>
+        </div>
       </header>
 
-      <main className="relative flex flex-1 items-center justify-center px-4 py-8 sm:px-6">
-        <div className="w-full max-w-md">
-          <Panel className="p-6 sm:p-8">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{title}</h1>
-            <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{subtitle}</p>
-            <div className="mt-6">{children}</div>
-          </Panel>
+      <main className="relative mx-auto w-full max-w-6xl px-5 pb-16 pt-2 sm:px-6 lg:px-8 lg:pb-24 lg:pt-6">
+        <div className="grid gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:items-start lg:gap-14">
+          {/* Form column */}
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-600/20 bg-emerald-600/10 px-3 py-1 text-[11px] font-semibold text-emerald-800">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Merchant Connect
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-semibold text-slate-600 backdrop-blur">
+                Shopify store programme
+              </span>
+            </div>
 
-          {footer && <div className="mt-5 text-center text-sm text-slate-600">{footer}</div>}
+            <h1 className="mt-5 font-display text-[2.05rem] font-semibold leading-[1.02] tracking-[-0.03em] text-slate-900 sm:text-[2.6rem]">
+              {title}
+            </h1>
+            <p className="mt-3 max-w-md text-[14px] leading-relaxed text-slate-600">{subtitle}</p>
 
-          <p className="mt-8 flex flex-wrap items-center justify-center gap-1 text-center text-[11px] text-slate-400">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600/70" /> Signed sessions
-            <Sep /> HMAC-verified webhooks <Sep /> Your credentials are never shared with Shopify
-          </p>
+            <div className="mt-7 rounded-[28px] border border-slate-900/10 bg-white/85 p-5 shadow-[0_30px_80px_-60px_rgba(4,47,34,0.65)] backdrop-blur-xl sm:p-7">
+              {children}
+            </div>
+
+            {footer && <div className="mt-5 text-center text-[13px] text-slate-600">{footer}</div>}
+
+            <p className="mt-7 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] text-slate-400">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600/70" />
+              Signed sessions
+              <span aria-hidden className="text-slate-300">
+                ·
+              </span>
+              HMAC-verified webhooks
+              <span aria-hidden className="text-slate-300">
+                ·
+              </span>
+              Credentials never shared with Shopify
+            </p>
+          </div>
+
+          {/* Workspace column — desktop only; the form stays the whole task on a phone. */}
+          <aside className="relative hidden lg:block">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-4 -z-10 rounded-[40px] bg-gradient-to-br from-emerald-300/25 via-white/30 to-violet-200/25 blur-2xl"
+            />
+            <div className="relative overflow-hidden rounded-[32px] bg-[#07130f] p-7 text-white shadow-[0_40px_120px_-60px_rgba(4,120,87,0.9)]">
+              <div aria-hidden className="pointer-events-none absolute inset-0">
+                <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-emerald-500/25 blur-3xl" />
+                <div className="absolute -bottom-20 -left-12 h-56 w-56 rounded-full bg-violet-500/20 blur-3xl" />
+                <div className="absolute inset-0 grid-veil opacity-30" />
+              </div>
+
+              <div className="relative">
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-emerald-200/60">
+                  Merchant workspace
+                </p>
+                <h2 className="mt-4 font-display text-[1.7rem] font-semibold leading-[1.08] tracking-tight text-white">
+                  Tickets minted from orders you already ship.
+                </h2>
+
+                <ol className="mt-6 space-y-4">
+                  {STEPS.map((step, i) => (
+                    <li key={step.title} className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-emerald-400/25 bg-emerald-400/10 font-mono text-[10px] font-semibold text-emerald-300">
+                        {i + 1}
+                      </span>
+                      <div>
+                        <p className="text-[13px] font-semibold text-white">{step.title}</p>
+                        <p className="mt-0.5 text-[12px] leading-relaxed text-emerald-50/60">{step.body}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+
+                <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-emerald-200/50">
+                      Sample ledger
+                    </p>
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-emerald-300">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                      Live
+                    </span>
+                  </div>
+                  <dl className="mt-3 space-y-2.5">
+                    {LEDGER.map((row) => (
+                      <div key={row.label} className="flex items-baseline justify-between gap-3">
+                        <dt className="text-[11.5px] text-emerald-50/50">{row.label}</dt>
+                        <dd className="font-mono text-[11.5px] font-semibold tabular-nums text-white">{row.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+
+                <p className="mt-5 flex items-center gap-1.5 text-[11px] text-emerald-200/60">
+                  <Check className="h-3 w-3" strokeWidth={3} />
+                  Free to connect — billed only on fulfilled orders
+                  <ArrowRight className="ml-auto h-3.5 w-3.5 text-emerald-300/60" />
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-5 px-1 font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400">
+              PakRaffle merchant operations · Lahore
+            </p>
+          </aside>
         </div>
       </main>
     </div>

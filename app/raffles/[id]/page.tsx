@@ -103,6 +103,54 @@ async function getRaffle(id: string) {
   }
 }
 
+export type RelatedDraw = {
+  id: string
+  title: string
+  description: string
+  image: string | null
+  category: string
+  price: number
+  realPrice: number
+  totalEntries: number
+  currentEntries: number
+  endDate: string
+  featured: boolean
+}
+
+/** Three other live draws, so a visitor who is not convinced still has somewhere to go. */
+async function getRelatedDraws(raffleId: string): Promise<RelatedDraw[]> {
+  type Row = Omit<RelatedDraw, "endDate"> & { endDate: Date | string | null }
+
+  try {
+    const rows = (await prisma.raffle.findMany({
+      where: { id: { not: raffleId }, status: "ACTIVE" },
+      orderBy: [{ featured: "desc" }, { endDate: "asc" }],
+      take: 3,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        image: true,
+        category: true,
+        price: true,
+        realPrice: true,
+        totalEntries: true,
+        currentEntries: true,
+        endDate: true,
+        featured: true,
+      },
+    })) as Row[]
+
+    return rows.map((row) => ({
+      ...row,
+      endDate: row.endDate ? new Date(row.endDate).toISOString() : new Date().toISOString(),
+    }))
+  } catch (err) {
+    console.error("Error retrieving related raffles:", err)
+    return []
+  }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const raffle = await getRaffle(params.id)
 
@@ -159,6 +207,8 @@ export default async function RaffleDetailPage({ params }: { params: { id: strin
     notFound()
   }
 
+  const related = await getRelatedDraws(raffle.id)
+
   const formattedRaffle = {
     ...raffle,
     entries: raffle.entries || [],
@@ -168,5 +218,5 @@ export default async function RaffleDetailPage({ params }: { params: { id: strin
     endDate: raffle.endDate ? new Date(raffle.endDate).toISOString() : new Date().toISOString(),
   }
 
-  return <ClientSide raffle={formattedRaffle as any} />
+  return <ClientSide raffle={formattedRaffle as any} related={related} />
 }

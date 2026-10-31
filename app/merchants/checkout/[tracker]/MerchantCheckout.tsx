@@ -157,7 +157,7 @@ export default function MerchantCheckout({ tracker }: { tracker: string }) {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex items-center gap-2">
-              <BrandMark className="h-7 w-7 rounded-lg" />
+              <BrandMark className="h-7 w-7" />
               <span className="text-sm font-semibold tracking-tight text-slate-900">PakRaffle</span>
             </span>
             <span className="hidden h-4 w-px bg-slate-200 sm:block" />

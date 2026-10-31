@@ -101,3 +101,114 @@ body {
 details[data-faq][open] > summary > svg {
   transform: rotate(180deg);
 }
+
+/*
+ * Marketing pages: a slow drifting mesh, a ticket ticker, a hairline grid veil, outlined section
+ * numerals and the perforated card edge. Every animation is switched off for visitors who ask
+ * their OS for reduced motion.
+ */
+@keyframes marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(3%, -4%, 0) scale(1.08);
+  }
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+@keyframes sheen {
+  0% {
+    transform: translateX(-130%) skewX(-14deg);
+  }
+  100% {
+    transform: translateX(240%) skewX(-14deg);
+  }
+}
+
+@layer utilities {
+  .animate-marquee {
+    animation: marquee 46s linear infinite;
+  }
+
+  .animate-drift {
+    animation: drift 22s ease-in-out infinite;
+  }
+
+  .animate-floaty {
+    animation: floaty 7s ease-in-out infinite;
+  }
+
+  .animate-sheen {
+    animation: sheen 3.2s ease-in-out infinite;
+  }
+
+  /* Fades the ticker into the page instead of cutting it off at the viewport edge. */
+  .marquee-mask {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  }
+
+  .grid-veil {
+    background-image: linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+    background-size: 46px 46px;
+    -webkit-mask-image: radial-gradient(ellipse at 50% 35%, #000 30%, transparent 78%);
+    mask-image: radial-gradient(ellipse at 50% 35%, #000 30%, transparent 78%);
+  }
+
+  .text-outline {
+    color: transparent;
+    -webkit-text-stroke: 1.2px rgba(15, 23, 42, 0.2);
+  }
+
+  /*
+   * The two masks knock a half-circle out of the left and right edge, halfway down the card, and
+   * intersect so everything else stays painted — a torn ticket without a single extra element.
+   */
+  .ticket-edge {
+    -webkit-mask-image: radial-gradient(circle at 0 50%, transparent 9px, #000 9.6px),
+      radial-gradient(circle at 100% 50%, transparent 9px, #000 9.6px);
+    -webkit-mask-composite: source-in;
+    mask-image: radial-gradient(circle at 0 50%, transparent 9px, #000 9.6px),
+      radial-gradient(circle at 100% 50%, transparent 9px, #000 9.6px);
+    mask-composite: intersect;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-drift,
+  .animate-floaty,
+  .animate-sheen {
+    animation: none !important;
+  }
+}

@@ -2,8 +2,11 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 
 /**
- * The PakRaffle gift-box mark. The artwork has an opaque white face, so it sits on its own white
- * tile instead of being tinted per surface — the brand green stays exact on light and dark headers.
+ * The PakRaffle gift-box mark (public/logo.svg).
+ *
+ * The artwork is transparent, so it is drawn exactly as supplied — no tile, ring, border or
+ * background colour behind it. Callers only choose the size; the mark sits directly on the
+ * surface it is placed on (white header, dark footer, glass panels).
  */
 export function BrandMark({
   className,
@@ -14,20 +17,13 @@ export function BrandMark({
   priority?: boolean
 }) {
   return (
-    <span
-      className={cn(
-        "relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-slate-900/10",
-        className,
-      )}
-    >
-      <Image
-        src="/brand/logo.png"
-        alt=""
-        width={512}
-        height={512}
-        priority={priority}
-        className="h-full w-full object-contain"
-      />
-    </span>
+    <Image
+      src="/logo.svg"
+      alt=""
+      width={132}
+      height={136}
+      priority={priority}
+      className={cn("h-9 w-9 shrink-0 object-contain", className)}
+    />
   )
 }

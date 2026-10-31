@@ -111,7 +111,7 @@ export default function AdminLayout({
         {/* Brand Header */}
         <div className="h-16 px-5 border-b border-slate-100 flex items-center justify-between">
           <Link href="/admin/dashboard" className="flex items-center gap-2.5 group">
-            <BrandMark className="h-9 w-9 shadow-sm" />
+            <BrandMark className="h-9 w-9" />
             <div className="flex flex-col">
               <span className="font-bold text-base tracking-tight text-slate-900 leading-none">
                 PakRaffle

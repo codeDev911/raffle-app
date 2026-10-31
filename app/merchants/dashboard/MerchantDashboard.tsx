@@ -171,7 +171,7 @@ export default function MerchantDashboard() {
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <Link href="/merchants/dashboard" className="flex min-w-0 items-center gap-2 whitespace-nowrap">
-            <BrandMark className="h-8 w-8 shrink-0 rounded-lg" />
+            <BrandMark className="h-8 w-8 shrink-0" />
             <span className="text-base font-bold tracking-tight text-slate-900">PakRaffle</span>
             <span className="hidden text-xs font-medium uppercase tracking-[0.18em] text-emerald-600 sm:inline">Merchant</span>
           </Link>

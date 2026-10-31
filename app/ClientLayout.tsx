@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { Inter } from "next/font/google"
+import { Inter, Space_Grotesk } from "next/font/google"
 import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -9,6 +9,9 @@ import { usePathname } from "next/navigation"
 import { useEffect } from "react"
 
 const inter = Inter({ subsets: ["latin"] })
+// Geometric display face for the marketing headlines; exposed as a CSS variable so only the
+// pages that ask for `font-display` pick it up.
+const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" })
 
 export default function ClientLayout({
   children,
@@ -36,7 +39,7 @@ export default function ClientLayout({
     }
   }, [])
   return (
-    <html lang="en">
+    <html lang="en" className={display.variable}>
       <head>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-EX44PLKN82"></script>
      <meta name="monetag" content="78091832d51a3d2d1cd351e318c806b9"></meta>

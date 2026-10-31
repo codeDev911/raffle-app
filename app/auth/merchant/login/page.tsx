@@ -77,7 +77,7 @@ export default function MerchantLoginPage() {
       footer={
         <>
           New to Merchant Connect?{" "}
-          <Link href="/auth/merchant/register" className="font-medium text-emerald-600 hover:text-emerald-700">
+          <Link href="/auth/merchant/register" className="font-semibold text-emerald-700 hover:text-emerald-800">
             Create a merchant account
           </Link>
         </>
@@ -100,6 +100,7 @@ export default function MerchantLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="owner@store.pk"
+                  className="h-11 rounded-2xl border-slate-900/10"
                 />
               </Field>
 
@@ -112,7 +113,7 @@ export default function MerchantLoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="pr-11"
+                    className="h-11 rounded-2xl border-slate-900/10 pr-11"
                   />
                   <button
                     type="button"
@@ -125,14 +126,14 @@ export default function MerchantLoginPage() {
                 </div>
               </Field>
 
-              <Btn type="submit" loading={loading} className="w-full">
+              <Btn type="submit" loading={loading} className="w-full min-h-[46px] rounded-2xl">
                 Sign in <ArrowRight className="h-4 w-4" />
               </Btn>
             </form>
           </>
         ) : (
           <>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-relaxed text-slate-600">
+            <div className="rounded-2xl border border-slate-900/10 bg-slate-50/70 px-4 py-3 text-xs leading-relaxed text-slate-600">
               Already connected a store before? Use the API key you saved at onboarding.
             </div>
 
@@ -144,17 +145,17 @@ export default function MerchantLoginPage() {
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="prk_live_…"
-                  className="font-mono"
+                  className="h-11 rounded-2xl border-slate-900/10 font-mono"
                 />
               </Field>
-              <Btn type="submit" loading={loading} className="w-full">
+              <Btn type="submit" loading={loading} className="w-full min-h-[46px] rounded-2xl">
                 Open dashboard <ArrowRight className="h-4 w-4" />
               </Btn>
             </form>
           </>
         )}
 
-        <div className="border-t border-slate-200 pt-4 text-center">
+        <div className="border-t border-slate-900/10 pt-4 text-center">
           <button
             type="button"
             onClick={() => {

@@ -2,29 +2,232 @@
 
 import React, { useState } from "react"
 import {
-  TrendingUp,
-  DollarSign,
-  Handshake,
-  ArrowRight,
-  Zap,
-  Wallet,
-  Clock,
-  Flame,
-  MessageCircle,
-  ChevronDown,
-  ChevronUp,
-  CheckCircle,
-  ExternalLink,
-  Calculator,
-  ShieldCheck,
+  BadgeCheck,
   BarChart3,
+  Check,
+  Clock,
+  ExternalLink,
+  Handshake,
+  Link2,
+  MessageCircle,
+  Minus,
+  Rocket,
+  ShieldCheck,
   Sparkles,
+  Ticket,
+  TrendingUp,
+  Wallet,
+  Zap,
 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
+import {
+  CONTAINER,
+  Cta,
+  FaqList,
+  GhostNumeral,
+  INK_PANEL,
+  Kicker,
+  LiveDot,
+  Marquee,
+  Mesh,
+  PANEL,
+  Pill,
+  SectionHead,
+  SHELL,
+  StatTile,
+  TicketCard,
+} from "@/components/marketing/kit"
+import { Counter, Reveal } from "@/components/marketing/motion"
 
 const WHATSAPP_INTL = "923377155722"
+
+const pkr = (value: number) => `Rs ${Math.round(value).toLocaleString("en-PK")}`
+const num = (value: number) => Math.round(value).toLocaleString("en-PK")
+
+/** The published tier ladder. The estimator below reads the same thresholds, so the two never drift. */
+const TIERS = [
+  {
+    name: "Starter Partner",
+    short: "Starter",
+    rate: 15,
+    requirement: 0,
+    band: "0 – 74 tickets / month",
+    bonus: 0,
+    perks: [
+      "Lifetime commission on every referred ticket",
+      "30-day attribution cookie on every link",
+      "Withdraw any time above Rs 500",
+    ],
+  },
+  {
+    name: "Pro Growth Partner",
+    short: "Pro Growth",
+    rate: 20,
+    requirement: 75,
+    band: "75 – 249 tickets / month",
+    bonus: 15000,
+    perks: [
+      "Everything in Starter",
+      "Rs 15,000 growth milestone bonus",
+      "A named affiliate manager on WhatsApp",
+    ],
+  },
+  {
+    name: "Elite VIP Partner",
+    short: "Elite VIP",
+    rate: 25,
+    requirement: 250,
+    band: "250+ tickets / month",
+    bonus: 50000,
+    perks: [
+      "Everything in Pro Growth",
+      "Rs 50,000 milestone bonus",
+      "First access to every new draw launch",
+    ],
+  },
+]
+
+const FAQ = [
+  {
+    q: "Do I need a large following or expensive camera to start?",
+    a: "Absolutely not! Over 60% of our successful affiliates are students, housewives, and everyday individuals who simply share links on their personal WhatsApp status or family groups. Even referring 3-5 ticket buyers a day earns you a solid passive monthly income.",
+  },
+  {
+    q: "How and when do I get paid?",
+    a: "You can request a withdrawal directly through your partner platform dashboard or via WhatsApp to our Affiliate Manager. Payouts are sent within 2 to 6 hours directly to your JazzCash, Easypaisa, Raast, or any Pakistani Bank Account.",
+  },
+  {
+    q: "Is there any cost, deposit, or subscription fee to join?",
+    a: "No! PakRaffle Affiliate Program is 100% completely free to join and will always remain free. You never have to pay a single rupee to earn commissions.",
+  },
+  {
+    q: "What if someone clicks my link today but buys a ticket 2 weeks later?",
+    a: "We use a 30-day tracking cookie! If someone clicks your link today and decides to purchase tickets anytime within the next 30 days, you will automatically receive full commission credit for that sale.",
+  },
+  {
+    q: "What is the minimum amount I can withdraw?",
+    a: "The minimum payout threshold is just Rs. 500! As soon as you earn Rs. 500 from your first few referrals, you can immediately transfer it to your mobile wallet.",
+  },
+  {
+    q: "Who handles customer support, ticket delivery, and winner verification?",
+    a: "PakRaffle handles 100% of the customer support, ticket issuance, random draw transparency, and winner prize courier delivery. You only share your link and collect your profits.",
+  },
+]
+
+const OLD_WAY = [
+  {
+    title: "Rs 50,000 – 200,000 upfront",
+    body: "Ad spend or inventory before your first rupee comes back to you.",
+  },
+  {
+    title: "Customer complaints at 2 AM",
+    body: "Courier delays, returns and refunds all land on your phone.",
+  },
+  {
+    title: "Bans, fees and verifications",
+    body: "Blocked accounts, foreign payout friction, endless paperwork.",
+  },
+  {
+    title: "You build the whole funnel",
+    body: "Website, pixels, ad copy — all before you earn anything.",
+  },
+]
+
+const NEW_WAY = [
+  {
+    title: "Rs 0 to start",
+    body: "Free to join, free to stay. No deposit and no renewal.",
+  },
+  {
+    title: "Zero customer handling",
+    body: "We run tickets, draws, verification and prize delivery.",
+  },
+  {
+    title: "Paid in rupees, locally",
+    body: "JazzCash, Easypaisa, Raast or any Pakistani bank account.",
+  },
+  {
+    title: "Instant portal access",
+    body: "Live clicks, live commissions, withdrawals on your schedule.",
+  },
+]
+
+const STORIES = [
+  {
+    initials: "AH",
+    name: "Ahmed Hassan",
+    role: "Tech reviewer · Islamabad",
+    earnings: 485750,
+    quote:
+      "I just post 2 Instagram stories whenever an iPhone or bike draw opens. The commission comes automatically to my Meezan bank.",
+    method: "Meezan Bank",
+    ring: "from-emerald-500 to-teal-500",
+    wash: "bg-emerald-500/10 text-emerald-800",
+  },
+  {
+    initials: "SF",
+    name: "Sarah Fatima",
+    role: "University student · Karachi",
+    earnings: 184200,
+    quote:
+      "I pay my entire semester university fee just by sharing raffle links in my university hostel WhatsApp groups. Zero stress!",
+    method: "JazzCash",
+    ring: "from-sky-500 to-blue-500",
+    wash: "bg-sky-500/10 text-sky-800",
+  },
+  {
+    initials: "BT",
+    name: "Bilal Tariq",
+    role: "TikTok creator · Lahore",
+    earnings: 342000,
+    quote:
+      "TikTok reels get huge organic views in Pakistan. PakRaffle converts like crazy because tickets are only Rs. 100.",
+    method: "Raast",
+    ring: "from-violet-500 to-indigo-500",
+    wash: "bg-violet-500/10 text-violet-800",
+  },
+  {
+    initials: "AN",
+    name: "Ayesha Noor",
+    role: "Stay-at-home mom · Rawalpindi",
+    earnings: 92500,
+    quote:
+      "I don't have many followers, just family WhatsApp groups. Whenever relatives buy entries, I get commission directly on Easypaisa.",
+    method: "Easypaisa",
+    ring: "from-amber-500 to-orange-500",
+    wash: "bg-amber-500/10 text-amber-800",
+  },
+]
+
+const PAYOUTS = ["JazzCash", "Easypaisa", "Raast (Instant)", "Meezan Bank", "HBL", "Bank Alfalah"]
+
+const FACTS = [
+  "Commission up to 25%",
+  "Minimum payout Rs 500",
+  "30-day attribution cookie",
+  "Milestone bonus up to Rs 50,000",
+  "Payouts in 2 – 6 hours",
+  "Zero joining cost",
+  "JazzCash & Easypaisa supported",
+  "Live partner dashboard",
+]
+
+const STEPS = [
+  {
+    icon: Link2,
+    title: "Grab your tracked link",
+    body: "Inside the partner portal every affiliate gets a unique link. Paste it in your status, story, group or reel — that is the entire setup.",
+  },
+  {
+    icon: Ticket,
+    title: "Someone buys a ticket",
+    body: "The 30-day cookie credits the sale to you even if they come back two weeks later. Commission is recorded the moment payment clears.",
+  },
+  {
+    icon: Wallet,
+    title: "Withdraw to your wallet",
+    body: "Cross Rs 500 and request a payout. It lands in JazzCash, Easypaisa, Raast or your bank within 2 – 6 hours.",
+  },
+]
 
 export default function PartnerPage() {
   // Partner app URL from environment
@@ -34,13 +237,10 @@ export default function PartnerPage() {
   const [dailyTickets, setDailyTickets] = useState<number>(25)
   const [ticketPrice, setTicketPrice] = useState<number>(300)
 
-  // FAQ open item
-  const [openFaq, setOpenFaq] = useState<number | null>(0)
-
   // Calculations
   const monthlyTickets = dailyTickets * 30
   const grossMonthlyVolume = monthlyTickets * ticketPrice
-  
+
   // Commission calculation based on volume
   let commissionRate = 0.15
   let tierName = "Starter Partner"
@@ -58,686 +258,354 @@ export default function PartnerPage() {
 
   const commissionEarnings = Math.round(grossMonthlyVolume * commissionRate)
   const totalEstimatedMonthly = commissionEarnings + milestoneBonus
+  const dailyAverage = Math.round(totalEstimatedMonthly / 30)
+  const ratePct = Math.round(commissionRate * 100)
+
+  // Ladder helpers — the pass in the hero and the ladder section both read these.
+  const nextTier = monthlyTickets < 75 ? 75 : monthlyTickets < 250 ? 250 : null
+  const ticketsToNext = nextTier ? Math.max(0, nextTier - monthlyTickets) : 0
+  const tierProgress = nextTier ? Math.min(100, Math.round((monthlyTickets / nextTier) * 100)) : 100
 
   // Fallback target for partner platform redirect
-  const redirectHref = partnerAppUrl || `https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20am%20ready%20to%20access%20the%20Partner%20Platform.`
+  const redirectHref =
+    partnerAppUrl || `https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20am%20ready%20to%20access%20the%20Partner%20Platform.`
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-emerald-500 selection:text-white">
-      {/* Top Urgency / Ticker Banner */}
-      <div className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-950 text-white text-xs sm:text-sm py-2.5 px-4 border-b border-emerald-800/40">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="font-semibold text-emerald-400">PAKRAFFLE AFFILIATE NETWORK:</span>
-            <span className="text-slate-300 hidden sm:inline">2,410+ Pakistani Affiliates Earning Daily</span>
-          </div>
-          <div className="flex items-center gap-4 text-xs">
-            <span className="text-amber-300 font-medium flex items-center gap-1">
-              <Zap className="h-3 w-3 fill-amber-300" />
-              Min. Payout: Only Rs. 500
-            </span>
-            <span className="text-slate-300 hidden md:inline">|</span>
-            <span className="text-emerald-300 hidden md:inline">Instant JazzCash / Easypaisa Transfers</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-emerald-50/30 to-slate-50 pt-12 pb-20 lg:pt-16 lg:pb-28">
-        {/* Glow ambient background elements */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-tr from-emerald-300/20 to-teal-200/20 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Pill Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs sm:text-sm font-semibold mb-6 shadow-xs animate-fade-in">
-              <Flame className="h-4 w-4 text-emerald-600 fill-emerald-500" />
-              <span>Highest Paying Pakistani Raffle Affiliate Program</span>
-              <span className="bg-emerald-600 text-white text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full">Zero Cost</span>
+    <div className={SHELL}>
+      {/* ---------------------------------------------------------------- Hero */}
+      <section className="relative overflow-hidden border-b border-slate-900/5">
+        <Mesh tone="violet" />
+        <div
+          className={`${CONTAINER} relative pb-14 pt-24 sm:pt-24 lg:grid lg:grid-cols-[1.04fr_0.96fr] lg:items-center lg:gap-14 lg:pb-24 lg:pt-28`}
+        >
+          <div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Pill className="border-violet-600/20 bg-violet-600/10 text-violet-800">
+                <LiveDot />
+                Affiliate network · Pakistan
+              </Pill>
+              <Pill className="hidden sm:inline-flex">
+                <Zap className="h-3 w-3 text-emerald-600" />
+                Zero cost to join
+              </Pill>
             </div>
 
-            {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15] mb-6">
-              Turn Your WhatsApp & Socials Into A{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600">
-                Daily Income Machine
+            <h1 className="mt-6 font-display text-[2.7rem] font-semibold leading-[0.96] tracking-[-0.035em] text-slate-900 sm:text-[3.6rem] lg:text-[4.05rem]">
+              Share a link.
+              <span className="block bg-gradient-to-r from-violet-600 via-emerald-600 to-teal-500 bg-clip-text text-transparent">
+                Every ticket pays.
               </span>
             </h1>
 
-            {/* Sub-headline */}
-            <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed mb-8">
-              Earn <span className="font-bold text-slate-900">generous lifetime commissions</span> promoting luxury raffles (iPhones, Cars, Gold, Cash). 
-              No investment, no inventory, and zero headache. Get instant daily payouts directly to your <span className="font-semibold text-emerald-700">JazzCash, Easypaisa, or Pakistani Bank</span>.
+            <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-slate-600 sm:text-lg">
+              Earn <span className="font-semibold text-slate-900">15 – 25% lifetime commission</span> on tickets sold
+              through your link. No stock, no support tickets, no upfront cost — just your WhatsApp, your reels, and
+              money that lands in your wallet.
             </p>
 
-            {/* CTA Group with Partner Platform Redirect */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-              <a
-                href={redirectHref}
-                target={partnerAppUrl ? "_blank" : undefined}
-                rel={partnerAppUrl ? "noopener noreferrer" : undefined}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-base px-8 py-4 rounded-2xl shadow-lg shadow-emerald-600/25 hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
-              >
-                <Handshake className="h-5 w-5" />
-                <span>Go to Partner Platform</span>
-                {partnerAppUrl ? (
-                  <ExternalLink className="h-4 w-4 ml-0.5" />
-                ) : (
-                  <ArrowRight className="h-5 w-5 ml-0.5" />
-                )}
-              </a>
-
-              <a
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Cta href={redirectHref} arrow className="w-full sm:w-auto">
+                <Handshake className="h-4 w-4" />
+                Go to Partner Platform
+              </Cta>
+              <Cta
                 href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle%20Team!%20I%20want%20to%20join%20the%20Affiliate%20Program%20and%20start%20earning%20commissions.`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold text-base px-7 py-4 rounded-2xl border-2 border-emerald-300 transition-all duration-200"
+                variant="ghost"
+                className="w-full sm:w-auto"
               >
-                <MessageCircle className="h-5 w-5 text-emerald-600 fill-emerald-600/20" />
-                <span>Chat on WhatsApp</span>
-              </a>
+                <MessageCircle className="h-4 w-4" />
+                Chat on WhatsApp
+              </Cta>
             </div>
 
-            {/* 4 Core Zero-Headache Pillars */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto text-left pt-4">
-              <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-xs flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700 shrink-0">
-                  <Zap className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">Zero Investment</h4>
-                  <p className="text-[11px] text-slate-500">Free forever. Start with Rs. 0</p>
-                </div>
-              </div>
+            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-slate-500">
+              {[
+                { icon: Check, label: "No registration fee" },
+                { icon: Clock, label: "Payouts in 2 – 6 hours" },
+                { icon: ShieldCheck, label: "30-day attribution" },
+              ].map(({ icon: Icon, label }) => (
+                <span key={label} className="inline-flex items-center gap-1.5">
+                  <Icon className="h-3.5 w-3.5 text-emerald-600" strokeWidth={2.5} />
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
 
-              <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-xs flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-teal-100 text-teal-700 shrink-0">
-                  <Wallet className="h-5 w-5" />
+          {/* Payout pass — the same maths as the estimator below, shown as a torn-off slip. */}
+          <div className="relative mt-12 lg:mt-0">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-6 -z-10 rounded-[36px] bg-gradient-to-br from-violet-300/25 via-white/40 to-emerald-200/30 blur-2xl"
+            />
+            <Reveal>
+              <TicketCard className="shadow-[0_40px_90px_-50px_rgba(30,20,70,0.55)]">
+                <div className="flex items-center justify-between gap-3 border-b border-dashed border-slate-900/10 px-5 py-3.5">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-500">
+                    PakRaffle · Partner payout pass
+                  </p>
+                  <Pill className="border-emerald-600/20 bg-emerald-600/10 text-emerald-800">
+                    <LiveDot />
+                    Live model
+                  </Pill>
                 </div>
-                <div>
-                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">Daily Payouts</h4>
-                  <p className="text-[11px] text-slate-500">JazzCash & Easypaisa</p>
-                </div>
-              </div>
 
-              <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-xs flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-blue-100 text-blue-700 shrink-0">
-                  <Clock className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">30-Day Cookie</h4>
-                  <p className="text-[11px] text-slate-500">Tag user once, earn forever</p>
-                </div>
-              </div>
+                <div className="px-5 py-5 sm:px-6">
+                  <div className="flex items-end justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Your tier</p>
+                      <p className="mt-1 font-display text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
+                        {tierName}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-mono text-3xl font-semibold tabular-nums leading-none text-emerald-700 sm:text-4xl">
+                        {ratePct}%
+                      </p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-slate-500">commission</p>
+                    </div>
+                  </div>
 
-              <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-xs flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-amber-100 text-amber-700 shrink-0">
-                  <BarChart3 className="h-5 w-5" />
+                  <dl className="mt-5 space-y-2.5">
+                    <PassRow label="Tickets / month" value={`${num(monthlyTickets)} tickets`} />
+                    <PassRow label="Ticket volume" value={pkr(grossMonthlyVolume)} />
+                    <PassRow label="Commission" value={pkr(commissionEarnings)} tone="emerald" />
+                    <PassRow
+                      label="Milestone bonus"
+                      value={milestoneBonus > 0 ? `+ ${pkr(milestoneBonus)}` : "Not reached yet"}
+                      tone={milestoneBonus > 0 ? "amber" : "muted"}
+                    />
+                  </dl>
+
+                  <div className="mt-5 rounded-2xl bg-[#07130f] px-4 py-3.5">
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-emerald-300/80">This month, roughly</p>
+                    <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-white sm:text-3xl">
+                      {pkr(totalEstimatedMonthly)}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">Live Portal</h4>
-                  <p className="text-[11px] text-slate-500">Real-time stats & tracking</p>
+
+                <div className="mx-5 border-t border-dashed border-slate-900/15 sm:mx-6" />
+
+                <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-600">
+                    <Wallet className="h-3.5 w-3.5 text-emerald-600" />
+                    Paid to JazzCash · Easypaisa · Raast
+                  </div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
+                    {nextTier ? `${num(ticketsToNext)} to next tier` : "Top tier unlocked"}
+                  </p>
                 </div>
-              </div>
+                {nextTier && (
+                  <div className="px-5 pb-5 sm:px-6">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-900/5">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-violet-500 to-emerald-500 transition-[width] duration-500"
+                        style={{ width: `${tierProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </TicketCard>
+            </Reveal>
+
+            <div className="absolute -bottom-5 -left-3 hidden rounded-2xl border border-slate-900/10 bg-white/90 px-3.5 py-2.5 shadow-lg backdrop-blur sm:block">
+              <p className="text-[10px] uppercase tracking-[0.16em] text-slate-500">Min payout</p>
+              <p className="font-mono text-sm font-semibold tabular-nums text-slate-900">Rs 500</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Live Social Proof Payout Ticker */}
-      <section className="bg-white border-y border-slate-200 py-4">
-        <div className="max-w-7xl mx-auto px-4 overflow-hidden">
-          <div className="flex items-center gap-3 mb-2 sm:mb-0">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-md shrink-0 flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-              Live Activity
-            </span>
-            <div className="flex items-center gap-6 overflow-x-auto no-scrollbar py-1 text-xs text-slate-600">
-              <span className="whitespace-nowrap font-medium flex items-center gap-1.5">
-                <span className="font-bold text-slate-900">Usman A. (Lahore)</span> withdrew{" "}
-                <span className="text-emerald-600 font-bold">Rs. 18,500</span> via JazzCash{" "}
-                <span className="text-slate-400 text-[10px]">(3 mins ago)</span>
-              </span>
-              <span className="text-slate-300">•</span>
-              <span className="whitespace-nowrap font-medium flex items-center gap-1.5">
-                <span className="font-bold text-slate-900">Zubair K. (Karachi)</span> made{" "}
-                <span className="text-emerald-600 font-bold">Rs. 4,200</span> commission on iPhone 16 draw{" "}
-                <span className="text-slate-400 text-[10px]">(7 mins ago)</span>
-              </span>
-              <span className="text-slate-300">•</span>
-              <span className="whitespace-nowrap font-medium flex items-center gap-1.5">
-                <span className="font-bold text-slate-900">Ayesha M. (Islamabad)</span> reached{" "}
-                <span className="text-purple-600 font-bold">Pro Partner Status</span>{" "}
-                <span className="text-slate-400 text-[10px]">(14 mins ago)</span>
-              </span>
-              <span className="text-slate-300">•</span>
-              <span className="whitespace-nowrap font-medium flex items-center gap-1.5">
-                <span className="font-bold text-slate-900">Hamza R. (Faisalabad)</span> withdrew{" "}
-                <span className="text-emerald-600 font-bold">Rs. 32,400</span> via Raast{" "}
-                <span className="text-slate-400 text-[10px]">(22 mins ago)</span>
-              </span>
-            </div>
-          </div>
+      {/* ------------------------------------------------------- Key numbers */}
+      <section className={`${CONTAINER} relative -mt-8 pb-4`}>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatTile label="Commission" value="15 – 25%" hint="Lifetime, per ticket" accent />
+          <StatTile label="Minimum payout" value="Rs 500" hint="No lock-in." />
+          <StatTile label="Attribution" value="30 days" hint="Cookie window" />
+          <StatTile label="Payout window" value="2 – 6 h" hint="Wallet or bank" />
         </div>
       </section>
 
-      {/* Interactive Live Earnings Calculator */}
-      <section id="calculator" className="py-16 lg:py-24 bg-gradient-to-b from-slate-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-14">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-3">
-              <Calculator className="h-3.5 w-3.5" />
-              Live Income Estimator
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
-              Calculate Your Potential Earnings
-            </h2>
-            <p className="text-slate-600 text-base sm:text-lg mt-3">
-              See what sharing just a few raffle tickets per day can bring to your bank account. No guesswork.
-            </p>
-          </div>
+      {/* ------------------------------------------------------------- Ticker */}
+      <div className="border-y border-slate-900/5 bg-white/60 py-3">
+        <Marquee items={FACTS} speed="52s" />
+      </div>
 
-          <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="grid md:grid-cols-12">
-              {/* Sliders Input Column */}
-              <div className="md:col-span-7 p-6 sm:p-8 space-y-8 border-b md:border-b-0 md:border-r border-slate-100">
-                {/* Slider 1: Daily Tickets */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <Label htmlFor="daily-tickets" className="text-sm font-bold text-slate-800">
-                      Raffle Tickets Sold Via Your Link
-                    </Label>
-                    <span className="text-emerald-700 font-mono font-bold text-base px-2.5 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200">
-                      {dailyTickets} tickets / day
-                    </span>
-                  </div>
-                  <input
-                    id="daily-tickets"
-                    type="range"
-                    min="2"
-                    max="100"
-                    step="1"
-                    value={dailyTickets}
-                    onChange={(e) => setDailyTickets(Number(e.target.value))}
-                    className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
-                  />
-                  <div className="flex justify-between text-[11px] text-slate-400 font-medium">
-                    <span>2 tickets (Just WhatsApp status)</span>
-                    <span>50 tickets</span>
-                    <span>100+ (TikTok / Reels)</span>
-                  </div>
-                </div>
+      {/* --------------------------------------------------------- Estimator */}
+      <section id="calculator" className="relative overflow-hidden py-16 sm:py-20">
+        <Mesh tone="violet" className="opacity-60" />
+        <div className={`${CONTAINER} relative`}>
+          <SectionHead
+            index="01"
+            kicker="Earnings estimator"
+            title="Model a month before you commit."
+            body="Move two sliders: how many tickets you expect to sell a day, and at what average price. The tier, the rate and the bonus update together."
+          />
 
-                {/* Slider 2: Average Ticket Price */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <Label htmlFor="ticket-price" className="text-sm font-bold text-slate-800">
-                      Average Ticket Price (PKR)
-                    </Label>
-                    <span className="text-slate-900 font-mono font-bold text-base px-2.5 py-0.5 rounded-lg bg-slate-100 border border-slate-200">
-                      Rs. {ticketPrice}
-                    </span>
-                  </div>
-                  <input
-                    id="ticket-price"
-                    type="range"
-                    min="100"
-                    max="1000"
-                    step="50"
-                    value={ticketPrice}
-                    onChange={(e) => setTicketPrice(Number(e.target.value))}
-                    className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
-                  />
-                  <div className="flex justify-between text-[11px] text-slate-400 font-medium">
-                    <span>Rs. 100 (Budget Raffles)</span>
-                    <span>Rs. 500 (iPhone Raffles)</span>
-                    <span>Rs. 1,000 (Cars & Bikes)</span>
-                  </div>
-                </div>
+          <div className="mt-10 grid gap-5 lg:grid-cols-[1.02fr_0.98fr] lg:items-stretch">
+            {/* Controls */}
+            <div className={`${PANEL} p-6 sm:p-8`}>
+              <Slot
+                label="Tickets sold through your link"
+                display={`${dailyTickets} / day`}
+                value={dailyTickets}
+                min={2}
+                max={100}
+                step={1}
+                onChange={setDailyTickets}
+                left="2 — just WhatsApp status"
+                right="100 — reels & TikTok"
+              />
 
-                {/* Monthly Volume Preview */}
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
-                  <div className="flex justify-between text-xs text-slate-600">
-                    <span>Estimated Monthly Ticket Sales:</span>
-                    <span className="font-bold text-slate-900">{monthlyTickets.toLocaleString()} tickets</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-600">
-                    <span>Total Ticket Volume:</span>
-                    <span className="font-bold text-slate-900">Rs. {grossMonthlyVolume.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-600 items-center pt-1 border-t border-slate-200">
-                    <span>Projected Commission Rate:</span>
-                    <Badge className="bg-emerald-600 text-white font-bold">{tierName} ({(commissionRate * 100)}%)</Badge>
-                  </div>
-                </div>
+              <div className="mt-8">
+                <Slot
+                  label="Average ticket price"
+                  display={pkr(ticketPrice)}
+                  value={ticketPrice}
+                  min={100}
+                  max={1000}
+                  step={50}
+                  onChange={setTicketPrice}
+                  left="Rs 100 — budget raffles"
+                  right="Rs 1,000 — cars & bikes"
+                />
               </div>
 
-              {/* Dynamic Earnings Display Column */}
-              <div className="md:col-span-5 p-6 sm:p-8 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 text-white flex flex-col justify-between">
-                <div>
-                  <span className="text-xs uppercase tracking-wider text-emerald-400 font-bold block mb-1">
-                    Your Projected Monthly Income
+              <div className="mt-8 grid grid-cols-2 gap-3">
+                <PreviewCell label="Tickets / month" value={`${num(monthlyTickets)}`} />
+                <PreviewCell label="Ticket volume" value={pkr(grossMonthlyVolume)} />
+              </div>
+
+              <div className="mt-3 rounded-2xl border border-slate-900/10 bg-slate-50/80 px-4 py-3.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Current tier
                   </span>
-                  <div className="text-4xl sm:text-5xl font-extrabold text-white font-mono tracking-tight my-2">
-                    Rs. {totalEstimatedMonthly.toLocaleString()}
-                  </div>
-                  <p className="text-xs text-slate-300">
-                    Paid directly to your JazzCash / Easypaisa on your schedule.
-                  </p>
-
-                  <div className="mt-6 pt-6 border-t border-slate-800 space-y-2.5 text-xs">
-                    <div className="flex justify-between text-slate-300">
-                      <span>Base Commission ({(commissionRate * 100)}%):</span>
-                      <span className="font-bold text-emerald-400 font-mono">Rs. {commissionEarnings.toLocaleString()}</span>
-                    </div>
-                    {milestoneBonus > 0 && (
-                      <div className="flex justify-between text-amber-300">
-                        <span className="flex items-center gap-1">
-                          <Sparkles className="h-3.5 w-3.5" /> Growth Milestone Bonus:
-                        </span>
-                        <span className="font-bold font-mono">+Rs. {milestoneBonus.toLocaleString()}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-slate-300">
-                      <span>Daily Passive Average:</span>
-                      <span className="font-bold text-white font-mono">
-                        Rs. {Math.round(totalEstimatedMonthly / 30).toLocaleString()} / day
-                      </span>
-                    </div>
-                  </div>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white">
+                    <TrendingUp className="h-3 w-3" />
+                    {tierName} · {ratePct}%
+                  </span>
                 </div>
-
-                <div className="mt-8">
-                  <a
-                    href={redirectHref}
-                    target={partnerAppUrl ? "_blank" : undefined}
-                    rel={partnerAppUrl ? "noopener noreferrer" : undefined}
-                    className="w-full inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm py-3.5 px-4 rounded-xl shadow-md transition-colors"
-                  >
-                    <span>Go to Partner Platform</span>
-                    {partnerAppUrl ? (
-                      <ExternalLink className="h-4 w-4" />
-                    ) : (
-                      <ArrowRight className="h-4 w-4" />
-                    )}
-                  </a>
-                  <p className="text-[11px] text-center text-slate-400 mt-2">
-                    Quick Access • Real-Time Portal
-                  </p>
+                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-900/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-violet-500 via-emerald-500 to-emerald-600 transition-[width] duration-500"
+                    style={{ width: `${tierProgress}%` }}
+                  />
                 </div>
+                <p className="mt-2.5 text-[11px] leading-relaxed text-slate-500">
+                  {nextTier
+                    ? `${num(ticketsToNext)} more tickets a month unlocks the next rate${milestoneBonus > 0 ? " and its milestone bonus" : ""}.`
+                    : "You are at the top tier — every one of these tickets earns the maximum rate."}
+                </p>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Dedicated Partner Platform Redirection Callout Section */}
-      <section className="py-16 lg:py-20 bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
-        
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="bg-white/5 border border-emerald-500/30 backdrop-blur-md rounded-3xl p-8 sm:p-12 shadow-2xl">
-            <div className="text-center max-w-3xl mx-auto space-y-6">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold border border-emerald-400/30">
-                <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-                <span>Official PakRaffle Partner Portal</span>
-              </div>
-
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
-                Ready to Join? Access The Partner Platform
-              </h2>
-
-              <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
-                Manage your affiliate links, monitor clicks in real-time, view live ticket purchase commissions, and withdraw directly to your Pakistani bank account or mobile wallet.
-              </p>
-
-              {/* 3 Portal Features */}
-              <div className="grid sm:grid-cols-3 gap-4 pt-4 text-left">
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <BarChart3 className="h-5 w-5 text-emerald-400 mb-2" />
-                  <h4 className="font-bold text-sm text-white">Live Tracking</h4>
-                  <p className="text-xs text-slate-300 mt-1">Instant view of referral link clicks & ticket sales.</p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <Wallet className="h-5 w-5 text-teal-400 mb-2" />
-                  <h4 className="font-bold text-sm text-white">Instant Withdrawals</h4>
-                  <p className="text-xs text-slate-300 mt-1">Cash out directly to JazzCash, Easypaisa, or Raast.</p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <ShieldCheck className="h-5 w-5 text-blue-400 mb-2" />
-                  <h4 className="font-bold text-sm text-white">30-Day Attribution</h4>
-                  <p className="text-xs text-slate-300 mt-1">Never lose a commission with smart cookie tracking.</p>
-                </div>
-              </div>
-
-              {/* Direct Redirect Button */}
-              <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a
-                  href={redirectHref}
-                  target={partnerAppUrl ? "_blank" : undefined}
-                  rel={partnerAppUrl ? "noopener noreferrer" : undefined}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-base px-8 py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all transform hover:-translate-y-0.5"
-                >
-                  <Handshake className="h-5 w-5" />
-                  <span>Launch Partner Platform</span>
-                  {partnerAppUrl ? (
-                    <ExternalLink className="h-4 w-4" />
-                  ) : (
-                    <ArrowRight className="h-4 w-4" />
-                  )}
-                </a>
-
-                <a
-                  href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20have%20questions%20about%20the%20Partner%20Platform.`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-base px-7 py-4 rounded-2xl border border-white/20 transition-all"
-                >
-                  <MessageCircle className="h-5 w-5 text-emerald-400" />
-                  <span>VIP WhatsApp Support</span>
-                </a>
-              </div>
-
-              {partnerAppUrl && (
-                <p className="text-xs text-emerald-400/80 font-mono">
-                  Destination: {partnerAppUrl}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Headaches Comparison Section */}
-      <section className="py-16 lg:py-24 bg-white border-t border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-14">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
-              Why PakRaffle Is 100% Headache-Free
-            </h2>
-            <p className="text-slate-600 text-base sm:text-lg mt-3">
-              Traditional ways of earning online in Pakistan are full of roadblocks. Here is how PakRaffle fixes everything.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* The Old Headache Way */}
-            <div className="bg-red-50/50 border-2 border-red-200/80 rounded-3xl p-6 sm:p-8 space-y-5">
-              <div className="flex items-center gap-3 pb-3 border-b border-red-200">
-                <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold">
-                  ✕
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-red-950">Other Methods (Dropshipping, Amazon, Freelancing)</h3>
-                  <p className="text-xs text-red-700">Massive headaches and delayed payments</p>
-                </div>
-              </div>
-
-              <ul className="space-y-3.5 text-sm text-red-900">
-                <li className="flex items-start gap-2.5">
-                  <span className="text-red-500 font-bold mt-0.5">✕</span>
-                  <span><strong>Heavy upfront money:</strong> Needs Rs. 50,000 to 200,000+ for ad spend or inventory.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-red-500 font-bold mt-0.5">✕</span>
-                  <span><strong>Customer complaints & returns:</strong> Angry buyers messaging you at 2:00 AM about delayed courier delivery.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-red-500 font-bold mt-0.5">✕</span>
-                  <span><strong>Account bans & PayPal issues:</strong> Blocked accounts, high foreign fees, and complex verifications.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-red-500 font-bold mt-0.5">✕</span>
-                  <span><strong>High technical skills required:</strong> You have to build websites, configure pixels, and write ad copy.</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* The PakRaffle Zero-Headache Way */}
-            <div className="bg-emerald-50/70 border-2 border-emerald-300 rounded-3xl p-6 sm:p-8 space-y-5 relative shadow-sm">
-              <div className="absolute -top-3.5 right-6">
-                <Badge className="bg-emerald-600 text-white font-bold px-3 py-1 shadow-xs">The Easy Way</Badge>
-              </div>
-
-              <div className="flex items-center gap-3 pb-3 border-b border-emerald-200">
-                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
-                  ✓
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-emerald-950">PakRaffle Affiliate Program</h3>
-                  <p className="text-xs text-emerald-700">Pure profit with zero operational stress</p>
-                </div>
-              </div>
-
-              <ul className="space-y-3.5 text-sm text-emerald-950">
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Rs. 0 Required:</strong> 100% free to join forever. No registration fee, no renewal costs.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Zero Customer Handling:</strong> PakRaffle manages tickets, live draws, prize verification, and courier delivery.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Direct Pakistani Payouts:</strong> Get money straight in your JazzCash, Easypaisa, or bank account whenever you want.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Instant Platform Access:</strong> Direct link to partner portal with live metrics and automated payouts.</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Top Earning Pakistani Affiliates (Social Proof) */}
-      <section className="py-16 lg:py-24 bg-slate-50 border-t border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-14">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
-              Meet Top Pakistani Affiliates Earning Weekly
-            </h2>
-            <p className="text-slate-600 text-base sm:text-lg mt-3">
-              From university students to full-time creators, see how real affiliates make money with PakRaffle.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Story 1 */}
-            <Card className="rounded-3xl border border-slate-200 bg-white shadow-xs hover:shadow-md transition-shadow relative overflow-hidden">
-              <div className="h-2 bg-emerald-500 w-full" />
-              <CardContent className="p-6 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xl flex items-center justify-center mx-auto shadow-inner">
-                  AH
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-lg">Ahmed Hassan</h3>
-                  <p className="text-xs text-slate-500">Tech Reviewer • Islamabad</p>
-                </div>
-                <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
-                  <span className="text-xs text-emerald-700 block font-medium">Last Month's Earnings</span>
-                  <span className="text-2xl font-extrabold text-emerald-700 font-mono">Rs. 485,750</span>
-                </div>
-                <p className="text-xs text-slate-600 italic">
-                  "I just post 2 Instagram stories whenever an iPhone or bike draw opens. The commission comes automatically to my Meezan bank."
-                </p>
-                <div className="text-[11px] font-semibold text-emerald-600 flex items-center justify-center gap-1">
-                  <CheckCircle className="h-3.5 w-3.5" /> Payout verified via Meezan Bank
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Story 2 */}
-            <Card className="rounded-3xl border border-slate-200 bg-white shadow-xs hover:shadow-md transition-shadow relative overflow-hidden">
-              <div className="h-2 bg-blue-500 w-full" />
-              <CardContent className="p-6 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-800 font-extrabold text-xl flex items-center justify-center mx-auto shadow-inner">
-                  SF
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-lg">Sarah Fatima</h3>
-                  <p className="text-xs text-slate-500">University Student • Karachi</p>
-                </div>
-                <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100">
-                  <span className="text-xs text-blue-700 block font-medium">Last Month's Earnings</span>
-                  <span className="text-2xl font-extrabold text-blue-700 font-mono">Rs. 184,200</span>
-                </div>
-                <p className="text-xs text-slate-600 italic">
-                  "I pay my entire semester university fee just by sharing raffle links in my university hostel WhatsApp groups. Zero stress!"
-                </p>
-                <div className="text-[11px] font-semibold text-blue-600 flex items-center justify-center gap-1">
-                  <CheckCircle className="h-3.5 w-3.5" /> Payout verified via JazzCash
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Story 3 */}
-            <Card className="rounded-3xl border border-slate-200 bg-white shadow-xs hover:shadow-md transition-shadow relative overflow-hidden">
-              <div className="h-2 bg-purple-500 w-full" />
-              <CardContent className="p-6 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-purple-100 text-purple-800 font-extrabold text-xl flex items-center justify-center mx-auto shadow-inner">
-                  BT
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-lg">Bilal Tariq</h3>
-                  <p className="text-xs text-slate-500">TikTok Creator • Lahore</p>
-                </div>
-                <div className="bg-purple-50 p-3 rounded-2xl border border-purple-100">
-                  <span className="text-xs text-purple-700 block font-medium">Last Month's Earnings</span>
-                  <span className="text-2xl font-extrabold text-purple-700 font-mono">Rs. 342,000</span>
-                </div>
-                <p className="text-xs text-slate-600 italic">
-                  "TikTok reels get huge organic views in Pakistan. PakRaffle converts like crazy because tickets are only Rs. 100."
-                </p>
-                <div className="text-[11px] font-semibold text-purple-600 flex items-center justify-center gap-1">
-                  <CheckCircle className="h-3.5 w-3.5" /> Payout verified via Raast
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Story 4 */}
-            <Card className="rounded-3xl border border-slate-200 bg-white shadow-xs hover:shadow-md transition-shadow relative overflow-hidden">
-              <div className="h-2 bg-amber-500 w-full" />
-              <CardContent className="p-6 text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-800 font-extrabold text-xl flex items-center justify-center mx-auto shadow-inner">
-                  AN
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-lg">Ayesha Noor</h3>
-                  <p className="text-xs text-slate-500">Stay-at-home Mom • Rawalpindi</p>
-                </div>
-                <div className="bg-amber-50 p-3 rounded-2xl border border-amber-100">
-                  <span className="text-xs text-amber-700 block font-medium">Last Month's Earnings</span>
-                  <span className="text-2xl font-extrabold text-amber-700 font-mono">Rs. 92,500</span>
-                </div>
-                <p className="text-xs text-slate-600 italic">
-                  "I don't have many followers, just family WhatsApp groups. Whenever relatives buy entries, I get commission directly on Easypaisa."
-                </p>
-                <div className="text-[11px] font-semibold text-amber-600 flex items-center justify-center gap-1">
-                  <CheckCircle className="h-3.5 w-3.5" /> Payout verified via Easypaisa
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Payout Methods Supported */}
-      <section className="py-14 bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-              Direct & Instant Pakistani Payouts
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
-              Receive Your Hard-Earned Rupees Exactly How You Want
-            </h3>
-            <p className="text-slate-400 text-sm max-w-2xl mx-auto mt-2">
-              No overseas fees, no complex currency conversions. Withdraw anytime once your balance reaches Rs. 500.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 max-w-4xl mx-auto">
-            {["JazzCash", "Easypaisa", "Raast (Instant)", "Meezan Bank", "HBL", "Bank Alfalah"].map((method) => (
+            {/* Result */}
+            <div className={`${INK_PANEL} relative overflow-hidden p-6 sm:p-8`}>
               <div
-                key={method}
-                className="bg-slate-800/80 border border-slate-700 px-5 py-3 rounded-2xl flex items-center gap-2.5 text-sm font-bold text-slate-200 shadow-sm"
-              >
-                <CheckCircle className="h-4 w-4 text-emerald-400" />
-                <span>{method}</span>
+                aria-hidden
+                className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-emerald-500/25 blur-3xl"
+              />
+              <div className="relative">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300/80">
+                  Projected monthly income
+                </p>
+                <p className="mt-2 font-mono text-[2.4rem] font-semibold leading-none tabular-nums text-white sm:text-5xl">
+                  <Counter to={totalEstimatedMonthly} prefix="Rs " />
+                </p>
+                <p className="mt-2 text-[13px] text-emerald-50/70">
+                  Paid straight to JazzCash, Easypaisa or Raast — on your schedule, not ours.
+                </p>
+
+                <div className="mt-6 space-y-2.5 border-t border-white/10 pt-5 text-[13px]">
+                  <div className="flex items-center justify-between gap-4 text-emerald-50/70">
+                    <span>Base commission ({ratePct}%)</span>
+                    <span className="font-mono font-semibold tabular-nums text-emerald-300">{pkr(commissionEarnings)}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4 text-emerald-50/70">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                      Milestone bonus
+                    </span>
+                    <span
+                      className={`font-mono font-semibold tabular-nums ${milestoneBonus > 0 ? "text-amber-300" : "text-slate-500"}`}
+                    >
+                      {milestoneBonus > 0 ? `+ ${pkr(milestoneBonus)}` : "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4 text-emerald-50/70">
+                    <span>Daily average</span>
+                    <span className="font-mono font-semibold tabular-nums text-white">{pkr(dailyAverage)} / day</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+                  <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-400" />
+                  <p className="text-[11px] leading-snug text-emerald-50/70">
+                    An estimate, not a promise — it assumes every ticket is paid for and the milestone is met.
+                  </p>
+                </div>
+
+                <div className="mt-6">
+                  <Cta href={redirectHref} variant="primary" className="w-full">
+                    <Handshake className="h-4 w-4" />
+                    Open the partner platform
+                  </Cta>
+                  <p className="mt-2.5 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-emerald-200/50">
+                    Live portal · real-time tracking
+                  </p>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Frequently Asked Questions */}
-      <section className="py-16 lg:py-24 bg-white border-t border-slate-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-slate-600 text-sm sm:text-base mt-2">
-              Everything you need to know to start earning without doubts.
-            </p>
-          </div>
+      {/* -------------------------------------------------------- Tier ladder */}
+      <section className="border-y border-slate-900/5 bg-white/60 py-16 sm:py-20">
+        <div className={CONTAINER}>
+          <SectionHead
+            index="02"
+            kicker="The ladder"
+            title="Three tiers. One direction: up."
+            body="Rates climb with the volume you move and never drop back down within the month you hit them."
+          />
 
-          <div className="space-y-4">
-            {[
-              {
-                q: "Do I need a large following or expensive camera to start?",
-                a: "Absolutely not! Over 60% of our successful affiliates are students, housewives, and everyday individuals who simply share links on their personal WhatsApp status or family groups. Even referring 3-5 ticket buyers a day earns you a solid passive monthly income.",
-              },
-              {
-                q: "How and when do I get paid?",
-                a: "You can request a withdrawal directly through your partner platform dashboard or via WhatsApp to our Affiliate Manager. Payouts are sent within 2 to 6 hours directly to your JazzCash, Easypaisa, Raast, or any Pakistani Bank Account.",
-              },
-              {
-                q: "Is there any cost, deposit, or subscription fee to join?",
-                a: "No! PakRaffle Affiliate Program is 100% completely free to join and will always remain free. You never have to pay a single rupee to earn commissions.",
-              },
-              {
-                q: "What if someone clicks my link today but buys a ticket 2 weeks later?",
-                a: "We use a 30-day tracking cookie! If someone clicks your link today and decides to purchase tickets anytime within the next 30 days, you will automatically receive full commission credit for that sale.",
-              },
-              {
-                q: "What is the minimum amount I can withdraw?",
-                a: "The minimum payout threshold is just Rs. 500! As soon as you earn Rs. 500 from your first few referrals, you can immediately transfer it to your mobile wallet.",
-              },
-              {
-                q: "Who handles customer support, ticket delivery, and winner verification?",
-                a: "PakRaffle handles 100% of the customer support, ticket issuance, random draw transparency, and winner prize courier delivery. You only share your link and collect your profits.",
-              },
-            ].map((faq, idx) => {
-              const isOpen = openFaq === idx
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {TIERS.map((tier) => {
+              const active = tier.name === tierName
               return (
                 <div
-                  key={idx}
-                  className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50 transition-colors"
+                  key={tier.name}
+                  className={`relative flex flex-col rounded-3xl border p-6 transition ${
+                    active
+                      ? "border-emerald-500/40 bg-white shadow-[0_30px_80px_-50px_rgba(5,120,87,0.75)]"
+                      : "border-slate-900/10 bg-white/60"
+                  }`}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setOpenFaq(isOpen ? null : idx)}
-                    className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-slate-900 text-sm sm:text-base hover:bg-slate-100/60"
-                  >
-                    <span>{faq.q}</span>
-                    {isOpen ? (
-                      <ChevronUp className="h-5 w-5 text-emerald-600 shrink-0" />
-                    ) : (
-                      <ChevronDown className="h-5 w-5 text-slate-400 shrink-0" />
-                    )}
-                  </button>
-                  {isOpen && (
-                    <div className="px-5 pb-5 pt-1 text-sm text-slate-600 leading-relaxed border-t border-slate-200/60 bg-white">
-                      {faq.a}
-                    </div>
+                  {active && (
+                    <span className="absolute -top-2.5 left-6 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+                      <LiveDot className="[&>span]:bg-white" />
+                      Your tier
+                    </span>
                   )}
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{tier.band}</p>
+                  <div className="mt-3 flex items-end justify-between gap-3">
+                    <h3 className="font-display text-xl font-semibold tracking-tight text-slate-900">{tier.name}</h3>
+                    <p className="font-mono text-3xl font-semibold tabular-nums text-emerald-700">{tier.rate}%</p>
+                  </div>
+                  <p className="mt-2 text-[12px] text-slate-500">
+                    {tier.bonus > 0 ? `Includes a ${pkr(tier.bonus)} milestone bonus` : "No bonus threshold — just commission"}
+                  </p>
+                  <ul className="mt-5 space-y-2.5 border-t border-slate-900/5 pt-5">
+                    {tier.perks.map((perk) => (
+                      <li key={perk} className="flex items-start gap-2 text-[13px] leading-relaxed text-slate-600">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" strokeWidth={3} />
+                        {perk}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )
             })}
@@ -745,73 +613,408 @@ export default function PartnerPage() {
         </div>
       </section>
 
-      {/* Final Irresistible CTA */}
-      <section className="py-20 bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 text-white text-center relative overflow-hidden">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
-          <Badge className="bg-white/20 text-white font-bold border-0 px-4 py-1 text-xs">
-            Start Today • Get Paid Tomorrow
-          </Badge>
+      {/* -------------------------------------------------------- How it pays */}
+      <section className={`${CONTAINER} py-16 sm:py-20`}>
+        <SectionHead
+          index="03"
+          kicker="Nothing to maintain"
+          title="Three steps, then it runs itself."
+          body="PakRaffle owns the tickets, the draws, the support desk and the courier. You own the link."
+        />
 
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-white leading-tight">
-            Ready to Build Your Passive Income Stream?
-          </h2>
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {STEPS.map((step, i) => (
+            <div key={step.title} className={`${PANEL} relative overflow-hidden p-6`}>
+              <GhostNumeral className="absolute right-4 top-3 opacity-40">{`0${i + 1}`}</GhostNumeral>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-700">
+                <step.icon className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 font-display text-lg font-semibold tracking-tight text-slate-900">{step.title}</h3>
+              <p className="mt-2 text-[13px] leading-relaxed text-slate-600">{step.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-          <p className="text-emerald-100 text-base sm:text-lg max-w-2xl mx-auto">
-            Join thousands of smart Pakistanis who turned their idle WhatsApp and phone screen time into real cash every single week.
-          </p>
+      {/* --------------------------------------------------------- Comparison */}
+      <section className="border-y border-slate-900/5 bg-white/60 py-16 sm:py-20">
+        <div className={CONTAINER}>
+          <SectionHead
+            index="04"
+            kicker="The honest comparison"
+            title="Why affiliates stay with PakRaffle."
+            body="Earning online in Pakistan usually means paying to begin. This one does not."
+          />
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <a
-              href={redirectHref}
-              target={partnerAppUrl ? "_blank" : undefined}
-              rel={partnerAppUrl ? "noopener noreferrer" : undefined}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-emerald-900 hover:bg-slate-100 font-extrabold text-base px-8 py-4 rounded-2xl shadow-xl transition-all"
-            >
-              <Handshake className="h-5 w-5 text-emerald-600" />
-              <span>Go to Partner Platform</span>
-              {partnerAppUrl ? (
-                <ExternalLink className="h-4 w-4" />
-              ) : (
-                <ArrowRight className="h-5 w-5" />
-              )}
-            </a>
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            <div className="rounded-3xl border border-rose-500/15 bg-rose-50/50 p-6 sm:p-7">
+              <div className="flex items-center gap-3 border-b border-rose-500/15 pb-4">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600">
+                  <Minus className="h-4 w-4" strokeWidth={3} />
+                </span>
+                <div>
+                  <h3 className="font-display text-base font-semibold text-rose-950">Dropshipping · Amazon · Freelancing</h3>
+                  <p className="text-[11px] text-rose-700/80">Capital first, headaches forever</p>
+                </div>
+              </div>
+              <ul className="mt-4 space-y-3.5">
+                {OLD_WAY.map((item) => (
+                  <li key={item.title} className="flex items-start gap-2.5">
+                    <span aria-hidden className="mt-0.5 font-mono text-xs font-bold text-rose-400">✕</span>
+                    <span className="text-[13px] leading-relaxed text-rose-900/90">
+                      <span className="font-semibold text-rose-950">{item.title}.</span> {item.body}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-            <a
-              href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20am%20ready%20to%20start%20as%20an%20affiliate%20partner.`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-800/80 hover:bg-emerald-800 text-white font-bold text-base px-7 py-4 rounded-2xl border border-emerald-400/40"
-            >
-              <MessageCircle className="h-5 w-5 text-emerald-300" />
-              <span>Talk to Affiliate VIP Manager</span>
-            </a>
-          </div>
-
-          <div className="pt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-emerald-200">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle className="h-4 w-4 text-emerald-300" /> No Registration Fees
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle className="h-4 w-4 text-emerald-300" /> Instant Platform Access
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle className="h-4 w-4 text-emerald-300" /> WhatsApp Payout Support
-            </span>
+            <div className="relative rounded-3xl border border-emerald-500/25 bg-emerald-50/50 p-6 shadow-[0_30px_80px_-60px_rgba(5,120,87,0.8)] sm:p-7">
+              <span className="absolute -top-2.5 right-6 rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+                The easy way
+              </span>
+              <div className="flex items-center gap-3 border-b border-emerald-500/15 pb-4">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-white">
+                  <Check className="h-4 w-4" strokeWidth={3} />
+                </span>
+                <div>
+                  <h3 className="font-display text-base font-semibold text-emerald-950">PakRaffle affiliate program</h3>
+                  <p className="text-[11px] text-emerald-700/80">Pure commission, zero operations</p>
+                </div>
+              </div>
+              <ul className="mt-4 space-y-3.5">
+                {NEW_WAY.map((item) => (
+                  <li key={item.title} className="flex items-start gap-2.5">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" strokeWidth={3} />
+                    <span className="text-[13px] leading-relaxed text-emerald-900/90">
+                      <span className="font-semibold text-emerald-950">{item.title}.</span> {item.body}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Floating WhatsApp Quick Action Button */}
+      {/* ------------------------------------------------------------ Stories */}
+      <section className={`${CONTAINER} py-16 sm:py-20`}>
+        <SectionHead
+          index="05"
+          kicker="Partner stories"
+          title="Students, creators, and one very persuasive aunt."
+          body="Four partners, four completely different audiences — the same commission structure."
+        />
+
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {STORIES.map((story) => (
+            <div key={story.name} className="flex flex-col rounded-3xl border border-slate-900/10 bg-white p-5">
+              <div className={`h-1 w-12 rounded-full bg-gradient-to-r ${story.ring}`} />
+              <div className={`mt-4 flex h-12 w-12 items-center justify-center rounded-2xl font-display text-base font-bold ${story.wash}`}>
+                {story.initials}
+              </div>
+              <p className="mt-3 font-display text-base font-semibold tracking-tight text-slate-900">{story.name}</p>
+              <p className="text-[11px] text-slate-500">{story.role}</p>
+
+              <div className="mt-4 rounded-2xl bg-slate-50 px-3.5 py-3">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-500">Last month</p>
+                <p className="mt-0.5 font-mono text-lg font-semibold tabular-nums text-slate-900">{pkr(story.earnings)}</p>
+              </div>
+
+              <p className="mt-4 flex-1 text-[12.5px] leading-relaxed text-slate-600">“{story.quote}”</p>
+
+              <p className="mt-4 inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
+                <BadgeCheck className="h-3.5 w-3.5" />
+                {story.method}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* -------------------------------------------- Portal access + payouts */}
+      <section className={`${CONTAINER} pb-16 sm:pb-20`}>
+        <div className={`${INK_PANEL} relative overflow-hidden p-6 sm:p-10`}>
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="absolute -left-20 top-0 h-64 w-64 rounded-full bg-violet-500/20 blur-3xl" />
+            <div className="absolute -right-10 bottom-0 h-56 w-56 rounded-full bg-emerald-500/20 blur-3xl" />
+          </div>
+
+          <div className="relative grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
+            <div>
+              <Kicker className="text-emerald-300">Official partner portal</Kicker>
+              <h2 className="mt-3 font-display text-2xl font-semibold leading-tight tracking-tight text-white sm:text-[2rem]">
+                Your link, your clicks, your money — all in one console.
+              </h2>
+              <p className="mt-3 max-w-md text-[13.5px] leading-relaxed text-emerald-50/70">
+                Open the portal, copy your tracked link, and watch commissions land in real time. No spreadsheets, no
+                waiting on an email, no asking anyone for your balance.
+              </p>
+
+              <div className="mt-6 grid gap-2.5 sm:grid-cols-3">
+                {[
+                  { icon: BarChart3, title: "Live tracking", body: "Clicks and sales as they happen." },
+                  { icon: Wallet, title: "Instant withdrawal", body: "JazzCash, Easypaisa or Raast." },
+                  { icon: ShieldCheck, title: "30-day credit", body: "The sale still counts later." },
+                ].map((f) => (
+                  <div key={f.title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-3.5">
+                    <f.icon className="h-4 w-4 text-emerald-400" />
+                    <p className="mt-2 text-[12px] font-semibold text-white">{f.title}</p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-emerald-50/60">{f.body}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
+                <Cta href={redirectHref} variant="primary" className="w-full sm:w-auto">
+                  <Handshake className="h-4 w-4" />
+                  Launch partner platform
+                  {partnerAppUrl ? <ExternalLink className="h-3.5 w-3.5" /> : null}
+                </Cta>
+                <Cta
+                  href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20have%20questions%20about%20the%20Partner%20Platform.`}
+                  variant="light"
+                  className="w-full sm:w-auto"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  VIP WhatsApp support
+                </Cta>
+              </div>
+              {partnerAppUrl && (
+                <p className="mt-3 truncate font-mono text-[10px] text-emerald-300/60">Destination: {partnerAppUrl}</p>
+              )}
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300/80">
+                  Payout methods
+                </p>
+                <Pill className="border-white/15 bg-white/10 text-emerald-50">
+                  <Zap className="h-3 w-3 text-amber-300" />
+                  2 – 6 hours
+                </Pill>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {PAYOUTS.map((method) => (
+                  <span
+                    key={method}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-[12px] font-semibold text-emerald-50/90"
+                  >
+                    <Check className="h-3 w-3 text-emerald-400" strokeWidth={3} />
+                    {method}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-5 space-y-2.5 border-t border-white/10 pt-5 text-[12px] text-emerald-50/70">
+                <div className="flex items-center justify-between gap-3">
+                  <span>Minimum withdrawal</span>
+                  <span className="font-mono font-semibold text-white">Rs 500</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span>Joining fee</span>
+                  <span className="font-mono font-semibold text-white">Rs 0</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span>Monthly fee</span>
+                  <span className="font-mono font-semibold text-white">Rs 0</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span>Commission cap</span>
+                  <span className="font-mono font-semibold text-white">None</span>
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-start gap-2.5 rounded-2xl bg-emerald-500/10 px-3.5 py-3">
+                <Rocket className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
+                <p className="text-[11px] leading-snug text-emerald-50/80">
+                  Payouts are released on working hours; weekend requests land on the next business morning.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- FAQ */}
+      <section className="border-t border-slate-900/5 bg-white/60 py-16 sm:py-20">
+        <div className={`${CONTAINER} grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14`}>
+          <div>
+            <SectionHead index="06" kicker="Questions" title="Everything before you start." />
+            <p className="mt-4 text-[13.5px] leading-relaxed text-slate-600">
+              Still unsure? Message the affiliate desk on WhatsApp — a human answers, not a bot.
+            </p>
+            <div className="mt-6 flex flex-col gap-2.5 sm:flex-row lg:flex-col">
+              <Cta
+                href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20am%20ready%20to%20start%20as%20an%20affiliate%20partner.`}
+                variant="ghost"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Talk to the affiliate desk
+              </Cta>
+            </div>
+            <p className="mt-6 max-w-sm text-[11px] leading-relaxed text-slate-500">
+              Commissions are paid on completed ticket purchases only. Voided or refunded tickets earn nothing.
+              Estimates shown on this page are illustrative and depend on your own audience.
+            </p>
+          </div>
+
+          <FaqList items={FAQ} />
+        </div>
+      </section>
+
+      {/* ----------------------------------------------------------- Final CTA */}
+      <section className={`${CONTAINER} py-16 sm:py-20`}>
+        <div className="relative overflow-hidden rounded-[32px] bg-[#0a1020] px-6 py-12 text-center sm:px-12 sm:py-16">
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-violet-500/25 blur-3xl" />
+            <div className="absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-emerald-500/25 blur-3xl" />
+            <div className="absolute inset-0 grid-veil opacity-40" />
+          </div>
+
+          <div className="relative mx-auto max-w-2xl">
+            <Pill className="border-white/15 bg-white/10 text-emerald-50">
+              <LiveDot />
+              Start today · first payout in days
+            </Pill>
+            <h2 className="mt-5 font-display text-[2rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.9rem]">
+              Your status update is
+              <span className="block bg-gradient-to-r from-emerald-300 via-teal-200 to-violet-300 bg-clip-text text-transparent">
+                already worth money.
+              </span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-slate-300">
+              Join the partners who turned screen time into a monthly payout — no capital, no inventory, no customer
+              support.
+            </p>
+
+            <div className="mt-7 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
+              <Cta href={redirectHref} variant="primary" className="w-full sm:w-auto">
+                <Handshake className="h-4 w-4" />
+                Go to partner platform
+              </Cta>
+              <Cta
+                href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20am%20ready%20to%20start%20as%20an%20affiliate%20partner.`}
+                variant="light"
+                className="w-full sm:w-auto"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Talk to VIP manager
+              </Cta>
+            </div>
+
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] text-emerald-100/70">
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5 text-emerald-400" strokeWidth={3} />
+                No registration fees
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5 text-emerald-400" strokeWidth={3} />
+                Instant platform access
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5 text-emerald-400" strokeWidth={3} />
+                WhatsApp payout support
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ------------------------------------------- Floating WhatsApp helper */}
       <a
         href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20have%20a%20question%20about%20the%20affiliate%20partner%20program.`}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-full shadow-2xl border-2 border-white transition-all transform hover:scale-105"
+        className="fixed bottom-6 right-5 z-50 inline-flex items-center gap-2 rounded-full border border-white/20 bg-emerald-600 px-4 py-3 text-white shadow-[0_18px_40px_-16px_rgba(5,120,87,0.9)] transition hover:-translate-y-0.5 hover:bg-emerald-500"
         title="Chat with Affiliate VIP Support on WhatsApp"
       >
-        <MessageCircle className="h-5 w-5 fill-white text-emerald-600" />
-        <span className="text-xs sm:text-sm font-bold hidden sm:inline">Affiliate WhatsApp Help</span>
+        <MessageCircle className="h-5 w-5" />
+        <span className="hidden text-xs font-semibold sm:inline">Affiliate help</span>
       </a>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------- helpers */
+
+function PassRow({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string
+  value: string
+  tone?: "default" | "emerald" | "amber" | "muted"
+}) {
+  const valueTone = {
+    default: "text-slate-900",
+    emerald: "text-emerald-700",
+    amber: "text-amber-600",
+    muted: "text-slate-400",
+  }[tone]
+  return (
+    <div className="flex items-center justify-between gap-4 text-[12.5px]">
+      <dt className="text-slate-500">{label}</dt>
+      <dd className={`font-mono font-semibold tabular-nums ${valueTone}`}>{value}</dd>
+    </div>
+  )
+}
+
+function Slot({
+  label,
+  display,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+  left,
+  right,
+}: {
+  label: string
+  display: string
+  value: number
+  min: number
+  max: number
+  step: number
+  onChange: (value: number) => void
+  left: string
+  right: string
+}) {
+  return (
+    <label className="block">
+      <span className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-[13px] font-semibold text-slate-800">{label}</span>
+        <span className="rounded-lg border border-slate-900/10 bg-white px-2.5 py-1 font-mono text-[13px] font-semibold tabular-nums text-slate-900">
+          {display}
+        </span>
+      </span>
+      <input
+        type="range"
+        value={value}
+        min={min}
+        max={max}
+        step={step}
+        onChange={(e) => onChange(Number(e.target.value))}
+        aria-label={label}
+        className="mt-3 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-900/10 accent-emerald-600"
+      />
+      <span className="mt-1.5 flex items-center justify-between gap-4 text-[10.5px] font-medium text-slate-400">
+        <span>{left}</span>
+        <span className="text-right">{right}</span>
+      </span>
+    </label>
+  )
+}
+
+function PreviewCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-900/10 bg-white px-3.5 py-3">
+      <p className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</p>
+      <p className="mt-1 font-mono text-sm font-semibold tabular-nums text-slate-900">{value}</p>
     </div>
   )
 }

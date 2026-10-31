@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function StoreTicketLookupPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#f8f9f6]" />}>
       <StoreTicketLookupClient />
     </Suspense>
   )
