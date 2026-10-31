@@ -15,6 +15,7 @@ import {
   CONTAINER,
   Cta,
   INK_PANEL,
+  JsonLd,
   Kicker,
   LiveDot,
   Mesh,
@@ -26,17 +27,34 @@ import {
 import { Reveal } from "@/components/marketing/motion"
 
 export const metadata = {
-  title: "Refund Policy — Official Cancellation & Return Terms | PakRaffle",
+  title: "Refund Policy — Ticket Cancellation & 100% Refund Guarantee | PakRaffle",
   description:
-    "Review PakRaffle’s official refund and cancellation policy, entry finality, and 100% target sales guarantee.",
-  keywords: ["PakRaffle refund", "cancellation policy", "ticket return", "Pakistan raffle refund rules"],
+    "PakRaffle's official refund policy: when raffle tickets are refundable, entry finality rules, full refunds on raffle cancellation, Merchant Connect ticket refunds, and how to claim money back in Pakistan via Raast, IBFT, JazzCash or Easypaisa.",
+  keywords: [
+    "PakRaffle refund policy",
+    "raffle ticket refund Pakistan",
+    "lucky draw cancellation",
+    "refund raffle tickets",
+    "money back guarantee Pakistan raffle",
+    "merchant ticket refund",
+  ],
   robots: "index, follow",
+  alternates: {
+    canonical: "https://pakraffle.com/refund",
+  },
   openGraph: {
     title: "Refund Policy - PakRaffle Pakistan",
-    description: "Clear guidelines on entry finality, fair play pool funding, and raffle cancellation guarantees.",
+    description:
+      "Clear rules on entry finality, 100% refunds on cancelled raffles, and Merchant Connect ticket refunds — no hidden conditions.",
     url: "https://pakraffle.com/refund",
     siteName: "PakRaffle",
     type: "website",
+    locale: "en_PK",
+  },
+  twitter: {
+    card: "summary",
+    title: "Refund Policy | PakRaffle Pakistan",
+    description: "When tickets are refundable, how cancellations work, and how payouts reach your wallet or bank.",
   },
 }
 
@@ -90,6 +108,56 @@ function Clause({
 export default function RefundPage() {
   return (
     <div className={SHELL}>
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: "Refund Policy — PakRaffle",
+            url: "https://pakraffle.com/refund",
+            inLanguage: "en-PK",
+            isPartOf: { "@type": "WebSite", name: "PakRaffle", url: "https://pakraffle.com" },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://pakraffle.com" },
+              { "@type": "ListItem", position: 2, name: "Refund Policy", item: "https://pakraffle.com/refund" },
+            ],
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+              {
+                "@type": "Question",
+                name: "Are PakRaffle raffle tickets refundable?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Verified tickets are generally non-refundable because they alter the draw pool and odds for other participants. Full 100% refunds are made automatically if a raffle is cancelled by PakRaffle or the ticket target is not met.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What happens if a raffle is cancelled?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "If a raffle is cancelled due to force majeure, technical issues, or inventory problems, 100% of the ticket purchase price is refunded to each participant's original payment method or wallet.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Can a Merchant Connect store refund a customer ticket?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Yes — a merchant can refund a ticket at any time before its draw runs. The refund equals the ticket price minus the payment-gateway charge already incurred (2.9% plus Rs. 30 per ticket), and the refund automatically voids that ticket and its invoice line.",
+                },
+              },
+            ],
+          },
+        ]}
+      />
       {/* ------------------------------------------------------------------ Hero */}
       <section className="relative overflow-hidden border-b border-slate-900/5">
         <Mesh tone="amber" />

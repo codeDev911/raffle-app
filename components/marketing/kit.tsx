@@ -308,3 +308,17 @@ export function GhostNumeral({ children, className }: { children: ReactNode; cla
 export function Rule({ className }: { className?: string }) {
   return <div aria-hidden className={cn("h-px w-full bg-gradient-to-r from-slate-900/10 via-slate-900/5 to-transparent", className)} />
 }
+
+/**
+ * SEO structured data (schema.org JSON-LD). `JSON.stringify` escapes `<`, `>` and `&`,
+ * so a script break-out via content is not possible. Server components only.
+ */
+export function JsonLd({ data, id }: { data: Record<string, unknown> | Record<string, unknown>[]; id?: string }) {
+  return (
+    <script
+      type="application/ld+json"
+      id={id}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  )
+}

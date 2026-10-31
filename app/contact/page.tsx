@@ -18,6 +18,7 @@ import {
   Cta,
   FaqList,
   INK_PANEL,
+  JsonLd,
   Kicker,
   LiveDot,
   PANEL,
@@ -28,23 +29,34 @@ import {
 } from "@/components/marketing/kit"
 
 export const metadata = {
-  title: "Contact Us — Official Support Desk & Inquiries | PakRaffle",
+  title: "Contact PakRaffle — 24/7 Support on WhatsApp, Email & Phone",
   description:
-    "Reach out to PakRaffle customer support. Get assistance with ticket verification, draw schedules, prize claims, or live chat.",
+    "Reach PakRaffle support anytime: ticket verification help, draw schedules, prize delivery status, refund requests and merchant onboarding queries. WhatsApp, email and inquiry desk — average response under 15 minutes, 24/7 across Pakistan.",
   keywords: [
     "contact PakRaffle",
     "PakRaffle support",
     "lucky draw help Pakistan",
     "ticket verification help",
     "PakRaffle customer care",
+    "PakRaffle WhatsApp number",
+    "raffle complaint Pakistan",
   ],
   robots: "index, follow",
+  alternates: {
+    canonical: "https://pakraffle.com/contact",
+  },
   openGraph: {
     title: "Contact Us - PakRaffle Pakistan",
-    description: "Get in touch with PakRaffle customer care via WhatsApp, email, or our inquiry desk.",
+    description: "Get in touch with PakRaffle customer care via WhatsApp, email, or our inquiry desk — 24/7.",
     url: "https://pakraffle.com/contact",
     siteName: "PakRaffle",
     type: "website",
+    locale: "en_PK",
+  },
+  twitter: {
+    card: "summary",
+    title: "Contact PakRaffle Support",
+    description: "Ticket checks, draw schedules, prize claims — 24/7 support on WhatsApp and email.",
   },
 }
 
@@ -111,6 +123,41 @@ const FAQS = [
 export default function ContactPage() {
   return (
     <div className={SHELL}>
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "ContactPage",
+            name: "Contact PakRaffle Support",
+            url: "https://pakraffle.com/contact",
+            inLanguage: "en-PK",
+            mainEntity: {
+              "@type": "Organization",
+              "@id": "https://pakraffle.com/#organization",
+              name: "PakRaffle",
+              url: "https://pakraffle.com",
+              contactPoint: [
+                {
+                  "@type": "ContactPoint",
+                  telephone: "+92-337-7155722",
+                  contactType: "customer support",
+                  areaServed: "PK",
+                  availableLanguage: ["English", "Urdu"],
+                  email: "support@pakraffle.com",
+                },
+              ],
+            },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://pakraffle.com" },
+              { "@type": "ListItem", position: 2, name: "Contact", item: "https://pakraffle.com/contact" },
+            ],
+          },
+        ]}
+      />
       {/* ------------------------------------------------------------------ Hero */}
       <section className="relative overflow-hidden border-b border-slate-900/5">
         {/* Signal field — a dot grid with the horizon rising behind it. */}

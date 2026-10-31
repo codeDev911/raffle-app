@@ -19,6 +19,7 @@ import {
   Cta,
   GhostNumeral,
   INK_PANEL,
+  JsonLd,
   Kicker,
   LiveDot,
   Marquee,
@@ -31,9 +32,9 @@ import {
 import { Counter } from "@/components/marketing/motion"
 
 export const metadata = {
-  title: "About Us — Pakistan's Trusted Lucky Draw Platform | PakRaffle",
+  title: "About PakRaffle — Pakistan's Most Transparent Lucky Draw Platform",
   description:
-    "Learn about PakRaffle — our story, 100% target ticket draw policy, transparent live broadcasts, and verified prize delivery across Pakistan.",
+    "Discover how PakRaffle runs Pakistan's verified digital lucky draws: the 100% target-ticket rule, cryptographically audited winner selection, live-streamed draws, and free nationwide prize delivery. Real prizes, real people, real proof.",
   keywords: [
     "about PakRaffle",
     "Pakistan lucky draw",
@@ -41,14 +42,26 @@ export const metadata = {
     "target tickets sold draw",
     "verified prize delivery",
     "PakRaffle story",
+    "trusted lucky draw platform Pakistan",
+    "live stream raffle draw",
   ],
   robots: "index, follow",
+  alternates: {
+    canonical: "https://pakraffle.com/about",
+  },
   openGraph: {
     title: "About Us - PakRaffle Pakistan",
-    description: "Discover the vision, mission, and transparent draw standards behind PakRaffle.",
+    description:
+      "The story, mission and transparent draw standards behind Pakistan's verified digital lucky draw platform.",
     url: "https://pakraffle.com/about",
     siteName: "PakRaffle",
     type: "website",
+    locale: "en_PK",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About PakRaffle — Pakistan's Trusted Lucky Draw Platform",
+    description: "100% target-ticket draws, live-streamed results, verified prize delivery. No fake draws, ever.",
   },
 }
 
@@ -178,6 +191,37 @@ const WINNERS = [
 export default function AboutPage() {
   return (
     <div className={SHELL}>
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "@id": "https://pakraffle.com/#organization",
+            name: "PakRaffle",
+            url: "https://pakraffle.com",
+            description:
+              "PakRaffle is Pakistan's verified digital lucky draw platform — 100% target-ticket draws, cryptographically audited winner selection, live-streamed results and free nationwide prize delivery.",
+            areaServed: { "@type": "Country", name: "Pakistan" },
+            knowsAbout: ["lucky draws", "raffles", "prize giveaways", "Merchant Connect Shopify draws"],
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "AboutPage",
+            name: "About PakRaffle",
+            url: "https://pakraffle.com/about",
+            inLanguage: "en-PK",
+            mainEntity: { "@id": "https://pakraffle.com/#organization" },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://pakraffle.com" },
+              { "@type": "ListItem", position: 2, name: "About", item: "https://pakraffle.com/about" },
+            ],
+          },
+        ]}
+      />
       {/* ---------------------------------------------------------------- Hero */}
       <section className="relative overflow-hidden border-b border-slate-900/5">
         {/* Editorial paper — hairline column rules and outlined seals. */}

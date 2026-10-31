@@ -27,6 +27,7 @@ export function toStoreDTO(store: MerchantStore) {
     contactEmail: store.contactEmail,
     contactPhone: store.contactPhone,
     payoutDetails: store.payoutDetails ?? null,
+    ownerId: store.ownerId ?? null,
     status: store.status,
     // Shopify one-click connect state (the token itself never leaves the server).
     shopifyConnected: Boolean(store.shopifyConnectedAt),

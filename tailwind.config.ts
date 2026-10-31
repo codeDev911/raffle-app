@@ -15,6 +15,24 @@ const config: Config = {
   			display: ['var(--font-display)', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
   		},
   		colors: {
+  			// Merchant-workspace palette swap: the neutrals and the two emerald accents the
+  			// workspace themes are driven by CSS channels (see globals.css), so a single variable
+  			// remap restyles every surface — and every alpha modifier — without touching markup.
+  			// Light values are Tailwind's own, so the rest of the site is byte-for-byte unchanged.
+  			slate: {
+  				'50': 'rgb(var(--ws-slate-50) / <alpha-value>)',
+  				'100': 'rgb(var(--ws-slate-100) / <alpha-value>)',
+  				'200': 'rgb(var(--ws-slate-200) / <alpha-value>)',
+  				'300': 'rgb(var(--ws-slate-300) / <alpha-value>)',
+  				'400': 'rgb(var(--ws-slate-400) / <alpha-value>)',
+  				'500': 'rgb(var(--ws-slate-500) / <alpha-value>)',
+  				'600': 'rgb(var(--ws-slate-600) / <alpha-value>)',
+  				'700': 'rgb(var(--ws-slate-700) / <alpha-value>)'
+  			},
+  			emerald: {
+  				'600': 'rgb(var(--ws-emerald-600) / <alpha-value>)',
+  				'700': 'rgb(var(--ws-emerald-700) / <alpha-value>)'
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

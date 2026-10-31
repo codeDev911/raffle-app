@@ -5,6 +5,7 @@ import {
   CONTAINER,
   Cta,
   INK_PANEL,
+  JsonLd,
   Kicker,
   LiveDot,
   Mesh,
@@ -15,17 +16,35 @@ import {
 import { Reveal } from "@/components/marketing/motion"
 
 export const metadata = {
-  title: "Terms & Conditions — Official Rules & 100% Ticket Draw Policy | PakRaffle",
+  title: "Terms & Conditions — Official Lucky Draw Rules & Ticket Policy | PakRaffle",
   description:
-    "Official terms, participation rules, and draw policy for PakRaffle Pakistan.",
-  keywords: ["PakRaffle terms", "conditions", "raffle draw rules", "target ticket solds", "Pakistan lucky draw policy"],
+    "Read PakRaffle's official terms and conditions: eligibility, ticket purchase and verification rules, 100% target-ticket draw policy, winner selection, free prize delivery, refunds and Merchant Connect terms for Shopify stores in Pakistan.",
+  keywords: [
+    "PakRaffle terms and conditions",
+    "lucky draw rules Pakistan",
+    "raffle ticket policy",
+    "target ticket draw policy",
+    "online raffle legal terms Pakistan",
+    "Merchant Connect terms",
+    "prize delivery terms",
+  ],
   robots: "index, follow",
+  alternates: {
+    canonical: "https://pakraffle.com/terms",
+  },
   openGraph: {
     title: "Terms & Conditions - PakRaffle Pakistan",
-    description: "Review our transparent lucky draw rules, target ticket sell-out draw policy, and prize delivery terms.",
+    description:
+      "Official lucky draw rules: 100% target-ticket draws, winner selection, free nationwide prize delivery, refunds and Merchant Connect terms.",
     url: "https://pakraffle.com/terms",
     siteName: "PakRaffle",
     type: "website",
+    locale: "en_PK",
+  },
+  twitter: {
+    card: "summary",
+    title: "Terms & Conditions | PakRaffle Pakistan",
+    description: "Official rules for participation, draws, prizes, refunds and Merchant Connect — written in full.",
   },
 }
 
@@ -104,6 +123,27 @@ function Callout({
 export default function TermsPage() {
   return (
     <div className={SHELL}>
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: "Terms & Conditions — PakRaffle",
+            url: "https://pakraffle.com/terms",
+            inLanguage: "en-PK",
+            isPartOf: { "@type": "WebSite", name: "PakRaffle", url: "https://pakraffle.com" },
+            about: { "@id": "https://pakraffle.com/#organization" },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://pakraffle.com" },
+              { "@type": "ListItem", position: 2, name: "Terms & Conditions", item: "https://pakraffle.com/terms" },
+            ],
+          },
+        ]}
+      />
       {/* ------------------------------------------------------------------ Hero */}
       <section className="relative overflow-hidden border-b border-slate-900/5">
         <Mesh tone="emerald" />

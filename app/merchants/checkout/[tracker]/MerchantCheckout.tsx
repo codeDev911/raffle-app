@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { BrandMark } from "@/components/brand"
+import { ThemeToggle } from "@/components/merchants/theme-toggle"
 import {
   ArrowLeft,
   CheckCircle2,
@@ -176,13 +177,16 @@ export default function MerchantCheckout({ tracker }: { tracker: string }) {
               </span>
             )}
           </div>
-          <Link
-            href={backHref}
-            className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-slate-500 transition hover:text-slate-900"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-            Back to dashboard
-          </Link>
+          <div className="flex shrink-0 items-center gap-3">
+            <ThemeToggle className="hidden sm:inline-flex" />
+            <Link
+              href={backHref}
+              className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-slate-500 transition hover:text-slate-900"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              Back to dashboard
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -204,7 +208,7 @@ export default function MerchantCheckout({ tracker }: { tracker: string }) {
             <div className="mt-5 flex flex-col gap-2">
               <Link
                 href="/merchants"
-                className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-slate-900 dark:bg-[#0f172a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
                 Sign in
               </Link>
@@ -260,7 +264,7 @@ export default function MerchantCheckout({ tracker }: { tracker: string }) {
                       </p>
                       <Link
                         href={backHref}
-                        className="mt-4 inline-flex min-h-[40px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                        className="mt-4 inline-flex min-h-[40px] items-center justify-center rounded-xl bg-slate-900 dark:bg-[#0f172a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
                       >
                         Back to dashboard
                       </Link>
@@ -401,7 +405,7 @@ function PaidCard({ view, backHref }: { view: CheckoutView; backHref: string }) 
 
       <Link
         href={backHref}
-        className="mt-5 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+        className="mt-5 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl bg-slate-900 dark:bg-[#0f172a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
       >
         Back to dashboard
       </Link>
@@ -446,7 +450,7 @@ function ClosedCard({
       <div className="mt-5 flex flex-col gap-2">
         <Link
           href={backHref}
-          className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+          className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-slate-900 dark:bg-[#0f172a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
         >
           Back to dashboard
         </Link>

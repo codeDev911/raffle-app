@@ -7,6 +7,9 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   AlertTriangle,
   CheckCircle2,
@@ -16,20 +19,40 @@ import {
   Loader2,
   Lock,
   Pause,
+  Pencil,
   Play,
   RefreshCw,
   ShieldAlert,
+  ShieldOff,
   ShoppingBag,
   Store as StoreIcon,
   Ticket,
   Trophy,
+  UserCheck,
+  UserX,
 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { type CampaignDTO, type EntryDTO, type InvoiceDTO, type StoreDTO } from "@/components/merchants/dashboard/types"
 
 const TOKEN_KEY = "merchantsAdminToken"
 
+interface OwnerInfo {
+  id: string
+  name: string | null
+  email: string
+  isActive: boolean
+}
+
 interface StoreRow extends StoreDTO {
   campaigns: number
+  owner: OwnerInfo | null
 }
 
 interface CampaignRow extends CampaignDTO {
@@ -104,6 +127,11 @@ export default function MerchantsAdminClient() {
   const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [tokenRequired, setTokenRequired] = useState(false)
+
+  // Store settings editor
+  const [editing, setEditing] = useState<StoreRow | null>(null)
+  const [editForm, setEditForm] = useState({ name: "", contactEmail: "", contactPhone: "", payoutDetails: "" })
+  const [editSaving, setEditSaving] = useState(false)
 
   useEffect(() => {
     if (paramTab && TABS.some((t) => t.key === paramTab)) setTab(paramTab)
@@ -183,6 +211,40 @@ export default function MerchantsAdminClient() {
       setError(err.message)
     } finally {
       setBusy(null)
+    }
+  }
+
+  const openEditor = (s: StoreRow) => {
+    setEditForm({
+      name: s.name,
+      contactEmail: s.contactEmail,
+      contactPhone: s.contactPhone,
+      payoutDetails: s.payoutDetails || "",
+    })
+    setEditing(s)
+  }
+
+  const saveEditor = async () => {
+    if (!editing) return
+    setEditSaving(true)
+    setError(null)
+    try {
+      await request(`/api/admin/merchants/stores/${editing.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: editForm.name,
+          contactEmail: editForm.contactEmail,
+          contactPhone: editForm.contactPhone,
+          payoutDetails: editForm.payoutDetails || null,
+        }),
+      })
+      setNotice(`${editing.name} settings updated`)
+      setEditing(null)
+      await load()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setEditSaving(false)
     }
   }
 
@@ -385,7 +447,7 @@ export default function MerchantsAdminClient() {
       {tab === "stores" && (
         <Card className="border-slate-200 shadow-2xs">
           <CardContent className="p-0">
-            <SectionTitle icon={StoreIcon} title="Connected stores" note="pausing a store stops webhook minting" />
+            <SectionTitle icon={StoreIcon} title="Connected stores" note="pausing a store stops webhook minting · suspending blocks the merchant account" />
             {(data?.stores || []).length === 0 ? (
               <EmptyRow text="No stores connected yet. Share the Merchant Connect landing page." />
             ) : (
@@ -393,7 +455,9 @@ export default function MerchantsAdminClient() {
                 {data!.stores.map((s) => (
                   <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 truncate">{s.name}</p>
+                      <p className="text-sm font-semibold text-slate-900 truncate">
+                        <Link href={`/admin/merchants/${s.id}`} className="hover:text-red-700 hover:underline">{s.name}</Link>
+                      </p>
                       <p className="text-xs text-slate-500 inline-flex items-center gap-1.5">
                         <a
                           href={`https://${s.storeUrl}`}
@@ -417,9 +481,67 @@ export default function MerchantsAdminClient() {
                           </>
                         )}
                       </p>
+                      {s.owner ? (
+                        <p className="text-xs mt-1 inline-flex items-center gap-1.5 flex-wrap">
+                          <span className="text-slate-500">Account:</span>
+                          <span className="font-medium text-slate-700">{s.owner.name || s.owner.email}</span>
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                              s.owner.isActive ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
+                            }`}
+                          >
+                            {s.owner.isActive ? <UserCheck className="h-3 w-3" /> : <UserX className="h-3 w-3" />}
+                            {s.owner.isActive ? "Active" : "Suspended"}
+                          </span>
+                        </p>
+                      ) : (
+                        <p className="text-xs text-slate-400 mt-1">No linked account</p>
+                      )}
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <StatusBadge status={s.status} />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openEditor(s)}
+                        className="rounded-lg gap-1.5"
+                      >
+                        <Pencil className="h-4 w-4" /> Edit
+                      </Button>
+                      {s.owner ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={busy === `acct-${s.owner.id}`}
+                          onClick={() =>
+                            runAction(
+                              `acct-${s.owner!.id}`,
+                              () =>
+                                request(`/api/admin/users/${s.owner!.id}`, {
+                                  method: "PATCH",
+                                  body: JSON.stringify({ isActive: !s.owner!.isActive }),
+                                }).then(() => undefined),
+                              s.owner!.isActive
+                                ? `Account ${s.owner!.email} suspended`
+                                : `Account ${s.owner!.email} reactivated`,
+                            )
+                          }
+                          className={`rounded-lg gap-1.5 ${
+                            s.owner.isActive
+                              ? "border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                              : "border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                          }`}
+                        >
+                          {busy === `acct-${s.owner.id}` ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : s.owner.isActive ? (
+                            <ShieldOff className="h-4 w-4" />
+                          ) : (
+                            <UserCheck className="h-4 w-4" />
+                          )}
+                          {s.owner.isActive ? "Suspend account" : "Reactivate"}
+                        </Button>
+                      ) : null}
                       <Button
                         size="sm"
                         variant={s.status === "ACTIVE" ? "outline" : "default"}
@@ -454,6 +576,64 @@ export default function MerchantsAdminClient() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={Boolean(editing)} onOpenChange={(open) => !open && setEditing(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit store details</DialogTitle>
+            <DialogDescription>
+              {editing?.storeUrl} · credentials and status are managed from the store row.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="store-name">Store name</Label>
+              <Input
+                id="store-name"
+                value={editForm.name}
+                onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                maxLength={80}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="store-email">Contact email</Label>
+              <Input
+                id="store-email"
+                type="email"
+                value={editForm.contactEmail}
+                onChange={(e) => setEditForm((f) => ({ ...f, contactEmail: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="store-phone">Contact phone</Label>
+              <Input
+                id="store-phone"
+                value={editForm.contactPhone}
+                onChange={(e) => setEditForm((f) => ({ ...f, contactPhone: e.target.value }))}
+                placeholder="+92 300 1234567"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="store-payout">Payout details</Label>
+              <Textarea
+                id="store-payout"
+                value={editForm.payoutDetails}
+                onChange={(e) => setEditForm((f) => ({ ...f, payoutDetails: e.target.value }))}
+                placeholder="Bank / wallet details used for settlements"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)} disabled={editSaving}>
+              Cancel
+            </Button>
+            <Button onClick={saveEditor} disabled={editSaving || !editForm.name.trim()} className="bg-red-600 hover:bg-red-700 text-white gap-1.5">
+              {editSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <p className="text-xs text-slate-400 inline-flex items-center gap-1.5">
         <Lock className="h-3.5 w-3.5" /> Merchant Connect <Link href="/merchants" className="hover:text-slate-600">landing</Link>

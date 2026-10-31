@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { AlertTriangle, ChevronDown, ExternalLink, KeyRound, LayoutDashboard, LogOut, Menu, Receipt, RefreshCw, Settings, Ticket, X, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { BrandMark } from "@/components/brand"
+import { ThemeToggle } from "@/components/merchants/theme-toggle"
 import { ApiError, Alert, Btn, Panel, Sep, StatusText, formatNumber, merchantApi } from "@/components/merchants/ui"
 import { CampaignsTab } from "@/components/merchants/dashboard/campaigns"
 import { EntriesTab } from "@/components/merchants/dashboard/entries"
@@ -315,6 +316,10 @@ export default function MerchantDashboard() {
             </nav>
 
             <div className="space-y-2 border-t border-slate-200 p-3">
+              <div className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 px-3 py-2">
+                <span className="text-sm font-medium text-slate-700">Appearance</span>
+                <ThemeToggle />
+              </div>
               <Link
                 href="/lookup/store-ticket"
                 target="_blank"

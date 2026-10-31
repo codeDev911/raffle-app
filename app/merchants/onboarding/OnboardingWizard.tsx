@@ -8,6 +8,7 @@ import { ArrowRight, Check, Loader2, PartyPopper, Rocket, Store, Zap } from "luc
 import { Alert, Btn, CopyField, Field, Panel, TextInput, TopicList, merchantApi } from "@/components/merchants/ui"
 import { IntakeForm } from "@/components/merchants/IntakeForm"
 import { BrandMark } from "@/components/brand"
+import { ThemeToggle } from "@/components/merchants/theme-toggle"
 import type { IntakeAnswers } from "@/lib/merchants/intake"
 import { WEBHOOK_TOPICS } from "@/lib/merchants/webhook-topics"
 
@@ -241,9 +242,12 @@ export default function OnboardingWizard() {
             <span className="text-base font-bold tracking-tight text-slate-900">PakRaffle</span>
             <span className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-600">Merchant</span>
           </Link>
-          <Link href="/merchants/dashboard" className="text-xs text-slate-500 hover:text-slate-700">
-            Skip to dashboard
-          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link href="/merchants/dashboard" className="text-xs text-slate-500 hover:text-slate-700">
+              Skip to dashboard
+            </Link>
+          </div>
         </div>
 
         <header className="mb-8 space-y-3">

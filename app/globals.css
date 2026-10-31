@@ -212,3 +212,138 @@ details[data-faq][open] > summary > svg {
     animation: none !important;
   }
 }
+
+/*
+ * ── Merchant workspace theme ──────────────────────────────────────────────
+ * The dashboard, checkout, onboarding and merchant auth screens are written entirely in
+ * light-mode Tailwind classes. Instead of restyling 3,200 lines, the channel tokens in
+ * tailwind.config.ts (slate 50–700, emerald 600/700) are remapped here in one place: the
+ * `data-merchant-workspace="dark"` attribute on <html> — set before first paint by the head
+ * script in ClientLayout, then kept in sync by next-themes — flips the whole neutral palette.
+ * The rest of the site never sees these values change, because the light channels below are
+ * Tailwind's own defaults.
+ */
+:root {
+  --ws-slate-50: 248 250 252;
+  --ws-slate-100: 241 245 249;
+  --ws-slate-200: 226 232 240;
+  --ws-slate-300: 203 213 225;
+  --ws-slate-400: 148 163 184;
+  --ws-slate-500: 100 116 139;
+  --ws-slate-600: 71 85 105;
+  --ws-slate-700: 51 65 85;
+  --ws-emerald-600: 5 150 105;
+  --ws-emerald-700: 4 120 87;
+}
+
+html[data-merchant-workspace="dark"] body {
+  --ws-slate-50: 241 245 249; /* slate-100 — neutrals invert around the middle of the ramp */
+  --ws-slate-100: 226 232 240;
+  --ws-slate-200: 148 163 184;
+  --ws-slate-300: 100 116 139;
+  --ws-slate-400: 71 85 105;
+  --ws-slate-500: 51 65 85;
+  --ws-slate-600: 203 213 225;
+  --ws-slate-700: 226 232 240;
+  --ws-emerald-600: 52 211 153; /* emerald-400 — accents brighten instead of inverting */
+  --ws-emerald-700: 110 231 183;
+  color-scheme: dark;
+}
+
+/* next-themes also marks <html> .dark, which would flip shadcn's global body colours on the
+   marketing pages nobody themed yet — keep the canvas pinned per corner of the app. */
+html.dark:not([data-merchant-workspace="dark"]) body {
+  background-color: #fff;
+  color: #0a0a0a;
+}
+html.dark[data-merchant-workspace="dark"] body {
+  background-color: #020617;
+  color: #f8fafc;
+}
+
+@layer utilities {
+  /* Surfaces: white panels, glass headers and the page canvas become the dark ramp. */
+  html[data-merchant-workspace="dark"] .bg-white {
+    background-color: #0f172a;
+  }
+  html[data-merchant-workspace="dark"] [class*="bg-white/"] {
+    background-color: rgb(15 23 42 / var(--tw-bg-opacity, 0.85));
+  }
+  html[data-merchant-workspace="dark"] .bg-slate-800 {
+    background-color: #1e293b;
+  }
+  html[data-merchant-workspace="dark"] .bg-slate-900 {
+    background-color: #f1f5f9;
+  }
+  /* Inks that must stay put: dark CTA fills, the drawer scrim, hairline dividers. */
+  html[data-merchant-workspace="dark"] .text-white {
+    color: #fff;
+  }
+  html[data-merchant-workspace="dark"] .bg-slate-900\/40 {
+    background-color: rgb(2 6 23 / 0.4);
+  }
+  html[data-merchant-workspace="dark"] [class*="bg-slate-900/"] {
+    background-color: rgb(241 245 249 / var(--tw-bg-opacity, 0.1));
+  }
+  html[data-merchant-workspace="dark"] [class*="border-slate-900/"] {
+    border-color: rgb(241 245 249 / var(--tw-border-opacity, 0.1));
+  }
+  html[data-merchant-workspace="dark"] [class*="border-white/"] {
+    border-color: rgb(255 255 255 / 0.1);
+  }
+  html[data-merchant-workspace="dark"] .via-white\/30 {
+    --tw-gradient-via: rgb(255 255 255 / 0.3);
+  }
+  /* Status tints: pale chips deepen, their text lifts to the bright end of each family. */
+  html[data-merchant-workspace="dark"] [class*="bg-rose-5"],
+  html[data-merchant-workspace="dark"] [class*="bg-rose-100"] {
+    background-color: rgb(190 18 60 / 0.16);
+  }
+  html[data-merchant-workspace="dark"] [class*="bg-amber-5"],
+  html[data-merchant-workspace="dark"] [class*="bg-amber-100"] {
+    background-color: rgb(217 119 6 / 0.16);
+  }
+  html[data-merchant-workspace="dark"] [class*="bg-sky-5"],
+  html[data-merchant-workspace="dark"] [class*="bg-sky-100"] {
+    background-color: rgb(2 132 199 / 0.16);
+  }
+  html[data-merchant-workspace="dark"] [class*="bg-emerald-5"],
+  html[data-merchant-workspace="dark"] [class*="bg-emerald-100"] {
+    background-color: rgb(16 185 129 / 0.14);
+  }
+  html[data-merchant-workspace="dark"] .text-rose-600,
+  html[data-merchant-workspace="dark"] .text-rose-700 {
+    color: #fda4af;
+  }
+  html[data-merchant-workspace="dark"] .border-rose-200 {
+    border-color: rgb(251 113 133 / 0.35);
+  }
+  html[data-merchant-workspace="dark"] .text-amber-700,
+  html[data-merchant-workspace="dark"] .text-amber-800 {
+    color: #fcd34d;
+  }
+  html[data-merchant-workspace="dark"] .border-amber-200 {
+    border-color: rgb(251 191 36 / 0.35);
+  }
+  html[data-merchant-workspace="dark"] .text-sky-700 {
+    color: #7dd3fc;
+  }
+  html[data-merchant-workspace="dark"] .border-sky-200 {
+    border-color: rgb(56 189 248 / 0.35);
+  }
+  html[data-merchant-workspace="dark"] .text-emerald-800 {
+    color: #a7f3d0;
+  }
+  html[data-merchant-workspace="dark"] .border-emerald-200 {
+    border-color: rgb(52 211 153 / 0.35);
+  }
+  /* Emerald CTA keeps its solid brand fill and white label. */
+  html[data-merchant-workspace="dark"] .bg-emerald-600 {
+    background-color: #059669;
+  }
+  /* shadcn Dialog (ticket/invoice modals): glass scrim and white sheet stay as designed —
+     the kit restyles DialogContent itself, so only the overlay needs pinning. */
+  html[data-merchant-workspace="dark"] .bg-background\/80 {
+    background-color: rgb(2 6 23 / 0.8);
+  }
+}

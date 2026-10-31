@@ -13,6 +13,7 @@ export interface StoreDTO {
   contactPhone: string
   payoutDetails: string | null
   status: "ACTIVE" | "PAUSED"
+  ownerId: string | null
   /** The merchant finished the manual Shopify setup (webhooks + widget snippet). */
   shopifyConnected: boolean
   shopifyConnectedAt: string | null

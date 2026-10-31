@@ -32,6 +32,8 @@ export interface MerchantStore {
   contactPhone: string
   payoutDetails?: string | null
   status: MerchantStoreStatus
+  /** User who owns this merchant account (email/password or Google). */
+  ownerId?: string | null
   /** Shopify OAuth install state — the offline token stays on the server. */
   shopifyAccessToken?: string | null
   shopifyScope?: string | null

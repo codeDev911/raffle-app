@@ -1,9 +1,15 @@
 import "./globals.css"
 import type React from "react"
 import type { Metadata } from "next"
+import { Inter, Space_Grotesk } from "next/font/google"
 import ClientLayout from "./ClientLayout"
 import Script from 'next/script'
 import crypto from "crypto"
+
+const inter = Inter({ subsets: ["latin"] })
+// Geometric display face for the marketing headlines; exposed as a CSS variable so only the
+// pages that ask for `font-display` pick it up.
+const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" })
 
 const Analytics = () => null
 const SpeedInsights = () => null
@@ -78,10 +84,32 @@ const hash = crypto
   .digest('hex');
 
 
-  return <ClientLayout>
-    <Scripts/>
-    <Analytics/>
-    <SpeedInsights/>
-    {children}
-  </ClientLayout>
+  // The document shell must be rendered by this Server Component — a client component owning
+  // <html>/<body> wipes the page at hydration. Route-aware head logic lives in ClientLayout's
+  // providers, which render inside <body>.
+  return (
+    <html lang="en" className={display.variable} suppressHydrationWarning>
+      <head>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-EX44PLKN82"></script>
+        <meta name="monetag" content="78091832d51a3d2d1cd351e318c806b9"></meta>
+        <meta name="google-adsense-account" content="ca-pub-8516478537168335"></meta>
+        {/* The merchant workspace is the app's only dark-mode corner: the saved theme is applied
+            there (and only there) via an attribute on <html> that the palette swap in globals.css
+            keys off. It must run before first paint so a dark-mode visitor never sees a flash. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('raffle-merchant-theme');var p=location.pathname;if(t==='dark'&&(p.startsWith('/merchants')||p.startsWith('/auth/merchant'))){document.documentElement.setAttribute('data-merchant-workspace','dark')}else{document.documentElement.removeAttribute('data-merchant-workspace')}catch(e){}`,
+          }}
+        />
+      </head>
+      <body className={inter.className}>
+        <ClientLayout>
+          <Scripts/>
+          <Analytics/>
+          <SpeedInsights/>
+          {children}
+        </ClientLayout>
+      </body>
+    </html>
+  )
 }

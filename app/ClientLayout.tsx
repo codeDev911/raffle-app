@@ -1,17 +1,14 @@
 "use client"
 
+// Body-level client shell: theme provider + route-aware chrome. The <html>/<head>/<body>
+// document is owned by the Server RootLayout in app/layout.tsx — rendering the document shell
+// from here left React unable to re-attach it at hydration and the whole page went blank.
 import type React from "react"
-import { Inter, Space_Grotesk } from "next/font/google"
-import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { usePathname } from "next/navigation"
 import { useEffect } from "react"
-
-const inter = Inter({ subsets: ["latin"] })
-// Geometric display face for the marketing headlines; exposed as a CSS variable so only the
-// pages that ask for `font-display` pick it up.
-const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" })
+import { ThemeProvider } from "@/components/theme-provider"
 
 export default function ClientLayout({
   children,
@@ -39,21 +36,13 @@ export default function ClientLayout({
     }
   }, [])
   return (
-    <html lang="en" className={display.variable}>
-      <head>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-EX44PLKN82"></script>
-     <meta name="monetag" content="78091832d51a3d2d1cd351e318c806b9"></meta>
-     <meta name="google-adsense-account" content="ca-pub-8516478537168335"></meta>
-     {!isCheckoutRoute && (
-       <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8516478537168335"
-       crossOrigin="anonymous"></script>
-     )}
-      </head>
-      <body className={inter.className}>
-        {!isStandaloneRoute && <Header />}
-        <main>{children}</main>
-        {!isStandaloneRoute && <Footer />}
-      </body>
-    </html>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="raffle-merchant-theme" disableTransitionOnChange>
+      {!isCheckoutRoute && (
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8516478537168335" crossOrigin="anonymous"></script>
+      )}
+      {!isStandaloneRoute && <Header />}
+      <main>{children}</main>
+      {!isStandaloneRoute && <Footer />}
+    </ThemeProvider>
   )
 }
