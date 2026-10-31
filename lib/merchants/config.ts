@@ -14,6 +14,13 @@ export function merchantTicketPrice(raffleTicketPricePkr?: number | null): numbe
 
 export const MERCHANT_SESSION_COOKIE = "merchant_session"
 
+/**
+ * How long a Safepay checkout session stays payable before it is treated as dead.
+ * Measured from when the session was opened — never from when the invoice was raised, or an
+ * invoice billed yesterday would report its brand-new checkout as expired on the first look.
+ */
+export const CHECKOUT_SESSION_TTL_MS = 30 * 60 * 1000
+
 export const TICKET_PREFIX = "PKR-SHOPIFY"
 
 export const WHATSAPP_SUPPORT_INTL = "923377155722"

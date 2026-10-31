@@ -9,6 +9,7 @@ import type { MerchantCampaign, MerchantEntry, MerchantInvoice, MerchantStore } 
 import { generateInvoiceNumber } from "../utils"
 import { generateInvoiceSchema, submitPaymentSchema } from "../validators"
 import { getOwnedCampaign } from "./campaigns"
+import { invoiceCheckoutOpen } from "./checkout"
 import { settleInvoiceEntries, ticketPaymentStatuses } from "./entry-payments"
 
 const INVOICEABLE_STATUSES = ["ACTIVE", "PAUSED"]
@@ -106,7 +107,12 @@ export async function listInvoices(store: MerchantStore) {
   const titles = await campaignTitles(db, invoices.map((i) => i.campaignId))
   const failed = await invoicesWithFailedPayment(db, invoices)
   return invoices.map((i) =>
-    toInvoiceDTO(i, { campaignTitle: titles.get(i.campaignId), storeName: store.name, paymentFailed: failed.has(i.id) }),
+    toInvoiceDTO(i, {
+      campaignTitle: titles.get(i.campaignId),
+      storeName: store.name,
+      paymentFailed: failed.has(i.id),
+      checkoutOpen: invoiceCheckoutOpen(i),
+    }),
   )
 }
 
@@ -146,7 +152,12 @@ export async function getInvoiceDetail(invoiceId: string, storeId?: string) {
   })
 
   return {
-    invoice: toInvoiceDTO(invoice, { campaignTitle: campaign?.title, storeName: store?.name, paymentFailed }),
+    invoice: toInvoiceDTO(invoice, {
+      campaignTitle: campaign?.title,
+      storeName: store?.name,
+      paymentFailed,
+      checkoutOpen: invoiceCheckoutOpen(invoice),
+    }),
     entries: rows.map((entry) => toEntryDTO(entry, { paymentStatus: payments.get(entry.ticketNumber) ?? null })),
     store: store ? { id: store.id, name: store.name, storeUrl: store.storeUrl, contactEmail: store.contactEmail } : null,
     settlementAccounts: getSettlementAccounts(),

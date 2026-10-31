@@ -30,9 +30,10 @@ export interface StorefrontCampaign {
  *  - eligible: an order placed now mints a ticket
  *  - progress: a live campaign is within reach, the cart is short of its threshold
  *  - blocked:  a campaign exists but is paused, ended, capped or filtered out of this cart
+ *  - pitch:    nothing in the cart yet — the product page advertises the offer it would unlock
  *  - idle:     no campaign is running
  */
-export type StorefrontState = "eligible" | "progress" | "blocked" | "idle"
+export type StorefrontState = "eligible" | "progress" | "blocked" | "pitch" | "idle"
 
 export interface StorefrontStatus {
   store: { name: string }
@@ -107,6 +108,33 @@ function describeGap(missingItems: number, missingAmount: number): string {
 }
 
 /**
+ * The empty-cart answer. No ticket can be earned without items, so the state stays "pitch" and the
+ * product page can advertise the offer with its full threshold as the gap. Campaigns limited to
+ * particular products are skipped: from an empty cart nothing tells us this product qualifies.
+ */
+function pitchStatus(
+  base: StorefrontStatus,
+  campaigns: MerchantCampaign[],
+  prizeFor: (campaign: MerchantCampaign) => { title: string; image: string | null } | null,
+): StorefrontStatus {
+  const open = campaigns.filter((campaign) => cleanFilters(campaign.productFilters).length === 0)
+  if (open.length === 0) return base
+  // The easiest offer wins: no threshold at all, then the smallest spend, then the fewest items.
+  const rank = (campaign: MerchantCampaign) =>
+    campaign.ruleType === "ALL_ORDERS" ? -1 : campaign.minAmount ?? campaign.minQuantity ?? 0
+  const easiest = [...open].sort((a, b) => rank(a) - rank(b))[0]
+  const needsQty = easiest.ruleType === "MIN_QUANTITY" || easiest.ruleType === "MIN_QUANTITY_AND_AMOUNT"
+  const needsAmt = easiest.ruleType === "MIN_AMOUNT" || easiest.ruleType === "MIN_QUANTITY_AND_AMOUNT"
+  return {
+    ...base,
+    state: "pitch",
+    campaign: campaignView(easiest, prizeFor(easiest)),
+    missingItems: needsQty ? easiest.minQuantity ?? 0 : 0,
+    missingAmount: needsAmt ? easiest.minAmount ?? 0 : 0,
+  }
+}
+
+/**
  * Evaluates the shopper's live cart against every running campaign and returns the one the
  * cart is (or is closest to) qualifying for. The order is evaluated with fulfilment bypassed
  * because the order does not exist yet.
@@ -139,8 +167,9 @@ export async function getStorefrontStatus(storeId: string, cart: CartInput): Pro
     tickets: 1,
   }
   if (campaigns.length === 0) return base
-  // An empty cart cannot earn anything — not even on an "every order" campaign.
-  if (cart.itemCount === 0 || cart.items.length === 0) return base
+  // An empty cart cannot earn anything — not even on an "every order" campaign — but there is
+  // still an offer to advertise on the product page the shopper is reading.
+  if (cart.itemCount === 0 || cart.items.length === 0) return pitchStatus(base, campaigns, prizeFor)
 
   const now = new Date()
   const asOrder: NormalizedOrder = {

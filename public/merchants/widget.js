@@ -4,7 +4,7 @@
  *  1. Reads the live cart from /cart.js and asks PakRaffle whether it qualifies for a free
  *     lucky-draw entry. The card renders inline above the checkout button on /cart and below the
  *     product details on /products/*, floating bottom-right everywhere else; a near-miss gets
- *     progress.
+ *     progress, and a product page with an empty cart pitches the offer from zero.
  *  2. Re-checks on every cart mutation, so an AJAX cart drawer crossing the threshold updates
  *     the card immediately instead of waiting for a page reload.
  *  3. Stamps a browser nonce on the cart as a note attribute so the order webhook can tie the
@@ -261,10 +261,35 @@
 
   /** Where the card belongs on this page: the cart, a product's details column, or nowhere. */
   function pageKind() {
-    var path = window.location.pathname
-    if (path.indexOf("/cart") === 0) return "cart"
+    // Market and language paths (/en/products/…, /en-pk/products/…) keep the same placement.
+    var path = window.location.pathname.replace(/^\/[a-z]{2}(?:-[a-z]{2})?(?=\/)/i, "")
+    if (/^\/cart\/?$/.test(path)) return "cart"
     if (path.indexOf("/products/") === 0) return "product"
     return null
+  }
+
+  /**
+   * Themes ship hidden copies of the same markup (quick-add forms, quick-view drawers, mobile
+   * duplicate columns). Querying a hidden copy would mount the card where nobody can see it.
+   */
+  function visible(el) {
+    return Boolean(el && el.getClientRects && el.getClientRects().length > 0)
+  }
+
+  /** First match in document order that the theme actually renders. */
+  function firstVisible(selectors, scope) {
+    for (var i = 0; i < selectors.length; i++) {
+      var found = (scope || document).querySelectorAll(selectors[i])
+      for (var j = 0; j < found.length; j++) {
+        if (visible(found[j])) return found[j]
+      }
+    }
+    return null
+  }
+
+  /** Dawn-style themes wrap the product in one section; quick-add forms live outside it. */
+  function productScope() {
+    return firstVisible([".shopify-section-main-product", "main", "[role='main']"])
   }
 
   /** The theme's checkout button, when the shopper is on the cart page. */
@@ -278,28 +303,33 @@
       ".cart-drawer__footer",
     ]
     for (var i = 0; i < selectors.length; i++) {
-      var found = document.querySelector(selectors[i])
+      var found = firstVisible([selectors[i]])
       // Sit directly above the checkout button rather than at the top of the whole cart form.
       if (found && found.parentNode) return found.parentNode
     }
     return null
   }
 
-  /** The product's details column, so the card lands under the price and the buy button. */
+  /**
+   * The product's details column, so the card lands under the price and the buy button.
+   * Returns where to put it: inside a details container (keeps the theme's grid intact) or
+   * after the bare add-to-cart form when the theme has no container we recognise.
+   */
   function productDetails() {
-    var selectors = [
+    var containers = [
       ".product__info-container",
       "[data-product-information]",
       ".product-single__meta",
       ".product__info-wrapper",
       ".product-info",
-      'form[action^="/cart/add"]',
+      ".product__details",
     ]
-    for (var i = 0; i < selectors.length; i++) {
-      var found = document.querySelector(selectors[i])
-      if (found && found.parentNode) return found
-    }
-    return null
+    var scope = productScope()
+    var container = firstVisible(containers, scope) || firstVisible(containers)
+    if (container) return { node: container, inside: true }
+    var form = firstVisible(['form[action^="/cart/add"]', "form.product-form"], scope) ||
+      firstVisible(['form[action^="/cart/add"]', "form.product-form"])
+    return form ? { node: form, inside: false } : null
   }
 
   function removeBanner() {
@@ -327,16 +357,25 @@
     removeBanner()
   }
 
-  function bannerSignature(status) {
-    return status.state + ":" + (status.cart ? status.cart.itemCount : 0) + ":" + (status.cart ? status.cart.amount : 0)
+  function bannerSignature(status, kind) {
+    // The placement is part of the signature: closing the cart card should not silence the
+    // product-page nudge, which is a different promise on a different page.
+    return (
+      (kind || "page") +
+      ":" +
+      status.state +
+      ":" +
+      (status.cart ? status.cart.itemCount : 0) +
+      ":" +
+      (status.cart ? status.cart.amount : 0)
+    )
   }
 
   function mountCard(html, signature, options) {
     if (dismissed(signature)) return
     var kind = options.placement
-    var anchor = kind === "cart" ? cartAnchor() : kind === "product" ? productDetails() : null
-    // A product card goes below the details it belongs to; the cart card goes above the button.
-    var below = kind === "product" && Boolean(anchor)
+    var target = kind === "cart" ? { node: cartAnchor(), inside: false } : kind === "product" ? productDetails() : null
+    var anchor = target ? target.node : null
     var wrapper = document.createElement("div")
     wrapper.id = "pakr-banner"
     wrapper.innerHTML =
@@ -346,7 +385,13 @@
       var style = document.createElement("style")
       style.textContent = BASE_CSS
       wrapper.insertBefore(style, wrapper.firstChild)
-      anchor.parentNode.insertBefore(wrapper, below ? anchor.nextSibling : anchor)
+      if (target.inside) {
+        // Inside the details column: below the price and the buy button, without touching the grid.
+        anchor.appendChild(wrapper)
+      } else {
+        // Above the cart's checkout button — the card goes before the button, not after it.
+        anchor.parentNode.insertBefore(wrapper, kind === "cart" ? anchor : anchor.nextSibling)
+      }
       state.inline = wrapper
     } else {
       shadowRoot().appendChild(wrapper)
@@ -419,11 +464,46 @@
     )
   }
 
+  /**
+   * The offer, shown on a product page before anything is in the cart. Same card, same footer —
+   * only the copy changes from "you are close" to "this is what is on offer".
+   */
+  function pitchHtml(status) {
+    var campaign = status.campaign || {}
+    var prize = campaign.prize && campaign.prize.title ? campaign.prize.title : null
+    var needsAmount = Number(status.missingAmount) > 0
+    var needsItems = Number(status.missingItems) > 0
+    var title = needsAmount
+      ? "Spend " + money(status.missingAmount) + ", earn a free ticket"
+      : needsItems
+        ? "Buy " + status.missingItems + " item" + (Number(status.missingItems) === 1 ? "" : "s") + ", earn a free ticket"
+        : "Every order earns a free ticket"
+    var body = prize
+      ? "Add to cart and this order enters the draw for <strong>" + escapeHtml(prize) + "</strong>."
+      : "Add to cart and this order earns a free lucky-draw ticket."
+    var drawLine = campaign.drawDate
+      ? '<span class="pill ghost">Draw ' + escapeHtml(new Date(campaign.drawDate).toDateString()) + "</span>"
+      : ""
+    return (
+      '<button class="close" type="button" aria-label="Dismiss">&times;</button>' +
+      '<span class="tag">Free entry available</span>' +
+      '<p class="title">' + escapeHtml(title) + "</p>" +
+      '<p class="body">' + body + "</p>" +
+      '<div class="bar"><i style="width:4%"></i></div>' +
+      '<div class="row"><span class="pill">' + escapeHtml(campaign.ruleSummary || "Lucky draw") + "</span>" +
+      '<span class="pill ghost">No code needed</span>' + drawLine + "</div>" +
+      footHtml()
+    )
+  }
+
   function renderState() {
     var status = state.status
     removeBanner()
 
-    if (!state.cart || !state.cart.item_count) {
+    var kind = pageKind()
+    var empty = !state.cart || !state.cart.item_count
+    // Elsewhere an empty cart has nothing to say; a product page still has an offer to make.
+    if (empty && kind !== "product") {
       log("no cart items — nothing to show")
       return
     }
@@ -436,8 +516,16 @@
       return
     }
 
-    var kind = pageKind()
-    var signature = bannerSignature(status)
+    var signature = bannerSignature(status, kind)
+
+    if (empty) {
+      if (status.state !== "pitch") {
+        log("empty cart, no offer to pitch", status.state)
+        return
+      }
+      mountCard(pitchHtml(status), signature, { placement: kind, celebrate: false })
+      return
+    }
 
     if (status.state === "eligible") {
       // Good news travels: the congratulations card follows the shopper around the store.
@@ -505,7 +593,10 @@
     return getCart()
       .then(function (cart) {
         state.cart = cart
-        if (!cart || !cart.item_count) {
+        var empty = !cart || !cart.item_count
+        // Only the product page has something to say about an empty cart, so every other page
+        // skips the round trip entirely.
+        if (empty && pageKind() !== "product") {
           state.status = null
           renderState()
           return null
@@ -592,6 +683,12 @@
       return checkClaims(1)
     })
     watchCart()
+    // A product page can paint its details column after this runs, so give the mount one retry.
+    if (pageKind() === "product") {
+      setTimeout(function () {
+        if (!state.inline) renderState()
+      }, 1200)
+    }
   }
 
   if (document.readyState === "loading") {

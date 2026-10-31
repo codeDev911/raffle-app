@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { cn } from "@/lib/utils"
-import { StatusText, formatNumber, formatPKR, timeAgo } from "../ui"
+import { Sep, StatusText, formatNumber, formatPKR, timeAgo } from "../ui"
 import type { CampaignDTO, EntryDTO } from "./types"
 
 /** "Entries Minted: 42/100" with a thin emerald progress rule (continuous campaigns show ∞). */
@@ -84,8 +84,63 @@ export function EntriesTable({
 }) {
   if (entries.length === 0) return <>{emptyState}</>
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[720px] text-left text-sm">
+    <>
+      {/* Phones: one card per ticket, because seven columns never fit a 375px screen. */}
+      <ul className="divide-y divide-slate-200 md:hidden">
+        {entries.map((entry) => {
+          const actions = renderActions?.(entry)
+          return (
+            <li key={entry.id} className="px-4 py-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-mono text-[11px] tabular-nums text-emerald-700">{entry.ticketNumber}</p>
+                  <p className="truncate text-sm text-slate-800">{entry.customerName}</p>
+                  {(entry.customerPhone || entry.customerCity) && (
+                    <p className="truncate font-mono text-[11px] tabular-nums text-slate-500">
+                      {entry.customerPhone || "—"}
+                      {entry.customerCity && (
+                        <>
+                          <span className="px-1 text-slate-400">·</span>
+                          <span className="font-sans">{entry.customerCity}</span>
+                        </>
+                      )}
+                    </p>
+                  )}
+                </div>
+                <span className="shrink-0">
+                  <StatusText status={entryStatusKey(entry)} />
+                </span>
+              </div>
+
+              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
+                <span className="font-mono tabular-nums text-slate-700">{entry.orderName || `#${entry.shopifyOrderId}`}</span>
+                <Sep />
+                <span className="font-mono tabular-nums">
+                  {entry.itemCount} item{entry.itemCount === 1 ? "" : "s"} · {formatPKR(entry.orderAmount)}
+                </span>
+                <Sep />
+                <span>{timeAgo(entry.createdAt)}</span>
+                {entry.isTest && <StatusText status="TEST" />}
+              </div>
+
+              {!dense && (
+                <p className="mt-1 truncate text-[11px] text-slate-500">{campaignTitles[entry.campaignId] || "—"}</p>
+              )}
+              {paymentFailed(entry) && (
+                <p className="mt-1 text-[11px] text-slate-500">
+                  {entry.invoiceId ? "transfer not verified · resubmit the invoice" : "transfer not verified"}
+                </p>
+              )}
+              {entry.cancelledReason && <p className="mt-1 text-[11px] text-slate-500">{entry.cancelledReason}</p>}
+
+              {actions ? <div className="mt-2">{actions}</div> : null}
+            </li>
+          )
+        })}
+      </ul>
+
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full min-w-[720px] text-left text-sm">
         <thead>
           <tr className="border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500">
             <th className="px-5 py-2.5 font-medium">Ticket</th>
@@ -151,6 +206,7 @@ export function EntriesTable({
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   )
 }

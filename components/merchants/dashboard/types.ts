@@ -133,6 +133,8 @@ export interface InvoiceDTO {
   gatewayAmount: number | null
   /** Hosted checkout URL while a session is open, so the dialog can resume it. */
   checkoutUrl: string | null
+  /** The session is still payable; an expired one keeps its tracker but is not resumable. */
+  checkoutOpen: boolean
   status: "PENDING" | "UNDER_REVIEW" | "PAID"
   submittedAt: string | null
   paidAt: string | null

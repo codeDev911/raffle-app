@@ -119,7 +119,9 @@ export function Sep() {
 // ───────────────────────── layout primitives ─────────────────────────
 
 export function Panel({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn("rounded-2xl border border-slate-200 bg-white shadow-sm", className)}>{children}</div>
+  // min-w-0 stops long unbreakable values (webhook URLs, script tags) from widening the grid
+  // column a panel sits in — that is what pushed the dashboard past a phone screen.
+  return <div className={cn("min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm", className)}>{children}</div>
 }
 
 export function PanelHeader({
@@ -132,12 +134,14 @@ export function PanelHeader({
   action?: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0">
+    // Wraps instead of stacking: a small action (refresh) stays beside the title, while a wide one
+    // (New campaign) drops to its own right-aligned line on a phone.
+    <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 border-b border-slate-200 px-5 py-4">
+      <div className="min-w-0 flex-1 basis-[12rem]">
         <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
         {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
       </div>
-      {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
+      {action && <div className="ml-auto flex shrink-0 items-center gap-2">{action}</div>}
     </div>
   )
 }
@@ -147,19 +151,26 @@ export function Metric({
   value,
   hint,
   accent = false,
+  className,
 }: {
   label: string
   value: React.ReactNode
   hint?: React.ReactNode
   accent?: boolean
+  className?: string
 }) {
   return (
-    <Panel className="p-4">
-      <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">{label}</p>
-      <p className={cn("mt-2 font-mono text-2xl font-semibold tabular-nums", accent ? "text-emerald-600" : "text-slate-900")}>
+    <Panel className={cn("p-3.5 sm:p-4", className)}>
+      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500 sm:text-[11px]">{label}</p>
+      <p
+        className={cn(
+          "mt-1.5 font-mono text-xl font-semibold tabular-nums sm:mt-2 sm:text-2xl",
+          accent ? "text-emerald-600" : "text-slate-900",
+        )}
+      >
         {value}
       </p>
-      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+      {hint && <p className="mt-0.5 text-[11px] text-slate-500 sm:mt-1 sm:text-xs">{hint}</p>}
     </Panel>
   )
 }
@@ -327,12 +338,12 @@ export function CopyField({
   }
 
   return (
-    <div className="space-y-1.5">
+    <div className="min-w-0 space-y-1.5">
       <span className="text-xs font-medium text-slate-700">{label}</span>
-      <div className="flex items-stretch gap-2">
+      <div className="flex min-w-0 items-stretch gap-2">
         <code
           onClick={() => setRevealed(true)}
-          className={`flex-1 cursor-text select-all rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 font-mono text-xs text-emerald-700 ${
+          className={`min-w-0 flex-1 cursor-text select-all rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 font-mono text-xs text-emerald-700 ${
             wrap ? "break-all whitespace-pre-wrap" : "overflow-x-auto whitespace-nowrap"
           }`}
         >

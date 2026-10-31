@@ -9,6 +9,7 @@
 //  4. An abandoned session cannot lock a ticket forever: past its lifetime it is released and the
 //     ticket becomes payable again.
 import { prisma, type Payment } from "@/lib/prisma"
+import { CHECKOUT_SESSION_TTL_MS } from "../config"
 import { getMerchantDb } from "../db"
 import { toEntryDTO } from "../dto"
 import { MerchantError, conflict, notFound } from "../errors"
@@ -39,7 +40,7 @@ import {
 } from "./entry-payments"
 
 /** How long a checkout session may sit unpaid before the ticket is released again. */
-const SESSION_TTL_MS = 30 * 60 * 1000
+const SESSION_TTL_MS = CHECKOUT_SESSION_TTL_MS
 
 const OPEN_ENTRY_STATUSES = ["ISSUED", "INVOICED"]
 
@@ -134,6 +135,29 @@ function entrySessionStartedAt(entry: MerchantEntry): number | null {
 }
 
 /**
+ * When a batch session opened. It must come from the session, not from the invoice: an invoice
+ * raised a day ago opens a brand-new checkout, and reading `createdAt` would call that checkout
+ * expired on sight. Rows armed before this field existed fall back to their last write, which is
+ * the write that armed the session.
+ */
+function invoiceSessionStartedAt(invoice: MerchantInvoice): number | null {
+  const raw = invoice.gatewayStartedAt || invoice.updatedAt
+  if (!raw) return null
+  const when = new Date(raw).getTime()
+  return Number.isNaN(when) ? null : when
+}
+
+/**
+ * True while the batch's card session can still be paid. An expired session keeps its tracker so a
+ * late capture is still matched, but it must not be offered to the merchant as "resume".
+ */
+export function invoiceCheckoutOpen(invoice: MerchantInvoice): boolean {
+  if (invoice.status === "PAID") return false
+  if (!invoice.gatewayRef || !invoice.checkoutUrl) return false
+  return !isExpired(invoiceSessionStartedAt(invoice))
+}
+
+/**
  * A second click must not open a second tracker: the merchant may still be paying in another tab,
  * and a tracker we stopped pointing at could never be matched when the money lands. While a
  * session for the same amount is live, hand it back untouched.
@@ -184,7 +208,7 @@ async function liveLegacyEntrySession(entry: MerchantEntry, amountPaisa: number)
 /** Same rule for batches: re-open the live session instead of stranding its tracker. */
 function liveInvoiceSession(invoice: MerchantInvoice, amountPaisa: number): CheckoutStartResult | null {
   if (!invoice.checkoutUrl || !invoice.gatewayRef || invoice.gatewayAmount !== amountPaisa) return null
-  if (isExpired(sessionStartedAt({ createdAt: invoice.createdAt, updatedAt: invoice.updatedAt }))) return null
+  if (isExpired(invoiceSessionStartedAt(invoice))) return null
 
   return {
     checkoutUrl: invoice.checkoutUrl,
@@ -310,6 +334,8 @@ export async function startInvoiceCheckout(
       gatewayRef: session.tracker,
       gatewayAmount: amountPaisa,
       checkoutUrl: session.checkoutUrl,
+      // The clock starts here, so an invoice raised days ago still gets a full-length session.
+      gatewayStartedAt: new Date(),
     },
   })
 
@@ -506,7 +532,7 @@ async function syncInvoiceSession(
   }
 
   if (snapshot.outcome === "pending") {
-    if (!isExpired(sessionStartedAt({ createdAt: invoice.createdAt, updatedAt: invoice.updatedAt }))) {
+    if (!isExpired(invoiceSessionStartedAt(invoice))) {
       return { ...base, status: "pending", invoiceStatus: invoice.status }
     }
     await db.merchantInvoice.update({ where: { id: invoice.id }, data: { checkoutUrl: null } })
@@ -706,7 +732,7 @@ export async function describeCheckoutSession(store: MerchantStore, tracker: str
       where: { id: invoice.campaignId },
     })
     const amountPaisa = Number(invoice.gatewayAmount || 0) || Math.round(Number(invoice.amountDue || 0) * 100)
-    const startedAt = sessionStartedAt({ createdAt: invoice.createdAt, updatedAt: invoice.updatedAt })
+    const startedAt = invoiceSessionStartedAt(invoice)
     const checkoutUrl = invoice.checkoutUrl || null
     const paid = invoice.status === "PAID"
     const status: CheckoutDisplayStatus = paid

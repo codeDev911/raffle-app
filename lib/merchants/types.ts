@@ -124,6 +124,8 @@ export interface MerchantInvoice {
   gatewayAmount?: number | null
   /** Hosted checkout URL the merchant can re-open while the session is alive. */
   checkoutUrl?: string | null
+  /** When the session opened; its age decides when the batch session stops being payable. */
+  gatewayStartedAt?: Date | null
   createdAt: Date
   updatedAt: Date
 }

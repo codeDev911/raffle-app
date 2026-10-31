@@ -181,7 +181,7 @@ export function SettingsTab({
           {shopifyNotice && <Alert tone="success">{shopifyNotice}</Alert>}
 
           <div className="grid gap-5 md:grid-cols-2">
-            <div className="space-y-3">
+            <div className="min-w-0 space-y-3">
               <CopyField label="Webhook URL" value={me.integration.webhookUrl} />
               <div className="space-y-2">
                 <span className="text-xs font-medium text-slate-700">One webhook per event</span>
@@ -193,7 +193,7 @@ export function SettingsTab({
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="min-w-0 space-y-3">
               <CopyField label="Storefront widget" value={widgetTag} wrap />
               <p className="text-[11px] leading-relaxed text-slate-500">
                 Online Store → Themes → Edit code → <span className="font-mono text-slate-600">theme.liquid</span> — paste it

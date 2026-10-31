@@ -334,6 +334,9 @@ model MerchantInvoice {
   gatewayRef     String?
   gatewayAmount  Int?
   checkoutUrl    String?
+  // When the batch session opened. Its age — not the invoice's own age — decides when the
+  // checkout stops being payable, so paying an old invoice still gets a usable session.
+  gatewayStartedAt DateTime?
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
 

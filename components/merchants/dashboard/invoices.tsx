@@ -73,8 +73,42 @@ export function InvoicesTab({
             Close a campaign batch with “Review & Settle Batch Invoice” to bill its fulfilled-order tickets.
           </EmptyState>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[680px] text-left text-sm">
+          <>
+            {/* Phones: the same six fields as stacked rows instead of a scrolling table. */}
+            <ul className="divide-y divide-slate-200 md:hidden">
+              {invoices.map((inv) => (
+                <li key={inv.id}>
+                  <button
+                    type="button"
+                    onClick={() => setSelected(inv.id)}
+                    className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition hover:bg-slate-100"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-mono text-xs tabular-nums text-slate-900">{inv.invoiceNumber}</p>
+                      <p className="mt-0.5 truncate text-xs text-slate-600">{inv.campaignTitle || "—"}</p>
+                      <p className="mt-0.5 text-[11px] text-slate-500">
+                        {formatNumber(inv.totalEntries)} ticket{inv.totalEntries === 1 ? "" : "s"}
+                        <Sep />
+                        {formatDate(inv.createdAt)}
+                      </p>
+                      <div className="pt-1">
+                        <StatusText status={inv.status} />
+                      </div>
+                      {inv.status !== "PAID" && inv.adminNotes && (
+                        <p className="mt-0.5 text-[11px] text-rose-700">Payment rejected · resubmit</p>
+                      )}
+                      {inv.status !== "PAID" && !inv.adminNotes && (inv.paymentFailed || (inv.status === "PENDING" && inv.submittedAt)) && (
+                        <p className="mt-0.5 text-[11px] text-rose-700">Transfer failed · resubmit</p>
+                      )}
+                    </div>
+                    <span className="shrink-0 font-mono text-sm tabular-nums text-slate-900">{formatPKR(inv.amountDue)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full min-w-[680px] text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-500">
                   <th className="px-5 py-2.5 font-medium">Invoice</th>
@@ -109,8 +143,9 @@ export function InvoicesTab({
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+              </table>
+            </div>
+          </>
         )}
       </Panel>
 
@@ -249,19 +284,19 @@ function InvoiceDetailDialog({
         {error && <Alert>{error}</Alert>}
 
         {invoice && detail && (
-          <div className="space-y-5">
+          <div className="min-w-0 space-y-5">
             {/* Summary */}
-            <div className="grid grid-cols-3 divide-x divide-slate-200 rounded-xl border border-slate-200 bg-slate-50">
+            <div className="grid grid-cols-1 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-slate-50 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
               <Figure label="Tickets" value={formatNumber(invoice.totalEntries)} />
               <Figure label="Rate" value={formatPKR(invoice.unitPrice)} />
               <Figure label="Amount due" value={formatPKR(invoice.amountDue)} accent />
             </div>
 
             {/* Itemised ledger */}
-            <div>
+            <div className="min-w-0">
               <p className="mb-2 text-xs font-medium text-slate-700">Itemised tickets</p>
-              <div className="max-h-56 overflow-y-auto rounded-xl border border-slate-200">
-                <table className="w-full text-left text-xs">
+              <div className="max-h-56 w-full overflow-auto rounded-xl border border-slate-200">
+                <table className="w-full min-w-[520px] text-left text-xs">
                   <tbody className="divide-y divide-slate-200">
                     {detail.entries.map((entry) => (
                       <tr key={entry.id} className="text-slate-700">
@@ -338,15 +373,23 @@ function InvoiceDetailDialog({
                       moment the payment succeeds — no receipt and no review.
                     </p>
                     <Btn type="button" className="w-full" loading={starting} onClick={startCheckout}>
-                      {starting ? "Opening secure checkout…" : `Pay ${formatPKR(invoice.amountDue)} now`}
+                      {starting
+                        ? "Opening secure checkout…"
+                        : `${invoice.checkoutOpen ? "Resume" : "Start a new checkout"} · ${formatPKR(invoice.amountDue)}`}
                     </Btn>
-                    {invoice.gatewayRef && (
+                    {invoice.checkoutOpen ? (
                       <a
                         href={`/merchants/checkout/${invoice.gatewayRef}`}
                         className="inline-flex text-xs text-emerald-600 hover:underline"
                       >
                         Resume the checkout you already opened
                       </a>
+                    ) : (
+                      invoice.gatewayRef && (
+                        <p className="text-xs text-slate-500">
+                          Your earlier checkout closed without a payment, so nothing was charged. This opens a fresh one.
+                        </p>
+                      )
                     )}
                   </div>
                 )}

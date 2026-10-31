@@ -21,7 +21,16 @@ interface ModelSpec {
   unique: string[][]
 }
 
-const DATE_FIELDS = ["createdAt", "updatedAt", "startDate", "endDate", "drawnAt", "submittedAt", "paidAt"]
+const DATE_FIELDS = [
+  "createdAt",
+  "updatedAt",
+  "startDate",
+  "endDate",
+  "drawnAt",
+  "submittedAt",
+  "paidAt",
+  "gatewayStartedAt",
+]
 
 const MODELS: Record<ModelName, ModelSpec> = {
   merchantStore: {
@@ -66,6 +75,10 @@ const MODELS: Record<ModelName, ModelSpec> = {
       status: "PENDING",
       submittedAt: null,
       paidAt: null,
+      gatewayRef: null,
+      gatewayAmount: null,
+      checkoutUrl: null,
+      gatewayStartedAt: null,
     }),
     unique: [["invoiceNumber"]],
   },

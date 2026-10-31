@@ -108,7 +108,7 @@ export function toEntryDTO(entry: MerchantEntry, extras: { paymentStatus?: strin
 
 export function toInvoiceDTO(
   invoice: MerchantInvoice,
-  extras: { campaignTitle?: string; storeName?: string; paymentFailed?: boolean } = {},
+  extras: { campaignTitle?: string; storeName?: string; paymentFailed?: boolean; checkoutOpen?: boolean } = {},
 ) {
   return {
     id: invoice.id,
@@ -128,6 +128,8 @@ export function toInvoiceDTO(
     gatewayAmount: invoice.gatewayAmount ?? null,
     /** Hosted checkout URL while a session is open, so the dialog can resume it. */
     checkoutUrl: invoice.checkoutUrl ?? null,
+    /** The session is still payable; an expired one keeps its tracker but is not resumable. */
+    checkoutOpen: extras.checkoutOpen ?? false,
     status: invoice.status,
     submittedAt: invoice.submittedAt ?? null,
     paidAt: invoice.paidAt ?? null,

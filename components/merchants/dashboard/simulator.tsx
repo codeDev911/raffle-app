@@ -111,7 +111,7 @@ export function SimulatorTab({
         <form onSubmit={run} className="space-y-4 p-5">
           {activeCount === 0 && <Alert tone="info">No active campaigns — the simulated order will be accepted but no ticket can mint.</Alert>}
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid gap-2 sm:grid-cols-3">
             {PRESETS.map((p) => (
               <button
                 key={p.key}

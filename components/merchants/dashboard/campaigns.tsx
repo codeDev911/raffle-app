@@ -157,7 +157,8 @@ export function CampaignsTab({
 
                   <CampaignProgress campaign={c} />
 
-                  <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                  {/* Phones stack the controls: a full-width row each reads better than a wrap. */}
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center lg:justify-end">
                     {editable && (
                       <>
                         <Btn variant="ghost" className="px-3" onClick={() => setEditing(c)} aria-label="Edit campaign">
@@ -167,18 +168,19 @@ export function CampaignsTab({
                           variant="secondary"
                           loading={busyId === c.id}
                           disabled={!storeActive}
+                          className="w-full sm:w-auto"
                           onClick={() => toggle(c)}
                         >
                           {c.status === "ACTIVE" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                           {c.status === "ACTIVE" ? "Pause" : "Resume"}
                         </Btn>
-                        <Btn onClick={() => setSettling(c)} disabled={c.billableEntries === 0}>
+                        <Btn className="w-full sm:w-auto" onClick={() => setSettling(c)} disabled={c.billableEntries === 0}>
                           <FileText className="h-4 w-4" /> Review & Settle Batch Invoice
                         </Btn>
                       </>
                     )}
                     {c.status === "PENDING_INVOICE" && (
-                      <Btn variant="secondary" onClick={onOpenInvoices}>
+                      <Btn variant="secondary" className="w-full sm:w-auto" onClick={onOpenInvoices}>
                         <FileText className="h-4 w-4" /> View invoice
                       </Btn>
                     )}
@@ -388,7 +390,7 @@ function CampaignBuilderDialog({
 
           <div className="space-y-2">
             <span className="text-xs font-medium text-slate-700">Qualification rule</span>
-            <div className="grid gap-2 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {RULE_OPTIONS.map((opt) => (
                 <button
                   type="button"
