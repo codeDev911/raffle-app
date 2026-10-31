@@ -12,7 +12,6 @@ import {
   Kicker,
   LiveDot,
   Marquee,
-  Mesh,
   PANEL,
   Pill,
   SHELL,
@@ -149,99 +148,129 @@ export function RafflesClient({ initialRaffles, categories }: RafflesClientProps
     <div className={SHELL}>
       {/* ------------------------------------------------------------------ Hero */}
       <section className="relative overflow-hidden border-b border-slate-900/5">
-        <Mesh tone="emerald" />
-        <div
-          className={`${CONTAINER} relative pb-14 pt-24 sm:pt-24 lg:grid lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14 lg:pb-20 lg:pt-28`}
-        >
-          <div>
-            <div className="flex flex-wrap items-center gap-2.5">
+        {/* Two spotlights over a perforated ticket wall. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-[radial-gradient(135%_100%_at_50%_-30%,#ffffff_0%,#f8f9f6_52%,#eef4ef_100%)]" />
+          <div className="absolute -left-28 top-4 h-80 w-80 rounded-full bg-emerald-300/30 blur-3xl" />
+          <div className="absolute -right-24 top-24 h-72 w-72 rounded-full bg-amber-200/35 blur-3xl" />
+          <div className="absolute inset-0 opacity-70 [background-image:repeating-linear-gradient(90deg,rgba(15,23,42,0.05)_0_1px,transparent_1px_104px)]" />
+          <div className="absolute inset-x-0 bottom-24 h-px bg-[repeating-linear-gradient(90deg,rgba(15,23,42,0.16)_0_10px,transparent_10px_22px)]" />
+        </div>
+
+        <div className={`${CONTAINER} relative pb-12 pt-24 sm:pt-28`}>
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="flex flex-wrap items-center justify-center gap-2.5">
               <Pill className="border-emerald-600/20 bg-emerald-600/10 text-emerald-800">
                 <LiveDot />
                 {activeCount} live {activeCount === 1 ? "draw" : "draws"}
               </Pill>
-              <Pill className="hidden sm:inline-flex">
+              <Pill>
                 <ShieldCheck className="h-3 w-3 text-emerald-600" />
                 100% target ticket rule
               </Pill>
             </div>
 
-            <h1 className="mt-6 font-display text-[2.7rem] font-semibold leading-[0.96] tracking-[-0.035em] text-slate-900 sm:text-[3.5rem] lg:text-[3.9rem]">
+            <h1 className="mt-6 font-display text-[2.6rem] font-semibold leading-[0.98] tracking-[-0.035em] text-slate-900 sm:text-[3.4rem] lg:text-[3.7rem]">
               Every draw.
               <span className="block bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 bg-clip-text text-transparent">
                 Nothing hidden.
               </span>
             </h1>
 
-            <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-slate-600 sm:text-lg">
+            <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-slate-600">
               Brand-new iPhones, motorcycles, consoles and cash grand prizes — each one already bought, verified and
               held. The pool locks at 100% sold, then the draw streams live and uncut.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Cta href={WHATSAPP_COMMUNITY_URL} className="w-full sm:w-auto">
+            <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+              <Cta href={WHATSAPP_COMMUNITY_URL} className="sm:w-auto">
                 <WhatsAppIcon className="h-4 w-4" />
                 Draw alerts on WhatsApp
               </Cta>
-              <Cta href="/winners" variant="ghost" arrow className="w-full sm:w-auto">
+              <Cta href="/winners" variant="ghost" arrow className="sm:w-auto">
                 <Trophy className="h-4 w-4" />
                 Past winners
               </Cta>
             </div>
           </div>
 
-          {/* Live desk */}
-          <div className="relative mt-12 lg:mt-0">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-6 -z-10 rounded-[36px] bg-gradient-to-br from-emerald-300/25 via-white/40 to-teal-200/30 blur-2xl"
-            />
-            <TicketCard className="shadow-[0_40px_90px_-50px_rgba(4,47,34,0.5)]">
-              <div className="flex items-center justify-between gap-3 border-b border-dashed border-slate-900/10 px-5 py-3.5">
-                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-500">Live draw desk</p>
-                <Pill className="border-emerald-600/20 bg-emerald-600/10 text-emerald-800">
-                  <LiveDot />
-                  Pool open
-                </Pill>
+          {/* The board itself, right in the hero — three live stubs instead of a side card. */}
+          <div className="mt-10 rounded-[28px] border border-slate-900/10 bg-white/55 p-3 backdrop-blur">
+            <div className="flex items-center justify-between gap-3 px-1.5 pb-2.5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">On the board now</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-emerald-700">
+                {activeCount} live · {ticketsSold.toLocaleString("en-PK")} tickets issued
+              </p>
+            </div>
+
+            {activeRaffles.length > 0 ? (
+              <div className="flex flex-col gap-2.5 sm:flex-row">
+                {activeRaffles.slice(0, 3).map((raffle) => {
+                  const percent = soldPercent(raffle)
+
+                  return (
+                    <Link
+                      key={raffle.id}
+                      href={`/raffles/${raffle.id}`}
+                      className="group flex flex-1 items-center gap-3 rounded-2xl border border-slate-900/5 bg-white px-3 py-2.5 transition hover:border-emerald-500/30"
+                    >
+                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                        <Image
+                          src={raffle.image || "/placeholder.jpg"}
+                          alt=""
+                          fill
+                          sizes="56px"
+                          className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="truncate text-[12.5px] font-semibold text-slate-900 transition-colors group-hover:text-emerald-700">
+                            {raffle.title}
+                          </p>
+                          <span className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-emerald-700">
+                            {formatCurrency(raffle.price)}
+                          </span>
+                        </div>
+                        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-slate-900/[0.07]">
+                          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${percent}%` }} />
+                        </div>
+                        <p className="mt-1 font-mono text-[10px] text-slate-500">
+                          {percent}% sold · {raffle.totalEntries.toLocaleString("en-PK")} ticket pool
+                        </p>
+                      </div>
+                      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-300 transition-colors group-hover:text-emerald-600" />
+                    </Link>
+                  )
+                })}
               </div>
-
-              <dl className="divide-y divide-slate-900/5 px-5 sm:px-6">
-                <div className="flex items-center justify-between gap-4 py-3.5">
-                  <dt className="text-[12.5px] text-slate-500">Active draws</dt>
-                  <dd className="font-mono text-[12px] font-semibold text-slate-900">{activeCount}</dd>
-                </div>
-                <div className="flex items-center justify-between gap-4 py-3.5">
-                  <dt className="text-[12.5px] text-slate-500">Tickets issued</dt>
-                  <dd className="font-mono text-[12px] font-semibold tabular-nums text-slate-900">
-                    {ticketsSold.toLocaleString("en-PK")}
-                  </dd>
-                </div>
-                <div className="flex items-center justify-between gap-4 py-3.5">
-                  <dt className="text-[12.5px] text-slate-500">Prize value in play</dt>
-                  <dd className="font-mono text-[12px] font-semibold text-slate-900">
-                    {prizeValue ? formatCurrency(prizeValue) : "—"}
-                  </dd>
-                </div>
-                <div className="flex items-center justify-between gap-4 py-3.5">
-                  <dt className="text-[12.5px] text-slate-500">Entry from</dt>
-                  <dd className="font-mono text-[12px] font-semibold text-emerald-700">
-                    {entryFloor ? formatCurrency(entryFloor) : "—"}
-                  </dd>
-                </div>
-              </dl>
-
-              <div className="mx-5 border-t border-dashed border-slate-900/15 sm:mx-6" />
-
-              <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4 sm:px-6">
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
-                  Draws run at 100% sold
-                </p>
-                <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
-                  <ShieldCheck className="h-3 w-3" />
-                  No early close
-                </p>
-              </div>
-            </TicketCard>
+            ) : (
+              <p className="px-2 pb-1 text-[12px] text-slate-500">
+                The next board opens soon — join the alerts below.
+              </p>
+            )}
           </div>
+
+          {/* Market ribbon */}
+          <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-900/10 bg-slate-900/10 sm:grid-cols-4">
+            {[
+              { label: "Live draws", value: String(activeCount), accent: false },
+              { label: "Tickets issued", value: ticketsSold.toLocaleString("en-PK"), accent: false },
+              { label: "Prize value", value: prizeValue ? formatCurrency(prizeValue) : "—", accent: false },
+              { label: "Entry from", value: entryFloor ? formatCurrency(entryFloor) : "—", accent: true },
+            ].map((cell) => (
+              <div key={cell.label} className="bg-white/80 px-4 py-3">
+                <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">{cell.label}</dt>
+                <dd
+                  className={`mt-1 font-mono text-[13px] font-semibold tabular-nums ${
+                    cell.accent ? "text-emerald-700" : "text-slate-900"
+                  }`}
+                >
+                  {cell.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 

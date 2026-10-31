@@ -9,7 +9,6 @@ import {
   Mail,
   MapPin,
   MessageSquare,
-  ShieldCheck,
   Ticket,
   Trophy,
 } from "lucide-react"
@@ -21,15 +20,12 @@ import {
   INK_PANEL,
   Kicker,
   LiveDot,
-  Mesh,
   PANEL,
   Pill,
   SectionHead,
   SHELL,
   StatTile,
-  TicketCard,
 } from "@/components/marketing/kit"
-import { Reveal } from "@/components/marketing/motion"
 
 export const metadata = {
   title: "Contact Us — Official Support Desk & Inquiries | PakRaffle",
@@ -117,17 +113,24 @@ export default function ContactPage() {
     <div className={SHELL}>
       {/* ------------------------------------------------------------------ Hero */}
       <section className="relative overflow-hidden border-b border-slate-900/5">
-        <Mesh tone="sky" />
-        <div
-          className={`${CONTAINER} relative pb-14 pt-24 sm:pt-24 lg:grid lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14 lg:pb-24 lg:pt-28`}
-        >
-          <div>
+        {/* Signal field — a dot grid with the horizon rising behind it. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,#f6fbff_0%,#f4faf8_58%,#ffffff_100%)]" />
+          <div className="absolute inset-0 opacity-70 [background-image:radial-gradient(rgba(14,116,144,0.16)_1px,transparent_1px)] [background-size:22px_22px]" />
+          <div className="absolute left-1/2 top-[17rem] h-[36rem] w-[36rem] -translate-x-1/2 rounded-full border border-sky-300/40" />
+          <div className="absolute left-1/2 top-[21rem] h-[26rem] w-[26rem] -translate-x-1/2 rounded-full border border-sky-300/30" />
+          <div className="absolute -right-24 -top-16 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
+          <div className="absolute -left-20 top-40 h-64 w-64 rounded-full bg-emerald-200/30 blur-3xl" />
+        </div>
+
+        <div className={`${CONTAINER} relative pb-12 pt-24 sm:pt-28`}>
+          <div className="max-w-3xl">
             <div className="flex flex-wrap items-center gap-2.5">
               <Pill className="border-emerald-600/20 bg-emerald-600/10 text-emerald-800">
                 <LiveDot />
                 Support desk open
               </Pill>
-              <Pill className="hidden sm:inline-flex">
+              <Pill>
                 <Headphones className="h-3 w-3 text-emerald-600" />
                 Average reply &lt; 15 min
               </Pill>
@@ -166,75 +169,57 @@ export default function ContactPage() {
             </div>
           </div>
 
-          {/* Routing pass */}
-          <div className="relative mt-12 lg:mt-0">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-6 -z-10 rounded-[36px] bg-gradient-to-br from-sky-300/25 via-white/40 to-emerald-200/30 blur-2xl"
-            />
-            <Reveal>
-              <TicketCard className="shadow-[0_40px_90px_-50px_rgba(4,47,34,0.5)]">
-                <div className="flex items-center justify-between gap-3 border-b border-dashed border-slate-900/10 px-5 py-3.5">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-500">Support routing</p>
-                  <Pill className="border-emerald-600/20 bg-emerald-600/10 text-emerald-800">
-                    <ShieldCheck className="h-3 w-3" />
-                    Official desk
-                  </Pill>
+          {/* Every channel side by side — pick whichever answers fastest. */}
+          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {ROUTES.map((route) => {
+              const body = (
+                <>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-sky-900/10 bg-white text-sky-700">
+                      <route.icon className="h-4 w-4" />
+                    </span>
+                    <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-400">
+                      {route.href ? "Open now" : "Info"}
+                    </span>
+                  </div>
+                  <p className="mt-4 text-[12.5px] font-semibold text-slate-900">{route.label}</p>
+                  <p className="mt-0.5 font-mono text-[11px] font-semibold text-emerald-700">{route.value}</p>
+                  <p className="mt-2 text-[11px] leading-snug text-slate-500">{route.hint}</p>
+                </>
+              )
+
+              return route.href ? (
+                <a
+                  key={route.label}
+                  href={route.href}
+                  target={route.external ? "_blank" : undefined}
+                  rel={route.external ? "noopener noreferrer" : undefined}
+                  className="rounded-2xl border border-sky-900/10 bg-white/80 p-4 backdrop-blur transition hover:-translate-y-0.5 hover:border-sky-500/40"
+                >
+                  {body}
+                </a>
+              ) : (
+                <div key={route.label} className="rounded-2xl border border-sky-900/10 bg-white/50 p-4">
+                  {body}
                 </div>
+              )
+            })}
+          </div>
 
-                <ul className="divide-y divide-slate-900/5 px-5 sm:px-6">
-                  {ROUTES.map((route) => {
-                    const row = (
-                      <>
-                        <span className="inline-flex items-center gap-2.5 text-[12.5px] text-slate-500">
-                          <route.icon className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                          {route.label}
-                        </span>
-                        <span className="text-right font-mono text-[12px] font-semibold text-slate-900">
-                          {route.value}
-                        </span>
-                      </>
-                    )
-                    const rowClass = "flex items-center justify-between gap-4 py-3.5"
-
-                    return (
-                      <li key={route.label}>
-                        {route.href ? (
-                          <a
-                            href={route.href}
-                            target={route.external ? "_blank" : undefined}
-                            rel={route.external ? "noopener noreferrer" : undefined}
-                            className={`${rowClass} transition hover:bg-emerald-50/40`}
-                          >
-                            {row}
-                          </a>
-                        ) : (
-                          <div className={rowClass}>{row}</div>
-                        )}
-                      </li>
-                    )
-                  })}
-                </ul>
-
-                <div className="mx-5 border-t border-dashed border-slate-900/15 sm:mx-6" />
-
-                <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4 sm:px-6">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
-                    support@pakraffle.com
-                  </p>
-                  <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
-                    <BadgeCheck className="h-3 w-3" />
-                    Never charged to reply
-                  </p>
-                </div>
-              </TicketCard>
-            </Reveal>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 px-1">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
+              support@pakraffle.com
+            </p>
+            <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
+              <BadgeCheck className="h-3 w-3" />
+              Never charged to reply
+            </p>
           </div>
         </div>
       </section>
 
       {/* ------------------------------------------------------------ Key numbers */}
-      <section className={`${CONTAINER} relative -mt-8 pb-4`}>
+      <section className={`${CONTAINER} relative pb-4 pt-6`}>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatTile label="First reply" value="< 15 min" hint="WhatsApp, 7 days a week" accent />
           <StatTile label="Payment review" value="5–15 min" hint="TID or screenshot" />

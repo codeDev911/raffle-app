@@ -35,13 +35,11 @@ import {
   Kicker,
   LiveDot,
   Marquee,
-  Mesh,
   PANEL,
   Pill,
   SectionHead,
   SHELL,
   StatTile,
-  TicketCard,
 } from "@/components/marketing/kit"
 import { Counter, Reveal } from "@/components/marketing/motion"
 
@@ -336,10 +334,16 @@ export default function ListProductPage() {
     <div className={SHELL}>
       {/* ---------------------------------------------------------------- Hero */}
       <section className="relative overflow-hidden border-b border-slate-900/5">
-        <Mesh tone="amber" />
-        <div
-          className={`${CONTAINER} relative pb-14 pt-24 sm:pt-24 lg:grid lg:grid-cols-[1.04fr_0.96fr] lg:items-center lg:gap-14 lg:pb-24 lg:pt-28`}
-        >
+        {/* Ledger paper — warm stock, ruled lines, one red margin rule. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,#fdfaf3_0%,#fbf7ec_55%,#ffffff_100%)]" />
+          <div className="absolute -right-32 -top-28 h-96 w-96 rounded-full bg-amber-300/25 blur-3xl" />
+          <div className="absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-emerald-200/25 blur-3xl" />
+          <div className="absolute inset-0 opacity-60 [background-image:repeating-linear-gradient(180deg,rgba(120,53,15,0.06)_0_1px,transparent_1px_38px)]" />
+          <div className="absolute inset-y-0 left-[6%] hidden w-px bg-rose-300/50 lg:block" />
+        </div>
+
+        <div className={`${CONTAINER} relative pb-12 pt-24 sm:pt-28`}>
           <div>
             <div className="flex flex-wrap items-center gap-2.5">
               <Pill className="border-amber-500/25 bg-amber-500/10 text-amber-900">
@@ -374,7 +378,7 @@ export default function ListProductPage() {
               </Cta>
             </div>
 
-            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-slate-500">
+            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-slate-500">
               {["8% flat fee", "Rs 0 upfront", "CNIC-verified sellers"].map((chip) => (
                 <span key={chip} className="inline-flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-600" strokeWidth={3} />
@@ -382,74 +386,69 @@ export default function ListProductPage() {
                 </span>
               ))}
             </div>
+          </div>
 
-            <div className="mt-9 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatTile label="Platform fee" value="8%" hint="Flat, from gross" accent />
-              <StatTile label="Upfront cost" value="Rs 0" hint="Pay when sold" />
-              <StatTile label="Identity" value="CNIC" hint="NADRA verified" />
-              <StatTile label="Payout" value="Instant" hint="Bank · Raast" />
+          {/* A horizontal statement across the page — not a floating side card. */}
+          <div className="relative mt-10">
+            <div className="overflow-hidden rounded-2xl border border-amber-900/10 bg-white/85 backdrop-blur">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-dashed border-amber-900/15 px-4 py-2.5 sm:px-6">
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-amber-900/60">
+                  Listing statement · live preview
+                </p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
+                  Sample · sealed smartphone
+                </p>
+              </div>
+
+              <div className="grid gap-px bg-amber-900/10 sm:grid-cols-2 lg:grid-cols-[1.25fr_1fr_1fr_1.05fr]">
+                <div className="flex items-center gap-3 bg-white px-4 py-4 sm:px-6">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-900/10 bg-gradient-to-br from-amber-50 to-white text-amber-700">
+                    <Smartphone className="h-5 w-5" strokeWidth={1.6} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400">Your asset</p>
+                    <p className="truncate text-[13px] font-semibold text-slate-900">iPhone · sealed</p>
+                    <p className="font-mono text-[11px] tabular-nums text-slate-500">{pkr(cMarket)} market</p>
+                  </div>
+                </div>
+
+                {[
+                  { label: "Sold as", value: `${num(cTickets)} tickets`, hint: `${pkr(cPrice)} each` },
+                  { label: "Gross collected", value: pkr(calcActualGross), hint: `fee ${pkr(calcPlatformFee)}` },
+                ].map((cell) => (
+                  <div key={cell.label} className="flex flex-col justify-center bg-white px-4 py-4 sm:px-6">
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400">{cell.label}</p>
+                    <p className="mt-0.5 font-mono text-[13.5px] font-semibold tabular-nums text-slate-900">
+                      {cell.value}
+                    </p>
+                    <p className="font-mono text-[10.5px] text-slate-500">{cell.hint}</p>
+                  </div>
+                ))}
+
+                <div className="flex flex-col justify-center bg-emerald-600 px-4 py-4 text-white sm:px-6">
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-emerald-100/80">You keep</p>
+                  <p className="mt-0.5 font-mono text-[15px] font-semibold tabular-nums">{pkr(calcSellerPayout)}</p>
+                  <p className="font-mono text-[10.5px] text-emerald-100/75">wired on draw completion</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-1">
+              <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600">
+                <Lock className="h-3.5 w-3.5 text-emerald-600" />
+                Escrow custody — the asset is inspected and held before the draw goes live
+              </p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
+                Figures follow the calculator below
+              </p>
             </div>
           </div>
 
-          {/* Live payout preview driven by the calculator below. */}
-          <div className="relative mt-12 lg:mt-0">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-8 -z-10 rounded-[48px] bg-gradient-to-br from-amber-200/50 via-white/0 to-emerald-100/60 blur-2xl"
-            />
-            <TicketCard className="animate-floaty shadow-[0_40px_100px_-60px_rgba(4,47,34,0.7)] lg:rotate-[1.1deg]">
-              <div className="flex items-center justify-between gap-3 border-b border-dashed border-slate-200 px-5 py-3">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">Listing preview</span>
-                <Pill className="border-emerald-600/20 bg-emerald-50 text-emerald-700">8% fee</Pill>
-              </div>
-
-              <div className="flex items-center gap-4 p-5">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-slate-900/5 bg-gradient-to-br from-slate-50 to-emerald-50 text-emerald-700">
-                  <Smartphone className="h-7 w-7" strokeWidth={1.5} />
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate font-display text-base font-semibold text-slate-900">Your listed asset</p>
-                  <p className="font-mono text-[11px] text-slate-500">Condition · sealed, verified on handover</p>
-                  <p className="mt-1 font-mono text-lg font-semibold tabular-nums text-slate-900">{pkr(cMarket)}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-px border-y border-dashed border-slate-200 bg-slate-900/5 text-center">
-                {[
-                  { label: "Tickets", value: num(cTickets) },
-                  { label: "Per ticket", value: pkr(cPrice) },
-                  { label: "Gross", value: pkr(calcActualGross) },
-                ].map((cell) => (
-                  <div key={cell.label} className="bg-white px-2 py-3">
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">{cell.label}</p>
-                    <p className="mt-0.5 font-mono text-[12px] font-semibold tabular-nums text-slate-900">{cell.value}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-2 p-5">
-                <div className="flex items-center justify-between text-[12px]">
-                  <span className="text-slate-500">PakRaffle fee · 8%</span>
-                  <span className="font-mono tabular-nums text-rose-600">- {pkr(calcPlatformFee)}</span>
-                </div>
-                <div className="flex items-end justify-between gap-3 rounded-2xl bg-emerald-600 px-4 py-3 text-white">
-                  <div>
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
-                      Your net payout
-                    </p>
-                    <p className="font-mono text-[11px] text-emerald-100/70">wired on draw completion</p>
-                  </div>
-                  <p className="font-mono text-lg font-semibold tabular-nums">{pkr(calcSellerPayout)}</p>
-                </div>
-              </div>
-            </TicketCard>
-
-            <div className="absolute -bottom-7 -left-2 rotate-[2deg] rounded-2xl border border-slate-900/10 bg-white px-3.5 py-2.5 shadow-[0_24px_50px_-30px_rgba(4,47,34,0.55)] sm:-left-5">
-              <p className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                <Lock className="h-3 w-3 text-emerald-600" /> Escrow custody
-              </p>
-              <p className="mt-1 font-mono text-[11px] tabular-nums text-slate-900">Item held · insured</p>
-            </div>
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatTile label="Platform fee" value="8%" hint="Flat, from gross" accent />
+            <StatTile label="Upfront cost" value="Rs 0" hint="Pay when sold" />
+            <StatTile label="Identity" value="CNIC" hint="NADRA verified" />
+            <StatTile label="Payout" value="Instant" hint="Bank · Raast" />
           </div>
         </div>
 

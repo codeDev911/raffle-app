@@ -34,9 +34,8 @@ import {
   SectionHead,
   SHELL,
   StatTile,
-  TicketCard,
 } from "@/components/marketing/kit"
-import { Counter, Reveal } from "@/components/marketing/motion"
+import { Counter } from "@/components/marketing/motion"
 
 const WHATSAPP_INTL = "923377155722"
 
@@ -274,36 +273,43 @@ export default function PartnerPage() {
     <div className={SHELL}>
       {/* ---------------------------------------------------------------- Hero */}
       <section className="relative overflow-hidden border-b border-slate-900/5">
-        <Mesh tone="violet" />
-        <div
-          className={`${CONTAINER} relative pb-14 pt-24 sm:pt-24 lg:grid lg:grid-cols-[1.04fr_0.96fr] lg:items-center lg:gap-14 lg:pb-24 lg:pt-28`}
-        >
-          <div>
-            <div className="flex flex-wrap items-center gap-2.5">
+        {/* Orbit fields — the tiers radiate out from the centre of the page. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_0%,#ffffff_0%,#f8f5fd_46%,#eef7f1_100%)]" />
+          <div className="absolute left-1/2 top-[-19rem] h-[38rem] w-[38rem] -translate-x-1/2 rounded-full border border-violet-300/25" />
+          <div className="absolute left-1/2 top-[-13rem] h-[27rem] w-[27rem] -translate-x-1/2 rounded-full border border-violet-300/40" />
+          <div className="absolute left-1/2 top-[-7rem] h-[16rem] w-[16rem] -translate-x-1/2 rounded-full border border-emerald-300/45" />
+          <div className="absolute -left-24 top-44 h-72 w-72 rounded-full bg-violet-300/25 blur-3xl" />
+          <div className="absolute -right-20 top-20 h-64 w-64 rounded-full bg-emerald-200/30 blur-3xl" />
+        </div>
+
+        <div className={`${CONTAINER} relative pb-12 pt-24 sm:pt-28`}>
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="flex flex-wrap items-center justify-center gap-2.5">
               <Pill className="border-violet-600/20 bg-violet-600/10 text-violet-800">
                 <LiveDot />
                 Affiliate network · Pakistan
               </Pill>
-              <Pill className="hidden sm:inline-flex">
+              <Pill>
                 <Zap className="h-3 w-3 text-emerald-600" />
                 Zero cost to join
               </Pill>
             </div>
 
-            <h1 className="mt-6 font-display text-[2.7rem] font-semibold leading-[0.96] tracking-[-0.035em] text-slate-900 sm:text-[3.6rem] lg:text-[4.05rem]">
+            <h1 className="mt-6 font-display text-[2.7rem] font-semibold leading-[0.96] tracking-[-0.035em] text-slate-900 sm:text-[3.5rem] lg:text-[3.9rem]">
               Share a link.
               <span className="block bg-gradient-to-r from-violet-600 via-emerald-600 to-teal-500 bg-clip-text text-transparent">
                 Every ticket pays.
               </span>
             </h1>
 
-            <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-slate-600 sm:text-lg">
+            <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-slate-600">
               Earn <span className="font-semibold text-slate-900">15 – 25% lifetime commission</span> on tickets sold
               through your link. No stock, no support tickets, no upfront cost — just your WhatsApp, your reels, and
               money that lands in your wallet.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
               <Cta href={redirectHref} arrow className="w-full sm:w-auto">
                 <Handshake className="h-4 w-4" />
                 Go to Partner Platform
@@ -318,7 +324,7 @@ export default function PartnerPage() {
               </Cta>
             </div>
 
-            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-slate-500">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12px] text-slate-500">
               {[
                 { icon: Check, label: "No registration fee" },
                 { icon: Clock, label: "Payouts in 2 – 6 hours" },
@@ -332,93 +338,100 @@ export default function PartnerPage() {
             </div>
           </div>
 
-          {/* Payout pass — the same maths as the estimator below, shown as a torn-off slip. */}
-          <div className="relative mt-12 lg:mt-0">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-6 -z-10 rounded-[36px] bg-gradient-to-br from-violet-300/25 via-white/40 to-emerald-200/30 blur-2xl"
-            />
-            <Reveal>
-              <TicketCard className="shadow-[0_40px_90px_-50px_rgba(30,20,70,0.55)]">
-                <div className="flex items-center justify-between gap-3 border-b border-dashed border-slate-900/10 px-5 py-3.5">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-500">
-                    PakRaffle · Partner payout pass
+          {/* The published ladder — the estimate underneath reads the same thresholds. */}
+          <div className="mt-12 grid gap-3 sm:grid-cols-3">
+            {TIERS.map((tier) => {
+              const current = tier.rate === ratePct
+
+              return (
+                <div
+                  key={tier.short}
+                  className={`rounded-2xl border p-5 text-left transition ${
+                    current
+                      ? "border-violet-500/40 bg-white shadow-[0_30px_70px_-55px_rgba(76,29,149,0.7)]"
+                      : "border-slate-900/10 bg-white/55"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">{tier.short}</p>
+                    {current && (
+                      <span className="rounded-full bg-violet-600/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-violet-700">
+                        Your band
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-2 font-display text-[2rem] font-semibold leading-none tracking-tight text-slate-900">
+                    {tier.rate}%
                   </p>
-                  <Pill className="border-emerald-600/20 bg-emerald-600/10 text-emerald-800">
-                    <LiveDot />
-                    Live model
-                  </Pill>
-                </div>
-
-                <div className="px-5 py-5 sm:px-6">
-                  <div className="flex items-end justify-between gap-4">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Your tier</p>
-                      <p className="mt-1 font-display text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
-                        {tierName}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-mono text-3xl font-semibold tabular-nums leading-none text-emerald-700 sm:text-4xl">
-                        {ratePct}%
-                      </p>
-                      <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-slate-500">commission</p>
-                    </div>
-                  </div>
-
-                  <dl className="mt-5 space-y-2.5">
-                    <PassRow label="Tickets / month" value={`${num(monthlyTickets)} tickets`} />
-                    <PassRow label="Ticket volume" value={pkr(grossMonthlyVolume)} />
-                    <PassRow label="Commission" value={pkr(commissionEarnings)} tone="emerald" />
-                    <PassRow
-                      label="Milestone bonus"
-                      value={milestoneBonus > 0 ? `+ ${pkr(milestoneBonus)}` : "Not reached yet"}
-                      tone={milestoneBonus > 0 ? "amber" : "muted"}
-                    />
-                  </dl>
-
-                  <div className="mt-5 rounded-2xl bg-[#07130f] px-4 py-3.5">
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-emerald-300/80">This month, roughly</p>
-                    <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-white sm:text-3xl">
-                      {pkr(totalEstimatedMonthly)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mx-5 border-t border-dashed border-slate-900/15 sm:mx-6" />
-
-                <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6">
-                  <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-600">
-                    <Wallet className="h-3.5 w-3.5 text-emerald-600" />
-                    Paid to JazzCash · Easypaisa · Raast
-                  </div>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
-                    {nextTier ? `${num(ticketsToNext)} to next tier` : "Top tier unlocked"}
+                  <p className="mt-2 font-mono text-[10.5px] text-slate-500">{tier.band}</p>
+                  <p
+                    className={`mt-3 text-[11.5px] font-semibold ${
+                      tier.bonus > 0 ? "text-emerald-700" : "text-slate-400"
+                    }`}
+                  >
+                    {tier.bonus > 0 ? `+ ${pkr(tier.bonus)} milestone bonus` : "No milestone bonus"}
                   </p>
                 </div>
-                {nextTier && (
-                  <div className="px-5 pb-5 sm:px-6">
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-900/5">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-violet-500 to-emerald-500 transition-[width] duration-500"
-                        style={{ width: `${tierProgress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </TicketCard>
-            </Reveal>
+              )
+            })}
+          </div>
 
-            <div className="absolute -bottom-5 -left-3 hidden rounded-2xl border border-slate-900/10 bg-white/90 px-3.5 py-2.5 shadow-lg backdrop-blur sm:block">
-              <p className="text-[10px] uppercase tracking-[0.16em] text-slate-500">Min payout</p>
-              <p className="font-mono text-sm font-semibold tabular-nums text-slate-900">Rs 500</p>
+          {/* Your numbers, at the current step of the ladder. */}
+          <div className="mt-3 overflow-hidden rounded-2xl border border-violet-900/10">
+            <dl className="grid grid-cols-2 gap-px bg-violet-900/10 sm:grid-cols-4">
+              {[
+                { label: "Your tier", value: tierName.replace(" Partner", ""), accent: false },
+                { label: "Tickets / month", value: num(monthlyTickets), accent: false },
+                { label: "Commission", value: pkr(commissionEarnings), accent: false },
+                { label: "This month, roughly", value: pkr(totalEstimatedMonthly), accent: true },
+              ].map((cell) => (
+                <div
+                  key={cell.label}
+                  className={`px-4 py-3.5 ${cell.accent ? "bg-emerald-600" : "bg-white/85"}`}
+                >
+                  <dt
+                    className={`text-[9px] font-semibold uppercase tracking-[0.16em] ${
+                      cell.accent ? "text-emerald-100/80" : "text-slate-400"
+                    }`}
+                  >
+                    {cell.label}
+                  </dt>
+                  <dd
+                    className={`mt-0.5 font-mono text-[13px] font-semibold tabular-nums ${
+                      cell.accent ? "text-white" : "text-slate-900"
+                    }`}
+                  >
+                    {cell.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+
+            <div className="border-t border-dashed border-violet-900/15 px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-slate-500">
+                  {nextTier
+                    ? `${num(ticketsToNext)} more tickets unlocks the next rate`
+                    : "Top tier unlocked — 25% on everything"}
+                </p>
+                <p className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-700">
+                  <Wallet className="h-3 w-3" />
+                  Paid to JazzCash · Easypaisa · Raast
+                </p>
+              </div>
+              <div className="mt-2.5 h-1 w-full overflow-hidden rounded-full bg-slate-900/[0.07]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-violet-500 to-emerald-500 transition-[width] duration-500"
+                  style={{ width: `${tierProgress}%` }}
+                />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ------------------------------------------------------- Key numbers */}
-      <section className={`${CONTAINER} relative -mt-8 pb-4`}>
+      <section className={`${CONTAINER} relative pb-4 pt-6`}>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatTile label="Commission" value="15 – 25%" hint="Lifetime, per ticket" accent />
           <StatTile label="Minimum payout" value="Rs 500" hint="No lock-in." />
@@ -939,29 +952,6 @@ export default function PartnerPage() {
 }
 
 /* -------------------------------------------------------------- helpers */
-
-function PassRow({
-  label,
-  value,
-  tone = "default",
-}: {
-  label: string
-  value: string
-  tone?: "default" | "emerald" | "amber" | "muted"
-}) {
-  const valueTone = {
-    default: "text-slate-900",
-    emerald: "text-emerald-700",
-    amber: "text-amber-600",
-    muted: "text-slate-400",
-  }[tone]
-  return (
-    <div className="flex items-center justify-between gap-4 text-[12.5px]">
-      <dt className="text-slate-500">{label}</dt>
-      <dd className={`font-mono font-semibold tabular-nums ${valueTone}`}>{value}</dd>
-    </div>
-  )
-}
 
 function Slot({
   label,

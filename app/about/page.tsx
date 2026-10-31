@@ -3,7 +3,6 @@ import {
   BadgeCheck,
   Check,
   Eye,
-  HeartHandshake,
   Lock,
   MessageSquare,
   Minus,
@@ -23,15 +22,13 @@ import {
   Kicker,
   LiveDot,
   Marquee,
-  Mesh,
   PANEL,
   Pill,
   SectionHead,
   SHELL,
   StatTile,
-  TicketCard,
 } from "@/components/marketing/kit"
-import { Counter, Reveal } from "@/components/marketing/motion"
+import { Counter } from "@/components/marketing/motion"
 
 export const metadata = {
   title: "About Us — Pakistan's Trusted Lucky Draw Platform | PakRaffle",
@@ -183,111 +180,120 @@ export default function AboutPage() {
     <div className={SHELL}>
       {/* ---------------------------------------------------------------- Hero */}
       <section className="relative overflow-hidden border-b border-slate-900/5">
-        <Mesh tone="emerald" />
-        <div
-          className={`${CONTAINER} relative pb-14 pt-24 sm:pt-24 lg:grid lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14 lg:pb-24 lg:pt-28`}
-        >
-          <div>
-            <div className="flex flex-wrap items-center gap-2.5">
-              <Pill className="border-emerald-600/20 bg-emerald-600/10 text-emerald-800">
-                <LiveDot />
-                Pakistan&apos;s lucky draw platform
-              </Pill>
-              <Pill className="hidden sm:inline-flex">
-                <BadgeCheck className="h-3 w-3 text-emerald-600" />
-                Established 2024
-              </Pill>
-            </div>
+        {/* Editorial paper — hairline column rules and outlined seals. */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,#fbfaf6_0%,#f7f8f4_58%,#ffffff_100%)]" />
+          <div className="absolute -right-40 top-4 h-[30rem] w-[30rem] rounded-full border border-slate-900/[0.07]" />
+          <div className="absolute -right-24 top-24 h-[20rem] w-[20rem] rounded-full border border-slate-900/[0.05]" />
+          <div className="absolute right-14 top-44 h-[9rem] w-[9rem] rounded-full border border-emerald-600/15" />
+          <div className="absolute inset-y-0 left-[26%] hidden w-px bg-slate-900/[0.06] lg:block" />
+          <div className="absolute inset-y-0 right-[22%] hidden w-px bg-slate-900/[0.04] lg:block" />
+        </div>
 
-            <h1 className="mt-6 font-display text-[2.7rem] font-semibold leading-[0.96] tracking-[-0.035em] text-slate-900 sm:text-[3.5rem] lg:text-[3.9rem]">
-              A raffle you can
-              <span className="block bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 bg-clip-text text-transparent">
-                actually audit.
-              </span>
-            </h1>
+        <div className={`${CONTAINER} relative pb-12 pt-24 sm:pt-28`}>
+          <div className="grid gap-8 lg:grid-cols-[9rem_1fr] lg:gap-12">
+            {/* Masthead rail: the facts a reader checks first. */}
+            <aside className="flex flex-wrap items-start gap-x-8 gap-y-4 lg:flex-col lg:gap-6 lg:border-r lg:border-slate-900/10 lg:pr-6">
+              <div>
+                <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-slate-400">Established</p>
+                <p className="mt-1 font-display text-2xl font-semibold tracking-tight text-slate-900">2024</p>
+              </div>
+              <div>
+                <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-slate-400">Coverage</p>
+                <p className="mt-1 text-[11.5px] font-semibold leading-snug text-slate-900">
+                  4 provinces · AJK · GB
+                </p>
+              </div>
+              <div>
+                <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-slate-400">Winner fees</p>
+                <p className="mt-1 font-mono text-sm font-semibold tabular-nums text-emerald-700">Rs 0</p>
+              </div>
+              <div className="hidden pt-1 lg:block">
+                <div className="-rotate-[7deg] rounded-lg border border-emerald-800/40 px-3 py-1.5 text-center">
+                  <p className="font-mono text-[8px] uppercase tracking-[0.24em] text-emerald-800/60">No</p>
+                  <p className="font-display text-[13px] font-semibold uppercase tracking-[0.1em] text-emerald-800">
+                    exceptions
+                  </p>
+                </div>
+              </div>
+            </aside>
 
-            <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-slate-600 sm:text-lg">
-              PakRaffle was built on one conviction: every Pakistani deserves an honest, mathematically fair shot at a
-              luxury prize — backed by inventory we already hold, broadcasts with no camera cuts, and zero hidden costs
-              for winners.
-            </p>
+            <div>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <Pill className="border-emerald-600/20 bg-emerald-600/10 text-emerald-800">
+                  <LiveDot />
+                  Pakistan&apos;s lucky draw platform
+                </Pill>
+                <Pill>
+                  <BadgeCheck className="h-3 w-3 text-emerald-600" />
+                  Established 2024
+                </Pill>
+              </div>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Cta href="/raffles" arrow className="w-full sm:w-auto">
-                <Trophy className="h-4 w-4" />
-                Explore active draws
-              </Cta>
-              <Cta href="/winners" variant="ghost" className="w-full sm:w-auto">
-                <BadgeCheck className="h-4 w-4" />
-                Winners &amp; proof
-              </Cta>
-            </div>
-
-            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-slate-500">
-              {["All 4 provinces, AJK & GB", "100% target ticket rule", "No winner fees, ever"].map((chip) => (
-                <span key={chip} className="inline-flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-600" strokeWidth={3} />
-                  {chip}
+              <h1 className="mt-6 font-display text-[2.7rem] font-semibold leading-[0.96] tracking-[-0.035em] text-slate-900 sm:text-[3.5rem] lg:text-[3.9rem]">
+                A raffle you can
+                <span className="block bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 bg-clip-text text-transparent">
+                  actually audit.
                 </span>
-              ))}
+              </h1>
+
+              <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-slate-600 sm:text-lg">
+                PakRaffle was built on one conviction: every Pakistani deserves an honest, mathematically fair shot at
+                a luxury prize — backed by inventory we already hold, broadcasts with no camera cuts, and zero hidden
+                costs for winners.
+              </p>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Cta href="/raffles" arrow className="w-full sm:w-auto">
+                  <Trophy className="h-4 w-4" />
+                  Explore active draws
+                </Cta>
+                <Cta href="/winners" variant="ghost" className="w-full sm:w-auto">
+                  <BadgeCheck className="h-4 w-4" />
+                  Winners &amp; proof
+                </Cta>
+              </div>
+
+              <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-slate-500">
+                {["All 4 provinces, AJK & GB", "100% target ticket rule", "No winner fees, ever"].map((chip) => (
+                  <span key={chip} className="inline-flex items-center gap-1.5">
+                    <Check className="h-3.5 w-3.5 text-emerald-600" strokeWidth={3} />
+                    {chip}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Integrity pass: the standards, presented as a document you could hold. */}
-          <div className="relative mt-12 lg:mt-0">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-6 -z-10 rounded-[36px] bg-gradient-to-br from-emerald-300/25 via-white/40 to-amber-200/30 blur-2xl"
-            />
-            <Reveal>
-              <TicketCard className="shadow-[0_40px_90px_-50px_rgba(4,47,34,0.5)]">
-                <div className="flex items-center justify-between gap-3 border-b border-dashed border-slate-900/10 px-5 py-3.5">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-500">Draw integrity pass</p>
-                  <Pill className="border-emerald-600/20 bg-emerald-600/10 text-emerald-800">
-                    <ShieldCheck className="h-3 w-3" />
-                    No exceptions
-                  </Pill>
-                </div>
-
-                <dl className="divide-y divide-slate-900/5 px-5 sm:px-6">
-                  {PASS_ROWS.map((row) => (
-                    <div key={row.label} className="flex items-center justify-between gap-4 py-3.5">
-                      <dt className="inline-flex items-center gap-2.5 text-[12.5px] text-slate-500">
-                        <row.icon className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                        {row.label}
-                      </dt>
-                      <dd className="text-right font-mono text-[12px] font-semibold text-slate-900">{row.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-
-                <div className="mx-5 border-t border-dashed border-slate-900/15 sm:mx-6" />
-
-                <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4 sm:px-6">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
-                    Every draw · same rules
+          {/* The integrity pass, laid out as a five-column document. */}
+          <div className="mt-10 overflow-hidden rounded-2xl border border-slate-900/10">
+            <div className="grid gap-px bg-slate-900/10 sm:grid-cols-2 lg:grid-cols-5">
+              {PASS_ROWS.map((row) => (
+                <div key={row.label} className="bg-[#fdfcf8] px-4 py-4">
+                  <row.icon className="h-4 w-4 text-emerald-600" />
+                  <p className="mt-3 font-mono text-[9.5px] uppercase tracking-[0.16em] text-slate-400">
+                    {row.label}
                   </p>
-                  <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
-                    <Lock className="h-3 w-3" />
-                    Verified before launch
-                  </p>
+                  <p className="mt-1 text-[12px] font-semibold leading-snug text-slate-900">{row.value}</p>
                 </div>
-              </TicketCard>
-            </Reveal>
+              ))}
+            </div>
 
-            <div className="absolute -bottom-5 -left-3 hidden items-center gap-2 rounded-2xl border border-slate-900/10 bg-white/90 px-3.5 py-2.5 shadow-lg backdrop-blur sm:flex">
-              <HeartHandshake className="h-4 w-4 text-emerald-600" />
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.16em] text-slate-500">Winner fees</p>
-                <p className="font-mono text-sm font-semibold tabular-nums text-slate-900">Rs 0</p>
-              </div>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-dashed border-slate-900/15 bg-white/70 px-4 py-2.5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
+                Every draw · same rules
+              </p>
+              <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
+                <Lock className="h-3 w-3" />
+                Verified before launch
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* ------------------------------------------------------- Key numbers */}
-      <section className={`${CONTAINER} relative -mt-8 pb-4`}>
+      <section className={`${CONTAINER} relative pb-4 pt-6`}>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatTile
             label="Prizes distributed"
