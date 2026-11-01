@@ -138,6 +138,8 @@ export interface NormalizedLineItem {
   sku?: string | null
   productId?: string | null
   variantId?: string | null
+  /** Shopify's URL slug. Only a product page knows it; order line items never carry one. */
+  handle?: string | null
   quantity: number
   unitPrice: number // PKR, may contain decimals
 }

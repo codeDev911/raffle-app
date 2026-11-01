@@ -18,7 +18,7 @@ export async function OPTIONS() {
 /**
  * POST /api/merchants/storefront/status
  * Body: { storeId, amount, items: [{ title, sku, productId, variantId, quantity, unitPrice }],
- *         product?: { title, sku, productId, variantId, price } }
+ *         product?: { title, sku, productId, variantId, handle, price } }
  *
  * Returns whether the live cart qualifies for a free draw entry, and how far it is from the
  * threshold. `product` is what the widget read off a product page: it lets a campaign that is

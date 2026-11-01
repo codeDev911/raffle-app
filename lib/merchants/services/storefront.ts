@@ -22,6 +22,8 @@ export interface ProductInput {
   productId: string | null
   variantId: string | null
   sku: string | null
+  /** The URL slug. Merchants copy product filters out of the address bar, so this is an identity. */
+  handle: string | null
   price: number
 }
 
@@ -93,13 +95,16 @@ export function parseProductInput(body: any): ProductInput | null {
   const productId = raw.productId ? String(raw.productId).slice(0, 64) : null
   const variantId = raw.variantId ? String(raw.variantId).slice(0, 64) : null
   const sku = raw.sku ? String(raw.sku).slice(0, 100) : null
-  // Filters match on identity, not price; a page that gives us neither is of no use here.
-  if (!title && !productId && !variantId && !sku) return null
-  return { title, productId, variantId, sku, price: Math.max(0, Number(raw.price) || 0) }
+  const handle = raw.handle ? String(raw.handle).slice(0, 120) : null
+  // Filters match on identity, not price; a page that gives us none of these is of no use here.
+  if (!title && !productId && !variantId && !sku && !handle) return null
+  return { title, productId, variantId, sku, handle, price: Math.max(0, Number(raw.price) || 0) }
 }
 
-function productAsLineItem(product: ProductInput): Pick<NormalizedLineItem, "title" | "sku" | "productId" | "variantId"> {
-  return { title: product.title, sku: product.sku, productId: product.productId, variantId: product.variantId }
+function productAsLineItem(
+  product: ProductInput,
+): Pick<NormalizedLineItem, "title" | "sku" | "productId" | "variantId" | "handle"> {
+  return { title: product.title, sku: product.sku, productId: product.productId, variantId: product.variantId, handle: product.handle }
 }
 
 /** A campaign the shopper could still enter right now: active, inside its window and under its cap. */

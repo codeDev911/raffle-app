@@ -429,9 +429,9 @@ function CampaignBuilderDialog({
 
           <Field
             label="Product filter"
-            hint="Optional · comma-separated SKUs, product IDs or title keywords. Leave blank to count every item."
+            hint="Optional · comma-separated keywords, SKUs or product handles. Leave blank to count every item. “moisturizing-cream” and “Moisturizing Cream” are treated as the same product."
           >
-            <TextInput value={form.productFilters} onChange={set("productFilters")} placeholder="lawn-suit, SKU-1042" className="font-mono" />
+            <TextInput value={form.productFilters} onChange={set("productFilters")} placeholder="Moisturizing Cream, SKU-1042" className="font-mono" />
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">

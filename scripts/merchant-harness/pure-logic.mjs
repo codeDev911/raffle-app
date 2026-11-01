@@ -117,6 +117,24 @@ await check("productMatchesFilters answers the product-page question", () => {
   assert.equal(productMatchesFilters({ title: "", sku: null, productId: null, variantId: null }, ["lawn"]), false)
 })
 
+await check("a handle-style filter still matches a spaced title, which is what merchants type", () => {
+  // The campaign field shows "moisturizing-cream"-style examples and Shopify writes handles with
+  // hyphens while titles keep spaces, so the two spellings must mean the same product.
+  const cream = { title: "HydraBoost Moisturizing Cream 50ml", sku: "HM-50", productId: "900", variantId: "910", handle: "moisturizing-cream" }
+  assert.equal(productMatchesFilters(cream, ["moisturizing-cream"]), true, "slug filter vs spaced title")
+  assert.equal(productMatchesFilters(cream, ["Moisturizing Cream"]), true, "spaced filter vs spaced title")
+  assert.equal(productMatchesFilters(cream, ["MOISTURIZING-CREAM"]), true, "case is irrelevant")
+  assert.equal(productMatchesFilters(cream, ["moisturizing cream 50ml"]), true, "longer phrase still matches")
+  assert.equal(productMatchesFilters({ ...cream, handle: null }, ["moisturizing-cream"]), true, "title alone is enough")
+  assert.equal(productMatchesFilters({ title: "Face Wash", handle: "face-wash" }, ["moisturizing-cream"]), false, "no accidental match")
+  // An order line has no handle, so the widened rule must not change how carts are judged.
+  const filtered = campaign({ productFilters: ["moisturizing-cream"] })
+  const qualifying = order({ lineItems: [{ id: "l1", title: "HydraBoost Moisturizing Cream", sku: "HM-50", quantity: 3, unitPrice: 1000 }] })
+  assert.equal(evaluateOrder(filtered, qualifying).qualified, true, "cart of spaced-title items qualifies")
+  const other = order({ lineItems: [{ id: "l2", title: "Micellar Face Wash", quantity: 3, unitPrice: 1000 }] })
+  assert.equal(evaluateOrder(filtered, other).qualified, false)
+})
+
 await check("describeRule renders the plan's summary strings", () => {
   assert.equal(describeRule(campaign()), "Buy 3+ items")
   assert.equal(describeRule(campaign({ ruleType: "MIN_AMOUNT", minQuantity: null, minAmount: 5000 })), "Spend Rs. 5,000+")

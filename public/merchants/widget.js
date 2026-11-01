@@ -280,13 +280,13 @@
 
   /**
    * What the shopper is reading, from the most authoritative source the theme offers down to the
-   * visible markup. Campaign filters match on title/sku/product/variant id, so any one of these
-   * four is enough to answer "does this product count?".
+   * visible markup. Campaign filters match on title/sku/product/variant id/handle, so any one of
+   * these is enough to answer "does this product count?".
    */
   function readProduct() {
     if (state.product !== null) return state.product
 
-    var out = { title: "", productId: null, variantId: null, sku: null, price: 0 }
+    var out = { title: "", productId: null, variantId: null, sku: null, handle: null, price: 0 }
     var win = window
 
     function takeTitle(value) {
@@ -314,6 +314,7 @@
       if (src && (src.id || src.title)) {
         takeTitle(src.title)
         takeId("productId", src.id)
+        takeId("handle", src.handle)
         takePrice(src.priceMin || src.price)
         takeVariant(src.selected_variant || (src.variants && src.variants[0]))
         break
@@ -328,6 +329,7 @@
           var parsed = JSON.parse(blobs[b].textContent || "{}")
           takeTitle(parsed.title)
           takeId("productId", parsed.id)
+          takeId("handle", parsed.handle)
           takePrice(parsed.priceMin || parsed.price)
           takeVariant(parsed.selected_variant || (parsed.variants && parsed.variants[0]))
         } catch (e) {}
@@ -369,7 +371,16 @@
       if (priceNode) takePrice(priceNode.textContent)
     }
 
-    state.product = out.title || out.productId || out.variantId || out.sku ? out : null
+    // 5. The handle. Themes stamp it on a node, and failing that the URL itself is the one place
+    // Shopify always spells it: /products/<handle>, optionally after a collection (/collections/x/products/<handle>).
+    if (!out.handle) {
+      var stamped = firstVisible(["[data-product-handle]"], productScope() || document)
+      takeId("handle", stamped && stamped.getAttribute("data-product-handle"))
+      var fromUrl = /\/products\/([^/?#]+)/i.exec(window.location.pathname)
+      takeId("handle", fromUrl && fromUrl[1].replace(/\.(json|xml|csv|js)$/i, ""))
+    }
+
+    state.product = out.title || out.productId || out.variantId || out.sku || out.handle ? out : null
     log("product context", state.product)
     return state.product
   }

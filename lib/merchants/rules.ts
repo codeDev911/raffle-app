@@ -17,16 +17,33 @@ export interface RuleEvaluation {
 
 const BLOCKED_FINANCIAL_STATUSES = new Set(["refunded", "voided"])
 
+/**
+ * Shopify writes handles with hyphens ("moisturizing-cream") and titles with spaces
+ * ("Moisturizing Cream"), and the product-filter field shows a handle-style example, so merchants
+ * naturally paste one. Comparing separators makes the slug and the title mean the same item; the
+ * previous literal substring test silently matched nothing on those campaigns.
+ */
+function asKeyword(value: unknown): string {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+}
+
 function lineItemMatches(item: NormalizedLineItem, filters: string[]): boolean {
-  const title = item.title.toLowerCase()
-  const exactKeys = [item.sku, item.productId, item.variantId]
+  const exactKeys = [item.sku, item.productId, item.variantId, item.handle]
     .filter(Boolean)
     .map((v) => String(v).toLowerCase())
+  // Every separator-insensitive place a keyword can land: what the shopper sees and what the URL says.
+  const keywords = [asKeyword(item.title), asKeyword(item.handle)].filter(Boolean)
 
   return filters.some((raw) => {
-    const token = raw.trim().toLowerCase()
+    const token = String(raw).trim().toLowerCase()
     if (!token) return false
-    return exactKeys.includes(token) || title.includes(token)
+    if (exactKeys.includes(token)) return true
+    const keyword = asKeyword(token)
+    return keyword.length > 0 && keywords.some((haystack) => haystack.includes(keyword))
   })
 }
 
@@ -35,7 +52,7 @@ function lineItemMatches(item: NormalizedLineItem, filters: string[]): boolean {
  * know whether the item the shopper is reading counts toward a product-filtered campaign.
  */
 export function productMatchesFilters(
-  item: Pick<NormalizedLineItem, "title" | "sku" | "productId" | "variantId">,
+  item: Pick<NormalizedLineItem, "title" | "sku" | "productId" | "variantId" | "handle">,
   filters?: string[] | null,
 ): boolean {
   const active = cleanFilters(filters)
