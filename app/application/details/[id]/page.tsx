@@ -1,39 +1,48 @@
 "use client"
 
-import React, { useState, useEffect, Suspense } from "react"
+import type React from "react"
+import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { useParams, useSearchParams } from "next/navigation"
 import {
-  ShieldCheck,
-  TrendingUp,
-  DollarSign,
-  Ticket,
-  Users,
-  Clock,
-  CheckCircle2,
   AlertCircle,
-  Copy,
+  ArrowRight,
+  BarChart3,
+  Building2,
+  Calendar,
   Check,
+  ChevronLeft,
+  Clock,
+  Copy,
+  DollarSign,
   ExternalLink,
-  Share2,
+  Gift,
+  Layers,
+  Lock,
+  MapPin,
   MessageCircle,
+  Package,
   Printer,
   RefreshCw,
-  Lock,
-  ArrowRight,
-  Package,
-  Building2,
-  Sparkles,
-  BarChart3,
-  Calendar,
-  Layers,
-  ChevronLeft,
-  Info,
+  ShieldCheck,
+  Tag,
+  Ticket,
+  TrendingUp,
+  User,
+  Users,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import {
+  CONTAINER,
+  Cta,
+  INK_PANEL,
+  Kicker,
+  LiveDot,
+  Mesh,
+  PANEL,
+  Pill,
+  SHELL,
+} from "@/components/marketing/kit"
+import { cn } from "@/lib/utils"
 
 interface RecentOrder {
   name: string
@@ -95,6 +104,160 @@ interface ProductApplication {
   updatedAt: string
 }
 
+const WHATSAPP_INTL = "923377155722"
+
+/** Ledger amounts arrive in rupees, so they are grouped locally and never divided like entry prices. */
+const num = (value: number) => (Number.isFinite(value) ? value : 0).toLocaleString("en-PK")
+const money = (value: number) => `Rs ${num(Math.round(Number.isFinite(value) ? value : 0))}`
+
+function submittedDate(iso?: string) {
+  const date = new Date(iso || "")
+  return Number.isNaN(date.getTime())
+    ? "—"
+    : new Intl.DateTimeFormat("en-PK", { day: "numeric", month: "short", year: "numeric" }).format(date)
+}
+
+function clockTime(value: number) {
+  return new Intl.DateTimeFormat("en-PK", { hour: "numeric", minute: "2-digit", hour12: true }).format(new Date(value))
+}
+
+const STATUS_META: Record<string, { label: string; tone: string }> = {
+  PENDING: { label: "Awaiting review", tone: "border-amber-500/25 bg-amber-500/10 text-amber-900" },
+  UNDER_REVIEW: { label: "Under review", tone: "border-sky-600/20 bg-sky-600/10 text-sky-800" },
+  APPROVED: { label: "Approved", tone: "border-emerald-600/20 bg-emerald-600/10 text-emerald-800" },
+  REJECTED: { label: "Not approved", tone: "border-rose-500/25 bg-rose-500/10 text-rose-800" },
+}
+
+const FIELD =
+  "w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 font-mono text-[13px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+
+/* ------------------------------------------------------------------ small pieces */
+
+/** Toolbar button — same grammar as the kit's Cta, but for actions instead of navigation. */
+function ToolButton({
+  children,
+  icon: Icon,
+  onClick,
+  variant = "ghost",
+  className,
+  disabled,
+  type = "button",
+  ariaLabel,
+}: {
+  children: React.ReactNode
+  icon: React.ElementType
+  onClick?: () => void
+  variant?: "ghost" | "primary"
+  className?: string
+  disabled?: boolean
+  type?: "button" | "submit"
+  ariaLabel?: string
+}) {
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      // The caption disappears on phones, so the name is carried explicitly for screen readers.
+      aria-label={ariaLabel}
+      className={cn(
+        "inline-flex min-h-[40px] items-center justify-center gap-2 rounded-xl px-3 text-[12.5px] font-semibold transition disabled:opacity-60",
+        variant === "primary"
+          ? "bg-emerald-600 text-white shadow-[0_12px_28px_-16px_rgba(5,150,105,0.9)] hover:bg-emerald-500"
+          : "border border-slate-900/10 bg-white/70 text-slate-700 backdrop-blur hover:bg-white hover:text-slate-900",
+        className,
+      )}
+    >
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className="hidden sm:inline">{children}</span>
+    </button>
+  )
+}
+
+/** One headline figure. Mirrors the kit's StatTile type scale so both pages read the same. */
+function Metric({
+  label,
+  value,
+  hint,
+  icon: Icon,
+  accent = false,
+  children,
+}: {
+  label: string
+  value: React.ReactNode
+  hint?: React.ReactNode
+  icon: React.ElementType
+  accent?: boolean
+  children?: React.ReactNode
+}) {
+  return (
+    <div className={cn(PANEL, "flex min-w-0 flex-col gap-3 p-4 sm:p-5")}>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[9.5px] font-semibold uppercase leading-tight tracking-[0.16em] text-slate-500">{label}</p>
+        <span
+          className={cn(
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
+            accent ? "bg-emerald-600/10 text-emerald-700" : "bg-slate-900/[0.05] text-slate-500",
+          )}
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+      </div>
+      <div className="min-w-0">
+        <p
+          className={cn(
+            "font-mono text-[1.2rem] font-semibold leading-tight tabular-nums tracking-tight sm:text-[1.5rem]",
+            accent ? "text-emerald-700" : "text-slate-900",
+          )}
+        >
+          {value}
+        </p>
+        {hint && <p className="mt-1 text-[11px] leading-snug text-slate-500">{hint}</p>}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function Fact({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+  return (
+    <div className="flex min-w-0 items-start gap-2.5 rounded-2xl border border-slate-900/5 bg-white/70 px-3.5 py-2.5">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+      <div className="min-w-0">
+        <p className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</p>
+        <p className="mt-0.5 truncate text-[12.5px] font-semibold text-slate-900">{value}</p>
+      </div>
+    </div>
+  )
+}
+
+function StatementRow({ label, value, tone = "plain" }: { label: string; value: string; tone?: "plain" | "minus" | "muted" }) {
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3",
+        tone === "minus" && "text-rose-600",
+        tone === "muted" && "text-slate-500",
+      )}
+    >
+      <span className={cn("text-[12.5px] leading-snug sm:text-[13px]", tone === "muted" ? "text-slate-500" : "font-medium text-slate-600")}>
+        {label}
+      </span>
+      <span
+        className={cn(
+          "font-mono text-[13px] font-semibold tabular-nums text-slate-900 sm:text-sm",
+          tone === "minus" && "text-rose-600",
+          tone === "muted" && "text-[12px] font-medium text-slate-600",
+        )}
+      >
+        {value}
+      </span>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------------- page */
+
 function ApplicationDashboardContent() {
   const params = useParams()
   const searchParams = useSearchParams()
@@ -103,7 +266,6 @@ function ApplicationDashboardContent() {
   const id = typeof rawId === "string" ? rawId : Array.isArray(rawId) ? rawId[0] : ""
   const tokenFromUrl = searchParams?.get("token") || ""
 
-  const [mounted, setMounted] = useState(false)
   const [tokenInput, setTokenInput] = useState<string>(tokenFromUrl)
   const [activeToken, setActiveToken] = useState<string>(tokenFromUrl)
 
@@ -116,9 +278,13 @@ function ApplicationDashboardContent() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [copiedLink, setCopiedLink] = useState(false)
   const [copiedToken, setCopiedToken] = useState(false)
+  const [syncedAt, setSyncedAt] = useState<number | null>(null)
+  // Origin only exists in the browser, so the share text is completed after mount — reading it
+  // during render produced a different href on the server than on the client.
+  const [origin, setOrigin] = useState("")
 
   useEffect(() => {
-    setMounted(true)
+    setOrigin(window.location.origin)
   }, [])
 
   useEffect(() => {
@@ -178,6 +344,7 @@ function ApplicationDashboardContent() {
       setAnalytics(data.analytics)
       setRequiresToken(false)
       setError(null)
+      setSyncedAt(Date.now())
     } catch (err) {
       console.error("Dashboard fetch error:", err)
       setError("Network error connecting to PakRaffle server. Please check your internet connection.")
@@ -193,6 +360,7 @@ function ApplicationDashboardContent() {
     if (id) {
       fetchDashboardData(id, activeToken)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, activeToken])
 
   const handleManualTokenSubmit = (e: React.FormEvent) => {
@@ -200,155 +368,140 @@ function ApplicationDashboardContent() {
     if (!tokenInput.trim()) return
     const trimmed = tokenInput.trim()
     setActiveToken(trimmed)
-    if (typeof window !== "undefined" && id) {
-      const newUrl = `${window.location.pathname}?token=${encodeURIComponent(trimmed)}`
-      window.history.replaceState(null, "", newUrl)
-    }
+    const newUrl = `${window.location.pathname}?token=${encodeURIComponent(trimmed)}`
+    window.history.replaceState(null, "", newUrl)
     fetchDashboardData(id, trimmed, true)
   }
 
   const handleCopyDashboardLink = async () => {
-    if (typeof window === "undefined" || !id) return
+    if (!id) return
     const token = activeToken || application?.secureToken || ""
-    const fullUrl = `${window.location.origin}/application/details/${id}${
-      token ? `?token=${token}` : ""
-    }`
+    const fullUrl = `${window.location.origin}/application/details/${id}${token ? `?token=${token}` : ""}`
     try {
-      if (navigator?.clipboard?.writeText) {
-        await navigator.clipboard.writeText(fullUrl)
-      }
-      setCopiedLink(true)
-      setTimeout(() => setCopiedLink(false), 2500)
+      await navigator.clipboard.writeText(fullUrl)
     } catch {
-      setCopiedLink(true)
-      setTimeout(() => setCopiedLink(false), 2500)
+      // Clipboard blocked by the browser — the copy below still confirms the action.
     }
+    setCopiedLink(true)
+    setTimeout(() => setCopiedLink(false), 2500)
   }
 
   const handleCopyTokenOnly = async () => {
     const token = activeToken || application?.secureToken || ""
     if (!token) return
     try {
-      if (navigator?.clipboard?.writeText) {
-        await navigator.clipboard.writeText(token)
-      }
-      setCopiedToken(true)
-      setTimeout(() => setCopiedToken(false), 2500)
+      await navigator.clipboard.writeText(token)
     } catch {
-      setCopiedToken(true)
-      setTimeout(() => setCopiedToken(false), 2500)
+      // Ignored — same fallback as above.
     }
+    setCopiedToken(true)
+    setTimeout(() => setCopiedToken(false), 2500)
   }
 
-  const handlePrint = () => {
-    if (typeof window !== "undefined") {
-      window.print()
-    }
-  }
-
-  // Loading Screen
+  /* --------------------------------------------------------------- loading state */
   if (loading && !application) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 shadow-xl p-8 text-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center border-2 border-emerald-200 animate-pulse">
-            <BarChart3 className="w-8 h-8" />
-          </div>
-          <div className="space-y-1.5">
-            <h2 className="text-xl font-extrabold text-slate-900">Verifying Partner Access...</h2>
-            <p className="text-xs text-slate-500">
-              Authenticating secure token and loading real-time raffle revenue analytics...
+      <div className={cn(SHELL, "relative min-h-screen overflow-hidden")}>
+        <Mesh tone="emerald" />
+        <div className={cn(CONTAINER, "flex min-h-screen items-center justify-center py-24")}>
+          <div className={cn(PANEL, "w-full max-w-md p-6 text-center sm:p-8")}>
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600/10 text-emerald-700">
+              <BarChart3 className="h-7 w-7" />
+            </span>
+            <h1 className="mt-4 font-display text-xl font-semibold tracking-tight text-slate-900">Verifying partner access</h1>
+            <p className="mx-auto mt-2 max-w-sm text-[13px] leading-relaxed text-slate-600">
+              Checking your security token, then pulling live ticket, revenue and payout figures from the PakRaffle ledger.
             </p>
-          </div>
-          <div className="h-1.5 w-48 bg-slate-100 rounded-full mx-auto overflow-hidden">
-            <div className="h-full bg-emerald-600 rounded-full animate-indeterminate" />
+            <div className="mx-auto mt-6 h-1.5 w-40 overflow-hidden rounded-full bg-slate-900/[0.07]">
+              <div className="animate-indeterminate h-full w-1/3 rounded-full bg-emerald-600" />
+            </div>
           </div>
         </div>
       </div>
     )
   }
 
-  // Access Denied / Invalid Token Screen
+  /* ------------------------------------------------------- token gate / error state */
   if (requiresToken || !application || error) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="max-w-lg w-full bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 sm:p-8 space-y-6 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-600 mx-auto flex items-center justify-center border-2 border-rose-200">
-            <Lock className="w-8 h-8" />
-          </div>
-
-          <div className="space-y-2">
-            <Badge className="bg-rose-100 text-rose-900 border-rose-300">
-              Confidential Seller Portal
-            </Badge>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              Access Denied: Token Required
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
-              This Partner Analytics Dashboard contains confidential financial revenue, profit margins, and buyer payout data. Access is strictly restricted to verified token holders.
-            </p>
-          </div>
-
-          {error && (
-            <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-800 text-left flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-              <span className="leading-relaxed font-medium">{error}</span>
+      <div className={cn(SHELL, "relative min-h-screen overflow-hidden")}>
+        <Mesh tone="amber" />
+        <div className={cn(CONTAINER, "flex min-h-screen items-center justify-center py-20")}>
+          <div className={cn(PANEL, "w-full max-w-lg p-6 sm:p-8")}>
+            <div className="flex items-start gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-900/[0.05] text-slate-700">
+                <Lock className="h-6 w-6" />
+              </span>
+              <div className="min-w-0">
+                <Kicker>Confidential seller portal</Kicker>
+                <h1 className="mt-2 font-display text-[1.6rem] font-semibold leading-tight tracking-tight text-slate-900 sm:text-4xl">
+                  A security token is required
+                </h1>
+              </div>
             </div>
-          )}
 
-          <form onSubmit={handleManualTokenSubmit} className="space-y-3 text-left">
-            <label className="text-xs font-bold text-slate-800 block">
-              Enter Private Security Token:
-            </label>
-            <div className="flex gap-2">
-              <Input
-                type="text"
-                placeholder="e.g. 4f98ab12e09..."
-                value={tokenInput}
-                onChange={(e) => setTokenInput(e.target.value)}
-                className="rounded-xl h-11 text-xs font-mono font-semibold"
-                required
-              />
-              <Button
-                type="submit"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl px-5 text-xs h-11 shrink-0"
-              >
-                Verify &amp; Enter
-              </Button>
-            </div>
-            <p className="text-[11px] text-slate-400">
-              Tip: Check the private link provided upon application submission or ask your PakRaffle representative.
+            <p className="mt-4 text-[13.5px] leading-relaxed text-slate-600">
+              This dashboard carries revenue, margin and payout figures for one listing only, so it stays locked to the
+              private link we sent you when the application was submitted.
             </p>
-          </form>
 
-          <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-center gap-3 text-xs">
-            <Button asChild variant="outline" className="w-full sm:w-auto rounded-xl h-10">
-              <Link href={`/application/status/${id}`}>Check Public Status</Link>
-            </Button>
-            <Button
-              asChild
-              className="w-full sm:w-auto rounded-xl h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-            >
-              <a
-                href={`https://wa.me/923000000000?text=${encodeURIComponent(
-                  `Assalam-o-Alaikum PakRaffle, I need assistance accessing my Seller Analytics Dashboard for application ID: ${id}`
+            {error && (
+              <div className="mt-5 flex items-start gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/[0.07] p-4">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                <p className="text-[12.5px] font-medium leading-relaxed text-rose-800">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleManualTokenSubmit} className="mt-6 space-y-3">
+              <label htmlFor="partner-token" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                Private security token
+              </label>
+              <div className="flex flex-col gap-2.5 sm:flex-row">
+                <input
+                  id="partner-token"
+                  type="text"
+                  placeholder="e.g. 4f98ab12e09…"
+                  value={tokenInput}
+                  onChange={(event) => setTokenInput(event.target.value)}
+                  className={cn(FIELD, "flex-1")}
+                  required
+                />
+                <button
+                  type="submit"
+                  className="inline-flex min-h-[46px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-[0_14px_34px_-16px_rgba(5,150,105,0.9)] transition hover:bg-emerald-500"
+                >
+                  Verify &amp; enter
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+              <p className="text-[11.5px] leading-relaxed text-slate-500">
+                Lost the link? Check the email or WhatsApp message sent on submission, or ask your PakRaffle
+                representative to re-send it.
+              </p>
+            </form>
+
+            <div className="mt-6 flex flex-col gap-2.5 border-t border-slate-900/5 pt-5 sm:flex-row">
+              <Cta href={`/application/status/${id}`} variant="ghost" className="w-full sm:w-auto">
+                Check public status
+              </Cta>
+              <Cta
+                href={`https://wa.me/${WHATSAPP_INTL}?text=${encodeURIComponent(
+                  `Assalam-o-Alaikum PakRaffle, I need assistance accessing my partner dashboard for application ID: ${id}`,
                 )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2"
+                className="w-full sm:w-auto"
               >
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span>Contact Verification Desk</span>
-              </a>
-            </Button>
+                <MessageCircle className="h-4 w-4" />
+                Contact verification desk
+              </Cta>
+            </div>
           </div>
         </div>
       </div>
     )
   }
 
-  // Derived calculations
-  const stats = analytics || {
+  /* ------------------------------------------------------------- derived figures */
+  const stats: AnalyticsData = analytics || {
     isApproved: application.status === "APPROVED",
     isLaunched: Boolean(application.raffleId),
     raffleId: application.raffleId || null,
@@ -371,655 +524,467 @@ function ApplicationDashboardContent() {
     settlementStatus: application.raffleId
       ? "HELD_IN_ESCROW"
       : application.status === "APPROVED"
-      ? "APPROVED_FOR_LAUNCH"
-      : "PENDING_APPROVAL",
+        ? "APPROVED_FOR_LAUNCH"
+        : "PENDING_APPROVAL",
     payoutMethod: "Raast / Direct IBFT",
     custodyLocation: `${application.city || "Lahore"} Central Vault`,
     inspectionStatus: application.raffleId ? "VERIFIED & INSURED" : "PENDING_INSPECTION",
   }
 
   const publicRaffleUrl = stats.publicRaffleUrl || (application.raffleId ? `/raffles/${application.raffleId}` : null)
-  const whatsappShareText = `Assalam-o-Alaikum! My ${application.productName} is officially live on PakRaffle! Tickets are just Rs. ${application.ticketPrice.toLocaleString()} each! Grab your entry before it's sold out:`
+  const statusMeta = STATUS_META[application.status] || {
+    label: (application.status || "unknown").toLowerCase().replace(/_/g, " "),
+    tone: "border-slate-900/10 bg-white/70 text-slate-700",
+  }
+  const feeShare = stats.totalRevenue > 0 ? Math.round((stats.platformFee / stats.totalRevenue) * 100) : 8
+  const payoutShare = 100 - feeShare
+  const avgPerBuyer = stats.uniqueBuyers > 0 ? (stats.soldTickets / stats.uniqueBuyers).toFixed(1) : "—"
+  const escrowHeld = stats.settlementStatus === "HELD_IN_ESCROW"
+  const soldBlocks = Math.round((Math.min(stats.percentageSold, 100) / 100) * 60)
+
+  const statusHref = `/application/status/${application.id}${activeToken ? `?token=${activeToken}` : ""}`
+  const shareUrl = publicRaffleUrl ? `${origin}${publicRaffleUrl}` : ""
+  const shareText = `Assalam-o-Alaikum! My ${application.productName} is officially live on PakRaffle! Tickets are just ${money(
+    stats.ticketPrice,
+  )} each! Grab your entry before it's sold out: ${shareUrl}`
+  const managerText = `Assalam-o-Alaikum! This is ${application.fullNameCnic}, seller for ${application.productName} (ID: ${application.id}). I would like to inquire about campaign promotion and draw schedule.`
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-24 selection:bg-emerald-500 selection:text-white">
-      {/* Top Header / Portal Navbar */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-2xs">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Button asChild variant="ghost" size="sm" className="h-8 px-2 text-slate-600 hover:text-slate-900">
-              <Link href={`/application/status/${application.id}?token=${activeToken}`} className="flex items-center gap-1 text-xs">
-                <ChevronLeft className="w-4 h-4" />
-                <span>Status View</span>
-              </Link>
-            </Button>
-            <span className="text-slate-300">/</span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-900">Partner Analytics Dashboard</span>
-              <span className="font-mono text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                #{application.id}
-              </span>
+    <div className={SHELL}>
+      {/* --------------------------------------------------------------- toolbar */}
+      <header className="sticky top-0 z-40 border-b border-slate-900/5 bg-[#f8f9f6]/85 backdrop-blur-xl print:hidden">
+        <div className={cn(CONTAINER, "flex items-center justify-between gap-3 py-2.5")}>
+          <div className="flex min-w-0 items-center gap-2.5">
+            <Link
+              href={statusHref}
+              aria-label="Back to public status page"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-900/10 bg-white/70 text-slate-600 transition hover:bg-white hover:text-slate-900"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Link>
+            <div className="min-w-0">
+              <p className="truncate text-[12.5px] font-semibold text-slate-900">Partner dashboard</p>
+              <p className="truncate font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400">#{application.id}</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <ToolButton
+              icon={RefreshCw}
               onClick={() => fetchDashboardData(id, activeToken, true)}
               disabled={refreshing}
-              className="h-8 text-xs rounded-lg gap-1.5"
+              ariaLabel={refreshing ? "Refreshing figures" : "Refresh figures"}
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-emerald-600" : ""}`} />
-              <span>{refreshing ? "Refreshing..." : "Refresh"}</span>
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handlePrint}
-              className="h-8 text-xs rounded-lg gap-1.5 hidden sm:inline-flex"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print Statement</span>
-            </Button>
-
-            <Button
-              type="button"
+              {refreshing ? "Refreshing" : "Refresh"}
+            </ToolButton>
+            <ToolButton icon={Printer} onClick={() => window.print()} className="hidden sm:inline-flex">
+              Print statement
+            </ToolButton>
+            <ToolButton
+              icon={copiedLink ? Check : Copy}
+              variant="primary"
               onClick={handleCopyDashboardLink}
-              size="sm"
-              className={`h-8 text-xs font-bold rounded-lg gap-1.5 ${
-                copiedLink ? "bg-emerald-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"
-              }`}
+              ariaLabel={copiedLink ? "Dashboard link copied" : "Copy secure dashboard link"}
             >
-              {copiedLink ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Link Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>Copy Secure Link</span>
-                </>
-              )}
-            </Button>
+              {copiedLink ? "Link copied" : "Copy secure link"}
+            </ToolButton>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6 sm:space-y-8">
-        {/* Hero Banner: Product & Campaign Overview */}
-        <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 overflow-hidden relative">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="space-y-3 max-w-3xl">
+      {/* ------------------------------------------------------------------- hero */}
+      <section className="relative overflow-hidden border-b border-slate-900/5 print:hidden">
+        <Mesh tone="emerald" />
+        <div className={cn(CONTAINER, "py-8 sm:py-12")}>
+          <div className="grid gap-7 lg:grid-cols-[1.05fr_0.95fr] lg:items-start lg:gap-10">
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className="bg-emerald-100 text-emerald-900 border-emerald-300 font-extrabold text-xs px-3 py-1 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>PakRaffle Verified Seller</span>
-                </Badge>
-                <Badge variant="outline" className="text-xs font-semibold text-slate-600 bg-slate-50">
-                  {application.productType}
-                </Badge>
-                <Badge variant="outline" className="text-xs font-semibold text-slate-600 bg-slate-50">
-                  {application.condition || "Brand New"}
-                </Badge>
-                {application.status === "APPROVED" ? (
-                  <Badge className="bg-emerald-600 text-white font-extrabold text-xs px-2.5 py-0.5 animate-pulse">
-                    Live Campaign
-                  </Badge>
-                ) : (
-                  <Badge className="bg-amber-100 text-amber-900 border-amber-300 text-xs font-bold">
-                    {application.status}
-                  </Badge>
-                )}
+                <Pill className={cn(statusMeta.tone)}>
+                  {stats.isLaunched ? <LiveDot /> : <Clock className="h-3 w-3" />}
+                  {stats.isLaunched ? "Live campaign" : statusMeta.label}
+                </Pill>
+                <Pill>{application.productType}</Pill>
+                <Pill>{application.condition || "Brand new"}</Pill>
               </div>
 
-              <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
-                  {application.productName}
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-600 mt-2 line-clamp-2 leading-relaxed">
-                  {application.description}
+              <h1 className="mt-4 break-words font-display text-[1.85rem] font-semibold leading-[1.05] tracking-[-0.025em] text-slate-900 sm:text-[2.4rem] lg:text-[2.75rem]">
+                {application.productName}
+              </h1>
+              <p className="mt-3 max-w-2xl text-[13.5px] leading-relaxed text-slate-600 sm:text-[15px]">
+                {application.description}
+              </p>
+
+              <div className="mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                <Fact icon={User} label="Seller" value={application.fullNameCnic} />
+                <Fact icon={MapPin} label="City" value={application.city || "Pakistan"} />
+                <Fact icon={Tag} label="Market value" value={money(stats.marketPrice)} />
+                <Fact icon={Calendar} label="Submitted" value={submittedDate(application.createdAt)} />
+              </div>
+
+              <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-slate-900/5 pt-4 text-[11.5px] text-slate-500">
+                <span className="font-mono uppercase tracking-[0.16em] text-slate-400">Access token</span>
+                <span className="rounded-lg bg-slate-900/[0.05] px-2 py-1 font-mono text-[11px] text-slate-700">
+                  {activeToken ? `${activeToken.slice(0, 10)}…` : "authenticated"}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyTokenOnly}
+                  className="font-semibold text-emerald-700 underline underline-offset-4 transition hover:text-emerald-800"
+                >
+                  {copiedToken ? "Copied" : "Copy token"}
+                </button>
+                <span className="text-slate-300">·</span>
+                <span>{syncedAt ? `Synced ${clockTime(syncedAt)}` : "Synced on load"}</span>
+              </div>
+            </div>
+
+            {/* Campaign pool — PANEL rather than TicketCard: the ticket mask would nick the full-width bar. */}
+            <div className={cn(PANEL, "p-5 sm:p-6")}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400">Campaign pool</p>
+                <p className="font-mono text-[11px] tabular-nums text-slate-500">
+                  {num(stats.soldTickets)} / {num(stats.totalTickets)}
                 </p>
               </div>
 
-              {/* Seller details & token bar */}
-              <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs text-slate-600 pt-2 border-t border-slate-100">
-                <span className="flex items-center gap-1.5">
-                  <span className="font-bold text-slate-900">Seller:</span>
-                  <span>{application.fullNameCnic}</span>
+              <p className="mt-3 font-mono text-[2.1rem] font-semibold leading-none tabular-nums tracking-tight text-slate-900">
+                {stats.percentageSold}%
+              </p>
+              <p className="mt-1.5 text-[12px] text-slate-500">
+                of the pool sold · {num(stats.remainingTickets)} tickets still open
+              </p>
+
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-900/[0.07]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-[width] duration-500"
+                  style={{ width: `${Math.min(stats.percentageSold, 100)}%` }}
+                />
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-slate-900/5 bg-white/80 px-3.5 py-3">
+                  <p className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-slate-400">Collected</p>
+                  <p className="mt-1 font-mono text-[15px] font-semibold tabular-nums text-slate-900 sm:text-lg">
+                    {money(stats.currentGrossRevenue)}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-900/5 bg-white/80 px-3.5 py-3">
+                  <p className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-slate-400">Target</p>
+                  <p className="mt-1 font-mono text-[15px] font-semibold tabular-nums text-slate-500 sm:text-lg">
+                    {money(stats.totalRevenue)}
+                  </p>
+                </div>
+              </div>
+
+              <p className="mt-3 text-[11.5px] leading-relaxed text-slate-500">
+                {money(stats.ticketPrice)} per entry · {payoutShare}% of every rupee raised is yours, released after the
+                draw.
+              </p>
+
+              <div className="mt-5 grid gap-2 border-t border-dashed border-slate-900/10 pt-5">
+                {publicRaffleUrl ? (
+                  <>
+                    <Cta href={publicRaffleUrl} target="_blank" arrow className="w-full">
+                      <ExternalLink className="h-4 w-4" />
+                      View live raffle page
+                    </Cta>
+                    <Cta href={`https://wa.me/?text=${encodeURIComponent(shareText)}`} variant="ghost" className="w-full">
+                      <MessageCircle className="h-4 w-4 text-emerald-600" />
+                      Share on WhatsApp
+                    </Cta>
+                  </>
+                ) : (
+                  <>
+                    <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.08] p-4">
+                      <p className="flex items-center gap-1.5 text-[12.5px] font-semibold text-amber-900">
+                        <Clock className="h-4 w-4" />
+                        Campaign pending launch
+                      </p>
+                      <p className="mt-1 text-[11.5px] leading-relaxed text-amber-800/80">
+                        The review desk is finishing the physical inspection and the catalogue entry. Your public raffle
+                        link appears here the moment the draw is published.
+                      </p>
+                    </div>
+                    <Cta href={statusHref} variant="ghost" className="w-full">
+                      Check verification status
+                    </Cta>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- metrics */}
+      <section className={cn(CONTAINER, "pt-8 sm:pt-10")}>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <Kicker>Campaign performance &amp; revenue</Kicker>
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-slate-400">Live sync via PakRaffle ledger</p>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <Metric
+            label="Gross revenue collected"
+            value={money(stats.currentGrossRevenue)}
+            hint={`Target cap ${money(stats.totalRevenue)}`}
+            icon={DollarSign}
+          >
+            <div className="space-y-1.5">
+              <div className="h-1.5 overflow-hidden rounded-full bg-slate-900/[0.07]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-emerald-500 transition-[width] duration-500"
+                  style={{ width: `${Math.min(stats.percentageSold, 100)}%` }}
+                />
+              </div>
+              <p className="font-mono text-[10.5px] tabular-nums text-slate-500">{stats.percentageSold}% of goal</p>
+            </div>
+          </Metric>
+
+          <Metric
+            label="Your net payout (profit)"
+            value={money(stats.currentSellerPayout)}
+            hint={`Full sellout pays ${money(stats.sellerPayout)}`}
+            icon={TrendingUp}
+            accent
+          >
+            <p className="rounded-xl bg-emerald-600/[0.07] px-3 py-2 text-[11px] font-semibold text-emerald-800">
+              {payoutShare}% seller share · asset worth {money(stats.marketPrice)}
+            </p>
+          </Metric>
+
+          <Metric
+            label="Tickets sold"
+            value={`${num(stats.soldTickets)}`}
+            hint={`${num(stats.remainingTickets)} of ${num(stats.totalTickets)} still available`}
+            icon={Ticket}
+          >
+            <p className="border-t border-slate-900/5 pt-2 font-mono text-[11px] tabular-nums text-slate-500">
+              {money(stats.ticketPrice)} / entry
+            </p>
+          </Metric>
+
+          <Metric
+            label={`Platform service fee (${feeShare}%)`}
+            value={money(stats.currentPlatformFee)}
+            hint={`Cap at full sellout ${money(stats.platformFee)}`}
+            icon={Layers}
+          >
+            <p className="text-[11px] leading-relaxed text-slate-500">
+              Covers payment gateway, fraud checks, escrow custody and door-to-door courier.
+            </p>
+          </Metric>
+
+          <Metric
+            label="Verified ticket buyers"
+            value={num(stats.uniqueBuyers)}
+            hint={`Avg. ${avgPerBuyer} tickets per participant`}
+            icon={Users}
+          >
+            <p className="border-t border-slate-900/5 pt-2 text-[11px] font-semibold text-emerald-700">
+              Automated live draw · recording published
+            </p>
+          </Metric>
+
+          <Metric
+            label="Escrow & payout release"
+            value={escrowHeld ? "Escrow secured" : "Awaiting launch"}
+            hint={(stats.inspectionStatus || "").replace(/_/g, " ").toLowerCase()}
+            icon={ShieldCheck}
+          >
+            <p className="border-t border-slate-900/5 pt-2 font-mono text-[10.5px] uppercase tracking-[0.12em] text-slate-500">
+              {(stats.settlementStatus || "").replace(/_/g, " ")} · {stats.payoutMethod}
+            </p>
+          </Metric>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------- statement + activity */}
+      <section className={cn(CONTAINER, "mt-8 grid gap-5 pb-16 sm:mt-10 lg:grid-cols-3 lg:gap-6")}>
+        <div className="space-y-5 lg:col-span-2">
+          <div className={cn(PANEL, "p-5 sm:p-6")}>
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-900/5 pb-4">
+              <div className="min-w-0">
+                <h2 className="font-display text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
+                  Official financial statement
+                </h2>
+                <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
+                  Itemised settlement under PakRaffle verified-partner terms — no hidden deductions.
+                </p>
+              </div>
+              <Pill className="font-mono text-[10px] uppercase tracking-[0.12em]">{feeShare}% fixed fee policy</Pill>
+            </div>
+
+            <div className="mt-1 divide-y divide-slate-900/5">
+              <StatementRow label="Asset market value (CNIC verified)" value={money(stats.marketPrice)} />
+              <StatementRow
+                label="Ticket pricing & target cap"
+                value={`${num(stats.totalTickets)} × ${money(stats.ticketPrice)}`}
+              />
+              <StatementRow label="Total gross proceeds (100% sellout)" value={money(stats.totalRevenue)} />
+              <StatementRow label={`PakRaffle platform fee (−${feeShare}%)`} value={`−${money(stats.platformFee)}`} tone="minus" />
+            </div>
+
+            <div className="my-4 -mx-5 flex flex-wrap items-center justify-between gap-3 border-y border-emerald-600/20 bg-emerald-600/[0.07] px-5 py-4 sm:-mx-6 sm:px-6">
+              <div className="min-w-0">
+                <p className="text-[13px] font-semibold text-emerald-900 sm:text-[15px]">
+                  Net payout to your account ({payoutShare}%)
+                </p>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-emerald-800/80">
+                  Direct IBFT / Raast transfer after the draw closes.
+                </p>
+              </div>
+              <p className="font-mono text-lg font-semibold tabular-nums text-emerald-800 sm:text-[1.4rem]">
+                {money(stats.sellerPayout)}
+              </p>
+            </div>
+
+            <StatementRow
+              label="Realised revenue to date"
+              value={`${money(stats.currentGrossRevenue)} (${stats.percentageSold}%)`}
+              tone="muted"
+            />
+          </div>
+
+          <div className={cn(PANEL, "p-5 sm:p-6")}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="font-display text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
+                  Live ticket inventory
+                </h2>
+                <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
+                  Every block is a batch of issued entries; sold batches turn green as receipts clear.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 text-[11px] font-semibold">
+                <span className="flex items-center gap-1.5 text-emerald-700">
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                  Sold {num(stats.soldTickets)}
                 </span>
-                <span>•</span>
-                <span className="flex items-center gap-1.5">
-                  <span className="font-bold text-slate-900">City:</span>
-                  <span>{application.city || "Pakistan"}</span>
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1.5 font-mono">
-                  <span className="font-bold text-slate-900">Token:</span>
-                  <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px] text-slate-700">
-                    {activeToken ? `${activeToken.substring(0, 10)}...` : "Authenticated"}
-                  </span>
-                  <button
-                    onClick={handleCopyTokenOnly}
-                    className="text-emerald-700 hover:text-emerald-800 text-[11px] font-bold underline cursor-pointer"
-                  >
-                    {copiedToken ? "Copied" : "Copy"}
-                  </button>
+                <span className="flex items-center gap-1.5 text-slate-500">
+                  <span className="h-2.5 w-2.5 rounded-full bg-slate-900/15" />
+                  Open {num(stats.remainingTickets)}
                 </span>
               </div>
             </div>
 
-            {/* Campaign Quick Actions Card */}
-            <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200 shrink-0 w-full lg:w-72 space-y-3">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
-                Public Raffle Campaign
-              </span>
+            <div className="mt-5 rounded-2xl border border-slate-900/5 bg-slate-900/[0.03] p-3.5 sm:p-4">
+              <div className="grid grid-cols-10 gap-1.5 sm:grid-cols-12" aria-hidden>
+                {Array.from({ length: 60 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className={cn(
+                      "h-3.5 rounded-sm sm:h-4",
+                      index < soldBlocks ? "bg-emerald-500" : "bg-slate-900/10",
+                    )}
+                  />
+                ))}
+              </div>
+              <div className="mt-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400">
+                <span>Batch 01</span>
+                <span className="text-emerald-700">{stats.percentageSold}% of target</span>
+                <span>Batch 60</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-              {publicRaffleUrl ? (
-                <>
-                  <Button
-                    asChild
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs h-10 rounded-xl gap-2 shadow-xs"
-                  >
-                    <Link href={publicRaffleUrl} target="_blank">
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span>View Live Raffle Page</span>
-                    </Link>
-                  </Button>
+        <div className="space-y-5">
+          <div className={cn(PANEL, "p-5")}>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-900/5 pb-3">
+              <p className="flex items-center gap-2 text-[13px] font-semibold text-slate-900">
+                <LiveDot />
+                Recent ticket sales
+              </p>
+              <span className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-slate-400">Real-time</span>
+            </div>
 
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full text-xs font-bold rounded-xl h-10 gap-2 border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+            <div className="no-scrollbar mt-3 max-h-[22rem] space-y-2 overflow-y-auto">
+              {(stats.recentOrders || []).length > 0 ? (
+                (stats.recentOrders || []).map((order, index) => (
+                  <div
+                    key={`${order.name}-${index}`}
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-slate-900/5 bg-white/70 px-3.5 py-2.5"
                   >
-                    <a
-                      href={`https://wa.me/?text=${encodeURIComponent(
-                        `${whatsappShareText} ${typeof window !== "undefined" ? window.location.origin : ""}${publicRaffleUrl}`
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <MessageCircle className="w-4 h-4 text-emerald-600" />
-                      <span>Share on WhatsApp</span>
-                    </a>
-                  </Button>
-                </>
-              ) : (
-                <div className="space-y-2.5">
-                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1">
-                    <span className="font-bold flex items-center gap-1.5 text-amber-800">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>Campaign Pending Launch</span>
-                    </span>
-                    <p className="text-[11px] text-amber-700 leading-relaxed">
-                      Admin review desk is preparing physical inspection &amp; catalog setup. The live raffle link will appear here once published.
-                    </p>
+                    <div className="min-w-0">
+                      <p className="truncate text-[12.5px] font-semibold text-slate-900">{order.name}</p>
+                      <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-500">
+                        <Ticket className="h-3 w-3 shrink-0 text-emerald-600" />
+                        <span className="font-mono tabular-nums">
+                          {order.tickets} {order.tickets === 1 ? "entry" : "entries"}
+                        </span>
+                        <span className="text-slate-300">·</span>
+                        <span className="truncate">{order.city}</span>
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="font-mono text-[12.5px] font-semibold tabular-nums text-slate-900">{money(order.amount)}</p>
+                      <p className="text-[10px] text-slate-400">{order.time}</p>
+                    </div>
                   </div>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full text-xs font-bold rounded-xl h-9 border-slate-200"
-                  >
-                    <Link href={`/application/status/${application.id}?token=${activeToken}`}>
-                      <span>Check Verification Status</span>
-                    </Link>
-                  </Button>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-900/10 px-4 py-8 text-center">
+                  <Gift className="mx-auto h-5 w-5 text-slate-300" />
+                  <p className="mx-auto mt-2 max-w-[16rem] text-[12px] leading-relaxed text-slate-500">
+                    No entries yet. Share the live raffle link — every ticket shows up here the moment its receipt clears.
+                  </p>
                 </div>
               )}
             </div>
           </div>
-        </section>
 
-        {/* 6 Key Performance Indicators (KPI Cards) */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-emerald-600" />
-              <span>Real-Time Campaign Performance &amp; Revenue</span>
-            </h2>
-            <span className="text-xs text-slate-400">Live sync via PakRaffle Ledger</span>
+          <div className={cn(PANEL, "p-5")}>
+            <p className="flex items-center gap-2 text-[13px] font-semibold text-slate-900">
+              <Package className="h-4 w-4 text-emerald-600" />
+              Physical custody &amp; inspection
+            </p>
+            <dl className="mt-4 space-y-2.5 text-[12px]">
+              <div className="rounded-2xl border border-slate-900/5 bg-white/70 px-3.5 py-3">
+                <dt className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-slate-400">Verification hub</dt>
+                <dd className="mt-1 font-semibold text-slate-900">{stats.custodyLocation}</dd>
+              </div>
+              <div className="rounded-2xl border border-emerald-600/20 bg-emerald-600/[0.06] px-3.5 py-3">
+                <dt className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Asset condition</dt>
+                <dd className="mt-1 font-semibold text-emerald-900">
+                  {application.condition || "Brand new (sealed)"} · accessories &amp; warranty pack
+                </dd>
+              </div>
+              <div className="rounded-2xl border border-slate-900/5 bg-white/70 px-3.5 py-3">
+                <dt className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-slate-400">Release mechanism</dt>
+                <dd className="mt-1 leading-relaxed text-slate-600">
+                  At 100% sellout or the scheduled draw date, the net amount moves straight to your verified Raast / IBFT
+                  account.
+                </dd>
+              </div>
+            </dl>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-            {/* KPI 1: Gross Raffle Revenue */}
-            <Card className="rounded-3xl border-slate-200 shadow-xs hover:shadow-md transition-shadow bg-white overflow-hidden">
-              <CardContent className="p-5 sm:p-6 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Total Gross Revenue
-                  </span>
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
-                    <DollarSign className="w-5 h-5" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl sm:text-3xl font-black text-slate-900 font-mono">
-                      Rs. {stats.currentGrossRevenue.toLocaleString()}
-                    </span>
-                    <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                      {stats.percentageSold}% Goal
-                    </span>
-                  </div>
-                  <span className="text-xs text-slate-400 block mt-1">
-                    Target Cap: Rs. {stats.totalRevenue.toLocaleString()}
-                  </span>
-                </div>
-
-                {/* Progress bar */}
-                <div className="space-y-1 pt-1">
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full transition-all duration-500"
-                      style={{ width: `${stats.percentageSold}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-[11px] text-slate-500 font-semibold">
-                    <span>Rs. {stats.currentGrossRevenue.toLocaleString()} collected</span>
-                    <span>Rs. {stats.totalRevenue.toLocaleString()} target</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* KPI 2: Estimated Seller Net Profit / Payout */}
-            <Card className="rounded-3xl border-emerald-300 shadow-md bg-gradient-to-br from-emerald-500/10 via-white to-white overflow-hidden relative">
-              <div className="absolute top-0 right-0 bg-emerald-600 text-white font-extrabold text-[10px] px-3 py-1 rounded-bl-xl uppercase tracking-wider">
-                92% Net Seller Payout
-              </div>
-              <CardContent className="p-5 sm:p-6 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider">
-                    Your Net Payout (Profit)
-                  </span>
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-                    <TrendingUp className="w-5 h-5" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl sm:text-3xl font-black text-emerald-800 font-mono">
-                      Rs. {stats.currentSellerPayout.toLocaleString()}
-                    </span>
-                  </div>
-                  <span className="text-xs text-emerald-700 font-semibold block mt-1">
-                    Final Target Payout: Rs. {stats.sellerPayout.toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-emerald-100/70 text-[11px] text-emerald-900 flex items-center justify-between font-semibold">
-                  <span>Asset Market Value:</span>
-                  <span className="font-mono font-bold">Rs. {stats.marketPrice.toLocaleString()}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* KPI 3: Tickets Sold & Remaining */}
-            <Card className="rounded-3xl border-slate-200 shadow-xs hover:shadow-md transition-shadow bg-white overflow-hidden">
-              <CardContent className="p-5 sm:p-6 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Tickets Sold &amp; Inventory
-                  </span>
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
-                    <Ticket className="w-5 h-5" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl sm:text-3xl font-black text-slate-900 font-mono">
-                      {stats.soldTickets.toLocaleString()}
-                    </span>
-                    <span className="text-sm font-bold text-slate-500 font-mono">
-                      / {stats.totalTickets.toLocaleString()} sold
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold text-blue-600 block mt-1">
-                    {stats.remainingTickets.toLocaleString()} tickets remaining
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-xs text-slate-600 pt-2 border-t border-slate-100">
-                  <span className="font-medium">Ticket Entry Price:</span>
-                  <span className="font-mono font-bold text-slate-900">
-                    Rs. {stats.ticketPrice.toLocaleString()} / entry
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* KPI 4: PakRaffle Platform Fee (8%) */}
-            <Card className="rounded-3xl border-slate-200 shadow-xs bg-white overflow-hidden">
-              <CardContent className="p-5 sm:p-6 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Platform Service Fee (8%)
-                  </span>
-                  <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold">
-                    <Layers className="w-5 h-5" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl sm:text-3xl font-black text-slate-900 font-mono">
-                      Rs. {stats.currentPlatformFee.toLocaleString()}
-                    </span>
-                  </div>
-                  <span className="text-xs text-slate-400 block mt-1">
-                    Full campaign cap: Rs. {stats.platformFee.toLocaleString()} (Exactly 8%)
-                  </span>
-                </div>
-
-                <p className="text-[11px] text-slate-500 leading-snug">
-                  Covers payment gateway fees, fraud verification, Escrow custody, and door-to-door courier.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* KPI 5: Verified Participants */}
-            <Card className="rounded-3xl border-slate-200 shadow-xs bg-white overflow-hidden">
-              <CardContent className="p-5 sm:p-6 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Verified Ticket Buyers
-                  </span>
-                  <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
-                    <Users className="w-5 h-5" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl sm:text-3xl font-black text-slate-900 font-mono">
-                      {stats.uniqueBuyers}
-                    </span>
-                    <span className="text-xs font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">
-                      Active Buyers
-                    </span>
-                  </div>
-                  <span className="text-xs text-slate-400 block mt-1">
-                    Avg. 2.3 tickets per participant
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-xs text-slate-600 pt-2 border-t border-slate-100">
-                  <span className="font-medium">Draw Condition:</span>
-                  <span className="font-bold text-emerald-700">Automated Live Draw</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* KPI 6: Settlement & Custody Status */}
-            <Card className="rounded-3xl border-slate-200 shadow-xs bg-white overflow-hidden">
-              <CardContent className="p-5 sm:p-6 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Escrow &amp; Payout Release
-                  </span>
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                </div>
-
-                <div>
-                  <Badge className="bg-emerald-100 text-emerald-900 border-emerald-300 font-extrabold text-xs">
-                    {stats.settlementStatus === "HELD_IN_ESCROW" ? "Funds Secured in Escrow" : "Pending Launch"}
-                  </Badge>
-                  <span className="text-xs text-slate-500 block mt-1.5 font-medium">
-                    Payout Channel: {stats.payoutMethod}
-                  </span>
-                </div>
-
-                <div className="text-[11px] text-slate-500 pt-2 border-t border-slate-100 space-y-1">
-                  <div className="flex justify-between">
-                    <span>Physical Inspection:</span>
-                    <span className="font-bold text-slate-800">{stats.inspectionStatus}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        {/* Detailed Breakdown & Recent Activity Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-          {/* Left Column (2 Cols): Financial Settlement Table & Ticket Visual Tracker */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Financial Settlement Statement */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-5">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <div>
-                  <h3 className="text-base sm:text-lg font-extrabold text-slate-900">
-                    Official Financial Statement &amp; Payout Schedule
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Itemized transparent settlement ledger under PakRaffle Verified Partner Terms.
-                  </p>
-                </div>
-                <Badge variant="outline" className="font-mono text-xs">
-                  8% Fixed Fee Policy
-                </Badge>
-              </div>
-
-              <div className="divide-y divide-slate-100 text-xs sm:text-sm">
-                <div className="py-3 flex items-center justify-between">
-                  <span className="text-slate-600 font-medium">Asset Market Price (CNIC Verified):</span>
-                  <span className="font-mono font-bold text-slate-900">
-                    Rs. {stats.marketPrice.toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="py-3 flex items-center justify-between">
-                  <span className="text-slate-600 font-medium">Ticket Pricing &amp; Target Cap:</span>
-                  <span className="font-mono font-bold text-slate-900">
-                    {stats.totalTickets.toLocaleString()} Tickets × Rs. {stats.ticketPrice.toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="py-3 flex items-center justify-between">
-                  <span className="text-slate-600 font-medium">Total Gross Proceeds (100% Sellout):</span>
-                  <span className="font-mono font-extrabold text-slate-900">
-                    Rs. {stats.totalRevenue.toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="py-3 flex items-center justify-between text-rose-600">
-                  <span className="font-medium">PakRaffle Platform Fee (-8.0%):</span>
-                  <span className="font-mono font-extrabold">
-                    -Rs. {stats.platformFee.toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="py-4 flex items-center justify-between bg-emerald-50/70 -mx-6 sm:-mx-8 px-6 sm:px-8 border-y border-emerald-200">
-                  <div>
-                    <span className="font-black text-emerald-950 text-sm sm:text-base block">
-                      Net Payout to Your Bank Account (92.0%):
-                    </span>
-                    <span className="text-[11px] text-emerald-700 font-medium block">
-                      Direct IBFT / Raast transfer without any other hidden deductions
-                    </span>
-                  </div>
-                  <span className="font-mono font-black text-emerald-800 text-lg sm:text-xl">
-                    Rs. {stats.sellerPayout.toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="py-3 flex items-center justify-between text-xs text-slate-500">
-                  <span>Current Realized Revenue to Date:</span>
-                  <span className="font-mono font-semibold text-slate-700">
-                    Rs. {stats.currentGrossRevenue.toLocaleString()} ({stats.percentageSold}%)
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Visual Ticket Inventory Tracker */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base sm:text-lg font-extrabold text-slate-900">
-                    Live Ticket Inventory &amp; Distribution
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Visual representation of ticket entries purchased by community members.
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 text-xs font-semibold">
-                  <span className="flex items-center gap-1.5 text-emerald-700">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                    <span>Sold ({stats.soldTickets})</span>
-                  </span>
-                  <span className="flex items-center gap-1.5 text-slate-400">
-                    <span className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-                    <span>Available ({stats.remainingTickets})</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Interactive Mini-Grid (sampled 60 blocks) */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                <div className="grid grid-cols-10 sm:grid-cols-12 md:grid-cols-15 gap-1.5">
-                  {Array.from({ length: 60 }).map((_, idx) => {
-                    const isSold = idx < Math.round((stats.soldTickets / stats.totalTickets) * 60)
-                    return (
-                      <div
-                        key={idx}
-                        title={`Ticket batch #${idx + 1}: ${isSold ? "Sold" : "Available"}`}
-                        className={`h-4 rounded-xs transition-colors cursor-pointer ${
-                          isSold
-                            ? "bg-emerald-500 hover:bg-emerald-600"
-                            : "bg-slate-200 hover:bg-slate-300"
-                        }`}
-                      />
-                    )
-                  })}
-                </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-                  <span>Ticket #001</span>
-                  <span className="font-semibold text-emerald-700">
-                    {stats.percentageSold}% of target reached
-                  </span>
-                  <span>Ticket #{stats.totalTickets}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column (1 Col): Recent Ticket Orders Feed & Custody Status */}
-          <div className="space-y-6">
-            {/* Live Order Activity Feed */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <h3 className="text-sm font-extrabold text-slate-900">Recent Ticket Sales</h3>
-                </div>
-                <Badge variant="outline" className="text-[10px]">
-                  Real-time Feed
-                </Badge>
-              </div>
-
-              <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
-                {stats.recentOrders && stats.recentOrders.length > 0 ? (
-                  stats.recentOrders.map((ord, i) => (
-                    <div
-                      key={i}
-                      className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between hover:bg-emerald-50/40 transition-colors"
-                    >
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs text-slate-900">{ord.name}</span>
-                          <span className="text-[10px] text-slate-400">({ord.city})</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-emerald-700 font-semibold">
-                          <Ticket className="w-3 h-3 text-emerald-600" />
-                          <span>{ord.tickets} {ord.tickets === 1 ? "entry" : "entries"}</span>
-                          <span className="text-slate-300">•</span>
-                          <span className="text-slate-400 font-normal">{ord.time}</span>
-                        </div>
-                      </div>
-                      <span className="font-mono font-bold text-xs text-slate-900">
-                        Rs. {ord.amount.toLocaleString()}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="py-8 text-center text-slate-400 text-xs">
-                    <Clock className="w-6 h-6 mx-auto mb-2 text-slate-300" />
-                    <span>No buyer entries recorded yet. Share your raffle link to kick off sales!</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Warehouse & Inspection Custody Box */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
-              <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                <Package className="w-4 h-4 text-emerald-600" />
-                <span>Physical Custody &amp; Inspection</span>
-              </h3>
-
-              <div className="space-y-2.5 text-xs">
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                  <span className="text-slate-400 font-medium block">Verification Hub Location:</span>
-                  <span className="font-bold text-slate-900 block">{stats.custodyLocation}</span>
-                </div>
-
-                <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-1">
-                  <span className="text-emerald-800 font-medium block">Asset Condition &amp; Warranty:</span>
-                  <span className="font-bold text-emerald-950 block">
-                    {application.condition || "Brand New (Sealed)"} • Complete Accessories &amp; Warranty Pack
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                  <span className="text-slate-400 font-medium block">Settlement Release Mechanism:</span>
-                  <span className="text-slate-700 leading-relaxed block">
-                    Upon reaching 100% ticket sellout or scheduled draw date, net proceeds are transferred directly via State Bank Raast / IBFT to your verified account.
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Dedicated Partner Manager Assistance */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl p-6 space-y-3 shadow-md">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-300" />
-                <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">
-                  Dedicated Partner Support
-                </span>
-              </div>
-              <h4 className="text-sm font-bold text-white">Need help promoting your raffle?</h4>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Connect directly with your assigned PakRaffle partner manager on WhatsApp for promotional banners, social media shoutouts, and live draw scheduling.
+          <div className={cn(INK_PANEL, "relative overflow-hidden p-5 print:hidden")}>
+            <div aria-hidden className="pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full bg-emerald-500/20 blur-3xl" />
+            <div className="relative">
+              <p className="flex items-center gap-2 font-mono text-[9.5px] uppercase tracking-[0.2em] text-emerald-300/90">
+                <Building2 className="h-3.5 w-3.5" />
+                Dedicated partner support
               </p>
-              <Button
-                asChild
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl h-10 gap-2"
+              <p className="mt-3 font-display text-lg font-semibold leading-snug text-white">
+                Want your draw pushed to more buyers?
+              </p>
+              <p className="mt-2 text-[12.5px] leading-relaxed text-emerald-50/75">
+                Message the partner desk for promotional banners, social shout-outs and the live draw schedule.
+              </p>
+              <Cta
+                href={`https://wa.me/${WHATSAPP_INTL}?text=${encodeURIComponent(managerText)}`}
+                variant="light"
+                className="mt-4 w-full"
               >
-                <a
-                  href={`https://wa.me/923000000000?text=${encodeURIComponent(
-                    `Assalam-o-Alaikum! This is ${application.fullNameCnic}, seller for ${application.productName} (ID: ${application.id}). I would like to inquire about campaign promotion and draw schedule.`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Chat with Partner Desk</span>
-                </a>
-              </Button>
+                <MessageCircle className="h-4 w-4" />
+                Chat with partner desk
+              </Cta>
             </div>
           </div>
         </div>
-      </main>
+      </section>
     </div>
   )
 }
@@ -1028,8 +993,8 @@ export default function ApplicationDashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-emerald-600 border-t-transparent" />
+        <div className="flex min-h-screen items-center justify-center bg-[#f8f9f6] p-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
         </div>
       }
     >

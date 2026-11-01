@@ -93,9 +93,11 @@ type CtaProps = {
   variant?: "primary" | "ink" | "ghost" | "light"
   className?: string
   arrow?: boolean
+  /** Passed straight through — used to open a portal's own record in a second tab. */
+  target?: string
 }
 
-export function Cta({ href, children, variant = "primary", className, arrow = false }: CtaProps) {
+export function Cta({ href, children, variant = "primary", className, arrow = false, target }: CtaProps) {
   const base =
     "group inline-flex min-h-[46px] items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold transition duration-200"
   const styles = {
@@ -114,16 +116,20 @@ export function Cta({ href, children, variant = "primary", className, arrow = fa
     </>
   )
 
+  // Off-site links (WhatsApp, payment pages) have always opened in a new tab; keep that default
+  // and let callers opt out or set the target on an internal link.
+  const linkTarget = target ?? (external ? "_blank" : undefined)
+
   if (external) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={cn(base, styles, className)}>
+      <a href={href} target={linkTarget} rel={linkTarget === "_blank" ? "noopener noreferrer" : undefined} className={cn(base, styles, className)}>
         {body}
       </a>
     )
   }
 
   return (
-    <Link href={href} className={cn(base, styles, className)}>
+    <Link href={href} target={target} className={cn(base, styles, className)}>
       {body}
     </Link>
   )
@@ -177,12 +183,15 @@ export function StatTile({
   hint,
   accent = false,
   className,
+  valueClassName,
 }: {
   label: ReactNode
   value: ReactNode
   hint?: ReactNode
   accent?: boolean
   className?: string
+  /** Long figures (currency) can shrink on narrow screens instead of pushing past the tile. */
+  valueClassName?: string
 }) {
   return (
     <div className={cn(PANEL, "px-4 py-3.5 sm:px-5 sm:py-4", className)}>
@@ -191,6 +200,7 @@ export function StatTile({
         className={cn(
           "mt-1.5 font-mono text-xl font-semibold tabular-nums tracking-tight sm:text-[1.6rem]",
           accent ? "text-emerald-700" : "text-slate-900",
+          valueClassName,
         )}
       >
         {value}

@@ -145,6 +145,16 @@ details[data-faq][open] > summary > svg {
   }
 }
 
+/* Indeterminate loader track (partner dashboard verifies a token before any data exists). */
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-105%);
+  }
+  100% {
+    transform: translateX(310%);
+  }
+}
+
 @layer utilities {
   .animate-marquee {
     animation: marquee 46s linear infinite;
@@ -160,6 +170,10 @@ details[data-faq][open] > summary > svg {
 
   .animate-sheen {
     animation: sheen 3.2s ease-in-out infinite;
+  }
+
+  .animate-indeterminate {
+    animation: indeterminate 1.35s ease-in-out infinite;
   }
 
   /* Fades the ticker into the page instead of cutting it off at the viewport edge. */
@@ -208,7 +222,8 @@ details[data-faq][open] > summary > svg {
   .animate-marquee,
   .animate-drift,
   .animate-floaty,
-  .animate-sheen {
+  .animate-sheen,
+  .animate-indeterminate {
     animation: none !important;
   }
 }

@@ -79,6 +79,10 @@ interface RelatedDraw {
 const WHATSAPP_COMMUNITY_URL = "https://whatsapp.com/channel/0029VbB0CzJ8fewyBXpXy210"
 const WHATSAPP_PHONE_CLEAN = "923377155722"
 
+// Currency and dates run long; on a two-up mobile grid they would push past the tile, so the
+// fact row shrinks its figures and lets "Rs" wrap onto its own line instead of clipping.
+const FACT_VALUE = "break-words text-[1.05rem] sm:text-[1.6rem]"
+
 const DATE_FMT = new Intl.DateTimeFormat("en-PK", {
   day: "numeric",
   month: "short",
@@ -608,7 +612,7 @@ const ClientSide = ({ raffle, related = [] }: { raffle: Raffle; related?: Relate
             </div>
           </div>
 
-          <div className="mt-6 grid gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-start lg:gap-12">
+          <div className="mt-6 grid gap-6 sm:gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-start lg:gap-12">
             <Gallery images={allImages} title={raffle.title} category={raffle.category} featured={raffle.featured} />
 
             {/* Ticket counter */}
@@ -780,15 +784,32 @@ const ClientSide = ({ raffle, related = [] }: { raffle: Raffle; related?: Relate
 
       {/* ------------------------------------------------------------ Draw facts */}
       <section className={`${CONTAINER} pt-8`}>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile label="Entry fee" value={formatCurrency(raffle.price)} accent hint="one ticket, one number" />
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+          <StatTile
+            label="Entry fee"
+            value={formatCurrency(raffle.price)}
+            accent
+            hint="one ticket, one number"
+            valueClassName={FACT_VALUE}
+          />
           <StatTile
             label="Tickets issued"
             value={currentEntries.toLocaleString("en-PK")}
             hint={`${percentFilled}% of the ${totalEntries.toLocaleString("en-PK")} pool`}
+            valueClassName={FACT_VALUE}
           />
-          <StatTile label="Prize value" value={formatCurrency(raffle.realPrice)} hint="brand-new and sealed" />
-          <StatTile label="Draw closes" value={drawDate(raffle.endDate)} hint={drawTime(raffle.endDate) ? `${drawTime(raffle.endDate)} PKT` : "date to be announced"} />
+          <StatTile
+            label="Prize value"
+            value={formatCurrency(raffle.realPrice)}
+            hint="brand-new and sealed"
+            valueClassName={FACT_VALUE}
+          />
+          <StatTile
+            label="Draw closes"
+            value={drawDate(raffle.endDate)}
+            hint={drawTime(raffle.endDate) ? `${drawTime(raffle.endDate)} PKT` : "date to be announced"}
+            valueClassName={FACT_VALUE}
+          />
         </div>
       </section>
 
@@ -811,7 +832,7 @@ const ClientSide = ({ raffle, related = [] }: { raffle: Raffle; related?: Relate
                   <TabsTrigger
                     key={tab.value}
                     value={tab.value}
-                    className="rounded-xl px-2 py-2 text-[12px] font-semibold text-slate-500 transition data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+                    className="truncate rounded-xl px-1.5 py-2 text-[11.5px] font-semibold text-slate-500 transition data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm sm:px-2 sm:text-[12px]"
                   >
                     {tab.label}
                   </TabsTrigger>
@@ -990,7 +1011,8 @@ const ClientSide = ({ raffle, related = [] }: { raffle: Raffle; related?: Relate
       )}
 
       {/* ----------------------------------------------------------- Closing band */}
-      <section className={`${CONTAINER} mt-14 pb-16`}>
+      {/* Extra bottom padding on mobile clears the fixed action bar underneath. */}
+      <section className={`${CONTAINER} mt-14 pb-28 lg:pb-16`}>
         <div className={`${INK_PANEL} relative overflow-hidden px-6 py-10 sm:px-10 sm:py-12`}>
           <div
             aria-hidden
@@ -1022,6 +1044,43 @@ const ClientSide = ({ raffle, related = [] }: { raffle: Raffle; related?: Relate
           </div>
         </div>
       </section>
+
+      {/* --------------------------------------------------- Mobile action bar */}
+      {/* On a phone the ticket panel sits under the photo and scrolls away, so the primary action
+          follows the reader. Hidden from lg upwards, where the sticky panel already carries it. */}
+      {!showModal && (raffle.status === "ACTIVE" || raffle.status === "COMPLETED") && (
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-900/10 bg-white/90 backdrop-blur-xl lg:hidden">
+          <div className="flex items-center gap-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+            {raffle.status === "ACTIVE" ? (
+              <>
+                <div className="shrink-0">
+                  <p className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-slate-400">Entry fee</p>
+                  <p className="font-mono text-[15px] font-semibold tabular-nums text-emerald-700">
+                    {formatCurrency(raffle.price)}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleEnterRaffle}
+                  className="group inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 text-[13.5px] font-semibold text-white shadow-[0_16px_34px_-18px_rgba(5,150,105,0.95)] transition hover:bg-emerald-500"
+                >
+                  <Gift className="h-4 w-4" />
+                  {isUserPurchased ? "Buy more entries" : "Enter draw"}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </button>
+              </>
+            ) : (
+              <Link
+                href={`/raffles/${raffle.id}/winner`}
+                className="inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 text-[13.5px] font-semibold text-white transition hover:bg-slate-800"
+              >
+                <Trophy className="h-4 w-4" />
+                See the winning ticket
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       {raffle && (
         <EnterRaffleModal
