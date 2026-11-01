@@ -1,36 +1,33 @@
 "use client"
 
-// Light/dark switch for the merchant workspace. next-themes stores the choice globally
-// (localStorage), but the palette swap in globals.css only renders inside /merchants* routes,
-// so the rest of the site is untouched. The button borrows the kit's secondary-button look —
-// its slate tokens flip automatically with the workspace palette.
+// Light/dark switch for the merchant workspace. Backed by lib/merchant-theme (a plain
+// localStorage store that paints the scoped `data-merchant-workspace` attribute), deliberately
+// not next-themes: that library writes a global `.dark` class / `color-scheme` on <html>, which
+// would leak dark scrollbars and form controls onto the public pages. The button borrows the
+// kit's secondary-button look, so its slate classes are remapped by the dark sheet in globals.css.
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
+import { onMerchantThemeChange, readMerchantTheme, setMerchantTheme } from "@/lib/merchant-theme"
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const { resolvedTheme, setTheme } = useTheme()
   const pathname = usePathname()
-  // Draw the neutral placeholder until mounted so SSR and the first client paint agree.
+  // Draw the moon placeholder until mounted so SSR and the first client paint agree.
   const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const [isDark, setIsDark] = useState(false)
 
-  // The pre-paint script in ClientLayout's <head> covers fresh loads; this keeps the scope
-  // honest after client-side navigations and theme changes.
   useEffect(() => {
-    const inWorkspace = pathname?.startsWith("/merchants") || pathname?.startsWith("/auth/merchant")
-    if (inWorkspace && resolvedTheme === "dark") document.documentElement.setAttribute("data-merchant-workspace", "dark")
-    else document.documentElement.removeAttribute("data-merchant-workspace")
-  }, [pathname, resolvedTheme])
-
-  const isDark = mounted && resolvedTheme === "dark"
+    setMounted(true)
+    setIsDark(readMerchantTheme() === "dark")
+    // Keep the icon in sync when another toggle on the page changes the theme.
+    return onMerchantThemeChange((theme) => setIsDark(theme === "dark"))
+  }, [])
 
   return (
     <button
       type="button"
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={() => setMerchantTheme(isDark ? "light" : "dark", pathname)}
       className={cn(
         "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-100",
         className,

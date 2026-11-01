@@ -208,7 +208,7 @@ export default function MerchantCheckout({ tracker }: { tracker: string }) {
             <div className="mt-5 flex flex-col gap-2">
               <Link
                 href="/merchants"
-                className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-slate-900 dark:bg-[#0f172a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
                 Sign in
               </Link>
@@ -264,7 +264,7 @@ export default function MerchantCheckout({ tracker }: { tracker: string }) {
                       </p>
                       <Link
                         href={backHref}
-                        className="mt-4 inline-flex min-h-[40px] items-center justify-center rounded-xl bg-slate-900 dark:bg-[#0f172a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                        className="mt-4 inline-flex min-h-[40px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
                       >
                         Back to dashboard
                       </Link>
@@ -405,7 +405,7 @@ function PaidCard({ view, backHref }: { view: CheckoutView; backHref: string }) 
 
       <Link
         href={backHref}
-        className="mt-5 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl bg-slate-900 dark:bg-[#0f172a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+        className="mt-5 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
       >
         Back to dashboard
       </Link>
@@ -450,7 +450,7 @@ function ClosedCard({
       <div className="mt-5 flex flex-col gap-2">
         <Link
           href={backHref}
-          className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-slate-900 dark:bg-[#0f172a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+          className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
         >
           Back to dashboard
         </Link>

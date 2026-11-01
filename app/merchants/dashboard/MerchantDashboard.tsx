@@ -187,6 +187,7 @@ export default function MerchantDashboard() {
               </p>
             </div>
             <StatusText status={store.status} className="hidden sm:inline-flex" />
+            <ThemeToggle/>
             <button
               type="button"
               onClick={logout}

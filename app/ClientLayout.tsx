@@ -1,6 +1,6 @@
 "use client"
 
-// Body-level client shell: theme provider + route-aware chrome. The <html>/<head>/<body>
+// Body-level client shell: theme scope + route-aware chrome. The <html>/<head>/<body>
 // document is owned by the Server RootLayout in app/layout.tsx — rendering the document shell
 // from here left React unable to re-attach it at hydration and the whole page went blank.
 import type React from "react"
@@ -8,7 +8,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { usePathname } from "next/navigation"
 import { useEffect } from "react"
-import { ThemeProvider } from "@/components/theme-provider"
+import { applyMerchantTheme, isWorkspacePath, readMerchantTheme } from "@/lib/merchant-theme"
 
 export default function ClientLayout({
   children,
@@ -35,14 +35,23 @@ export default function ClientLayout({
       }
     }
   }, [])
+
+  // Keep the workspace theme in sync across client-side navigations. The stored preference is
+  // only painted while a workspace route is mounted, so public pages never go dark; the very
+  // first paint is handled by the head script in app/layout.tsx, this covers everything after.
+  useEffect(() => {
+    if (isWorkspacePath(pathname)) applyMerchantTheme(readMerchantTheme(), pathname)
+    else applyMerchantTheme("light", pathname)
+  }, [pathname])
+
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="raffle-merchant-theme" disableTransitionOnChange>
+    <>
       {!isCheckoutRoute && (
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8516478537168335" crossOrigin="anonymous"></script>
       )}
       {!isStandaloneRoute && <Header />}
       <main>{children}</main>
       {!isStandaloneRoute && <Footer />}
-    </ThemeProvider>
+    </>
   )
 }

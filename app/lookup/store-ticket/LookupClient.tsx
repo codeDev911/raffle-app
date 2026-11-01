@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Clock,
   ExternalLink,
+  Flag,
   Gift,
   Hourglass,
   Loader2,
@@ -218,6 +219,54 @@ export default function StoreTicketLookupClient() {
         </div>
       </section>
 
+      {/* ------------------------------------------------------- Result cards */}
+      {/* The answer first: results render above the explainer cards, never below them. */}
+      {searched && (
+        <section className={`${CONTAINER} pt-10`}>
+          {!loading && tickets?.length === 0 && (
+            <div className={`${PANEL} mx-auto max-w-2xl p-8 text-center`}>
+              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-500">
+                <ShieldQuestion className="h-6 w-6" />
+              </span>
+              <h2 className="mt-4 font-display text-lg font-semibold tracking-tight text-slate-900">
+                No ticket found for that reference
+              </h2>
+              <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-slate-600">
+                Tickets are minted when your order is <span className="font-semibold text-slate-800">fulfilled and shipped</span>,
+                and only for stores running a live campaign. Check the order number again or contact the store.
+              </p>
+              <div className="mt-5 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
+                <Cta
+                  href={`https://wa.me/${WHATSAPP_INTL}?text=${encodeURIComponent(`Ticket lookup: ${query}`)}`}
+                  variant="ghost"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Ask PakRaffle support
+                </Cta>
+                <Cta href="/merchants" variant="ghost">
+                  How Merchant Connect works
+                </Cta>
+              </div>
+            </div>
+          )}
+
+          {tickets && tickets.length > 0 && (
+            <div className="mx-auto max-w-3xl space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <LiveDot />
+                  {tickets.length} ticket{tickets.length > 1 ? "s" : ""} found
+                </p>
+                <p className="font-mono text-[11px] text-slate-400">ref: {query.trim()}</p>
+              </div>
+              {tickets.map((ticket) => (
+                <TicketCardView key={ticket.ticketNumber} ticket={ticket} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* ---------------------------------------------------- Three references */}
       <section className={`${CONTAINER} pb-4 pt-10`}>
         <div className="grid gap-3 sm:grid-cols-3">
@@ -232,50 +281,8 @@ export default function StoreTicketLookupClient() {
         </div>
       </section>
 
-      {/* -------------------------------------------------------------- Results */}
+      {/* -------------------------------------------------- Helper rail (info) */}
       <section className={`${CONTAINER} pb-16 pt-8 sm:pb-20`}>
-        {searched && !loading && tickets?.length === 0 && (
-          <div className={`${PANEL} mx-auto max-w-2xl p-8 text-center`}>
-            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-500">
-              <ShieldQuestion className="h-6 w-6" />
-            </span>
-            <h2 className="mt-4 font-display text-lg font-semibold tracking-tight text-slate-900">
-              No ticket found for that reference
-            </h2>
-            <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-slate-600">
-              Tickets are minted when your order is <span className="font-semibold text-slate-800">fulfilled and shipped</span>,
-              and only for stores running a live campaign. Check the order number again or contact the store.
-            </p>
-            <div className="mt-5 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
-              <Cta
-                href={`https://wa.me/${WHATSAPP_INTL}?text=${encodeURIComponent(`Ticket lookup: ${query}`)}`}
-                variant="ghost"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Ask PakRaffle support
-              </Cta>
-              <Cta href="/merchants" variant="ghost">
-                How Merchant Connect works
-              </Cta>
-            </div>
-          </div>
-        )}
-
-        {tickets && tickets.length > 0 && (
-          <div className="mx-auto max-w-3xl space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                <LiveDot />
-                {tickets.length} ticket{tickets.length > 1 ? "s" : ""} found
-              </p>
-              <p className="font-mono text-[11px] text-slate-400">ref: {query.trim()}</p>
-            </div>
-            {tickets.map((ticket) => (
-              <TicketCardView key={ticket.ticketNumber} ticket={ticket} />
-            ))}
-          </div>
-        )}
-
         {/* Helper rail — always useful, never in the way of results. */}
         <div className="mx-auto mt-12 max-w-3xl">
           <div className="rounded-3xl border border-slate-900/10 bg-white/70 p-5 backdrop-blur sm:p-6">
@@ -451,6 +458,20 @@ function TicketCardView({ ticket }: { ticket: PublicTicket }) {
             )}
           </div>
         )}
+
+        <div className="flex justify-end border-t border-dashed border-slate-900/10 pt-3">
+          <Link
+            href={`/make-complaint?seller=${encodeURIComponent(ticket.storeName)}&domain=${encodeURIComponent(
+              ticket.storeUrl || "",
+            )}&ticket=${encodeURIComponent(ticket.ticketNumber)}&order=${encodeURIComponent(
+              ticket.orderName || "",
+            )}&campaign=${encodeURIComponent(ticket.campaignTitle)}`}
+            className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-slate-500 transition hover:text-rose-600"
+          >
+            <Flag className="h-3.5 w-3.5" />
+            Report this seller
+          </Link>
+        </div>
       </div>
     </TicketCard>
   )

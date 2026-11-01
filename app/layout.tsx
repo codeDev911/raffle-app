@@ -94,13 +94,12 @@ const hash = crypto
         <meta name="monetag" content="78091832d51a3d2d1cd351e318c806b9"></meta>
         <meta name="google-adsense-account" content="ca-pub-8516478537168335"></meta>
         {/* The merchant workspace is the app's only dark-mode corner: the saved theme is applied
-            there (and only there) via an attribute on <html> that the palette swap in globals.css
-            keys off. It must run before first paint so a dark-mode visitor never sees a flash. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('raffle-merchant-theme');var p=location.pathname;if(t==='dark'&&(p.startsWith('/merchants')||p.startsWith('/auth/merchant'))){document.documentElement.setAttribute('data-merchant-workspace','dark')}else{document.documentElement.removeAttribute('data-merchant-workspace')}catch(e){}`,
-          }}
-        />
+            there (and only there) via `data-merchant-workspace` on <html>, which the dark sheet in
+            globals.css keys off. beforeInteractive runs blocking in <head> before first paint, so a
+            dark-mode visitor never sees a light flash; ClientLayout re-asserts it on navigation. */}
+        <Script id="workspace-theme" strategy="beforeInteractive">
+          {`try{var t=localStorage.getItem('raffle-merchant-theme');var p=location.pathname;var ws=p.indexOf('/merchants/dashboard')===0||p.indexOf('/merchants/checkout')===0||p.indexOf('/merchants/onboarding')===0||p.indexOf('/auth/merchant')===0;if(t==='dark'&&ws){document.documentElement.setAttribute('data-merchant-workspace','dark')}else{document.documentElement.removeAttribute('data-merchant-workspace')}}catch(e){}`}
+        </Script>
       </head>
       <body className={inter.className}>
         <ClientLayout>

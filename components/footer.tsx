@@ -21,6 +21,7 @@ const LEGAL = [
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Refund & Cancellation Policy", href: "/refund" },
   { label: "Contact Support", href: "/contact" },
+  { label: "Make a complaint", href: "/make-complaint" },
 ]
 
 const SOCIALS = [

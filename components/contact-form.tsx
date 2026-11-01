@@ -3,6 +3,9 @@
 import { useState } from "react"
 import { CheckCircle2, Loader2, Send } from "lucide-react"
 
+const WHATSAPP_INTL = "923377155722"
+const CONTACT_ENDPOINT = process.env.NEXT_PUBLIC_FORMSPREE_CONTACT_ENDPOINT
+
 const INPUT =
   "w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
 
@@ -36,15 +39,43 @@ function Label({ children, required = false }: { children: React.ReactNode; requ
 export function ContactForm() {
   const [formData, setFormData] = useState(EMPTY)
   const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle")
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus("submitting")
+    setError(null)
 
-    // Simulate reliable dispatch
-    setTimeout(() => {
+    if (!CONTACT_ENDPOINT) {
+      setError("The inquiry form is temporarily unavailable. Please reach us on WhatsApp.")
+      setStatus("idle")
+      return
+    }
+
+    try {
+      // Formspree returns JSON (instead of an HTML redirect) when Accept is set.
+      const res = await fetch(CONTACT_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          department: formData.category,
+          ticketOrOrderId: formData.orderId,
+          message: formData.message,
+          _subject: `PakRaffle inquiry — ${formData.category}`,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.errors?.[0]?.message || "We couldn't send that. Please try again in a moment.")
+      }
       setStatus("success")
-    }, 800)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "We couldn't send that. Please try again in a moment.")
+      setStatus("idle")
+    }
   }
 
   if (status === "success") {
@@ -65,6 +96,7 @@ export function ContactForm() {
           type="button"
           onClick={() => {
             setFormData(EMPTY)
+            setError(null)
             setStatus("idle")
           }}
           className="mt-5 inline-flex min-h-[40px] items-center justify-center rounded-xl border border-emerald-600/25 bg-white px-4 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-50"
@@ -168,6 +200,21 @@ export function ContactForm() {
           className={`${INPUT} min-h-[132px] resize-y leading-relaxed`}
         />
       </label>
+
+      {error && (
+        <p className="rounded-xl bg-rose-50 px-3.5 py-2.5 text-[12.5px] font-medium leading-relaxed text-rose-700">
+          {error}{" "}
+          <a
+            href={`https://wa.me/${WHATSAPP_INTL}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold underline underline-offset-2"
+          >
+            Message us on WhatsApp
+          </a>
+          .
+        </p>
+      )}
 
       <div className="flex flex-col gap-3 border-t border-slate-900/5 pt-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="max-w-[16rem] text-[11px] leading-relaxed text-slate-500">

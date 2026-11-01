@@ -6,9 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import {
   ArrowLeftRight,
-  Check,
   CheckCircle2,
-  Copy,
   ExternalLink,
   Gift,
   Hourglass,
@@ -35,7 +33,6 @@ import {
   SectionHead,
   TicketCard,
 } from "@/components/marketing/kit"
-import { Lift } from "@/components/marketing/motion"
 
 const WHATSAPP_INTL = "923377155722"
 
@@ -160,7 +157,6 @@ export default function StoreCheckClient() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
-  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const search = async (event?: React.FormEvent) => {
     event?.preventDefault()
@@ -172,7 +168,6 @@ export default function StoreCheckClient() {
 
     setLoading(true)
     setError(null)
-    setCopiedId(null)
     router.replace(`/lookup/store?store=${encodeURIComponent(domain)}`, { scroll: false })
 
     try {
@@ -197,16 +192,6 @@ export default function StoreCheckClient() {
     router.replace("/lookup/store", { scroll: false })
     inputRef.current?.focus()
     window.scrollTo({ top: 0, behavior: "smooth" })
-  }
-
-  const copyLink = async (id: string, url: string) => {
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopiedId(id)
-      window.setTimeout(() => setCopiedId((current) => (current === id ? null : current)), 1800)
-    } catch {
-      // Clipboard blocked by the browser — the query string is still visible to copy by hand.
-    }
   }
 
   // A shared link such as /lookup/store?store=brand.myshopify.com should already show the answer.
@@ -292,19 +277,6 @@ export default function StoreCheckClient() {
         </div>
       </section>
 
-      {/* ------------------------------------------------------- Shopper promise */}
-      <section className={`${CONTAINER} pt-10`}>
-        <div className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-3">
-          {PROMISES.map((item) => (
-            <div key={item.title} className="rounded-2xl border border-slate-900/10 bg-white/70 p-4 backdrop-blur">
-              <item.icon className="h-4 w-4 text-emerald-600" />
-              <p className="mt-2 text-[12.5px] font-semibold text-slate-900">{item.title}</p>
-              <p className="mt-1 text-[11.5px] leading-relaxed text-slate-500">{item.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* ------------------------------------------------------------- Results */}
       {searched && (
         <section className={`${CONTAINER} pb-4 pt-10 sm:pt-12`}>
@@ -353,81 +325,13 @@ export default function StoreCheckClient() {
           )}
 
           {!loading && result?.found && result.store && (
-            <div className="mx-auto max-w-5xl">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div className="min-w-0">
-                  <p className="inline-flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
-                    <LiveDot />
-                    {result.store.liveCampaigns > 0 ? "Partner store · draw live" : "Partner store on PakRaffle"}
-                  </p>
-                  <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.85rem]">
-                    {result.store.name}
-                  </h2>
-                  <p className="mt-1 flex flex-wrap items-center gap-2 font-mono text-[11.5px] text-slate-500">
-                    <span className="truncate">{result.store.domain}</span>
-                    <span className="text-slate-300">·</span>
-                    <span className="font-semibold text-emerald-700">{result.store.liveCampaigns} live</span>
-                    <span className="text-slate-300">·</span>
-                    <span className="font-normal">
-                      {result.store.campaignCount} campaign{result.store.campaignCount === 1 ? "" : "s"}
-                    </span>
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <a
-                    href={result.store.siteUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-10 items-center gap-1.5 rounded-full border border-slate-900/10 bg-white px-3.5 text-[12px] font-semibold text-slate-800 transition hover:border-emerald-500/30 hover:text-emerald-700"
-                  >
-                    Visit store <ExternalLink className="h-3 w-3" />
-                  </a>
-                  <button
-                    type="button"
-                    onClick={reset}
-                    className="inline-flex h-10 items-center gap-1.5 rounded-full border border-slate-900/10 bg-white/70 px-3.5 text-[12px] font-semibold text-slate-600 transition hover:text-slate-900"
-                  >
-                    <ArrowLeftRight className="h-3 w-3" />
-                    Check another
-                  </button>
-                </div>
-              </div>
-
-              {result.campaigns && result.campaigns.length > 0 ? (
-                <div className="mt-6 grid gap-4 md:grid-cols-2">
-                  {result.campaigns.map((campaign) => (
-                    <CampaignCard
-                      key={campaign.id}
-                      campaign={campaign}
-                      copied={copiedId === campaign.id}
-                      onCopy={copyLink}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className={`${PANEL} mt-6 p-8 text-center`}>
-                  <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-700">
-                    <Hourglass className="h-6 w-6" />
-                  </span>
-                  <h3 className="mt-4 font-display text-lg font-semibold tracking-tight text-slate-900">
-                    No campaign running right now
-                  </h3>
-                  <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-slate-600">
-                    {result.store.name} works with PakRaffle but has no live draw this moment. Check back soon — or go
-                    straight to the main draws, where the prizes are already waiting.
-                  </p>
-                  <div className="mt-5 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
-                    <Cta href="/raffles" variant="ghost">
-                      Browse PakRaffle draws
-                    </Cta>
-                    <Cta href="/lookup/store-ticket" variant="ghost">
-                      Check a ticket
-                    </Cta>
-                  </div>
-                </div>
-              )}
-
+            <div className="mx-auto max-w-3xl">
+              <StoreProfileCard
+                store={result.store}
+                campaigns={result.campaigns ?? []}
+                domain={result.domain}
+                onReset={reset}
+              />
               <p className="mt-4 text-center text-[11px] text-slate-400">
                 Draw details come straight from the store. Delivery, returns and order support stay with the store.
               </p>
@@ -435,6 +339,20 @@ export default function StoreCheckClient() {
           )}
         </section>
       )}
+
+      {/* ------------------------------------------------------- Shopper promise */}
+      {/* Explainer cards sit under the answer, never above it. */}
+      <section className={`${CONTAINER} pt-10`}>
+        <div className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-3">
+          {PROMISES.map((item) => (
+            <div key={item.title} className="rounded-2xl border border-slate-900/10 bg-white/70 p-4 backdrop-blur">
+              <item.icon className="h-4 w-4 text-emerald-600" />
+              <p className="mt-2 text-[12.5px] font-semibold text-slate-900">{item.title}</p>
+              <p className="mt-1 text-[11.5px] leading-relaxed text-slate-500">{item.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* ----------------------------------------------------- Store-owner band */}
       <section className={`${CONTAINER} pb-16 pt-14 sm:pb-20`}>
@@ -494,112 +412,155 @@ export default function StoreCheckClient() {
   )
 }
 
-function CampaignCard({
-  campaign,
-  copied,
-  onCopy,
+// The store's own favicon is the only logo Merchant Connect has for a partner — no upload, no
+// brand kit. Google's icon service resolves any domain; a broken or missing icon falls back below.
+const faviconUrl = (domain: string) =>
+  `https://www.google.com/s2/favicons?sz=128&domain=${domain.replace(/^https?:\/\//i, "").split("/")[0]}`
+
+/**
+ * One card per store: identity (logo, name, domain, live counters) up top, the campaigns running
+ * there as minimal rows, and the actions underneath. Deliberately lighter than the old
+ * two-column campaign grid — a shopper skims this to decide where to buy, not to audit a draw.
+ */
+function StoreProfileCard({
+  store,
+  campaigns,
+  domain,
+  onReset,
 }: {
-  campaign: StoreCampaign
-  copied: boolean
-  onCopy: (id: string, url: string) => void
+  store: NonNullable<StoreCheckResult["store"]>
+  campaigns: StoreCampaign[]
+  domain: string
+  onReset: () => void
 }) {
-  const tone = STATE_TONE[campaign.state] ?? STATE_TONE.paused
-  const Icon = tone.icon
-  const query = campaign.shopUrl.includes("?") ? `?${campaign.shopUrl.split("?")[1]}` : ""
+  const [logoBroken, setLogoBroken] = useState(false)
+  const host = store.domain || domain
 
   return (
-    <Lift className="h-full">
-      <TicketCard className="flex h-full flex-col border-slate-900/10">
-        <div className="flex items-start gap-3 border-b border-dashed border-slate-900/10 px-5 py-4">
-          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-slate-900/10 bg-slate-100">
-            {campaign.prize?.image ? (
-              <Image
-                src={campaign.prize.image}
-                alt={campaign.prize.title}
-                fill
-                sizes="56px"
-                className="object-cover"
-                unoptimized
-              />
-            ) : (
-              <Gift className="absolute inset-0 m-auto h-5 w-5 text-emerald-600" />
-            )}
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] ${tone.className}`}
-            >
-              <Icon className="h-3 w-3" /> {tone.label}
-            </span>
-            <h3 className="mt-1.5 font-display text-[15.5px] font-semibold leading-snug tracking-tight text-slate-900">
-              {campaign.title}
-            </h3>
-            <p className="mt-0.5 text-[11.5px] leading-relaxed text-slate-500">{campaign.ruleSummary}</p>
-          </div>
+    <TicketCard className="border-slate-900/10">
+      <div className="flex items-start gap-4 border-b border-dashed border-slate-900/10 px-5 py-5 sm:px-6">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-900/10 bg-white">
+          {logoBroken ? (
+            <Store className="h-6 w-6 text-emerald-600" />
+          ) : (
+            <Image
+              src={faviconUrl(host)}
+              alt=""
+              width={40}
+              height={40}
+              className="h-10 w-10 object-contain"
+              unoptimized
+              onError={() => setLogoBroken(true)}
+            />
+          )}
         </div>
 
-        <div className="flex-1 space-y-3 px-5 py-4">
-          {campaign.prize && (
-            <div className="rounded-2xl border border-emerald-500/15 bg-emerald-50/60 px-3 py-2.5">
-              <p className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-emerald-800">Prize on the line</p>
-              <p className="mt-0.5 truncate text-[12.5px] font-semibold text-slate-900">{campaign.prize.title}</p>
-              <p className="font-mono text-[11.5px] tabular-nums text-emerald-700">
-                {formatPKR(campaign.prize.valuePkr)}
-                {campaign.prize.category ? ` · ${campaign.prize.category}` : ""}
-              </p>
-            </div>
-          )}
-
-          <div className="grid grid-cols-3 gap-2">
-            <MiniStat label="Tickets" value={campaign.entriesIssued.toLocaleString("en-PK")} />
-            <MiniStat
-              label="Entry cap"
-              value={campaign.entryCap ? campaign.entryCap.toLocaleString("en-PK") : "Open"}
-            />
-            <MiniStat label="Closes" value={formatDate(campaign.closesAt)} />
-          </div>
-
-          <p className="text-[11px] leading-relaxed text-slate-500">
-            Free to enter. The store pays for every ticket you earn — one per qualifying order, no extra charge at
-            checkout.
+        <div className="min-w-0 flex-1">
+          <p className="inline-flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
+            <LiveDot />
+            {store.liveCampaigns > 0 ? "Partner store · draw live" : "Partner store on PakRaffle"}
+          </p>
+          <h2 className="mt-1.5 truncate font-display text-xl font-semibold tracking-tight text-slate-900 sm:text-[1.6rem]">
+            {store.name}
+          </h2>
+          <p className="mt-1 flex flex-wrap items-center gap-2 font-mono text-[11.5px] text-slate-500">
+            <span className="truncate">{host}</span>
+            <span className="text-slate-300">·</span>
+            <span className="font-semibold text-emerald-700">{store.liveCampaigns} live</span>
+            <span className="text-slate-300">·</span>
+            <span className="font-normal">
+              {store.campaignCount} campaign{store.campaignCount === 1 ? "" : "s"}
+            </span>
           </p>
         </div>
+      </div>
 
-        <div className="space-y-2 border-t border-slate-900/5 px-5 py-4">
-          <a
-            href={campaign.shopUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 text-[13px] font-semibold text-white shadow-[0_14px_34px_-16px_rgba(5,150,105,0.9)] transition hover:-translate-y-0.5 hover:bg-emerald-500"
-          >
-            {campaign.isAccepting ? "Shop this draw" : "Visit the store"}
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
+      <div className="space-y-3 px-5 py-5 sm:px-6">
+        <p className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          Running campaign{campaigns.length === 1 ? "" : "s"}
+        </p>
 
-          <div className="flex items-center gap-2 rounded-xl bg-slate-900/[0.035] px-2.5 py-2">
-            <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-slate-500">{query}</span>
-            <button
-              type="button"
-              onClick={() => onCopy(campaign.id, campaign.shopUrl)}
-              aria-label="Copy tracked store link"
-              className="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg border border-slate-900/10 bg-white px-2 text-[10px] font-semibold text-slate-600 transition hover:text-emerald-700"
-            >
-              {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-              {copied ? "Copied" : "Copy"}
-            </button>
+        {campaigns.length > 0 ? (
+          <ul className="space-y-2.5">
+            {campaigns.slice(0, 3).map((campaign) => (
+              <CampaignRow key={campaign.id} campaign={campaign} />
+            ))}
+          </ul>
+        ) : (
+          <div className="flex items-start gap-2.5 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+            <Hourglass className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+            <p className="text-[12px] leading-relaxed text-slate-600">
+              <span className="font-semibold text-slate-900">{store.name}</span> works with PakRaffle but has no live
+              draw this moment. Check back soon, or browse the main PakRaffle draws.
+            </p>
           </div>
+        )}
+
+        {campaigns.length > 3 && (
+          <p className="text-[11px] text-slate-400">
+            +{campaigns.length - 3} older campaign{campaigns.length - 3 === 1 ? "" : "s"} not shown.
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center gap-2 border-t border-slate-900/5 pt-4">
+          <Cta href={store.siteUrl}>
+            Visit store <ExternalLink className="h-4 w-4" />
+          </Cta>
+          <Cta href="/lookup/store-ticket" variant="ghost">
+            Check my ticket
+          </Cta>
+          <button
+            type="button"
+            onClick={onReset}
+            className="inline-flex h-[46px] items-center gap-1.5 rounded-2xl border border-slate-900/10 bg-white/70 px-5 text-sm font-semibold text-slate-600 backdrop-blur transition hover:bg-white hover:text-slate-900"
+          >
+            <ArrowLeftRight className="h-4 w-4" />
+            Check another
+          </button>
         </div>
-      </TicketCard>
-    </Lift>
+      </div>
+    </TicketCard>
   )
 }
 
-function MiniStat({ label, value }: { label: string; value: string }) {
+/** A campaign reduced to what decides a purchase: state, name, prize and close date. */
+function CampaignRow({ campaign }: { campaign: StoreCampaign }) {
+  const tone = STATE_TONE[campaign.state] ?? STATE_TONE.paused
+  const Icon = tone.icon
+
   return (
-    <div className="rounded-xl border border-slate-900/5 bg-white px-2.5 py-2">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</p>
-      <p className="mt-0.5 truncate font-mono text-[11.5px] font-semibold tabular-nums text-slate-900">{value}</p>
-    </div>
+    <li className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-900/10 bg-white px-4 py-3">
+      <span
+        className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] ${tone.className}`}
+      >
+        <Icon className="h-3 w-3" /> {tone.label}
+      </span>
+
+      <div className="min-w-0 flex-1 basis-40">
+        <p className="truncate text-[13px] font-semibold text-slate-900">{campaign.title}</p>
+        <p className="mt-0.5 truncate text-[11.5px] text-slate-500">
+          {campaign.prize ? (
+            <>
+              Prize <span className="font-semibold text-emerald-700">{campaign.prize.title}</span>
+              <span className="text-slate-300"> · </span>
+              <span className="font-mono tabular-nums">{formatPKR(campaign.prize.valuePkr)}</span>
+            </>
+          ) : (
+            campaign.ruleSummary
+          )}
+          <span className="text-slate-300"> · </span>
+          closes {formatDate(campaign.closesAt)}
+        </p>
+      </div>
+
+      <a
+        href={campaign.shopUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-50 px-3 text-[11.5px] font-semibold text-emerald-700 transition hover:bg-emerald-500/20"
+      >
+        {campaign.isAccepting ? "Shop" : "Visit"} <ExternalLink className="h-3 w-3" />
+      </a>
+    </li>
   )
 }
