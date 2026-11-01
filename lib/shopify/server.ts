@@ -4,7 +4,7 @@
 
 /** One widget script serves every store; the store id is baked into its src. */
 export const widgetScriptUrl = (base: string, storeId: string) =>
-  `${base}/merchants/widget.js?store=${encodeURIComponent(storeId)}&v=2`
+  `${base}/merchants/widget.js?store=${encodeURIComponent(storeId)}&v=3`
 
 /** The exact tag a merchant pastes into theme.liquid, before </head>. */
 export const widgetSnippet = (base: string, storeId: string) =>

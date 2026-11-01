@@ -2,7 +2,7 @@
 import assert from "node:assert/strict"
 import { check } from "./_util.mjs"
 
-const { evaluateOrder, describeRule, qualifyingLineItems, validateRuleConfig } = await import(
+const { evaluateOrder, describeRule, qualifyingLineItems, validateRuleConfig, productMatchesFilters } = await import(
   "../../lib/merchants/rules.ts"
 )
 const { signShopifyPayload, verifyShopifyHmac, normalizeShopifyOrder } = await import("../../lib/merchants/shopify.ts")
@@ -103,6 +103,18 @@ await check("ALL_ORDERS mints for any fulfilled order", () => {
 
 await check("paused campaigns reject", () => {
   assert.equal(evaluateOrder(campaign({ status: "PAUSED" }), order()).qualified, false)
+})
+
+await check("productMatchesFilters answers the product-page question", () => {
+  const product = { title: "Khamis Lawn Suit", sku: "SKU-1", productId: "771", variantId: "4412" }
+  // No filters means every product counts, which is what a store-wide campaign promises.
+  assert.equal(productMatchesFilters(product, []), true)
+  assert.equal(productMatchesFilters(product, null), true)
+  assert.equal(productMatchesFilters(product, ["lawn"]), true, "title substring match")
+  assert.equal(productMatchesFilters(product, ["SKU-1"]), true, "exact sku match")
+  assert.equal(productMatchesFilters(product, ["771"]), true, "product id match")
+  assert.equal(productMatchesFilters(product, ["kurti"]), false, "unrelated filter must not advertise")
+  assert.equal(productMatchesFilters({ title: "", sku: null, productId: null, variantId: null }, ["lawn"]), false)
 })
 
 await check("describeRule renders the plan's summary strings", () => {

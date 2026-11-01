@@ -30,6 +30,19 @@ function lineItemMatches(item: NormalizedLineItem, filters: string[]): boolean {
   })
 }
 
+/**
+ * The same matching the order engine uses, exposed for the storefront widget: a product page has to
+ * know whether the item the shopper is reading counts toward a product-filtered campaign.
+ */
+export function productMatchesFilters(
+  item: Pick<NormalizedLineItem, "title" | "sku" | "productId" | "variantId">,
+  filters?: string[] | null,
+): boolean {
+  const active = cleanFilters(filters)
+  if (active.length === 0) return true
+  return lineItemMatches({ ...item, quantity: 1, unitPrice: 0 }, active)
+}
+
 export function cleanFilters(filters?: string[] | null): string[] {
   return (filters || []).map((f) => String(f).trim()).filter(Boolean)
 }

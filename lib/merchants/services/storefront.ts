@@ -2,7 +2,7 @@
 // No merchant credentials are involved: everything is scoped by the store id baked into the
 // script tag, and only non-sensitive, shopper-facing fields are returned.
 import { getMerchantDb } from "../db"
-import { cleanFilters, describeRule, evaluateOrder, type RuleEvaluation } from "../rules"
+import { cleanFilters, describeRule, evaluateOrder, productMatchesFilters, type RuleEvaluation } from "../rules"
 import type { MerchantCampaign, MerchantEntry, NormalizedLineItem, NormalizedOrder } from "../types"
 import { getPrizeMap } from "./prizes"
 import { getStoreById } from "./stores"
@@ -11,6 +11,18 @@ export interface CartInput {
   items: NormalizedLineItem[]
   itemCount: number
   amount: number
+}
+
+/**
+ * The product the shopper is looking at. A product page can only advertise a campaign that accepts
+ * this item, so the widget sends what it can read from the theme and nothing more.
+ */
+export interface ProductInput {
+  title: string
+  productId: string | null
+  variantId: string | null
+  sku: string | null
+  price: number
 }
 
 export interface StorefrontCampaign {
@@ -51,7 +63,7 @@ export interface StorefrontStatus {
   tickets: number
 }
 
-/** Defensive parsing: this endpoint is public and called from arbitrary cart pages. */
+/** Defensive parsing: this endpoint is public and called from arbitrary storefront pages. */
 export function parseCartInput(body: any): CartInput {
   const rawItems = Array.isArray(body?.items) ? body.items.slice(0, 60) : []
   const items: NormalizedLineItem[] = rawItems.map((item: any) => ({
@@ -71,6 +83,31 @@ export function parseCartInput(body: any): CartInput {
   const sampled = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
   const amount = Math.max(0, Number(body?.amount) || sampled)
   return { items, itemCount, amount }
+}
+
+/** The product block is optional and comes straight from a theme page, so it is treated as hostile. */
+export function parseProductInput(body: any): ProductInput | null {
+  const raw = body?.product
+  if (!raw || typeof raw !== "object") return null
+  const title = String(raw.title ?? "").trim().slice(0, 200)
+  const productId = raw.productId ? String(raw.productId).slice(0, 64) : null
+  const variantId = raw.variantId ? String(raw.variantId).slice(0, 64) : null
+  const sku = raw.sku ? String(raw.sku).slice(0, 100) : null
+  // Filters match on identity, not price; a page that gives us neither is of no use here.
+  if (!title && !productId && !variantId && !sku) return null
+  return { title, productId, variantId, sku, price: Math.max(0, Number(raw.price) || 0) }
+}
+
+function productAsLineItem(product: ProductInput): Pick<NormalizedLineItem, "title" | "sku" | "productId" | "variantId"> {
+  return { title: product.title, sku: product.sku, productId: product.productId, variantId: product.variantId }
+}
+
+/** A campaign the shopper could still enter right now: active, inside its window and under its cap. */
+function isOpenNow(campaign: MerchantCampaign, now: Date): boolean {
+  if (campaign.status !== "ACTIVE") return false
+  if (now < new Date(campaign.startDate) || now > new Date(campaign.endDate)) return false
+  if (campaign.maxEntries && (campaign.currentEntries ?? 0) >= campaign.maxEntries) return false
+  return true
 }
 
 function campaignView(campaign: MerchantCampaign, prize: { title: string; image: string | null } | null): StorefrontCampaign {
@@ -108,21 +145,33 @@ function describeGap(missingItems: number, missingAmount: number): string {
 }
 
 /**
- * The empty-cart answer. No ticket can be earned without items, so the state stays "pitch" and the
- * product page can advertise the offer with its full threshold as the gap. Campaigns limited to
- * particular products are skipped: from an empty cart nothing tells us this product qualifies.
+ * The nothing-in-the-cart answer. No ticket can be earned without items, so the state stays "pitch"
+ * and the product page advertises the offer with its full threshold as the gap. When the widget tells
+ * us which product is on screen, campaigns filtered to that product become advertisable too — that
+ * is exactly the case that used to show nothing on a product page.
  */
 function pitchStatus(
   base: StorefrontStatus,
   campaigns: MerchantCampaign[],
   prizeFor: (campaign: MerchantCampaign) => { title: string; image: string | null } | null,
+  product: ProductInput | null,
+  now: Date,
 ): StorefrontStatus {
-  const open = campaigns.filter((campaign) => cleanFilters(campaign.productFilters).length === 0)
+  const isFiltered = (campaign: MerchantCampaign) => cleanFilters(campaign.productFilters).length > 0
+  const accepts = (campaign: MerchantCampaign) =>
+    !isFiltered(campaign) || (product !== null && productMatchesFilters(productAsLineItem(product), campaign.productFilters))
+
+  const open = campaigns.filter((campaign) => isOpenNow(campaign, now) && accepts(campaign))
   if (open.length === 0) return base
+
   // The easiest offer wins: no threshold at all, then the smallest spend, then the fewest items.
   const rank = (campaign: MerchantCampaign) =>
     campaign.ruleType === "ALL_ORDERS" ? -1 : campaign.minAmount ?? campaign.minQuantity ?? 0
-  const easiest = [...open].sort((a, b) => rank(a) - rank(b))[0]
+  // …unless the shopper is standing on a product a filtered campaign names for itself: that campaign
+  // is the answer to the question they are actually asking, so it is shown even when it is stricter.
+  const specificity = (campaign: MerchantCampaign) => (product && isFiltered(campaign) ? 0 : 1)
+  const easiest = [...open].sort((a, b) => specificity(a) - specificity(b) || rank(a) - rank(b))[0]
+
   const needsQty = easiest.ruleType === "MIN_QUANTITY" || easiest.ruleType === "MIN_QUANTITY_AND_AMOUNT"
   const needsAmt = easiest.ruleType === "MIN_AMOUNT" || easiest.ruleType === "MIN_QUANTITY_AND_AMOUNT"
   return {
@@ -139,7 +188,11 @@ function pitchStatus(
  * cart is (or is closest to) qualifying for. The order is evaluated with fulfilment bypassed
  * because the order does not exist yet.
  */
-export async function getStorefrontStatus(storeId: string, cart: CartInput): Promise<StorefrontStatus | null> {
+export async function getStorefrontStatus(
+  storeId: string,
+  cart: CartInput,
+  product: ProductInput | null = null,
+): Promise<StorefrontStatus | null> {
   const store = await getStoreById(storeId)
   if (!store || store.status !== "ACTIVE") return null
 
@@ -153,6 +206,7 @@ export async function getStorefrontStatus(storeId: string, cart: CartInput): Pro
     const prize = campaign.raffleId ? prizeMap.get(campaign.raffleId) : null
     return prize ? { title: prize.title, image: prize.image } : null
   }
+  const now = new Date()
 
   const base: StorefrontStatus = {
     store: { name: store.name },
@@ -169,9 +223,8 @@ export async function getStorefrontStatus(storeId: string, cart: CartInput): Pro
   if (campaigns.length === 0) return base
   // An empty cart cannot earn anything — not even on an "every order" campaign — but there is
   // still an offer to advertise on the product page the shopper is reading.
-  if (cart.itemCount === 0 || cart.items.length === 0) return pitchStatus(base, campaigns, prizeFor)
+  if (cart.itemCount === 0 || cart.items.length === 0) return pitchStatus(base, campaigns, prizeFor, product, now)
 
-  const now = new Date()
   const asOrder: NormalizedOrder = {
     orderId: "cart",
     customerName: "Cart",
@@ -233,6 +286,12 @@ export async function getStorefrontStatus(storeId: string, cart: CartInput): Pro
       reason: describeGap(missingItems, missingAmount),
       progress: progressPercent(campaign, evaluation),
     }
+  }
+  // Nothing in the cart moves the shopper closer, but the product they are reading does: keep the
+  // rule on screen instead of going quiet, otherwise a product page shows an empty gap.
+  if (product) {
+    const pitched = pitchStatus(base, campaigns, prizeFor, product, now)
+    if (pitched.state === "pitch") return pitched
   }
   if (blocked) {
     return {

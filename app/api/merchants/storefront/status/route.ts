@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getStorefrontStatus, parseCartInput } from "@/lib/merchants/services/storefront"
+import { getStorefrontStatus, parseCartInput, parseProductInput } from "@/lib/merchants/services/storefront"
 
 export const dynamic = "force-dynamic"
 
@@ -17,10 +17,13 @@ export async function OPTIONS() {
 
 /**
  * POST /api/merchants/storefront/status
- * Body: { storeId, amount, items: [{ title, sku, productId, variantId, quantity, unitPrice }] }
+ * Body: { storeId, amount, items: [{ title, sku, productId, variantId, quantity, unitPrice }],
+ *         product?: { title, sku, productId, variantId, price } }
  *
  * Returns whether the live cart qualifies for a free draw entry, and how far it is from the
- * threshold. The authoritative check still runs on the order webhook.
+ * threshold. `product` is what the widget read off a product page: it lets a campaign that is
+ * filtered to specific products advertise its rule there instead of staying silent.
+ * The authoritative check still runs on the order webhook.
  */
 export async function POST(req: Request) {
   try {
@@ -29,7 +32,7 @@ export async function POST(req: Request) {
     if (!storeId) {
       return NextResponse.json({ success: false, error: "storeId is required" }, { status: 400, headers: CORS })
     }
-    const status = await getStorefrontStatus(storeId, parseCartInput(body))
+    const status = await getStorefrontStatus(storeId, parseCartInput(body), parseProductInput(body))
     if (!status) {
       return NextResponse.json({ success: false, error: "Store not available" }, { status: 404, headers: CORS })
     }
