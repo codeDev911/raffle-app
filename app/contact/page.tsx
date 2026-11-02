@@ -2,6 +2,7 @@ import Link from "next/link"
 import {
   ArrowRight,
   BadgeCheck,
+  BookOpen,
   Check,
   Clock,
   Headphones,
@@ -27,6 +28,8 @@ import {
   SHELL,
   StatTile,
 } from "@/components/marketing/kit"
+import { LiveChatLink } from "@/components/marketing/live-chat"
+import { KNOWLEDGE_BASE_URL, LIVE_CHAT_URL } from "@/lib/support-links"
 
 export const metadata = {
   title: "Contact PakRaffle — 24/7 Support on WhatsApp, Email & Phone",
@@ -64,6 +67,22 @@ const WHATSAPP_URL =
   "https://wa.me/923377155722?text=Hello%20PakRaffle%20Support%2C%20I%20need%20assistance"
 
 const ROUTES = [
+  {
+    icon: MessageSquare,
+    label: "Live chat",
+    value: "Replies in ~15 min",
+    hint: "Opens a panel on this page — no app, no queue number",
+    href: LIVE_CHAT_URL,
+    external: true,
+  },
+  {
+    icon: BookOpen,
+    label: "Help articles",
+    value: "35 answers, always open",
+    hint: "The searchable library, no account needed",
+    href: KNOWLEDGE_BASE_URL,
+    external: true,
+  },
   {
     icon: MessageSquare,
     label: "WhatsApp live",
@@ -196,9 +215,15 @@ export default function ContactPage() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Cta href={WHATSAPP_URL} arrow className="w-full sm:w-auto">
+              <LiveChatLink
+                label="Chat with an agent"
+                prefill="Hi PakRaffle support, "
+                arrow
+                className="w-full sm:w-auto"
+              />
+              <Cta href={WHATSAPP_URL} variant="ghost" className="w-full sm:w-auto">
                 <MessageSquare className="h-4 w-4" />
-                Chat on WhatsApp
+                WhatsApp
               </Cta>
               <Cta href="mailto:support@pakraffle.com" variant="ghost" className="w-full sm:w-auto">
                 <Mail className="h-4 w-4" />
@@ -217,7 +242,7 @@ export default function ContactPage() {
           </div>
 
           {/* Every channel side by side — pick whichever answers fastest. */}
-          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {ROUTES.map((route) => {
               const body = (
                 <>

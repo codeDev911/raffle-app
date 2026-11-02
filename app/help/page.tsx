@@ -1,6 +1,7 @@
 import Link from "next/link"
 import {
   ArrowRight,
+  BookOpen,
   Check,
   Clock,
   CreditCard,
@@ -9,6 +10,7 @@ import {
   Lock,
   Mail,
   MessageCircle,
+  MessagesSquare,
   RotateCcw,
   Search,
   ShieldCheck,
@@ -37,6 +39,8 @@ import {
   StatTile,
   TicketCard,
 } from "@/components/marketing/kit"
+import { KnowledgeBaseLink, LiveChatLink } from "@/components/marketing/live-chat"
+import { KNOWLEDGE_BASE_URL, LIVE_CHAT_URL } from "@/lib/support-links"
 
 export const metadata = {
   title: "Help Centre & FAQs — How PakRaffle Draws Work",
@@ -310,6 +314,20 @@ const QUICK_LINKS = [
 
 const CHANNELS = [
   {
+    icon: MessagesSquare,
+    label: "Live chat",
+    value: "Opens on this page",
+    href: LIVE_CHAT_URL,
+    hint: "The bubble in the corner, or click for the full panel",
+  },
+  {
+    icon: BookOpen,
+    label: "Help articles",
+    value: "Always open",
+    href: KNOWLEDGE_BASE_URL,
+    hint: "Every answer on this page, searchable without an account",
+  },
+  {
     icon: MessageCircle,
     label: "WhatsApp live",
     value: "Under 15 min",
@@ -420,13 +438,16 @@ export default function HelpPage() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Cta href={WHATSAPP_URL} arrow className="w-full sm:w-auto">
+              <LiveChatLink
+                label="Chat with support"
+                prefill="Hi PakRaffle support, I need help with a draw: "
+                arrow
+                className="w-full sm:w-auto"
+              />
+              <KnowledgeBaseLink label="Help articles" className="w-full sm:w-auto" />
+              <Cta href={WHATSAPP_URL} variant="ghost" className="w-full sm:w-auto">
                 <MessageCircle className="h-4 w-4" />
                 Ask on WhatsApp
-              </Cta>
-              <Cta href="/contact" variant="ghost" className="w-full sm:w-auto">
-                <LifeBuoy className="h-4 w-4" />
-                Open the support desk
               </Cta>
             </div>
 
@@ -626,11 +647,12 @@ export default function HelpPage() {
             <div>
               <Kicker>Still unresolved</Kicker>
               <h2 className="mt-3 font-display text-[1.8rem] font-semibold leading-[1.05] tracking-tight text-slate-900 sm:text-[2.4rem]">
-                Four ways to reach a human.
+                Six ways to get an answer.
               </h2>
               <p className="mt-3 max-w-xl text-[14px] leading-relaxed text-slate-600">
-                No ticket queues, no chatbots pretending to be an agent. Pick whichever channel suits the question —
-                everything except the email desk is answered the same day.
+                The live chat panel and the article library resolve most of it on the spot; everything else goes to a
+                named desk. No ticket queues, no bot pretending to be an agent — and except for the email desk, all of
+                it is answered the same day.
               </p>
 
               <div className="mt-7 grid gap-3 sm:grid-cols-2">

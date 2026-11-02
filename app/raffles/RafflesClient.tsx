@@ -3,11 +3,31 @@
 import React, { useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, Gift, Search, ShieldCheck, Sparkles, Star, Trophy, X } from "lucide-react"
+import {
+  ArrowRight,
+  Banknote,
+  Bike,
+  CircleDollarSign,
+  Gamepad2,
+  Gem,
+  Gift,
+  Laptop,
+  Search,
+  ShieldCheck,
+  Smartphone,
+  Sparkles,
+  Star,
+  Tag,
+  Ticket,
+  Trophy,
+  X,
+} from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import {
   CONTAINER,
   Cta,
+  IconTile,
   INK_PANEL,
   Kicker,
   LiveDot,
@@ -77,6 +97,28 @@ function soldPercent(raffle: RaffleItem) {
   return Math.min(100, Math.round(((raffle.currentEntries || 0) / raffle.totalEntries) * 100))
 }
 
+// Categories arrive from the database as free text, so the glyph is resolved by keyword
+// instead of an enum. Order matters: the specific shapes are tested before the broad ones.
+const CATEGORY_ICON_RULES: { test: RegExp; icon: LucideIcon }[] = [
+  { test: /bike|motorcycle|scooter|rickshaw|vehicle|honda|yamaha/i, icon: Bike },
+  { test: /game|console|playstation|ps5|ps4|xbox|nintendo/i, icon: Gamepad2 },
+  { test: /cash|currency|money|rupee|pkr/i, icon: Banknote },
+  { test: /gold|watch|jewel|diamond|ring|bracelet/i, icon: Gem },
+  { test: /laptop|macbook|computer|dell|hp/i, icon: Laptop },
+  { test: /phone|iphone|tablet|ipad|mobile|electro|tv|camera|audio|speaker|appliance/i, icon: Smartphone },
+]
+
+function categoryIcon(category: string): LucideIcon {
+  return CATEGORY_ICON_RULES.find((rule) => rule.test.test(category))?.icon ?? Gift
+}
+
+const TILE_SHELL = (active: boolean) =>
+  `flex shrink-0 items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left backdrop-blur transition ${
+    active
+      ? "border-emerald-600/40 bg-white shadow-[0_18px_40px_-30px_rgba(4,47,34,0.55)]"
+      : "border-slate-900/[0.07] bg-white/70 hover:border-emerald-500/25 hover:bg-white"
+  }`
+
 export function RafflesClient({ initialRaffles, categories }: RafflesClientProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
@@ -144,6 +186,27 @@ export function RafflesClient({ initialRaffles, categories }: RafflesClientProps
     setSortBy("popular")
   }
 
+  // Icon-first prize navigation for the hero. Tiles are built from the categories that
+  // actually have draws, so an empty category never shows up as a dead end.
+  const categoryTiles = categories
+    .map((cat) => {
+      const inCategory = initialRaffles.filter((r) => r.category?.toLowerCase() === cat.toLowerCase())
+      return {
+        name: cat,
+        icon: categoryIcon(cat),
+        live: inCategory.filter((r) => r.status === "ACTIVE").length,
+        total: inCategory.length,
+      }
+    })
+    .filter((tile) => tile.total > 0)
+    .sort((a, b) => b.live - a.live || b.total - a.total)
+    .slice(0, 6)
+
+  const jumpToCategory = (category: string) => {
+    setSelectedCategory(category)
+    document.getElementById("browse")?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
   return (
     <div className={SHELL}>
       {/* ------------------------------------------------------------------ Hero */}
@@ -194,6 +257,43 @@ export function RafflesClient({ initialRaffles, categories }: RafflesClientProps
             </div>
           </div>
 
+          {/* Prize types, icon-first — the fastest route onto the board. */}
+          {categoryTiles.length > 1 && (
+            <div className="mt-10">
+              <p className="text-center font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">
+                Browse by prize type
+              </p>
+              <div className="no-scrollbar mt-3.5 flex gap-2.5 overflow-x-auto px-1 pb-1.5 sm:flex-wrap sm:justify-center sm:overflow-visible">
+                <button onClick={() => jumpToCategory("all")} className={TILE_SHELL(selectedCategory === "all")}>
+                  <IconTile icon={Sparkles} tone={selectedCategory === "all" ? "emerald" : "slate"} size="sm" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-[12.5px] font-semibold text-slate-900">All draws</span>
+                    <span className="block font-mono text-[9.5px] uppercase tracking-[0.12em] text-slate-400">
+                      {initialRaffles.length} listed
+                    </span>
+                  </span>
+                </button>
+                {categoryTiles.map((tile) => {
+                  const slug = tile.name.toLowerCase()
+                  const active = selectedCategory === slug
+                  return (
+                    <button key={tile.name} onClick={() => jumpToCategory(slug)} className={TILE_SHELL(active)}>
+                      <IconTile icon={tile.icon} tone={active ? "emerald" : "slate"} size="sm" />
+                      <span className="min-w-0">
+                        <span className="block max-w-[10rem] truncate text-[12.5px] font-semibold text-slate-900">
+                          {tile.name}
+                        </span>
+                        <span className="block font-mono text-[9.5px] uppercase tracking-[0.12em] text-slate-400">
+                          {tile.live} live · {tile.total} total
+                        </span>
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {/* The board itself, right in the hero — three live stubs instead of a side card. */}
           <div className="mt-10 rounded-[28px] border border-slate-900/10 bg-white/55 p-3 backdrop-blur">
             <div className="flex items-center justify-between gap-3 px-1.5 pb-2.5">
@@ -207,6 +307,7 @@ export function RafflesClient({ initialRaffles, categories }: RafflesClientProps
               <div className="flex flex-col gap-2.5 sm:flex-row">
                 {activeRaffles.slice(0, 3).map((raffle) => {
                   const percent = soldPercent(raffle)
+                  const StubIcon = categoryIcon(raffle.category)
 
                   return (
                     <Link
@@ -214,14 +315,19 @@ export function RafflesClient({ initialRaffles, categories }: RafflesClientProps
                       href={`/raffles/${raffle.id}`}
                       className="group flex flex-1 items-center gap-3 rounded-2xl border border-slate-900/5 bg-white px-3 py-2.5 transition hover:border-emerald-500/30"
                     >
-                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-                        <Image
-                          src={raffle.image || "/placeholder.jpg"}
-                          alt=""
-                          fill
-                          sizes="56px"
-                          className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                        />
+                      <div className="relative shrink-0">
+                        <div className="h-14 w-14 overflow-hidden rounded-xl bg-slate-100">
+                          <Image
+                            src={raffle.image || "/placeholder.jpg"}
+                            alt=""
+                            fill
+                            sizes="56px"
+                            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                          />
+                        </div>
+                        <span className="absolute -bottom-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-lg border border-slate-900/10 bg-white text-emerald-700 shadow-sm">
+                          <StubIcon className="h-3 w-3" strokeWidth={2} />
+                        </span>
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-2">
@@ -254,13 +360,16 @@ export function RafflesClient({ initialRaffles, categories }: RafflesClientProps
           {/* Market ribbon */}
           <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-900/10 bg-slate-900/10 sm:grid-cols-4">
             {[
-              { label: "Live draws", value: String(activeCount), accent: false },
-              { label: "Tickets issued", value: ticketsSold.toLocaleString("en-PK"), accent: false },
-              { label: "Prize value", value: prizeValue ? formatCurrency(prizeValue) : "—", accent: false },
-              { label: "Entry from", value: entryFloor ? formatCurrency(entryFloor) : "—", accent: true },
+              { icon: Trophy, label: "Live draws", value: String(activeCount), accent: false },
+              { icon: Ticket, label: "Tickets issued", value: ticketsSold.toLocaleString("en-PK"), accent: false },
+              { icon: CircleDollarSign, label: "Prize value", value: prizeValue ? formatCurrency(prizeValue) : "—", accent: false },
+              { icon: Tag, label: "Entry from", value: entryFloor ? formatCurrency(entryFloor) : "—", accent: true },
             ].map((cell) => (
               <div key={cell.label} className="bg-white/80 px-4 py-3">
-                <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">{cell.label}</dt>
+                <dt className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  <cell.icon className="h-3 w-3" strokeWidth={2.2} />
+                  {cell.label}
+                </dt>
                 <dd
                   className={`mt-1 font-mono text-[13px] font-semibold tabular-nums ${
                     cell.accent ? "text-emerald-700" : "text-slate-900"
@@ -280,7 +389,7 @@ export function RafflesClient({ initialRaffles, categories }: RafflesClientProps
       </div>
 
       {/* --------------------------------------------------------- Browse & filter */}
-      <div className={`${CONTAINER} py-10 sm:py-12`}>
+      <div id="browse" className={`${CONTAINER} py-10 sm:py-12`}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <Kicker>Browse the board</Kicker>

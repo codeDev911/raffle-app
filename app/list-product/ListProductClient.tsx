@@ -7,8 +7,11 @@ import {
   ArrowRight,
   ArrowUpRight,
   Bike,
+  Boxes,
   Building,
+  BadgePercent,
   Calculator,
+  Camera,
   Check,
   CheckCircle2,
   Clock,
@@ -20,10 +23,13 @@ import {
   Layers,
   Lock,
   MessageCircle,
+  ScanLine,
   ShieldCheck,
   Smartphone,
   Sparkles,
   Tag,
+  Ticket,
+  Trophy,
   Upload,
   Wallet,
 } from "lucide-react"
@@ -31,6 +37,7 @@ import {
   CONTAINER,
   Cta,
   FaqList,
+  FlowRail,
   GhostNumeral,
   Kicker,
   LiveDot,
@@ -413,11 +420,19 @@ export default function ListProductPage() {
                 </div>
 
                 {[
-                  { label: "Sold as", value: `${num(cTickets)} tickets`, hint: `${pkr(cPrice)} each` },
-                  { label: "Gross collected", value: pkr(calcActualGross), hint: `fee ${pkr(calcPlatformFee)}` },
+                  { icon: Ticket, label: "Sold as", value: `${num(cTickets)} tickets`, hint: `${pkr(cPrice)} each` },
+                  {
+                    icon: BadgePercent,
+                    label: "Gross collected",
+                    value: pkr(calcActualGross),
+                    hint: `fee ${pkr(calcPlatformFee)}`,
+                  },
                 ].map((cell) => (
                   <div key={cell.label} className="flex flex-col justify-center bg-white px-4 py-4 sm:px-6">
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400">{cell.label}</p>
+                    <p className="inline-flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                      <cell.icon className="h-3 w-3 text-amber-600" strokeWidth={2.2} />
+                      {cell.label}
+                    </p>
                     <p className="mt-0.5 font-mono text-[13.5px] font-semibold tabular-nums text-slate-900">
                       {cell.value}
                     </p>
@@ -426,7 +441,10 @@ export default function ListProductPage() {
                 ))}
 
                 <div className="flex flex-col justify-center bg-emerald-600 px-4 py-4 text-white sm:px-6">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-emerald-100/80">You keep</p>
+                  <p className="inline-flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-emerald-100/80">
+                    <Wallet className="h-3 w-3" strokeWidth={2.2} />
+                    You keep
+                  </p>
                   <p className="mt-0.5 font-mono text-[15px] font-semibold tabular-nums">{pkr(calcSellerPayout)}</p>
                   <p className="font-mono text-[10.5px] text-emerald-100/75">wired on draw completion</p>
                 </div>
@@ -444,11 +462,51 @@ export default function ListProductPage() {
             </div>
           </div>
 
+          {/* The custody chain the item walks while the seller waits. */}
+          <div className="mt-9">
+            <div className="flex items-center gap-3 px-1">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-amber-900/60">
+                From your door to the draw
+              </p>
+              <span className="h-px flex-1 bg-amber-900/10" />
+            </div>
+            <FlowRail
+              className="mt-3"
+              tone="amber"
+              cols="5"
+              steps={[
+                { icon: Camera, label: "You send photos", caption: "Box, serial, invoice — 5 minutes" },
+                { icon: ScanLine, label: "We verify it", caption: "Authenticity + condition report" },
+                { icon: Boxes, label: "Insured custody", caption: "Collected and stored by us" },
+                { icon: Ticket, label: "Tickets sell", caption: "To our audience, not your contacts" },
+                { icon: Trophy, label: "Draw, then payout", caption: "Live stream, then your transfer" },
+              ]}
+            />
+          </div>
+
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <StatTile label="Platform fee" value="8%" hint="Flat, from gross" accent />
             <StatTile label="Upfront cost" value="Rs 0" hint="Pay when sold" />
             <StatTile label="Identity" value="CNIC" hint="NADRA verified" />
             <StatTile label="Payout" value="Instant" hint="Bank · Raast" />
+          </div>
+
+          {/* What qualifies — the asset icons a seller recognises in one glance. */}
+          <div className="mt-7">
+            <p className="px-1 font-mono text-[10px] uppercase tracking-[0.22em] text-amber-900/60">What qualifies</p>
+            <div className="no-scrollbar mt-2.5 flex gap-2.5 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible">
+              {PRODUCT_CATEGORIES.map((category) => (
+                <span
+                  key={category.id}
+                  className="inline-flex shrink-0 items-center gap-2 rounded-full border border-amber-900/10 bg-white/85 py-1.5 pl-1.5 pr-3.5 text-[12px] font-medium text-slate-700 backdrop-blur transition hover:border-amber-500/30"
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-500/10 text-amber-700">
+                    <category.icon className="h-3.5 w-3.5" strokeWidth={1.9} />
+                  </span>
+                  {category.name.split(" (")[0]}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 

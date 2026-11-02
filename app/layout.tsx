@@ -20,37 +20,16 @@ const Scripts = () => {
   return (
     <Script id="chatbase-loader" strategy="afterInteractive">
   {`
-    (function(){
-    window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-EX44PLKN82');
-      if(!window.chatbase || window.chatbase("getState") !== "initialized"){
-        window.chatbase = (...arguments) => {
-          if(!window.chatbase.q){ window.chatbase.q = [] }
-          window.chatbase.q.push(arguments)
-        };
-        window.chatbase = new Proxy(window.chatbase, {
-          get(target, prop){
-            if(prop === "q"){ return target.q }
-            return (...args) => target(prop, ...args)
-          }
-        })
-      }
-      const onLoad = function(){
-        const script = document.createElement("script");
-        script.src = "https://www.chatbase.co/embed.min.js";
-        script.id = "_H-nlMU3DumW5G2WeDwSg";
-        script.domain = "www.chatbase.co";
-        document.body.appendChild(script);
-      };
-      if(document.readyState === "complete"){
-        onLoad()
-      } else {
-        window.addEventListener("load", onLoad)
-      }
-    })();
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6ae85667fceb143c3f37e8c6/1k6dp31gm';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+      
   `}
 </Script>
 

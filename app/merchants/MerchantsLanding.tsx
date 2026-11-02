@@ -34,6 +34,7 @@ import {
   CONTAINER,
   Cta,
   FaqList,
+  IconTile,
   INK_PANEL,
   Kicker,
   LiveDot,
@@ -50,16 +51,41 @@ import { Counter, Reveal } from "@/components/marketing/motion"
 const pkr = (value: number) => `Rs ${Math.round(value).toLocaleString("en-PK")}`
 const num = (value: number) => Math.round(value).toLocaleString("en-PK")
 
+// One lap of the order path. The hero draws it as a ring on desktop and as the same six
+// steps in a list on phones, so the copy lives in one place and cannot drift.
+const ORDER_LOOP = [
+  { icon: ShoppingCart, label: "Order placed", hint: "Shopify checkout" },
+  { icon: Webhook, label: "Webhook verified", hint: "HMAC-SHA256" },
+  { icon: SlidersHorizontal, label: "Rule matched", hint: "3+ items · Rs 5,000" },
+  { icon: Ticket, label: "Ticket minted", hint: "Seconds, not days" },
+  { icon: Receipt, label: "Invoice settled", hint: "Raast · IBFT" },
+  { icon: Trophy, label: "Draw ran live", hint: "Public + audited" },
+]
+
+// Real brand marks, kept as static assets so nothing hotlinks a CDN. Shown to identify the
+// platforms PakRaffle connects with — the logos belong to their owners.
+const STACK = [
+  { name: "Shopify", logo: "/assets/shopify.svg", size: "h-6 w-6" },
+  { name: "Raast", logo: "/assets/raast.svg", size: "h-7 w-auto object-contain" },
+  { name: "1Link", logo: "/assets/1link-logo.svg", size: "h-7 w-auto object-contain" },
+  { name: "Sadapay", logo: "/assets/sadapay.svg", size: "h-6 w-auto object-contain" },
+  { name: "NayaPay", logo: "/assets/nayapay.svg", size: "h-7 w-auto object-contain" },
+  { name: "Easypaisa", logo: "/assets/easypaisa-logo.png", size: "h-7 w-auto object-contain" },
+  { name: "JazzCash", logo: "/assets/jazzcash-logo.png", size: "h-7 w-auto object-contain" },
+  { name: "Visa", logo: "/assets/visa.svg", size: "h-4 w-auto object-contain" },
+  { name: "Mastercard", logo: "/assets/mastercard.svg", size: "h-5 w-auto object-contain" },
+]
+
 const LIFECYCLE = [
   {
     icon: Store,
     title: "Connect store",
-    body: "Create your merchant account and paste our webhook URL plus the storefront widget tag into your Shopify admin â€” two minutes, one time.",
+    body: "Create your merchant account and paste our webhook URL plus the storefront widget tag into your Shopify admin — two minutes, one time.",
   },
   {
     icon: Sparkles,
     title: "Launch campaign",
-    body: "Link a live PakRaffle prize and set the rule â€” e.g. buy 3+ items or spend Rs. 5,000+.",
+    body: "Link a live PakRaffle prize and set the rule — e.g. buy 3+ items or spend Rs. 5,000+.",
   },
   {
     icon: PackageCheck,
@@ -87,7 +113,7 @@ const FEATURES = [
   {
     icon: ShoppingCart,
     title: "Cart widget, before checkout",
-    body: "Shoppers see the unlocked prize while they can still add another item â€” that timing is the whole point.",
+    body: "Shoppers see the unlocked prize while they can still add another item — that timing is the whole point.",
   },
   {
     icon: Zap,
@@ -102,7 +128,7 @@ const FEATURES = [
   {
     icon: RefreshCcw,
     title: "Cancel-safe billing",
-    body: "Shopify cancellation and refund webhooks void the ticket automatically â€” and a voided ticket never hits your invoice.",
+    body: "Shopify cancellation and refund webhooks void the ticket automatically — and a voided ticket never hits your invoice.",
   },
   {
     icon: Receipt,
@@ -112,7 +138,7 @@ const FEATURES = [
   {
     icon: LayoutDashboard,
     title: "One dashboard",
-    body: "Entries, invoices, payments and campaign health in a fast light console â€” no spreadsheets, no WhatsApp reconciliation.",
+    body: "Entries, invoices, payments and campaign health in a fast light console — no spreadsheets, no WhatsApp reconciliation.",
   },
 ]
 
@@ -147,11 +173,11 @@ const FAQ = [
   },
   {
     q: "What happens if an order is cancelled or refunded?",
-    a: "We register the order cancellation and refund webhooks when you connect Shopify, so the ticket is voided automatically â€” as long as the batch has not been paid yet. Voided tickets are removed from your invoice.",
+    a: "We register the order cancellation and refund webhooks when you connect Shopify, so the ticket is voided automatically — as long as the batch has not been paid yet. Voided tickets are removed from your invoice.",
   },
   {
     q: "Can I get a ticket refunded?",
-    a: "Yes, up to the moment the draw runs. The refund is the ticket price minus the card and wallet charge we already paid on it â€” 2.9% plus Rs. 30 per ticket. A refunded ticket is voided and its entry is withdrawn from the draw.",
+    a: "Yes, up to the moment the draw runs. The refund is the ticket price minus the card and wallet charge we already paid on it — 2.9% plus Rs. 30 per ticket. A refunded ticket is voided and its entry is withdrawn from the draw.",
   },
   {
     q: "Can one order earn multiple tickets?",
@@ -159,7 +185,7 @@ const FAQ = [
   },
   {
     q: "Who supplies the prize?",
-    a: "PakRaffle does. You link one of our live prizes to your campaign â€” we handle sourcing, the draw and delivery to the winner.",
+    a: "PakRaffle does. You link one of our live prizes to your campaign — we handle sourcing, the draw and delivery to the winner.",
   },
   {
     q: "How do customers check their ticket?",
@@ -178,7 +204,7 @@ const INCLUDED = [
 
 export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
   // Spend-rule builder. The model is deliberately small: one rule, one ticket per qualifying
-  // order, and a discount comparison â€” enough to argue the case without pretending to predict.
+  // order, and a discount comparison — enough to argue the case without pretending to predict.
   const [monthlyOrders, setMonthlyOrders] = useState(400)
   const [aov, setAov] = useState(4500)
   const [threshold, setThreshold] = useState(5000)
@@ -200,34 +226,27 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
       {/* ---------------------------------------------------------------- Hero */}
       <section className="relative overflow-hidden border-b border-slate-900/5">
         <Mesh tone="sky" />
-        <div
-          className={`${CONTAINER} relative pb-14 pt-24 sm:pt-24 lg:grid lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-14 lg:pb-24 lg:pt-28`}
-        >
-          <div>
-            <div className="flex flex-wrap items-center gap-2.5">
-              <Pill className="border-sky-600/20 bg-sky-600/10 text-sky-800">
-                <LiveDot />
-                Merchant Connect Â· Shopify
-              </Pill>
-              <Pill className="hidden sm:inline-flex">
-                <Webhook className="h-3 w-3 text-emerald-600" />
-                Zero-code install
-              </Pill>
-            </div>
+        <div className={`${CONTAINER} relative pb-16 pt-24 sm:pt-28 lg:pb-24`}>
+          <div className="mx-auto max-w-2xl text-center">
+            <Pill className="border-sky-600/20 bg-sky-600/10 text-sky-800">
+              <LiveDot />
+              Merchant Connect · Shopify
+            </Pill>
 
-            <h1 className="mt-6 font-display text-[2.7rem] font-semibold leading-[0.96] tracking-[-0.035em] text-slate-900 sm:text-[3.6rem] lg:text-[4.05rem]">
+            <h1 className="mt-6 font-display text-[2.6rem] font-semibold leading-[0.96] tracking-[-0.035em] text-slate-900 sm:text-[3.4rem] lg:text-[3.85rem]">
               Make the basket
               <span className="block bg-gradient-to-r from-sky-600 via-emerald-600 to-teal-500 bg-clip-text text-transparent">
                 worth one more item.
               </span>
             </h1>
 
-            <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-slate-600 sm:text-lg">
-              Replace margin-eating discounts with a reason to add something else. Set a spend rule once â€” every
-              qualifying Shopify order automatically mints a ticket into a real, fully funded PakRaffle draw.
+            <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-slate-600 sm:text-lg">
+              Replace margin-eating discounts with a reason to add one more item. You set the rule once; every
+              qualifying Shopify order mints a ticket into a real, fully funded PakRaffle draw — we source the prize,
+              run the audited live draw and deliver it.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Cta href="/auth/merchant/register" arrow className="w-full sm:w-auto">
                 <UserPlus className="h-4 w-4" /> Create merchant account
               </Cta>
@@ -236,107 +255,149 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
               </Cta>
             </div>
 
-            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-slate-500">
-              {["Free to connect", "No monthly fee", "Pay only per qualifying order"].map((chip) => (
-                <span key={chip} className="inline-flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-600" strokeWidth={3} />
-                  {chip}
-                </span>
+            {/* The three numbers a merchant actually decides on. One hairline row, no boxes. */}
+            <dl className="mt-9 flex flex-wrap items-end justify-center gap-x-10 gap-y-5 border-t border-slate-900/10 pt-6">
+              {[
+                { icon: Ticket, term: "Per ticket", value: pkr(entryFee), note: "only on fulfilled orders" },
+                { icon: Zap, term: "To start", value: "Rs 0", note: "no setup, no monthly fee" },
+                { icon: PackageCheck, term: "Per order", value: "1 ticket", note: "duplicates ignored" },
+              ].map((fact) => (
+                <div key={fact.term} className="text-center">
+                  <dt className="inline-flex items-center gap-1.5 font-mono text-[9.5px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    <fact.icon className="h-3 w-3 text-sky-600" strokeWidth={2.2} />
+                    {fact.term}
+                  </dt>
+                  <dd className="mt-1.5 font-mono text-[1.55rem] font-semibold leading-none tabular-nums text-slate-900">
+                    {fact.value}
+                  </dd>
+                  <dd className="mt-1.5 text-[11.5px] text-slate-500">{fact.note}</dd>
+                </div>
               ))}
-            </div>
-
-            <div className="mt-8 flex flex-wrap items-end gap-x-8 gap-y-4 border-t border-slate-900/10 pt-6">
-              <div>
-                <p className="font-mono text-2xl font-semibold tabular-nums text-slate-900">
-                  {pkr(entryFee)}
-                  <span className="ml-1 font-sans text-xs font-medium text-slate-500">/ ticket</span>
-                </p>
-                <p className="mt-0.5 text-[11px] uppercase tracking-[0.14em] text-slate-500">From rate</p>
-              </div>
-              <div className="hidden h-9 w-px bg-slate-200 sm:block" />
-              <div>
-                <p className="font-mono text-2xl font-semibold tabular-nums text-slate-900">Rs 0</p>
-                <p className="mt-0.5 text-[11px] uppercase tracking-[0.14em] text-slate-500">Setup &amp; monthly</p>
-              </div>
-              <div className="hidden h-9 w-px bg-slate-200 sm:block" />
-              <div>
-                <p className="font-mono text-2xl font-semibold tabular-nums text-emerald-700">1</p>
-                <p className="mt-0.5 text-[11px] uppercase tracking-[0.14em] text-slate-500">Ticket per order</p>
-              </div>
-            </div>
+            </dl>
           </div>
 
-          {/* Storefront composition: the cart widget is the product, so it leads the visual. */}
-          <div className="relative mt-12 lg:mt-0">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-8 -z-10 rounded-[48px] bg-gradient-to-br from-sky-200/50 via-white/0 to-emerald-100/60 blur-2xl"
-            />
-            <div className="relative">
-              <div className="overflow-hidden rounded-[26px] border border-slate-900/10 bg-white shadow-[0_40px_100px_-60px_rgba(4,47,34,0.7)]">
-                <div className="flex items-center gap-2 border-b border-slate-900/5 bg-slate-50/80 px-4 py-2.5">
-                  <span className="h-2 w-2 rounded-full bg-rose-400" />
-                  <span className="h-2 w-2 rounded-full bg-amber-400" />
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  <span className="ml-2 truncate font-mono text-[10px] text-slate-400">
-                    khanstore.myshopify.com/cart
-                  </span>
-                  <span className="ml-auto rounded-full bg-emerald-600/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-emerald-700">
-                    Widget live
-                  </span>
-                </div>
+          {/* ---------------------------------------------------- Order path loop
+              The loop is the product, so it owns the centre of the hero: one Shopify order
+              travelling six nodes and coming back as a live draw. Below lg a circle turns
+              into a slideshow, so the same six steps render as a list. */}
+          <div className="mt-14 lg:mt-16">
+            <p className="text-center font-mono text-[10px] uppercase tracking-[0.24em] text-slate-400">
+              The order path
+            </p>
+            <p className="mx-auto mt-2.5 max-w-md text-center text-[13px] leading-relaxed text-slate-500">
+              Six nodes, and no manual work in any of them. The winner we publish is what sends the next batch of
+              orders back into node one.
+            </p>
 
-                <div className="space-y-4 p-5">
-                  <div className="flex items-center gap-3 rounded-2xl border border-slate-900/5 bg-slate-50/60 p-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-slate-200 to-slate-100 text-slate-500">
-                      <ShoppingBag className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-semibold text-slate-900">Linen kurta Â· Medium</p>
-                      <p className="font-mono text-[11px] tabular-nums text-slate-500">Qty 2 Â· Rs 4,000</p>
-                    </div>
-                  </div>
+            <div className="relative mx-auto mt-10 hidden aspect-square w-full max-w-[640px] lg:block">
+              <span
+                aria-hidden
+                className="absolute inset-[8%] rounded-full border border-dashed border-sky-600/30"
+              />
+              <span
+                aria-hidden
+                className="absolute inset-[24%] rounded-full border border-slate-900/[0.06] bg-white/45 backdrop-blur-[2px]"
+              />
+              {/* One marker travelling the ring, so the direction is unmistakable. */}
+              <span aria-hidden className="absolute inset-[8%] animate-[spin_64s_linear_infinite]">
+                <span className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500 shadow-[0_0_0_5px_rgba(16,185,129,0.14)]" />
+              </span>
 
-                  <div className="rounded-2xl border border-emerald-600/20 bg-gradient-to-br from-emerald-50 to-white p-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-800">
-                        <Ticket className="h-3.5 w-3.5" /> Draw entry unlocked
-                      </span>
-                      <span className="rounded-full bg-emerald-600 px-2 py-0.5 font-mono text-[9px] font-bold text-white">
-                        1 TICKET
-                      </span>
-                    </div>
-                    <p className="mt-2 text-[13px] leading-snug text-slate-700">
-                      Add <span className="font-semibold text-emerald-800">Rs 1,000</span> more to enter the{" "}
-                      <span className="font-semibold">iPhone 16 Pro</span> draw.
+              {ORDER_LOOP.map((node, index) => {
+                const angle = (index / ORDER_LOOP.length) * 2 * Math.PI - Math.PI / 2
+                const left = 50 + 38 * Math.cos(angle)
+                const top = 50 + 38 * Math.sin(angle)
+                const last = index === ORDER_LOOP.length - 1
+
+                return (
+                  <div
+                    key={node.label}
+                    className="absolute w-[136px] -translate-x-1/2 -translate-y-1/2 text-center"
+                    style={{ left: `${left}%`, top: `${top}%` }}
+                  >
+                    <IconTile
+                      icon={node.icon}
+                      tone={last ? "emerald" : "sky"}
+                      size="md"
+                      className="mx-auto"
+                    />
+                    <p className="mt-2 text-[12px] font-semibold leading-tight text-slate-900">{node.label}</p>
+                    <p className="mt-1 font-mono text-[9px] uppercase leading-tight tracking-[0.1em] text-slate-400">
+                      {node.hint}
                     </p>
-                    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-emerald-600/10">
-                      <div className="h-full w-[80%] rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" />
-                    </div>
-                    <div className="mt-1.5 flex justify-between font-mono text-[10px] tabular-nums text-slate-500">
-                      <span>Rs 4,000</span>
-                      <span>Rs 5,000</span>
-                    </div>
                   </div>
+                )
+              })}
 
-                  <div className="flex items-center justify-between rounded-2xl border border-slate-900/5 px-4 py-3">
-                    <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Subtotal</span>
-                    <span className="font-mono text-sm font-semibold tabular-nums text-slate-900">Rs 4,000</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating proof card */}
-              <div className="absolute -bottom-8 -right-3 w-[210px] rotate-[-2deg] rounded-2xl border border-slate-900/10 bg-white p-3.5 shadow-[0_30px_60px_-30px_rgba(4,47,34,0.55)] sm:-right-6">
-                <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                  <ShieldCheck className="h-3 w-3 text-emerald-600" /> Webhook verified
-                </div>
-                <p className="mt-2 font-mono text-[13px] font-semibold tabular-nums text-slate-900">
+              {/* The hub is what one lap produces. */}
+              <div className="absolute left-1/2 top-1/2 w-[250px] -translate-x-1/2 -translate-y-1/2 rounded-[24px] border border-slate-900/10 bg-white p-4 text-center shadow-[0_36px_80px_-50px_rgba(4,47,34,0.75)]">
+                <p className="inline-flex items-center gap-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-700">
+                  <LiveDot /> Ticket minted
+                </p>
+                <p className="mt-2 font-mono text-[15px] font-semibold tabular-nums text-slate-900">
                   PKR-SHOPIFY-7Q4K
                 </p>
-                <p className="mt-1 text-[10px] leading-snug text-slate-500">Order #1042 Â· 4 items Â· Rs 6,800</p>
+                <p className="mt-1 text-[11px] text-slate-500">Order #1042 · 4 items · Rs 6,800</p>
+                <div className="mt-3 border-t border-dashed border-slate-900/10 pt-3 text-left">
+                  <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-400">
+                    Rule on this store
+                  </p>
+                  <p className="mt-1 flex items-center gap-2 text-[12px] font-semibold text-slate-800">
+                    <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-sky-600" />
+                    Buy 3+ items → 1 entry
+                  </p>
+                </div>
               </div>
             </div>
+
+            <ol className="mx-auto mt-9 grid max-w-3xl gap-2.5 sm:grid-cols-2 lg:hidden">
+              {ORDER_LOOP.map((node, index) => {
+                const last = index === ORDER_LOOP.length - 1
+                return (
+                  <li
+                    key={node.label}
+                    className="flex items-center gap-3 rounded-2xl border border-slate-900/[0.07] bg-white/80 px-3 py-2.5 backdrop-blur"
+                  >
+                    <IconTile icon={node.icon} tone={last ? "emerald" : "sky"} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12.5px] font-semibold text-slate-900">{node.label}</p>
+                      <p className="font-mono text-[9.5px] uppercase tracking-[0.1em] text-slate-400">{node.hint}</p>
+                    </div>
+                    <span className="font-mono text-[11px] tabular-nums text-slate-300">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                  </li>
+                )
+              })}
+            </ol>
+
+            <p className="mt-5 flex items-center justify-center gap-1.5 text-[11.5px] text-slate-500">
+              <RefreshCcw className="h-3.5 w-3.5 shrink-0 text-rose-500" strokeWidth={2.2} />
+              A cancellation or refund at any node voids the ticket, and a voided ticket never reaches your invoice.
+            </p>
+          </div>
+
+          {/* ------------------------------------------------------------ Real stack */}
+          <div className="mt-14 border-t border-slate-900/10 pt-8">
+            <p className="mx-auto max-w-2xl text-center text-[13px] leading-relaxed text-slate-600">
+              <span className="font-semibold text-slate-900">Your shoppers keep paying the way they always have.</span>{" "}
+              You settle your PakRaffle invoice by Raast, IBFT bank transfer or wallet — nothing about your checkout
+              changes.
+            </p>
+            <ul className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+              {STACK.map((brand) => (
+                <li
+                  key={brand.name}
+                  className={`${PANEL} flex h-14 w-[104px] items-center justify-center px-3`}
+                  title={brand.name}
+                >
+                  <img src={brand.logo} alt={brand.name} className={`${brand.size} max-w-[72px] object-contain`} />
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-center font-mono text-[9.5px] uppercase tracking-[0.16em] text-slate-400">
+              Logos belong to their owners · shown to identify the platforms we connect with
+            </p>
           </div>
         </div>
 
@@ -362,7 +423,7 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
               index="01"
               kicker="What you get"
               title="Not a coupon with a logo on it"
-              body="A draw engine wired into the orders you already fulfil â€” and a dashboard that tells you exactly what it cost."
+              body="A draw engine wired into the orders you already fulfil — and a dashboard that tells you exactly what it cost."
               action={
                 <Cta href="#rule-builder" variant="ghost" arrow>
                   Try the rule builder
@@ -387,6 +448,113 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
         </div>
       </section>
 
+      {/* --------------------------------------------------- Shopper-side preview */}
+      <section className="relative border-b border-slate-900/5 bg-white">
+        <div className={`${CONTAINER} py-16 md:py-24`}>
+          <div className="grid gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+            <Reveal>
+              <Kicker>Inside the storefront</Kicker>
+              <h2 className="mt-3 font-display text-[1.7rem] font-semibold leading-tight tracking-tight text-slate-900 sm:text-[2.05rem]">
+                Shoppers are told before they check out.
+              </h2>
+              <p className="mt-4 text-[15px] leading-relaxed text-slate-600">
+                That timing is the whole point. The note appears in the cart, beside the subtotal, while adding one
+                more item is still possible — and your checkout itself is untouched.
+              </p>
+              <ul className="mt-7 space-y-3.5">
+                {[
+                  {
+                    icon: ShoppingCart,
+                    text: "One tag in your theme renders it, in your store's colours, radius and font.",
+                  },
+                  {
+                    icon: SlidersHorizontal,
+                    text: "It states the rule in plain words: what is missing, and exactly what it unlocks.",
+                  },
+                  {
+                    icon: RefreshCcw,
+                    text: "It re-checks on every cart change, so it disappears the moment the basket stops qualifying.",
+                  },
+                ].map((row) => (
+                  <li key={row.text} className="flex items-start gap-3">
+                    <IconTile icon={row.icon} tone="sky" size="sm" />
+                    <span className="text-[13.5px] leading-relaxed text-slate-600">{row.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+
+            <Reveal delay={120}>
+              <div className="relative mx-auto w-full max-w-[420px]">
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -inset-6 -z-10 rounded-[40px] bg-gradient-to-br from-sky-200/45 via-white/0 to-emerald-100/55 blur-2xl"
+                />
+                <div className="overflow-hidden rounded-[24px] border border-slate-900/10 bg-white shadow-[0_36px_90px_-60px_rgba(4,47,34,0.7)]">
+                  <div className="flex items-center gap-2 border-b border-slate-900/5 bg-slate-50/80 px-4 py-2.5">
+                    <span className="h-2 w-2 rounded-full bg-rose-400" />
+                    <span className="h-2 w-2 rounded-full bg-amber-400" />
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                    <span className="ml-2 truncate font-mono text-[10px] text-slate-400">
+                      khanstore.myshopify.com/cart
+                    </span>
+                    <span className="ml-auto rounded-full bg-emerald-600/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-emerald-700">
+                      Widget live
+                    </span>
+                  </div>
+
+                  <div className="space-y-3.5 p-4">
+                    <div className="flex items-center gap-3 rounded-2xl border border-slate-900/5 bg-slate-50/60 p-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-slate-200 to-slate-100 text-slate-500">
+                        <ShoppingBag className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[12.5px] font-semibold text-slate-900">Linen kurta · Medium</p>
+                        <p className="font-mono text-[11px] tabular-nums text-slate-500">Qty 2 · Rs 4,000</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-emerald-600/20 bg-gradient-to-br from-emerald-50 to-white p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-800">
+                          <Ticket className="h-3.5 w-3.5" /> Draw entry unlocked
+                        </span>
+                        <span className="rounded-full bg-emerald-600 px-2 py-0.5 font-mono text-[9px] font-bold text-white">
+                          1 TICKET
+                        </span>
+                      </div>
+                      <p className="mt-2 text-[13px] leading-snug text-slate-700">
+                        Add <span className="font-semibold text-emerald-800">Rs 1,000</span> more to enter the{" "}
+                        <span className="font-semibold">iPhone 16 Pro</span> draw.
+                      </p>
+                      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-emerald-600/10">
+                        <div className="h-full w-[80%] rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" />
+                      </div>
+                      <div className="mt-1.5 flex justify-between font-mono text-[10px] tabular-nums text-slate-500">
+                        <span>Rs 4,000</span>
+                        <span>Rs 5,000</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-2xl border border-slate-900/5 px-4 py-3">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-slate-500">
+                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Ticket verified
+                      </span>
+                      <span className="font-mono text-[12px] font-semibold tabular-nums text-slate-900">
+                        PKR-SHOPIFY-7Q4K
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-3 text-center text-[11px] text-slate-400">
+                  Illustration of the widget on a cart page · your own theme colours are adopted automatically
+                </p>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
       {/* -------------------------------------------------------- Lifecycle */}
       <section className="relative overflow-hidden border-b border-slate-900/5">
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(14,165,233,0.08),transparent_58%)]" />
@@ -396,7 +564,7 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
               index="02"
               kicker="Lifecycle"
               title="Install once. Then it runs itself."
-              body="Six steps from pasting the tag to a live draw â€” no app review, no theme surgery, no release window."
+              body="Six steps from pasting the tag to a live draw — no app review, no theme surgery, no release window."
             />
           </Reveal>
 
@@ -429,7 +597,7 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
               index="03"
               kicker="Spend-rule builder"
               title="Build the rule. See the bill."
-              body="Move the sliders to model the exact campaign you would launch. Ticket cost, added revenue and the discount you would have given up â€” all in rupees."
+              body="Move the sliders to model the exact campaign you would launch. Ticket cost, added revenue and the discount you would have given up — all in rupees."
             />
           </Reveal>
 
@@ -475,7 +643,7 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
                       <p className="mt-2 text-[11px] leading-relaxed text-amber-200/70">
                         {ruleIsBelowAov
                           ? "This sits below your average order, so most orders already qualify. Raise it to reward a bigger basket."
-                          : "Shoppers see how much more to add before checkout â€” that is where the extra item comes from."}
+                          : "Shoppers see how much more to add before checkout — that is where the extra item comes from."}
                       </p>
                     </div>
                     <Slider
@@ -485,7 +653,7 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
                       max={80}
                       step={1}
                       onChange={setReachPct}
-                      display={`${reachPct}% Â· ${num(qualifyingOrders)} orders`}
+                      display={`${reachPct}% · ${num(qualifyingOrders)} orders`}
                     />
                     <Slider
                       label="Extra spend per qualifying order"
@@ -552,7 +720,7 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
                       tone="rose"
                     />
                     <CostBar
-                      label={`Draw tickets Â· ${num(qualifyingOrders)} Ã— ${pkr(entryFee)}`}
+                      label={`Draw tickets · ${num(qualifyingOrders)} × ${pkr(entryFee)}`}
                       value={ticketCost}
                       max={barMax}
                       tone="emerald"
@@ -569,7 +737,7 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
                     <p className="mt-1 text-[11px] leading-relaxed text-emerald-100/60">
                       {advantage > 0
                         ? "kept versus discounting every order. Prize sourcing and delivery are on us."
-                        : "This rule costs more than the discount at these numbers â€” widen the gap or lower the expected reach."}
+                        : "This rule costs more than the discount at these numbers — widen the gap or lower the expected reach."}
                     </p>
                   </div>
 
@@ -584,7 +752,7 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
 
                   <p className="mt-4 flex items-start gap-1.5 text-[10px] leading-relaxed text-slate-500">
                     <Calculator className="mt-0.5 h-3 w-3 shrink-0" />
-                    Estimate only â€” it assumes one ticket per qualifying order and your per-ticket rate of{" "}
+                    Estimate only — it assumes one ticket per qualifying order and your per-ticket rate of{" "}
                     {pkr(entryFee)}. Actual reach depends on your catalogue and traffic.
                   </p>
                 </div>
@@ -702,7 +870,7 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
                     <RefreshCcw className="h-3.5 w-3.5" /> Ticket refunds
                   </p>
                   <p className="mt-2 text-sm leading-relaxed text-amber-950">
-                    Refundable any time before the draw runs, minus the card and wallet charge already paid on it â€”{" "}
+                    Refundable any time before the draw runs, minus the card and wallet charge already paid on it —{" "}
                     <strong>2.9% + Rs. 30</strong> per ticket. The ticket is voided and its entry withdrawn.
                   </p>
                 </div>
@@ -774,7 +942,7 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
               index="06"
               kicker="Questions"
               title="The things merchants ask first"
-              body="If something is still unclear, the merchant team answers on WhatsApp â€” and the lookup page lets you test a ticket before you launch."
+              body="If something is still unclear, the merchant team answers on WhatsApp — and the lookup page lets you test a ticket before you launch."
               align="center"
             />
           </Reveal>

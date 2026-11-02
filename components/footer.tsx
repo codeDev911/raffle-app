@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { BrandMark } from "@/components/brand"
 import { Facebook } from "lucide-react"
+import { KNOWLEDGE_BASE_URL, LIVE_CHAT_URL } from "@/lib/support-links"
 
 const EXPLORE = [
   { label: "All Active Raffles", href: "/raffles" },
@@ -152,6 +153,28 @@ export function Footer() {
                 Official help desk
               </h3>
               <ul className="mt-4 space-y-3">
+                <li>
+                  <a
+                    href={LIVE_CHAT_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-[12.5px] font-semibold text-white transition-colors hover:text-emerald-300"
+                  >
+                    Live Chat
+                  </a>
+                  <span className="mt-0.5 block text-[11px] text-white/40">Replies in ~15 min · 24/7</span>
+                </li>
+                <li>
+                  <a
+                    href={KNOWLEDGE_BASE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-[12.5px] text-white/75 transition-colors hover:text-white"
+                  >
+                    Help Articles
+                  </a>
+                  <span className="mt-0.5 block text-[11px] text-white/40">Searchable guides, no login</span>
+                </li>
                 <li>
                   <a
                     href="https://whatsapp.com/channel/0029VbB0CzJ8fewyBXpXy210"

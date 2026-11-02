@@ -4,9 +4,11 @@ import React, { useState } from "react"
 import {
   BadgeCheck,
   BarChart3,
+  ArrowRight,
   Check,
   Clock,
   ExternalLink,
+  HandCoins,
   Handshake,
   Link2,
   MessageCircle,
@@ -16,6 +18,8 @@ import {
   Sparkles,
   Ticket,
   TrendingUp,
+  Trophy,
+  Users,
   Wallet,
   Zap,
 } from "lucide-react"
@@ -24,6 +28,7 @@ import {
   Cta,
   FaqList,
   GhostNumeral,
+  IconTile,
   INK_PANEL,
   Kicker,
   LiveDot,
@@ -47,6 +52,7 @@ const TIERS = [
   {
     name: "Starter Partner",
     short: "Starter",
+    icon: Rocket,
     rate: 15,
     requirement: 0,
     band: "0 – 74 tickets / month",
@@ -60,6 +66,7 @@ const TIERS = [
   {
     name: "Pro Growth Partner",
     short: "Pro Growth",
+    icon: TrendingUp,
     rate: 20,
     requirement: 75,
     band: "75 – 249 tickets / month",
@@ -73,6 +80,7 @@ const TIERS = [
   {
     name: "Elite VIP Partner",
     short: "Elite VIP",
+    icon: Trophy,
     rate: 25,
     requirement: 250,
     band: "250+ tickets / month",
@@ -336,6 +344,30 @@ export default function PartnerPage() {
                 </span>
               ))}
             </div>
+
+            {/* The whole job, in three moves — share, they buy, money lands. */}
+            <div className="mx-auto mt-9 flex max-w-4xl flex-col items-stretch gap-2.5 text-left sm:flex-row sm:items-center">
+              {[
+                { icon: Link2, label: "You share one link", hint: "Status · reels · groups" },
+                { icon: Users, label: "They buy tickets", hint: "Credited for 30 days" },
+                { icon: HandCoins, label: "Commission lands", hint: "Wallet · Raast · bank" },
+              ].map((step, index, all) => (
+                <React.Fragment key={step.label}>
+                  <div className="flex flex-1 items-center gap-3 rounded-2xl border border-violet-900/10 bg-white/80 px-3.5 py-3 backdrop-blur transition hover:border-violet-500/30">
+                    <IconTile icon={step.icon} tone="violet" size="sm" />
+                    <div className="min-w-0">
+                      <p className="truncate text-[12.5px] font-semibold text-slate-900">{step.label}</p>
+                      <p className="truncate font-mono text-[9.5px] uppercase tracking-[0.12em] text-slate-400">
+                        {step.hint}
+                      </p>
+                    </div>
+                  </div>
+                  {index < all.length - 1 && (
+                    <ArrowRight className="mx-auto h-4 w-4 shrink-0 rotate-90 text-violet-300 sm:mx-0 sm:rotate-0" />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
 
           {/* The published ladder — the estimate underneath reads the same thresholds. */}
@@ -353,7 +385,12 @@ export default function PartnerPage() {
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">{tier.short}</p>
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <IconTile icon={tier.icon} tone={current ? "violet" : "slate"} size="sm" />
+                      <span className="truncate font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                        {tier.short}
+                      </span>
+                    </span>
                     {current && (
                       <span className="rounded-full bg-violet-600/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-violet-700">
                         Your band
@@ -380,20 +417,21 @@ export default function PartnerPage() {
           <div className="mt-3 overflow-hidden rounded-2xl border border-violet-900/10">
             <dl className="grid grid-cols-2 gap-px bg-violet-900/10 sm:grid-cols-4">
               {[
-                { label: "Your tier", value: tierName.replace(" Partner", ""), accent: false },
-                { label: "Tickets / month", value: num(monthlyTickets), accent: false },
-                { label: "Commission", value: pkr(commissionEarnings), accent: false },
-                { label: "This month, roughly", value: pkr(totalEstimatedMonthly), accent: true },
+                { icon: BadgeCheck, label: "Your tier", value: tierName.replace(" Partner", ""), accent: false },
+                { icon: Ticket, label: "Tickets / month", value: num(monthlyTickets), accent: false },
+                { icon: TrendingUp, label: "Commission", value: pkr(commissionEarnings), accent: false },
+                { icon: Wallet, label: "This month, roughly", value: pkr(totalEstimatedMonthly), accent: true },
               ].map((cell) => (
                 <div
                   key={cell.label}
                   className={`px-4 py-3.5 ${cell.accent ? "bg-emerald-600" : "bg-white/85"}`}
                 >
                   <dt
-                    className={`text-[9px] font-semibold uppercase tracking-[0.16em] ${
+                    className={`inline-flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] ${
                       cell.accent ? "text-emerald-100/80" : "text-slate-400"
                     }`}
                   >
+                    <cell.icon className="h-3 w-3" strokeWidth={2.2} />
                     {cell.label}
                   </dt>
                   <dd

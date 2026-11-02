@@ -1,6 +1,7 @@
 import Link from "next/link"
-import type { ReactNode } from "react"
+import type { MouseEvent, ReactNode } from "react"
 import { ArrowRight, Check, ChevronDown } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 /**
@@ -95,9 +96,15 @@ type CtaProps = {
   arrow?: boolean
   /** Passed straight through — used to open a portal's own record in a second tab. */
   target?: string
+  /**
+   * Optional side effect, used by the live-chat launcher: the href stays a real link so the
+   * button still works when the third-party script never loaded. The handler decides whether
+   * to cancel navigation by calling preventDefault() itself.
+   */
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
 }
 
-export function Cta({ href, children, variant = "primary", className, arrow = false, target }: CtaProps) {
+export function Cta({ href, children, variant = "primary", className, arrow = false, target, onClick }: CtaProps) {
   const base =
     "group inline-flex min-h-[46px] items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold transition duration-200"
   const styles = {
@@ -122,14 +129,20 @@ export function Cta({ href, children, variant = "primary", className, arrow = fa
 
   if (external) {
     return (
-      <a href={href} target={linkTarget} rel={linkTarget === "_blank" ? "noopener noreferrer" : undefined} className={cn(base, styles, className)}>
+      <a
+        href={href}
+        target={linkTarget}
+        rel={linkTarget === "_blank" ? "noopener noreferrer" : undefined}
+        onClick={onClick}
+        className={cn(base, styles, className)}
+      >
         {body}
       </a>
     )
   }
 
   return (
-    <Link href={href} target={target} className={cn(base, styles, className)}>
+    <Link href={href} target={target} onClick={onClick} className={cn(base, styles, className)}>
       {body}
     </Link>
   )
@@ -175,6 +188,99 @@ export function SectionHead({ kicker, title, body, action, index, align = "left"
 /** Card with a perforated left/right edge, like a torn ticket. Mask keeps the border honest. */
 export function TicketCard({ children, className }: { children: ReactNode; className?: string }) {
   return <div className={cn("ticket-edge relative overflow-hidden rounded-[26px] border border-slate-900/10 bg-white", className)}>{children}</div>
+}
+
+/* ------------------------------------------------------------------ icon weight
+ *
+ * The heroes needed more visual weight than a bare 16px glyph beside a sentence,
+ * and each service page needed icons that belong to *that* service — a cart and a
+ * webhook on Merchant Connect, a camera and a wallet on Listing, a share link on
+ * Partners. `IconTile` puts the glyph in a tinted, ringed tile; `FlowRail` strings
+ * them into a numbered pipeline with a dashed connector. Both take a tone so a page
+ * can carry its own accent instead of borrowing the previous page's.
+ */
+
+const TILE_TONES = {
+  emerald: "border-emerald-600/15 from-emerald-50 to-white text-emerald-700",
+  sky: "border-sky-600/15 from-sky-50 to-white text-sky-700",
+  amber: "border-amber-600/15 from-amber-50 to-white text-amber-700",
+  violet: "border-violet-600/15 from-violet-50 to-white text-violet-700",
+  slate: "border-slate-900/10 from-slate-100 to-white text-slate-600",
+  ink: "border-slate-900/20 from-slate-700 to-slate-900 text-white",
+} as const
+
+export type TileTone = keyof typeof TILE_TONES
+
+const TILE_SIZES = { sm: "h-9 w-9 rounded-[10px]", md: "h-11 w-11 rounded-xl", lg: "h-14 w-14 rounded-2xl" } as const
+const TILE_GLYPH = { sm: "h-4 w-4", md: "h-[18px] w-[18px]", lg: "h-6 w-6" } as const
+
+export function IconTile({
+  icon: Icon,
+  tone = "emerald",
+  size = "md",
+  className = "",
+}: {
+  icon: LucideIcon
+  tone?: TileTone
+  size?: keyof typeof TILE_SIZES
+  className?: string
+}) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center justify-center border bg-gradient-to-br shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] ${TILE_TONES[tone]} ${TILE_SIZES[size]} ${className}`}
+    >
+      <Icon className={TILE_GLYPH[size]} strokeWidth={1.7} />
+    </span>
+  )
+}
+
+// Static class strings only — Tailwind has to see every column count in the source.
+const RAIL_COLS = {
+  "3": { wrap: "sm:grid-cols-2 lg:grid-cols-3", singleRow: false },
+  "4": { wrap: "sm:grid-cols-2 lg:grid-cols-4", singleRow: true },
+  "5": { wrap: "sm:grid-cols-2 lg:grid-cols-5", singleRow: true },
+  "6": { wrap: "sm:grid-cols-2 lg:grid-cols-3", singleRow: false },
+} as const
+
+export function FlowRail({
+  steps,
+  tone = "emerald",
+  cols = "4",
+  className = "",
+}: {
+  steps: { icon: LucideIcon; label: string; caption?: string }[]
+  tone?: TileTone
+  cols?: keyof typeof RAIL_COLS
+  className?: string
+}) {
+  const rail = RAIL_COLS[cols]
+
+  return (
+    <ol className={`relative grid gap-3 ${rail.wrap} ${className}`}>
+      {rail.singleRow && steps.length > 1 && (
+        // 14px card padding + half of the 44px tile puts the glyph centre at 36px.
+        <span
+          aria-hidden
+          className="absolute left-[36px] right-[36px] top-[36px] hidden border-t border-dashed border-slate-900/15 lg:block"
+        />
+      )}
+      {steps.map((step, index) => (
+        <li
+          key={step.label}
+          className="relative flex items-start gap-3 rounded-2xl border border-slate-900/[0.07] bg-white/80 p-3.5 backdrop-blur"
+        >
+          <IconTile icon={step.icon} tone={tone} size="md" className="relative z-10" />
+          <div className="min-w-0">
+            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.18em] tabular-nums text-slate-400">
+              {String(index + 1).padStart(2, "0")}
+            </p>
+            <p className="mt-0.5 text-[12.5px] font-semibold leading-snug text-slate-900">{step.label}</p>
+            {step.caption && <p className="mt-0.5 text-[11.5px] leading-snug text-slate-500">{step.caption}</p>}
+          </div>
+        </li>
+      ))}
+    </ol>
+  )
 }
 
 export function StatTile({
