@@ -32,9 +32,10 @@ const NAV = [
 /** Routes whose first screen is a hero the bar is meant to sit inside. */
 const OVERLAY_ROUTES = ["/about", "/merchants", "/list-product", "/become-a-partner", "/lookup"]
 /** Pages that float too, but only at the exact path — their child routes keep the spacer. */
-const OVERLAY_EXACT = ["/", "/raffles", "/contact", "/terms", "/refund"]
+const OVERLAY_EXACT = ["/", "/raffles", "/contact", "/help", "/terms", "/refund"]
 
 const SHEET_EXTRAS = [
+  { label: "Help centre", href: "/help" },
   { label: "Ticket lookup", href: "/lookup/store-ticket" },
   { label: "How it works", href: "/#how-it-works" },
   { label: "Contact", href: "/contact" },

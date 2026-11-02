@@ -16,6 +16,7 @@ const EXPLORE = [
 ]
 
 const LEGAL = [
+  { label: "Help Centre", href: "/help" },
   { label: "About PakRaffle", href: "/about" },
   { label: "Terms & Conditions", href: "/terms" },
   { label: "Privacy Policy", href: "/privacy" },
