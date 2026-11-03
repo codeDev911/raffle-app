@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
+  ChevronRight,
   ExternalLink,
   Gift,
   Loader2,
@@ -440,7 +441,9 @@ export default function MerchantDetailClient({ params }: { params: { id: string 
               {campaigns.map((c) => (
                 <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 truncate">{c.title}</p>
+                    <Link href={`/admin/merchants/campaigns/${c.id}`} className="block truncate text-sm font-semibold text-slate-900 hover:text-red-700 hover:underline">
+                      {c.title}
+                    </Link>
                     <p className="text-xs text-slate-500">{c.ruleSummary}</p>
                     <p className="text-xs text-slate-500 mt-0.5 inline-flex items-center gap-1.5 flex-wrap">
                       <span className="font-mono tabular-nums">{formatNumber(c.currentEntries)}</span>
@@ -455,8 +458,19 @@ export default function MerchantDetailClient({ params }: { params: { id: string 
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm tabular-nums text-slate-900">{formatPKR(c.billableAmount)}</span>
+                    <div className="text-right">
+                      <span className="font-mono text-sm tabular-nums text-slate-900">
+                        {formatPKR(c.billableEntries ? c.billableAmount : c.currentEntries * c.ticketPrice)}
+                      </span>
+                      <p className="text-[10px] uppercase tracking-wider text-slate-400">{c.billableEntries ? "awaiting invoice" : "ticket value billed"}</p>
+                    </div>
                     <StatusBadge status={c.status} />
+                    <Link
+                      href={`/admin/merchants/campaigns/${c.id}`}
+                      className="inline-flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 hover:border-red-300 hover:text-red-700"
+                    >
+                      Details <ChevronRight className="h-3.5 w-3.5" />
+                    </Link>
                   </div>
                 </div>
               ))}
@@ -473,7 +487,7 @@ export default function MerchantDetailClient({ params }: { params: { id: string 
               <CheckCircle2 className="h-4 w-4 text-slate-400" /> Invoices
             </p>
             <p className="text-xs text-slate-400">
-              settle under <Link href="/admin/merchants" className="text-red-700 hover:underline">Settlements</Link>
+              settle under <Link href="/admin/merchants?tab=settlements" className="text-red-700 hover:underline">Settlements</Link>
             </p>
           </div>
           {invoices.length === 0 ? (
@@ -483,10 +497,14 @@ export default function MerchantDetailClient({ params }: { params: { id: string 
               {invoices.map((inv) => (
                 <div key={inv.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5">
                   <div className="min-w-0">
-                    <p className="font-mono text-sm font-semibold text-slate-900">{inv.invoiceNumber}</p>
-                    <p className="text-xs text-slate-500 truncate">{inv.campaignTitle || "—"}</p>
+                    <Link href={`/admin/merchants/invoices/${inv.id}`} className="block font-mono text-sm font-semibold text-slate-900 hover:text-red-700 hover:underline">
+                      {inv.invoiceNumber}
+                    </Link>
+                    <p className="text-xs text-slate-500 truncate">
+                      <Link href={`/admin/merchants/campaigns/${inv.campaignId}`} className="hover:text-red-700 hover:underline">{inv.campaignTitle || "—"}</Link>
+                    </p>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      <span className="font-mono tabular-nums">{formatNumber(inv.totalEntries)}</span> tickets ×{" "}
+                      <span className="font-mono tabular-nums">{formatNumber(inv.totalEntries)}</span> {inv.totalEntries === 1 ? "ticket" : "tickets"} ×{" "}
                       <span className="font-mono tabular-nums">{formatPKR(inv.unitPrice)}</span>
                       {inv.transactionRef && (
                         <>
@@ -498,6 +516,12 @@ export default function MerchantDetailClient({ params }: { params: { id: string 
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-sm font-semibold tabular-nums text-slate-900">{formatPKR(inv.amountDue)}</span>
                     <StatusBadge status={inv.status} />
+                    <Link
+                      href={`/admin/merchants/invoices/${inv.id}`}
+                      className="inline-flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 hover:border-red-300 hover:text-red-700"
+                    >
+                      Settlement <ChevronRight className="h-3.5 w-3.5" />
+                    </Link>
                   </div>
                 </div>
               ))}

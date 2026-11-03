@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import * as Sentry from "@sentry/nextjs"
 import { MerchantError } from "./errors"
 
 export const noCacheHeaders = {
@@ -26,6 +27,10 @@ export function handleRouteError(err: unknown, context: string) {
     const message = first ? `${first.path.join(".") || "input"}: ${first.message}` : "Invalid input"
     return fail(message, 400, { code: "VALIDATION_ERROR" })
   }
+  // Every merchant API route funnels unexpected failures (database, gateway, webhook) through
+  // this branch and then answers with a clean 500, so Next never sees an unhandled throw. Without
+  // reporting here, that whole class of errors would reach GlitchTip not at all.
+  Sentry.captureException(err, { tags: { surface: "merchant-api" }, extra: { context } })
   console.error(`[MerchantConnect] ${context}:`, err)
   return fail("Something went wrong. Please try again.", 500, { code: "INTERNAL_ERROR" })
 }

@@ -9,6 +9,7 @@ import { Footer } from "@/components/footer"
 import { usePathname } from "next/navigation"
 import { useEffect } from "react"
 import { applyMerchantTheme, isWorkspacePath, readMerchantTheme } from "@/lib/merchant-theme"
+import { isStaffRoute } from "@/lib/route-scope"
 
 export default function ClientLayout({
   children,
@@ -17,15 +18,17 @@ export default function ClientLayout({
 }) {
   const pathname = usePathname()
   const isStandaloneRoute =
-    pathname?.startsWith("/admin") ||
+    isStaffRoute(pathname) ||
     pathname?.startsWith("/payment") ||
     pathname?.startsWith("/application/") ||
     pathname?.startsWith("/merchants/dashboard") ||
     pathname?.startsWith("/merchants/checkout") ||
     pathname?.startsWith("/merchants/onboarding") ||
     pathname?.startsWith("/auth/merchant")
-  // Ads on a payment page read as a scam, so the AdSense tag is skipped there.
+  // Ads on a payment page read as a scam, and an operations console has no business requesting
+  // ad or captcha frames, so the AdSense tag is skipped on both.
   const isCheckoutRoute = pathname?.startsWith("/merchants/checkout")
+  const isAdsFreeRoute = isCheckoutRoute || isStaffRoute(pathname)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const key = "client_browse_id"
@@ -46,7 +49,7 @@ export default function ClientLayout({
 
   return (
     <>
-      {!isCheckoutRoute && (
+      {!isAdsFreeRoute && (
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8516478537168335" crossOrigin="anonymous"></script>
       )}
       {!isStandaloneRoute && <Header />}

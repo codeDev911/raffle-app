@@ -6,8 +6,11 @@ import { getMerchantDb, type MerchantDb } from "../db"
 import { toEntryDTO, toInvoiceDTO, toStoreDTO } from "../dto"
 import { MerchantError, conflict, notFound } from "../errors"
 import type { MerchantCampaign, MerchantEntry, MerchantInvoice, MerchantStore } from "../types"
-import { adminStoreStatusSchema } from "../validators"
+import { adminCampaignStatusSchema, adminInvoiceNoteSchema, adminStoreStatusSchema } from "../validators"
 import { decorateCampaigns } from "./campaigns"
+import { invoiceCheckoutOpen } from "./checkout"
+import { ticketPaymentStatuses } from "./entry-payments"
+import { getInvoiceDetail } from "./invoices"
 import { setStoreStatus, updateStoreSettings } from "./stores"
 import { z } from "zod"
 
@@ -161,4 +164,128 @@ export async function adminGetStoreDetail(storeId: string) {
         .reduce((acc, i) => acc + i.amountDue, 0),
     },
   }
+}
+
+/**
+ * Full campaign record for the admin detail page: rule, prize, every ledger line, the invoices
+ * raised against it and the winner. The whole entry set is read because the numbers on this page
+ * are the ones an operator acts on — a capped sample would misreport the pool.
+ */
+export async function adminGetCampaignDetail(campaignId: string) {
+  const db = await getMerchantDb()
+
+  const found: MerchantCampaign | null = await db.merchantCampaign.findUnique({ where: { id: campaignId } })
+  if (!found) throw notFound("Campaign")
+  const campaign = found
+
+  const [store, invoiceRows, entryRows] = (await Promise.all([
+    db.merchantStore.findUnique({ where: { id: campaign.storeId } }),
+    db.merchantInvoice.findMany({ where: { campaignId }, orderBy: { createdAt: "desc" } }),
+    db.merchantEntry.findMany({ where: { campaignId }, orderBy: { createdAt: "desc" } }),
+  ])) as [MerchantStore | null, MerchantInvoice[], MerchantEntry[]]
+
+  const [campaignDto] = await decorateCampaigns([campaign])
+
+  const payments = await ticketPaymentStatuses(entryRows.map((entry) => entry.ticketNumber))
+  const paymentState = (ticketNumber: string) => payments.get(ticketNumber) ?? null
+  const rejected = (ticketNumber: string) => ["FAILED", "REFUNDED"].includes(String(paymentState(ticketNumber)))
+
+  const winner: MerchantEntry | null = campaign.winnerEntryId
+    ? ((await db.merchantEntry.findUnique({ where: { id: campaign.winnerEntryId } })) as MerchantEntry | null)
+    : null
+
+  // "Live" tickets are every non-test, non-cancelled entry — the lifetime billing base.
+  // campaign.billableEntries from the decorator means something narrower (unbilled only), so the
+  // two are named apart to stop an operator reading Rs 0 as "nothing to pay".
+  const liveTickets = entryRows.filter((e) => !e.isTest && e.status !== "CANCELLED")
+
+  return {
+    campaign: { ...campaignDto, storeName: store?.name ?? "Unknown store" },
+    store: store ? toStoreDTO(store) : null,
+    winner: winner ? toEntryDTO(winner) : null,
+    entries: entryRows.map((entry) => toEntryDTO(entry, { paymentStatus: paymentState(entry.ticketNumber) })),
+    invoices: invoiceRows.map((invoice) =>
+      toInvoiceDTO(invoice, {
+        campaignTitle: campaign.title,
+        storeName: store?.name,
+        paymentFailed: entryRows.some((e) => e.invoiceId === invoice.id && rejected(e.ticketNumber)),
+        checkoutOpen: invoiceCheckoutOpen(invoice),
+      }),
+    ),
+    ledger: {
+      total: entryRows.length,
+      paid: entryRows.filter((e) => e.status === "PAID").length,
+      invoiced: entryRows.filter((e) => e.status === "INVOICED").length,
+      issued: entryRows.filter((e) => e.status === "ISSUED").length,
+      cancelled: entryRows.filter((e) => e.status === "CANCELLED").length,
+      test: entryRows.filter((e) => e.isTest).length,
+      live: liveTickets.length,
+      liveAmount: liveTickets.length * campaign.ticketPrice,
+      paymentRejected: entryRows.filter((e) => rejected(e.ticketNumber)).length,
+      drawPool: entryRows.filter((e) => e.status === "PAID" && !e.isTest).length,
+    },
+  }
+}
+
+/**
+ * Pause or resume minting. Everything past the minting stage is deliberately locked: an invoice
+ * already raised, a draw already armed or a completed campaign must be resolved through
+ * settlement and the draw, not by flipping the status back to ACTIVE.
+ */
+export async function adminUpdateCampaignStatus(campaignId: string, input: unknown) {
+  const { status } = adminCampaignStatusSchema.parse(input)
+  const db = await getMerchantDb()
+
+  const found: MerchantCampaign | null = await db.merchantCampaign.findUnique({ where: { id: campaignId } })
+  if (!found) throw notFound("Campaign")
+
+  const lockedStages = ["PENDING_INVOICE", "DRAW_READY", "COMPLETED"]
+  if (lockedStages.includes(found.status)) {
+    throw conflict(`This campaign is already ${found.status.toLowerCase().replace(/_/g, " ")}`)
+  }
+  if (found.status === status) return (await decorateCampaigns([found]))[0]
+
+  const updated: MerchantCampaign = await db.merchantCampaign.update({ where: { id: campaignId }, data: { status } })
+  return (await decorateCampaigns([updated]))[0]
+}
+
+/** Settlement detail: the invoice, its ledger lines, the campaign behind it and the store. */
+export async function adminGetInvoiceDetail(invoiceId: string) {
+  const db = await getMerchantDb()
+  const detail = await getInvoiceDetail(invoiceId)
+
+  const campaign: MerchantCampaign | null = await db.merchantCampaign.findUnique({
+    where: { id: detail.invoice.campaignId },
+  })
+  const [campaignDto] = campaign ? await decorateCampaigns([campaign]) : [null]
+
+  const store: MerchantStore | null = await db.merchantStore.findUnique({ where: { id: detail.invoice.storeId } })
+
+  return {
+    ...detail,
+    store: store ? toStoreDTO(store) : detail.store,
+    campaign: campaignDto ? { ...campaignDto, storeName: store?.name ?? null } : null,
+  }
+}
+
+/** Record (or clear) the operator note attached to a settlement. Never touches money or status. */
+export async function adminUpdateInvoiceNotes(invoiceId: string, input: unknown) {
+  const { adminNotes } = adminInvoiceNoteSchema.parse(input)
+  const db = await getMerchantDb()
+
+  const found: MerchantInvoice | null = await db.merchantInvoice.findUnique({ where: { id: invoiceId } })
+  if (!found) throw notFound("Invoice")
+
+  const updated: MerchantInvoice = await db.merchantInvoice.update({
+    where: { id: invoiceId },
+    data: { adminNotes },
+  })
+  const campaign: MerchantCampaign | null = await db.merchantCampaign.findUnique({ where: { id: updated.campaignId } })
+  const store: MerchantStore | null = await db.merchantStore.findUnique({ where: { id: updated.storeId } })
+
+  return toInvoiceDTO(updated, {
+    campaignTitle: campaign?.title,
+    storeName: store?.name,
+    checkoutOpen: invoiceCheckoutOpen(updated),
+  })
 }

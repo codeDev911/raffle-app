@@ -118,3 +118,16 @@ export const simulateOrderSchema = z.object({
 export const adminStoreStatusSchema = z.object({
   status: z.enum(["ACTIVE", "PAUSED"]),
 })
+
+/**
+ * Admin governance over a campaign. Only the minting stage is writable here: once a campaign is
+ * awaiting its invoice, draw-ready or completed, its lifecycle belongs to settlement and the draw.
+ */
+export const adminCampaignStatusSchema = z.object({
+  status: z.enum(["ACTIVE", "PAUSED"]),
+})
+
+/** Settlement note kept on the invoice record (empty string clears it). */
+export const adminInvoiceNoteSchema = z.object({
+  adminNotes: z.string().trim().max(2000),
+})

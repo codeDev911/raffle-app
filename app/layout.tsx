@@ -3,8 +3,8 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter, Space_Grotesk } from "next/font/google"
 import ClientLayout from "./ClientLayout"
+import SupportChat from "@/components/support-chat"
 import Script from 'next/script'
-import crypto from "crypto"
 
 const inter = Inter({ subsets: ["latin"] })
 // Geometric display face for the marketing headlines; exposed as a CSS variable so only the
@@ -15,53 +15,11 @@ const Analytics = () => null
 const SpeedInsights = () => null
 
 
-// Ai chat bot
-const Scripts = () => {
-  return (
-    <Script id="chatbase-loader" strategy="afterInteractive">
-  {`
-var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-(function(){
-var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-s1.async=true;
-s1.src='https://embed.tawk.to/6ae85667fceb143c3f37e8c6/1k6dp31gm';
-s1.charset='UTF-8';
-s1.setAttribute('crossorigin','*');
-s0.parentNode.insertBefore(s1,s0);
-})();
-      
-  `}
-</Script>
-
-  )
-}
-
-function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = (Math.random() * 16) | 0,
-      v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-
-// Replace this with your actual secret key from Chatbase
-const secret = process.env.NEXT_PUBLIC_CODEBASE_AGENT_SECRET_KEY || "";
-
-// Replace this with the actual user's unique ID (must be a string)
-const userId = generateUUID(); // e.g., "b7e70f19-dc91-4c7c-9e76-xyz"
-
-// Generate the HMAC SHA-256 hash
-const hash = crypto
-  .createHmac('sha256', secret)
-  .update(userId)
-  .digest('hex');
-
 
   // The document shell must be rendered by this Server Component — a client component owning
   // <html>/<body> wipes the page at hydration. Route-aware head logic lives in ClientLayout's
@@ -82,7 +40,7 @@ const hash = crypto
       </head>
       <body className={inter.className}>
         <ClientLayout>
-          <Scripts/>
+          <SupportChat/>
           <Analytics/>
           <SpeedInsights/>
           {children}
