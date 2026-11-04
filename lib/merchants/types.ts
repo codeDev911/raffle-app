@@ -11,6 +11,10 @@ export const INVOICE_STATUSES = ["PENDING", "UNDER_REVIEW", "PAID"] as const
 export const PAYMENT_METHODS = ["RAAST", "IBFT", "NAYAPAY", "SADAPAY", "JAZZCASH", "EASYPAISA", "CARD"] as const
 /** Everything the ledger stores, including the hosted checkout that settles itself. */
 export const MERCHANT_PAYMENT_METHODS = [...PAYMENT_METHODS, "SAFEPAY"] as const
+/** Who raised a refund, where the money goes, and how far it has travelled. */
+export const REFUND_SOURCES = ["WEBHOOK", "MERCHANT", "ADMIN"] as const
+export const REFUND_SETTLEMENTS = ["CREDIT", "PAYOUT"] as const
+export const REFUND_STATUSES = ["REQUESTED", "APPROVED", "PAID", "REJECTED", "CREDITED"] as const
 
 export type MerchantStoreStatus = (typeof STORE_STATUSES)[number]
 export type MerchantRuleType = (typeof RULE_TYPES)[number]
@@ -19,6 +23,9 @@ export type MerchantEntryStatus = (typeof ENTRY_STATUSES)[number]
 export type MerchantInvoiceStatus = (typeof INVOICE_STATUSES)[number]
 export type ManualPaymentMethod = (typeof PAYMENT_METHODS)[number]
 export type MerchantPaymentMethod = (typeof MERCHANT_PAYMENT_METHODS)[number]
+export type MerchantRefundSource = (typeof REFUND_SOURCES)[number]
+export type MerchantRefundSettlement = (typeof REFUND_SETTLEMENTS)[number]
+export type MerchantRefundStatus = (typeof REFUND_STATUSES)[number]
 
 export interface MerchantStore {
   id: string
@@ -31,6 +38,8 @@ export interface MerchantStore {
   contactEmail: string
   contactPhone: string
   payoutDetails?: string | null
+  /** Square logo the merchant supplies; the public raffle page falls back to the shop initial. */
+  logoUrl?: string | null
   status: MerchantStoreStatus
   /** User who owns this merchant account (email/password or Google). */
   ownerId?: string | null
@@ -128,6 +137,50 @@ export interface MerchantInvoice {
   checkoutUrl?: string | null
   /** When the session opened; its age decides when the batch session stops being payable. */
   gatewayStartedAt?: Date | null
+  /** Credits from voided tickets of earlier batches, already deducted from amountDue. */
+  creditApplied?: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+/** One readable step in a refund's trail, rendered as the merchant-facing timeline. */
+export interface MerchantRefundEvent {
+  at: string
+  kind: "detected" | "voided" | "requested" | "approved" | "credited" | "paid" | "rejected" | "reversed" | "note"
+  label: string
+  detail?: string | null
+}
+
+/**
+ * A ticket that came back after its batch was billed. The three timestamps answer "when did this
+ * happen, when did you hear about it, when did you act" — which is what a silent void could not.
+ */
+export interface MerchantRefundRequest {
+  id: string
+  storeId: string
+  campaignId: string
+  entryId: string
+  ticketNumber: string
+  shopifyOrderId: string
+  orderName?: string | null
+  invoiceId?: string | null
+  creditInvoiceId?: string | null
+  grossAmount: number
+  gatewayCost: number
+  netAmount: number
+  reason: string
+  note?: string | null
+  source: MerchantRefundSource
+  settlement: MerchantRefundSettlement
+  status: MerchantRefundStatus
+  triggerTopic?: string | null
+  shopifyEventAt?: Date | null
+  receivedAt: Date
+  actionedAt?: Date | null
+  decidedAt?: Date | null
+  decidedBy?: string | null
+  settledAt?: Date | null
+  events?: MerchantRefundEvent[] | null
   createdAt: Date
   updatedAt: Date
 }

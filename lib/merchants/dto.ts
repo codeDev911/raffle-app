@@ -2,7 +2,15 @@
 // stripped, and derived fields (rule summary, billable amounts) are computed once here.
 import { describeRule } from "./rules"
 import type { IntakeAnswers } from "./intake"
-import type { MerchantCampaign, MerchantEntry, MerchantInvoice, MerchantStore } from "./types"
+import { REFUND_STATUS_LABELS } from "./refunds"
+import type {
+  MerchantCampaign,
+  MerchantEntry,
+  MerchantInvoice,
+  MerchantRefundEvent,
+  MerchantRefundRequest,
+  MerchantStore,
+} from "./types"
 import { maskName, maskPhone, maskSecret } from "./utils"
 
 export interface PrizeSummary {
@@ -21,6 +29,8 @@ export function toStoreDTO(store: MerchantStore) {
     id: store.id,
     name: store.name,
     storeUrl: store.storeUrl,
+    /** Merchant-supplied logo; the public pages fall back to the shop initial when unset. */
+    logoUrl: store.logoUrl ?? null,
     platform: store.platform,
     apiKeyPrefix: store.apiKeyPrefix,
     webhookSecretPreview: maskSecret(store.webhookSecret),
@@ -119,6 +129,8 @@ export function toInvoiceDTO(
     totalEntries: invoice.totalEntries,
     unitPrice: invoice.unitPrice,
     amountDue: invoice.amountDue,
+    /** Credits from voided tickets of earlier batches that this invoice was already reduced by. */
+    creditApplied: invoice.creditApplied ?? 0,
     paymentMethod: invoice.paymentMethod ?? null,
     paymentProof: invoice.paymentProof ?? null,
     transactionRef: invoice.transactionRef ?? null,
@@ -198,5 +210,50 @@ export function toPublicTicketDTO(
       ? { title: ctx.prize.title, image: ctx.prize.image, prizeValuePkr: ctx.prize.prizeValuePkr }
       : null,
     issuedAt: entry.createdAt,
+  }
+}
+
+/**
+ * A refund, told as a story the merchant can verify: what Shopify reported, when we received it,
+ * when PakRaffle acted, what it is worth and where the money is going.
+ */
+export function toRefundDTO(row: MerchantRefundRequest, store?: MerchantStore | null) {
+  const events: MerchantRefundEvent[] = Array.isArray(row.events) ? (row.events as MerchantRefundEvent[]) : []
+  const receivedAt = row.receivedAt ? new Date(row.receivedAt).getTime() : null
+  const shopifyEventAt = row.shopifyEventAt ? new Date(row.shopifyEventAt).getTime() : null
+  return {
+    id: row.id,
+    storeId: row.storeId,
+    storeName: store?.name ?? null,
+    payoutDetails: store?.payoutDetails ?? null,
+    campaignId: row.campaignId,
+    entryId: row.entryId,
+    ticketNumber: row.ticketNumber,
+    shopifyOrderId: row.shopifyOrderId,
+    orderName: row.orderName ?? null,
+    invoiceId: row.invoiceId ?? null,
+    creditInvoiceId: row.creditInvoiceId ?? null,
+    grossAmount: row.grossAmount,
+    gatewayCost: row.gatewayCost,
+    netAmount: row.netAmount,
+    reason: row.reason,
+    note: row.note ?? null,
+    source: row.source,
+    settlement: row.settlement,
+    status: row.status,
+    statusLabel: REFUND_STATUS_LABELS[row.status] ?? row.status,
+    triggerTopic: row.triggerTopic ?? null,
+    shopifyEventAt: row.shopifyEventAt ?? null,
+    receivedAt: row.receivedAt,
+    actionedAt: row.actionedAt ?? null,
+    decidedAt: row.decidedAt ?? null,
+    decidedBy: row.decidedBy ?? null,
+    settledAt: row.settledAt ?? null,
+    events,
+    /** The credit is already spent on an invoice, so it is no longer available. */
+    applied: Boolean(row.creditInvoiceId),
+    /** Seconds between Shopify's event and our receipt of it — the webhook's real latency. */
+    detectedInMs: shopifyEventAt !== null && receivedAt !== null ? Math.max(0, receivedAt - shopifyEventAt) : null,
+    createdAt: row.createdAt,
   }
 }

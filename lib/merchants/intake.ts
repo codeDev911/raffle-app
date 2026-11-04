@@ -1,7 +1,8 @@
 // The store-intake questions asked at the end of the welcome wizard.
 //
-// One list feeds both sides: the wizard renders it, the API validates against it. That keeps the
-// labels a merchant reads and the values we store from ever drifting apart.
+// One list feeds both sides: the wizard renders it, and the Formbold submission is formatted from
+// it. That keeps the labels a merchant reads and the answers our team receives from ever drifting
+// apart.
 
 export type IntakeKey = "source" | "storeName" | "dailyOrders" | "teamSize" | "averageOrderValue" | "storeAge"
 
@@ -98,14 +99,11 @@ export const INTAKE_QUESTIONS: IntakeQuestion[] = [
 ]
 
 /**
- * Stored in `MerchantStore.intakeAnswers`. Each question holds the chosen option value, and
+ * What used to live in `MerchantStore.intakeAnswers` and still does for stores that submitted
+ * before we moved the intake to Formbold. Each question holds the chosen option value, and
  * `<key>Other` holds the typed answer when the merchant picked "Other".
  */
 export type IntakeAnswers = Partial<Record<IntakeKey | `${IntakeKey}Other`, string>>
-
-export function isIntakeKey(key: string): key is IntakeKey {
-  return INTAKE_QUESTIONS.some((question) => question.key === key)
-}
 
 /** The answer a human would read: the typed text when "Other" was picked, else the option label. */
 export function describeIntakeAnswer(key: IntakeKey, answers: IntakeAnswers | null | undefined): string {
@@ -114,4 +112,26 @@ export function describeIntakeAnswer(key: IntakeKey, answers: IntakeAnswers | nu
   if (!question || !value) return "—"
   if (value === INTAKE_OTHER) return answers?.[`${key}Other`] || "Other"
   return question.options.find((option) => option.value === value)?.label || value
+}
+
+/**
+ * The answers as a person would read them, keyed by question. Formbold shows the raw field name in
+ * its inbox, so we post labels ("Instagram") instead of codes ("instagram") under the question keys.
+ */
+export function describeIntakeAnswers(answers: IntakeAnswers): Record<string, string> {
+  const described: Record<string, string> = {}
+  for (const question of INTAKE_QUESTIONS) {
+    const text = describeIntakeAnswer(question.key, answers)
+    if (text !== "—") described[question.key] = text
+  }
+  return described
+}
+
+/** Plain-text recap for the Formbold `message` field, in question order. */
+export function formatIntakeDigest(answers: IntakeAnswers): string {
+  return INTAKE_QUESTIONS.map((question) => {
+    const label = `Q${question.number} ${question.label}`
+    const text = describeIntakeAnswer(question.key, answers)
+    return text === "—" ? `${label}: (no answer)` : `${label}: ${text}`
+  }).join("\n")
 }

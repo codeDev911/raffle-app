@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { CheckCircle2, Loader2, Send } from "lucide-react"
+import { CONTACT_ENDPOINT, submitToFormbold } from "@/lib/forms"
 
 const WHATSAPP_INTL = "923377155722"
-const CONTACT_ENDPOINT = process.env.NEXT_PUBLIC_FORMSPREE_CONTACT_ENDPOINT
 
 const INPUT =
   "w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
@@ -53,24 +53,15 @@ export function ContactForm() {
     }
 
     try {
-      // Formspree returns JSON (instead of an HTML redirect) when Accept is set.
-      const res = await fetch(CONTACT_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          department: formData.category,
-          ticketOrOrderId: formData.orderId,
-          message: formData.message,
-          _subject: `PakRaffle inquiry — ${formData.category}`,
-        }),
+      await submitToFormbold(CONTACT_ENDPOINT, {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        department: formData.category,
+        ticketOrOrderId: formData.orderId,
+        message: formData.message,
+        subject: `PakRaffle inquiry — ${formData.category}`,
       })
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        throw new Error(data?.errors?.[0]?.message || "We couldn't send that. Please try again in a moment.")
-      }
       setStatus("success")
     } catch (err) {
       setError(err instanceof Error ? err.message : "We couldn't send that. Please try again in a moment.")

@@ -211,6 +211,8 @@ model MerchantStore {
   contactEmail  String
   contactPhone  String
   payoutDetails String?
+  /** Square logo the merchant supplies, shown on the public raffle page next to their store name. */
+  logoUrl       String?
   status        MerchantStoreStatus @default(ACTIVE)
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
@@ -236,7 +238,9 @@ model MerchantStore {
 
   campaigns MerchantCampaign[]
   entries   MerchantEntry[]
-  invoices  MerchantInvoice[]
+  invoices  MerchantInvoice[] 
+  // Credits and payout requests raised by returns, cancellations and refunds.
+  refunds   MerchantRefundRequest[]
 
   @@map("merchant_stores")
 }
@@ -265,6 +269,7 @@ model MerchantCampaign {
   raffle   Raffle?           @relation(fields: [raffleId], references: [id], onDelete: SetNull)
   entries  MerchantEntry[]
   invoices MerchantInvoice[]
+  refunds  MerchantRefundRequest[]
 
   @@index([storeId, status])
   @@map("merchant_campaigns")
@@ -303,6 +308,8 @@ model MerchantEntry {
   campaign MerchantCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   store    MerchantStore    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   invoice  MerchantInvoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  // One request per ticket: the void itself is the guard against a duplicate credit.
+  refund   MerchantRefundRequest?
 
   @@unique([campaignId, shopifyOrderId])
   @@index([storeId, status])
@@ -322,6 +329,9 @@ model MerchantInvoice {
   totalEntries   Int
   unitPrice      Int // PKR per entry at time of invoicing
   amountDue      Int // PKR
+  // Credits from voided tickets of earlier batches, deducted when this invoice was raised. amountDue
+  // is already net of it; this is kept so the merchant can see what was offset and why.
+  creditApplied  Int   @default(0) // PKR
   paymentMethod  MerchantPaymentMethod?
   paymentProof   String? // receipt screenshot URL
   transactionRef String?
@@ -343,6 +353,10 @@ model MerchantInvoice {
   campaign MerchantCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   store    MerchantStore    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   entries  MerchantEntry[]
+  // The batch a refunded ticket was billed on (RefundedBatch) and the batch a credit was spent on
+  // (CreditedBatch). Both point at MerchantRefundRequest, so the relations are named.
+  credits    MerchantRefundRequest[] @relation("RefundedBatch")
+  creditRefs MerchantRefundRequest[] @relation("CreditedBatch")
 
   @@index([storeId, status])
   // Every callback/webhook resolves a session by its tracker.
@@ -392,4 +406,79 @@ enum MerchantPaymentMethod {
   EASYPAISA
   CARD
   SAFEPAY
+}
+
+/** Who raised the refund: Shopify told us, the merchant asked, or staff corrected it. */
+enum MerchantRefundSource {
+  WEBHOOK
+  MERCHANT
+  ADMIN
+}
+
+/** Where the money goes: offset the next batch, or be transferred out (staff approves payouts). */
+enum MerchantRefundSettlement {
+  CREDIT
+  PAYOUT
+}
+
+enum MerchantRefundStatus {
+  // Raised and waiting for staff because it asks for a cash payout.
+  REQUESTED
+  // Approved by staff, not transferred yet.
+  APPROVED
+  // Transferred to the merchant's payout details.
+  PAID
+  // Staff said no, with a reason the merchant can read.
+  REJECTED
+  // Applied against an invoice — no human needed.
+  CREDITED
+}
+
+// A ticket that came back after its batch was billed: the entry is void, and this row is the
+// merchant's money trail. Timestamps are split deliberately — Shopify's own event time, the moment
+// our webhook received it, and the moment PakRaffle acted — so "nothing happened" is never the answer.
+model MerchantRefundRequest {
+  id             String                  @id @default(cuid())
+  storeId        String
+  campaignId     String
+  entryId        String                  @unique
+  ticketNumber   String
+  shopifyOrderId String
+  orderName      String?
+  invoiceId      String?
+  creditInvoiceId String?
+
+  grossAmount  Int // PKR billed for this ticket
+  gatewayCost  Int // PKR already paid to the card/wallet processor (2.9% + Rs 30)
+  netAmount    Int // PKR owed back to the merchant
+
+  reason       String
+  note         String?
+  source       MerchantRefundSource
+  settlement   MerchantRefundSettlement @default(CREDIT)
+  status       MerchantRefundStatus     @default(CREDITED)
+  triggerTopic String? // refunds/create, orders/updated, orders/cancelled, or manual
+
+  // When it happened, when we heard, when we acted — visible to the merchant and to staff.
+  shopifyEventAt DateTime?
+  receivedAt     DateTime              @default(now())
+  actionedAt     DateTime?
+  decidedAt      DateTime?
+  decidedBy      String?
+  settledAt      DateTime?
+  // Append-only, human-readable trail rendered as the timeline: [{ at, kind, label, detail }]
+  events         Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store        MerchantStore    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  campaign     MerchantCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  entry        MerchantEntry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  invoice      MerchantInvoice? @relation("RefundedBatch", fields: [invoiceId], references: [id], onDelete: SetNull)
+  creditInvoice MerchantInvoice? @relation("CreditedBatch", fields: [creditInvoiceId], references: [id], onDelete: SetNull)
+
+  @@index([storeId, status])
+  @@index([storeId, settlement])
+  @@map("merchant_refund_requests")
 }

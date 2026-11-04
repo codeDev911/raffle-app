@@ -13,7 +13,7 @@ import path from "path"
 import crypto from "crypto"
 
 type Row = Record<string, any>
-type ModelName = "merchantStore" | "merchantCampaign" | "merchantEntry" | "merchantInvoice"
+type ModelName = "merchantStore" | "merchantCampaign" | "merchantEntry" | "merchantInvoice" | "merchantRefundRequest"
 type State = Record<ModelName, Row[]>
 
 interface ModelSpec {
@@ -30,11 +30,18 @@ const DATE_FIELDS = [
   "submittedAt",
   "paidAt",
   "gatewayStartedAt",
+  // Refund trail. Each one answers a different question: when Shopify's event happened, when we
+  // received it, when we acted, when staff decided, when the money moved.
+  "shopifyEventAt",
+  "receivedAt",
+  "actionedAt",
+  "decidedAt",
+  "settledAt",
 ]
 
 const MODELS: Record<ModelName, ModelSpec> = {
   merchantStore: {
-    defaults: () => ({ platform: "SHOPIFY", status: "ACTIVE", payoutDetails: null }),
+    defaults: () => ({ platform: "SHOPIFY", status: "ACTIVE", payoutDetails: null, logoUrl: null }),
     unique: [["storeUrl"], ["apiKeyHash"]],
   },
   merchantCampaign: {
@@ -79,15 +86,41 @@ const MODELS: Record<ModelName, ModelSpec> = {
       gatewayAmount: null,
       checkoutUrl: null,
       gatewayStartedAt: null,
+      creditApplied: 0,
     }),
     unique: [["invoiceNumber"]],
+  },
+  merchantRefundRequest: {
+    defaults: () => ({
+      orderName: null,
+      invoiceId: null,
+      creditInvoiceId: null,
+      note: null,
+      triggerTopic: null,
+      settlement: "CREDIT",
+      status: "CREDITED",
+      shopifyEventAt: null,
+      actionedAt: null,
+      decidedAt: null,
+      decidedBy: null,
+      settledAt: null,
+      events: [],
+    }),
+    // One refund per ticket; the void itself is the idempotency guard behind it.
+    unique: [["entryId"]],
   },
 }
 
 const PRIMARY_FILE = path.join(process.cwd(), "data", "merchant-connect.json")
 const FALLBACK_FILE = path.join("/tmp", "pakraffle-merchant-connect.json")
 
-const emptyState = (): State => ({ merchantStore: [], merchantCampaign: [], merchantEntry: [], merchantInvoice: [] })
+const emptyState = (): State => ({
+  merchantStore: [],
+  merchantCampaign: [],
+  merchantEntry: [],
+  merchantInvoice: [],
+  merchantRefundRequest: [],
+})
 
 function cuid(): string {
   return `c${Date.now().toString(36)}${crypto.randomBytes(8).toString("hex")}`

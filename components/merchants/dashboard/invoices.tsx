@@ -292,6 +292,13 @@ function InvoiceDetailDialog({
               <Figure label="Amount due" value={formatPKR(invoice.amountDue)} accent />
             </div>
 
+            {invoice.creditApplied > 0 && (
+              <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs leading-relaxed text-emerald-800">
+                {formatPKR(invoice.creditApplied)} of credits from returned orders of earlier batches were applied to this
+                invoice, so you are only asked for the remaining {formatPKR(invoice.amountDue)}.
+              </p>
+            )}
+
             {/* Itemised ledger */}
             <div className="min-w-0">
               <p className="mb-2 text-xs font-medium text-slate-700">Itemised tickets</p>

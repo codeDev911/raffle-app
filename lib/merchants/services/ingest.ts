@@ -1,5 +1,6 @@
 // Order ingestion pipeline: Shopify webhook -> HMAC verification -> rule engine ->
-// atomic, idempotent ticket minting (one entry per order per campaign).
+// atomic, idempotent ticket minting (one entry per order per campaign), and the mirror path:
+// a cancellation or refund voids the ticket and, when the batch was already billed, raises a credit.
 import { getMerchantDb, type MerchantDb } from "../db"
 import { toEntryDTO } from "../dto"
 import { MerchantError, isUniqueViolation, notFound, unauthorized } from "../errors"
@@ -17,15 +18,16 @@ import type {
   IngestOutcome,
   MerchantCampaign,
   MerchantEntry,
-  MerchantEntryStatus,
   MerchantStore,
   NormalizedOrder,
 } from "../types"
 import { generateTicketNumber, normalizePhone } from "../utils"
 import { simulateOrderSchema } from "../validators"
 import { canonicalTopic } from "../webhook-topics"
-import { ticketPaymentStatuses, voidOpenEntryPayment } from "./entry-payments"
+import { orderLooksRefunded } from "../refunds"
+import { ticketPaymentStatuses } from "./entry-payments"
 import { findStoreByDomain, getStoreById } from "./stores"
+import { voidOrCreditOrder, type VoidOutcome } from "./refunds"
 
 const TEST_ORDER_PREFIX = "TEST-"
 const MAX_TICKET_ATTEMPTS = 5
@@ -146,61 +148,47 @@ export async function ingestOrder(
   return outcomes
 }
 
-// ───────────────────────── cancellations ─────────────────────────
+// ───────────────────────── cancellations and refunds ─────────────────────────
+//
+// Voids and credits live in ./refunds, because "the shop told us the order came back" has two
+// different answers: an unbilled ticket is simply released from the batch, while a ticket whose
+// batch was submitted or paid needs its money back. The old code reported the second case as a
+// count called "locked" and created nothing — which is how a paid invoice with a returned order
+// produced a silent dashboard.
 
-export interface CancelResult {
-  cancelled: number
-  locked: number
+/**
+ * Shopify's own timestamp for the event, so the merchant can see when it happened upstream, not
+ * only when we noticed. Each topic keeps the moment on a different field.
+ */
+function eventTime(topic: string, payload: any): Date | null {
+  const raw =
+    topic === "orders/cancelled"
+      ? payload?.cancelled_at || payload?.updated_at
+      : topic === "refunds/create"
+        ? payload?.processed_at || payload?.created_at
+        : payload?.updated_at || payload?.created_at
+  const parsed = raw ? new Date(String(raw)) : null
+  return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null
+}
+
+function voidReason(topic: string): string {
+  return topic === "orders/cancelled" ? "Order cancelled by the customer" : "Order refunded in Shopify"
 }
 
 /**
- * Voids tickets for a cancelled/refunded order. Entries already on a submitted or paid
- * invoice are locked (the merchant has settled them) and stay valid.
+ * The webhook response is what Shopify support and the merchant both read, so it states the money
+ * outcome rather than a bare count: what was released, what was credited, and what could not move.
  */
-export async function cancelOrderEntries(store: MerchantStore, shopifyOrderId: string, reason: string): Promise<CancelResult> {
-  const db = await getMerchantDb()
-  const candidates: MerchantEntry[] = await db.merchantEntry.findMany({
-    where: { storeId: store.id, shopifyOrderId, status: { in: ["ISSUED", "INVOICED"] } },
-  })
-
-  const result: CancelResult = { cancelled: 0, locked: 0 }
-  for (const candidate of candidates) {
-    const outcome = await db.$transaction(async (tx: MerchantDb): Promise<"cancelled" | "locked" | "skipped"> => {
-      const entry: MerchantEntry | null = await tx.merchantEntry.findUnique({ where: { id: candidate.id } })
-      if (!entry || (entry.status !== "ISSUED" && entry.status !== "INVOICED")) return "skipped"
-
-      if (entry.status === "INVOICED" && entry.invoiceId) {
-        const invoice = await tx.merchantInvoice.findUnique({ where: { id: entry.invoiceId } })
-        if (!invoice) return "skipped"
-        const { count } = await tx.merchantInvoice.updateMany({
-          where: { id: invoice.id, status: "PENDING" },
-          data: { totalEntries: { decrement: 1 }, amountDue: { decrement: invoice.unitPrice } },
-        })
-        if (count === 0) return "locked"
-      }
-
-      const { count } = await tx.merchantEntry.updateMany({
-        where: { id: entry.id, status: entry.status as MerchantEntryStatus },
-        data: { status: "CANCELLED", cancelledReason: reason, invoiceId: null },
-      })
-      if (count === 0) return "skipped"
-
-      if (!entry.isTest) {
-        await tx.merchantCampaign.updateMany({
-          where: { id: entry.campaignId, currentEntries: { gt: 0 } },
-          data: { currentEntries: { decrement: 1 } },
-        })
-      }
-      return "cancelled"
-    })
-    if (outcome === "cancelled") {
-      result.cancelled++
-      // The ticket is void, so any payment submitted for it must not be confirmable any more.
-      await voidOpenEntryPayment(candidate)
-    }
-    if (outcome === "locked") result.locked++
-  }
-  return result
+function describeVoid(outcome: VoidOutcome): string {
+  const parts = [`${outcome.voided} ticket(s) voided`]
+  if (outcome.credited) parts.push(`${outcome.credited} credit(s) raised for the next invoice`)
+  // Saying this out loud matters: a refunded ticket must stop reading as "Paid" in the ledger, and
+  // the shopper has to be genuinely out of the draw rather than still holding a paid entry.
+  if (outcome.refundedPayments) parts.push(`${outcome.refundedPayments} payment(s) marked refunded`)
+  if (outcome.withdrawnEntries) parts.push(`${outcome.withdrawnEntries} raffle entr${outcome.withdrawnEntries === 1 ? "y" : "ies"} withdrawn`)
+  if (outcome.alreadyVoided) parts.push(`${outcome.alreadyVoided} already voided`)
+  if (outcome.deferred) parts.push(`${outcome.deferred} kept — the draw had already run`)
+  return parts.join(", ")
 }
 
 // ───────────────────────── webhook entry point ─────────────────────────
@@ -218,7 +206,7 @@ export interface WebhookResult {
   action: "minted" | "cancelled" | "ignored"
   message: string
   outcomes?: IngestOutcome[]
-  cancellation?: CancelResult
+  refund?: VoidOutcome
 }
 
 async function processWebhook(input: WebhookInput, options: IngestOptions): Promise<WebhookResult> {
@@ -252,6 +240,16 @@ async function processWebhook(input: WebhookInput, options: IngestOptions): Prom
 
   if (MINT_TOPICS.has(topic)) {
     const order = normalizeShopifyOrder(payload)
+    // An order update can be the only signal that money came back: refunds/create may have been
+    // configured by a different app, and a Shopify return that was refunded lands here too.
+    if (orderLooksRefunded(order)) {
+      const refund = await voidOrCreditOrder(store, order.orderId, {
+        topic,
+        reason: topic === "orders/cancelled" ? "Order cancelled by the customer" : "Order refunded in Shopify",
+        shopifyEventAt: eventTime(topic, payload),
+      })
+      return { topic, action: "cancelled", message: describeVoid(refund), refund }
+    }
     if (topic === "orders/updated" && !order.fulfilled) {
       return { topic, action: "ignored", message: "Order not fulfilled yet" }
     }
@@ -274,8 +272,12 @@ async function processWebhook(input: WebhookInput, options: IngestOptions): Prom
   if (CANCEL_TOPICS.has(topic)) {
     const orderId = extractCancelledOrderId(topic, payload)
     if (!orderId) return { topic, action: "ignored", message: "Payload has no order id" }
-    const cancellation = await cancelOrderEntries(store, orderId, topic === "refunds/create" ? "Order refunded" : "Order cancelled")
-    return { topic, action: "cancelled", message: `${cancellation.cancelled} ticket(s) voided`, cancellation }
+    const refund = await voidOrCreditOrder(store, orderId, {
+      topic,
+      reason: voidReason(topic),
+      shopifyEventAt: eventTime(topic, payload),
+    })
+    return { topic, action: "cancelled", message: describeVoid(refund), refund }
   }
 
   return { topic, action: "ignored", message: `Topic "${topic || "unknown"}" is not handled` }

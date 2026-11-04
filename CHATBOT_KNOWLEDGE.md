@@ -112,7 +112,7 @@ Every route below terminates at the same desk. A **Tawk.to live-chat widget is i
 4. Ticket minted (`PKR-SHOPIFY-…`, seconds after fulfilment) →
 5. Invoice settled (Raast or IBFT) →
 6. Draw runs live, public and audited.
-A cancellation or refund at **any** node voids the ticket, and a voided ticket never reaches the invoice.
+A cancellation or refund at **any** node voids the ticket the moment the webhook arrives. Before the batch is paid, the voided ticket simply never reaches the invoice. After it is paid, the refundable amount becomes **credit that is applied automatically to the next batch** — and the merchant can ask for a cash payout instead, which PakRaffle approves and sends.
 
 **Commercial terms**
 | Item | Value |
@@ -124,6 +124,8 @@ A cancellation or refund at **any** node voids the ticket, and a voided ticket n
 | Test tickets from the dashboard simulator | **never billed** |
 | Tickets per order | **one per campaign** — duplicate webhook deliveries are detected and ignored, so Shopify retries never double-bill |
 | Merchant ticket refund | available **up to the moment the draw runs**; refunded amount = ticket price minus the card/wallet charge already paid (**2.9% + Rs 30 per ticket**); the ticket is voided and its entry withdrawn |
+| How a refund is settled | credit against the merchant's **next invoice** by default (applied automatically when that batch closes); a **cash payout** on request, approved and sent by PakRaffle |
+| Does the merchant have to file anything | no — a cancellation or refund reported by Shopify voids the ticket, marks that ticket's PakRaffle payment **refunded**, withdraws the shopper's raffle entry and raises the credit, all in the same delivery. The **Returns & refunds** tab is a record, not a form: there is nothing to request. A return that happened outside Shopify has to be refunded (or the order cancelled) **in Shopify** for any of it to fire |
 | Checkout session validity | **30 minutes**, measured from when the session was opened (never from invoice creation) |
 | Settlement accounts | Meezan Bank (Raast / IBFT), NayaPay wallet, SadaPay wallet — the same verified PakRaffle accounts used by retail checkout |
 
@@ -134,7 +136,7 @@ A cancellation or refund at **any** node voids the ticket, and a voided ticket n
 
 **Product filters** accept comma-separated keywords, SKUs or product handles. Separator-insensitive matching: `moisturizing-cream` and `Moisturizing Cream` are treated as the same product. Blank = every item counts.
 
-**Included with every connected store:** unlimited campaigns on one store, the storefront cart widget, signed Shopify webhooks with automatic voiding, a hosted customer ticket-lookup page, prize sourcing + live draw + winner delivery, and itemised invoices with Raast/IBFT receipts.
+**Included with every connected store:** unlimited campaigns on one store, the storefront cart widget, signed Shopify webhooks with automatic voiding and crediting, a hosted customer ticket-lookup page, prize sourcing + live draw + winner delivery, and itemised invoices with Raast/IBFT receipts.
 
 **Sources:** `app/merchants/MerchantsLanding.tsx`, `lib/merchants/config.ts`, `lib/merchants/rules.ts`, `app/api/merchants/*`.
 
@@ -400,8 +402,8 @@ Source: `app/help/page.tsx`. These are the published answers; reuse them verbati
 ### 11.2 Merchant Connect FAQs
 Source: `app/merchants/MerchantsLanding.tsx`.
 - **When am I charged?** Only when you close a batch. Each ticket minted from a fulfilled, non-cancelled order is billed once at the locked per-ticket rate. Test tickets from the simulator are never billed.
-- **What happens if an order is cancelled or refunded?** We register the order cancellation and refund webhooks when you connect Shopify, so the ticket is voided automatically — as long as the batch has not been paid yet. Voided tickets are removed from your invoice.
-- **Can I get a ticket refunded?** Yes, up to the moment the draw runs. The refund is the ticket price minus the card and wallet charge we already paid on it — 2.9% plus Rs 30 per ticket. A refunded ticket is voided and its entry is withdrawn from the draw.
+- **What happens if an order is cancelled or refunded?** We register the order cancellation and refund webhooks when you connect Shopify, so the ticket is voided the moment the webhook arrives. If the batch was still open, the ticket is simply removed from your invoice. If you had already paid for it, we raise a credit for the refundable amount and apply it to your next batch — or you can ask us to pay it out instead.
+- **Can I get a ticket refunded?** Yes, up to the moment the draw runs. The refund is the ticket price minus the card and wallet charge we already paid on it — 2.9% plus Rs 30 per ticket. There is no refund form: refund or cancel the order in Shopify and the credit appears on your dashboard in the same second the webhook lands. The ticket is voided, its payment is marked refunded, and the shopper's entry is withdrawn from the draw.
 - **Can one order earn multiple tickets?** No. Each order earns at most one ticket per campaign. Duplicate webhook deliveries are detected and ignored, so retries from Shopify never double-bill you.
 - **Who supplies the prize?** PakRaffle does. You link one of our live prizes to your campaign — we handle sourcing, the draw and delivery to the winner.
 - **How do customers check their ticket?** On the public Store Ticket Lookup page, using their Shopify order number or phone number. They see the ticket, prize and draw date.
@@ -443,6 +445,7 @@ Source: `app/become-a-partner/BecomeACustomerPartnerClient.tsx`.
 | Merchant setup / monthly fee | Rs 0 | `/merchants` |
 | Merchant per-ticket fallback fee | Rs 250 (`MERCHANT_ENTRY_FEE_PKR`) — linked raffles bill at the raffle's own ticket price | `lib/merchants/config.ts` |
 | Merchant ticket refund deduction | 2.9% + Rs 30 per ticket, before the draw only | `/merchants` FAQ |
+| Merchant refund settlement | credit on the next invoice by default; cash payout on request, staff-approved | merchant dashboard **Returns & refunds** tab |
 | Tickets per order | 1 per campaign | `/merchants` FAQ |
 | Invoice checkout session TTL | 30 minutes from session start | `lib/merchants/config.ts` |
 | Store ticket serial prefix | `PKR-SHOPIFY-` | `lib/merchants/config.ts` |

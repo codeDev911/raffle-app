@@ -678,10 +678,24 @@ function SettleInvoiceDialog({
                     <span className="font-mono tabular-nums text-slate-800">{line.value}</span>
                   </div>
                 ))}
+                {typeof preview.creditsAvailable === "number" && preview.creditsAvailable > 0 && (
+                  <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 text-sm">
+                    <span className="text-slate-600">Credits from returned orders</span>
+                    <span className="font-mono tabular-nums text-emerald-700">− {formatPKR(preview.creditsAvailable)}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between px-4 py-4">
                   <span className="text-sm font-medium text-slate-800">Amount due</span>
-                  <span className="font-mono text-2xl font-semibold tabular-nums text-emerald-600">{formatPKR(preview.amountDue)}</span>
+                  <span className="font-mono text-2xl font-semibold tabular-nums text-emerald-600">
+                    {formatPKR(preview.estimatedDue ?? preview.amountDue)}
+                  </span>
                 </div>
+                {typeof preview.creditsAvailable === "number" && preview.creditsAvailable > 0 && (
+                  <p className="px-4 pb-4 text-[11px] leading-relaxed text-slate-500">
+                    Credits are applied whole, so a credit bigger than this batch waits for the next one instead of being
+                    split. You will see the exact figure on the invoice.
+                  </p>
+                )}
               </div>
 
               <Alert tone="info">

@@ -65,6 +65,22 @@ export const updateSettingsSchema = z.object({
   contactEmail: z.string().trim().toLowerCase().email({ message: "Enter a valid email address" }).optional(),
   contactPhone: phone.optional(),
   payoutDetails: optionalText(500),
+  /**
+   * Public store logo. Merchants paste either "https://…" or a bare "cdn.shopify.com/…"; an empty
+   * string or null clears it, which is why the blank case maps to null instead of being dropped.
+   */
+  logoUrl: z
+    .string()
+    .trim()
+    .max(600, { message: "Logo URL is too long" })
+    .optional()
+    .nullable()
+    .transform((v) =>
+      v === undefined ? undefined : v === null || v === "" ? null : /^https?:\/\//i.test(v) ? v : `https://${v.replace(/^\/\//, "")}`,
+    )
+    .refine((v) => v === undefined || v === null || /^https:\/\/[^/?]+\.[a-z]{2,}/i.test(v), {
+      message: "Enter a full image URL, e.g. https://cdn.example.com/logo.png",
+    }),
   webhookSecret: webhookSecret.optional(),
   regenerateWebhookSecret: z.boolean().optional(),
 })
@@ -130,4 +146,16 @@ export const adminCampaignStatusSchema = z.object({
 /** Settlement note kept on the invoice record (empty string clears it). */
 export const adminInvoiceNoteSchema = z.object({
   adminNotes: z.string().trim().max(2000),
+})
+
+/** Staff decision on a payout. Credits need no decision — they apply themselves to the next batch. */
+export const refundDecisionSchema = z.object({
+  id: z.string().trim().min(1, { message: "id is required" }),
+  action: z.enum(["APPROVE", "REJECT", "PAID"]),
+  note: z.string().trim().max(800).optional(),
+})
+
+/** An unspent credit can still be switched into a payout request, and back. */
+export const refundSettlementSchema = z.object({
+  settlement: z.enum(["CREDIT", "PAYOUT"]),
 })

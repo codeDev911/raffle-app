@@ -29,3 +29,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Sanity content backups written by scripts/sanity-kb.mjs
+.backups/

@@ -12,7 +12,11 @@ const MAX_BODY_BYTES = 1024 * 1024
  * Configure in Shopify Admin → Settings → Notifications → Webhooks (JSON format):
  *   Order creation  (orders/create)   → mints the ticket + congratulations popup
  *   Order cancellation (orders/cancelled), Refund creation (refunds/create) → void tickets
+ *   Order update (orders/updated)     → catches a refund or return that only ever arrives as an
+ *                                        order change, so the ticket is voided and credited
  *   Order fulfillment (orders/fulfilled) → optional, for stores billing after shipping
+ * A refund against an already-paid batch does not disappear: it raises a credit that settles itself
+ * on the merchant's next invoice, or a payout request the desk approves.
  * The store is resolved from X-Shopify-Shop-Domain (or ?store=<id> for custom domains) and
  * every delivery must carry a valid X-Shopify-Hmac-Sha256 over the raw body.
  * Re-deliveries are idempotent: the same order never mints a second ticket.

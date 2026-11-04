@@ -6,12 +6,12 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { ArrowLeft, CheckCircle2, Flag, Loader2, ShieldAlert } from "lucide-react"
 import { CONTAINER, Mesh, PANEL, SHELL } from "@/components/marketing/kit"
+import { COMPLAINT_ENDPOINT, emailField, submitToFormbold } from "@/lib/forms"
 
-const COMPLAINTS_ENDPOINT = process.env.NEXT_PUBLIC_FORMSPREE_COMPLAINTS_ENDPOINT
 const WHATSAPP_INTL = "923377155722"
 
-// The reason is sent as its own Formspree field so the complaints inbox can be triaged without
-// opening every message.
+// The reason travels as its own field so the complaints inbox can be triaged without opening
+// every message.
 const COMPLAINT_REASONS = [
   "Seller is not honouring the draw or prize",
   "Prize promised but never delivered",
@@ -55,34 +55,27 @@ export default function MakeComplaintClient() {
     setStatus("submitting")
     setError(null)
 
-    if (!COMPLAINTS_ENDPOINT) {
+    if (!COMPLAINT_ENDPOINT) {
       setError("Complaints are temporarily unavailable. Please report to PakRaffle support on WhatsApp.")
       setStatus("idle")
       return
     }
 
     try {
-      // Formspree returns JSON (instead of an HTML redirect) when Accept is set.
-      const res = await fetch(COMPLAINTS_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          sellerName: form.seller,
-          sellerDomain: form.domain,
-          ticketNumber: form.ticket,
-          orderName: form.order,
-          campaignTitle: form.campaign,
-          reporterName: form.name,
-          reporterContact: form.contact,
-          reason: form.reason,
-          details: form.details,
-          _subject: `Seller complaint — ${form.seller || form.domain || "unknown store"}`,
-        }),
+      await submitToFormbold(COMPLAINT_ENDPOINT, {
+        name: form.name,
+        // Reporters type an email or a WhatsApp number; only a real address goes in `email`.
+        email: emailField(form.contact),
+        reporterContact: form.contact,
+        sellerName: form.seller,
+        sellerDomain: form.domain,
+        ticketNumber: form.ticket,
+        orderName: form.order,
+        campaignTitle: form.campaign,
+        reason: form.reason,
+        message: form.details,
+        subject: `Seller complaint — ${form.seller || form.domain || "unknown store"}`,
       })
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        throw new Error(data?.errors?.[0]?.message || "We couldn't file that complaint. Please try again.")
-      }
       setStatus("success")
       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" })
     } catch (err) {

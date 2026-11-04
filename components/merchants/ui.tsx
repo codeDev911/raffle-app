@@ -85,6 +85,7 @@ const STATUS_TONE: Record<string, { dot: string; text: string; label?: string }>
   DRAW_READY: { dot: "bg-violet-500", text: "text-violet-700", label: "Ready for draw" },
   COMPLETED: { dot: "bg-slate-400", text: "text-slate-600", label: "Draw completed" },
   CANCELLED: { dot: "bg-rose-500", text: "text-rose-700" },
+  REFUNDED: { dot: "bg-rose-500", text: "text-rose-700", label: "Refunded" },
   ENDED: { dot: "bg-slate-400", text: "text-slate-500", label: "Ended" },
   TEST: { dot: "bg-fuchsia-500", text: "text-fuchsia-700", label: "Test" },
   // Merchant ticket states, derived from the ticket + its PakRaffle payment row.

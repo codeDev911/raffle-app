@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, ExternalLink, Inbox, Radio, Ticket } from "lucide-react"
+import { ArrowRight, ExternalLink, Inbox, Radio, Ticket, Undo2 } from "lucide-react"
 import {
+  Btn,
   EmptyState,
   Metric,
   Panel,
@@ -21,14 +22,21 @@ export function OverviewTab({
   me,
   campaigns,
   invoices,
+  creditsAvailable = 0,
+  creditsCount = 0,
   onOpenCampaigns,
   onOpenInvoices,
+  onOpenRefunds,
 }: {
   me: MeResponse
   campaigns: CampaignDTO[]
   invoices: InvoiceDTO[]
+  /** Unspent credits from returned and refunded orders, raised automatically. */
+  creditsAvailable?: number
+  creditsCount?: number
   onOpenCampaigns: () => void
   onOpenInvoices: () => void
+  onOpenRefunds?: () => void
 }) {
   const open = campaigns.filter((c) => c.status === "ACTIVE" || c.status === "PAUSED")
   const active = campaigns.filter((c) => c.status === "ACTIVE" && !c.ended && !c.capReached)
@@ -54,6 +62,28 @@ export function OverviewTab({
         <Metric label="Awaiting settlement" value={formatNumber(outstanding.length)} hint={formatPKR(outstandingAmount) + " due"} />
         <Metric label="Tickets in draw pool" value={formatNumber(ticketsPaid)} hint="paid & verified" />
       </div>
+
+      {creditsAvailable > 0 && (
+        <Panel className="border-emerald-200 bg-emerald-50/70">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-emerald-900">
+                {formatPKR(creditsAvailable)} in credits from {formatNumber(creditsCount)} returned order
+                {creditsCount === 1 ? "" : "s"}
+              </p>
+              <p className="mt-0.5 text-xs text-emerald-800/80">
+                Raised automatically when Shopify told us. They come off your next batch invoice by themselves —
+                or turn them into a payout whenever you like.
+              </p>
+            </div>
+            {onOpenRefunds && (
+              <Btn variant="secondary" onClick={onOpenRefunds}>
+                <Undo2 className="h-4 w-4" /> View refunds
+              </Btn>
+            )}
+          </div>
+        </Panel>
+      )}
 
       <div className="grid gap-4 xl:grid-cols-[1fr_380px]">
         <Panel>

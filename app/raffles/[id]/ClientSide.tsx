@@ -14,11 +14,13 @@ import {
   ChevronRight,
   Clock,
   Eye,
+  ExternalLink,
   Gift,
   Maximize2,
   Share2,
   ShieldCheck,
   Sparkles,
+  Store,
   Trophy,
   Truck,
   Video,
@@ -76,6 +78,20 @@ interface RelatedDraw {
   currentEntries: number
 }
 
+/** A Shopify store whose Merchant Connect campaign hands out this draw's tickets for free. */
+interface PartnerStore {
+  id: string
+  name: string
+  /** Bare shop domain, e.g. mystore.myshopify.com. */
+  domain: string
+  /** Logo the merchant set in their dashboard; null falls back to the store's own favicon. */
+  logoUrl?: string | null
+  campaignTitle: string
+  /** The store's qualifying rule in shopper words: "Spend Rs. 5,000+". */
+  ruleSummary: string
+  ticketsMinted: number
+}
+
 const WHATSAPP_COMMUNITY_URL = "https://whatsapp.com/channel/0029VbB0CzJ8fewyBXpXy210"
 const WHATSAPP_PHONE_CLEAN = "923377155722"
 
@@ -83,27 +99,12 @@ const WHATSAPP_PHONE_CLEAN = "923377155722"
 // fact row shrinks its figures and lets "Rs" wrap onto its own line instead of clipping.
 const FACT_VALUE = "break-words text-[1.05rem] sm:text-[1.6rem]"
 
-const DATE_FMT = new Intl.DateTimeFormat("en-PK", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: "Asia/Karachi",
-})
-const TIME_FMT = new Intl.DateTimeFormat("en-PK", {
-  hour: "numeric",
-  minute: "2-digit",
-  timeZone: "Asia/Karachi",
-})
-
-function drawDate(value?: string) {
-  const date = new Date(value || "")
-  return Number.isNaN(date.getTime()) ? "—" : DATE_FMT.format(date)
-}
-
-function drawTime(value?: string) {
-  const date = new Date(value || "")
-  return Number.isNaN(date.getTime()) ? "" : TIME_FMT.format(date)
-}
+/**
+ * Nothing on this page counts down or names a date. The stored endDate is when ticket sales close,
+ * not when the draw runs — the pool locks at 100% sold and the live stream is scheduled after that
+ * and announced on the WhatsApp channel. A countdown or a date would promise a moment we do not
+ * decide in advance, so the panel sells on progress (tickets left / pool sold) instead.
+ */
 
 /** Database ids are cuids; show only the tail so the label stays readable. */
 function shortDrawId(id: string) {
@@ -171,78 +172,6 @@ function WhatsAppIcon({ className = "h-5 w-5" }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
       <path d="M17.507 14.307l-.009.075c-.238-.12-1.406-.694-1.624-.774-.219-.079-.378-.12-.538.12-.158.239-.617.774-.757.933-.138.16-.279.179-.517.06-.239-.12-1.008-.372-1.92-1.185-.709-.633-1.188-1.415-1.328-1.654-.139-.239-.015-.368.105-.487.108-.107.239-.279.359-.418.119-.14.159-.239.239-.399.08-.159.04-.299-.02-.418-.06-.12-.538-1.296-.737-1.774-.194-.467-.393-.404-.539-.412l-.46-.008c-.159 0-.418.06-.637.299-.22.239-.837.817-.837 1.993 0 1.176.857 2.311.976 2.471.12.16 1.687 2.576 4.088 3.613.571.247 1.018.395 1.366.506.574.183 1.096.157 1.509.095.46-.069 1.406-.575 1.605-1.131.199-.557.199-1.035.139-1.135-.059-.1-.219-.16-.458-.279zM12.023 2C6.49 2 2 6.48 2 12c0 1.979.578 3.824 1.579 5.378L2.094 22l4.802-1.436C8.36 21.435 10.134 22 12.023 22c5.534 0 10.024-4.48 10.024-10S17.557 2 12.023 2zm0 18.25c-1.644 0-3.18-.49-4.475-1.332l-.321-.21-2.852.853.865-2.784-.23-.332A8.196 8.196 0 013.78 12c0-4.545 3.697-8.243 8.243-8.243 4.545 0 8.243 3.698 8.243 8.243 0 4.545-3.698 8.25-8.243 8.25z" />
     </svg>
-  )
-}
-
-/** Live countdown. Renders placeholders on the server, then ticks once mounted. */
-function Countdown({ endDate, variant }: { endDate: string; variant: "live" | "closed" | "pending" }) {
-  const [now, setNow] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (variant !== "live") return
-    setNow(Date.now())
-    const id = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(id)
-  }, [endDate, variant])
-
-  if (variant === "pending") {
-    return (
-      <div className="flex items-center gap-2.5 rounded-2xl border border-slate-900/10 bg-white/70 px-4 py-3">
-        <Clock className="h-4 w-4 shrink-0 text-slate-400" />
-        <p className="text-[12px] text-slate-600">Entries open soon — no tickets have been issued yet.</p>
-      </div>
-    )
-  }
-
-  const target = new Date(endDate).getTime()
-  const left = now === null || Number.isNaN(target) ? null : Math.max(target - now, 0)
-
-  if (variant === "closed" || (left !== null && left === 0)) {
-    return (
-      <div className="flex items-center gap-2.5 rounded-2xl border border-slate-900/10 bg-white/70 px-4 py-3">
-        <Clock className="h-4 w-4 shrink-0 text-slate-400" />
-        <p className="text-[12px] text-slate-600">
-          Entries closed on <span className="font-mono font-semibold text-slate-900">{drawDate(endDate)}</span>
-        </p>
-      </div>
-    )
-  }
-
-  const units =
-    left === null
-      ? [
-          { label: "Days", value: undefined },
-          { label: "Hrs", value: undefined },
-          { label: "Min", value: undefined },
-          { label: "Sec", value: undefined },
-        ]
-      : [
-          { label: "Days", value: Math.floor(left / 86_400_000) },
-          { label: "Hrs", value: Math.floor((left / 3_600_000) % 24) },
-          { label: "Min", value: Math.floor((left / 60_000) % 60) },
-          { label: "Sec", value: Math.floor((left / 1000) % 60) },
-        ]
-
-  return (
-    <div>
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-slate-400">Draw closes in</p>
-        <p className="text-[10.5px] text-slate-500">
-          {drawDate(endDate)}
-          {drawTime(endDate) ? ` · ${drawTime(endDate)} PKT` : ""}
-        </p>
-      </div>
-      <div className="mt-2 grid grid-cols-4 gap-2">
-        {units.map((unit) => (
-          <div key={unit.label} className="rounded-xl border border-slate-900/5 bg-white/80 px-2 py-2 text-center">
-            <p className="font-mono text-lg font-semibold leading-none tabular-nums text-slate-900">
-              {unit.value === undefined ? "--" : String(unit.value).padStart(2, "0")}
-            </p>
-            <p className="mt-1 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-slate-400">{unit.label}</p>
-          </div>
-        ))}
-      </div>
-    </div>
   )
 }
 
@@ -465,7 +394,40 @@ function RelatedCard({ draw }: { draw: RelatedDraw }) {
   )
 }
 
-const ClientSide = ({ raffle, related = [] }: { raffle: Raffle; related?: RelatedDraw[] }) => {
+/**
+ * Store branding, in order of trust: the logo the merchant set in their dashboard, then the shop's
+ * own favicon, then the shop initial. The letter tile always sits underneath, so a store whose image
+ * cannot be fetched still reads as a brand instead of a broken image. Requests go to the merchant's
+ * own domain with no referrer — nothing is pulled through a third-party icon service.
+ */
+function StoreLogo({ name, domain, logoUrl }: { name: string; domain: string; logoUrl?: string | null }) {
+  const [iconFailed, setIconFailed] = useState(false)
+  const initial = (name.trim().charAt(0) || "?").toUpperCase()
+  const src = logoUrl || (domain ? `https://${domain}/favicon.ico` : null)
+
+  return (
+    <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-900/10 bg-white">
+      <span aria-hidden className="font-display text-lg font-semibold text-emerald-700">
+        {initial}
+      </span>
+      {src && !iconFailed && (
+        <img
+          src={src}
+          alt=""
+          width={44}
+          height={44}
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={() => setIconFailed(true)}
+          className="absolute inset-0 h-full w-full bg-white object-contain p-2"
+        />
+      )}
+    </span>
+  )
+}
+
+const ClientSide = ({ raffle, related = [], stores = [] }: { raffle: Raffle; related?: RelatedDraw[]; stores?: PartnerStore[] }) => {
   const searchParams = useSearchParams()
   const openEnModal = searchParams.get("openEnModal") || 0
   const referralLinkId = searchParams.get("lnk") || false
@@ -668,13 +630,6 @@ const ClientSide = ({ raffle, related = [] }: { raffle: Raffle; related?: Relate
                 </p>
               </div>
 
-              <div className="mt-5">
-                <Countdown
-                  endDate={raffle.endDate}
-                  variant={raffle.status === "ACTIVE" ? "live" : raffle.status === "DRAFT" ? "pending" : "closed"}
-                />
-              </div>
-
               <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-900/5 pt-4 text-[11.5px] text-slate-500">
                 <span className="inline-flex items-center gap-1.5">
                   <Eye className="h-3.5 w-3.5 text-emerald-600" />
@@ -805,13 +760,80 @@ const ClientSide = ({ raffle, related = [] }: { raffle: Raffle; related?: Relate
             valueClassName={FACT_VALUE}
           />
           <StatTile
-            label="Draw closes"
-            value={drawDate(raffle.endDate)}
-            hint={drawTime(raffle.endDate) ? `${drawTime(raffle.endDate)} PKT` : "date to be announced"}
+            label="Delivery"
+            value="Free"
+            hint="TCS, insured, to your door nationwide"
             valueClassName={FACT_VALUE}
           />
         </div>
       </section>
+
+      {/* --------------------------------------------- Stores that gift this ticket */}
+      {stores.length > 0 && (
+        <section className={`${CONTAINER} mt-10`}>
+          <div className={`${PANEL} p-5 sm:p-7`}>
+            <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+              <div className="min-w-0">
+                <Kicker>
+                  <Store className="h-3.5 w-3.5" /> Shopify stores feeding this draw
+                </Kicker>
+                <h2 className="mt-2.5 font-display text-xl font-semibold tracking-tight text-slate-900 sm:text-[1.7rem]">
+                  Buy from these stores to get a free ticket
+                </h2>
+              </div>
+              <p className="max-w-sm text-[11.5px] leading-relaxed text-slate-500">
+                These shops run this exact prize. Meet their rule at checkout and one ticket for this
+                draw is added to the order — the shopper never pays PakRaffle for it.
+              </p>
+            </div>
+
+            <ul className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {stores.map((store) => (
+                <li
+                  key={store.id}
+                  className="flex flex-col gap-3.5 rounded-2xl border border-slate-900/5 bg-white/70 p-4 transition hover:border-emerald-600/25 hover:bg-white"
+                >
+                  <div className="flex items-start gap-3.5">
+                    <StoreLogo name={store.name} domain={store.domain} logoUrl={store.logoUrl} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13.5px] font-semibold text-slate-900" title={store.name}>
+                        {store.name}
+                      </p>
+                      <p className="mt-1.5 inline-flex max-w-full items-center gap-1.5 rounded-full bg-emerald-600/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-800">
+                        <Gift className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{store.ruleSummary}</span>
+                      </p>
+                      <p className="mt-1.5 truncate text-[11px] text-slate-500">
+                        {store.campaignTitle}
+                        {store.ticketsMinted > 0
+                          ? ` · ${store.ticketsMinted.toLocaleString("en-PK")} ticket${store.ticketsMinted === 1 ? "" : "s"} given away`
+                          : " · live now"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <a
+                    href={`https://${store.domain}`}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="mt-auto inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-xl border border-slate-900/10 bg-white px-4 text-[12.5px] font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-emerald-600/30 hover:text-emerald-800"
+                  >
+                    Shop now <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-4 text-[11.5px] leading-relaxed text-slate-500">
+              Already ordered? The ticket is minted when the shop fulfils the order —{" "}
+              <Link href="/lookup/store-ticket" className="font-semibold text-emerald-700 transition hover:text-emerald-800">
+                check it by order number
+              </Link>{" "}
+              or by the phone number you used at checkout. No sign-up needed.
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* --------------------------------------------------------------- Details */}
       <section className={`${CONTAINER} mt-10 grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-8`}>

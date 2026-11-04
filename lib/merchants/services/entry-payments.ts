@@ -298,13 +298,41 @@ export async function settleInvoiceEntries(
   return payments
 }
 
-/** Cancelling/refunding an order must not leave a confirmable payment behind. */
-export async function voidOpenEntryPayment(entry: MerchantEntry): Promise<boolean> {
+/** What happened to the money row behind a voided ticket, so the caller can say it out loud. */
+export interface EntryPaymentVoid {
+  /** A payment row existed for this ticket at all. */
+  found: boolean
+  /** Confirmed money was reversed: the payment now reads REFUNDED and the draw entry is gone. */
+  refunded: boolean
+  /** Raffle entries withdrawn from the draw by this reversal. */
+  withdrawn: number
+}
+
+/**
+ * The money side of voiding a ticket — the part a cancellation and a refund do NOT share.
+ *
+ * Nothing was collected yet, so a pending transfer is simply cancelled and can never be confirmed
+ * by the desk. But when PakRaffle had already confirmed the money, cancelling the ticket alone left
+ * the ledger reading "Paid" and the shopper still holding a real raffle entry. That case now runs
+ * the same unwind the admin desk triggers on /admin/payments: the raffle entry is deleted, the
+ * raffle counter is put back, and the payment row is flipped to REFUNDED.
+ */
+export async function voidEntryPayment(entry: MerchantEntry): Promise<EntryPaymentVoid> {
   const transactionId = entryPaymentTransactionId(entry.ticketNumber)
   const existing: Payment | null = await prisma.payment.findFirst({ where: { transactionId } })
-  if (!existing || !["PENDING", "PROCESSING"].includes(existing.status)) return false
-  await prisma.payment.update({ where: { id: existing.id }, data: { status: "CANCELLED" } })
-  return true
+  if (!existing) return { found: false, refunded: false, withdrawn: 0 }
+
+  if (["PENDING", "PROCESSING"].includes(existing.status)) {
+    await prisma.payment.update({ where: { id: existing.id }, data: { status: "CANCELLED" } })
+    return { found: true, refunded: false, withdrawn: 0 }
+  }
+
+  // Already FAILED / REFUNDED / CANCELLED: nothing was collected, so there is nothing to reverse.
+  if (existing.status !== "COMPLETED") return { found: true, refunded: false, withdrawn: 0 }
+
+  const { withdrawn } = await refundPayment(existing.id)
+  await prisma.payment.update({ where: { id: existing.id }, data: { status: "REFUNDED" } })
+  return { found: true, refunded: true, withdrawn }
 }
 
 // ───────────────────────── admin rejection ─────────────────────────

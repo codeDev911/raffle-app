@@ -40,6 +40,7 @@ import {
   Store as StoreIcon,
   Ticket,
   Trophy,
+  Undo2,
   UserCheck,
   Users,
   Wallet,
@@ -148,6 +149,8 @@ export default function MerchantsAdminClient() {
   const [busy, setBusy] = useState<string | null>(null)
   const [query, setQuery] = useState("")
   const [status, setStatus] = useState("ALL")
+  // Payout requests live on their own screen; the hub only carries the number so it is never forgotten.
+  const [payoutQueue, setPayoutQueue] = useState(0)
 
   const { request, tokenRequired, askForToken } = useAdminApi()
 
@@ -177,7 +180,13 @@ export default function MerchantsAdminClient() {
     setLoading(true)
     setError(null)
     try {
-      setData(await request<Overview & { success: boolean }>("/api/admin/merchants"))
+      const [overview, refunds] = await Promise.all([
+        request<Overview & { success: boolean }>("/api/admin/merchants"),
+        // A failure here must not hide the settlement desk, so the queue count degrades to "unknown".
+        request<{ requests: Array<{ settlement: string; status: string }> }>("/api/admin/merchant-refunds").catch(() => null),
+      ])
+      setData(overview)
+      setPayoutQueue((refunds?.requests || []).filter((r) => r.settlement === "PAYOUT" && (r.status === "REQUESTED" || r.status === "APPROVED")).length)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -436,6 +445,16 @@ export default function MerchantsAdminClient() {
             )}
           </button>
         ))}
+        <Link
+          href="/admin/merchants/refunds"
+          className="inline-flex shrink-0 items-center gap-2 border-b-2 border-transparent px-3.5 py-2.5 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+        >
+          <Undo2 className="h-4 w-4" />
+          Refunds
+          {payoutQueue > 0 && (
+            <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-800">{payoutQueue} to pay</span>
+          )}
+        </Link>
       </div>
 
       {/* Filter bar */}

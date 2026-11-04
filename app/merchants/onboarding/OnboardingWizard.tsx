@@ -10,6 +10,8 @@ import { IntakeForm } from "@/components/merchants/IntakeForm"
 import { BrandMark } from "@/components/brand"
 import { ThemeToggle } from "@/components/merchants/theme-toggle"
 import type { IntakeAnswers } from "@/lib/merchants/intake"
+import { describeIntakeAnswer, describeIntakeAnswers, formatIntakeDigest } from "@/lib/merchants/intake"
+import { MERCHANT_INTAKE_ENDPOINT, submitToFormbold } from "@/lib/forms"
 import { WEBHOOK_TOPICS } from "@/lib/merchants/webhook-topics"
 
 type StepKey = "store" | "shopify" | "tally" | "done"
@@ -31,7 +33,7 @@ interface StoreDTO {
   shopifyWebhooksReady: boolean
   shopifyScriptInstalled: boolean
   onboardingCompletedAt: string | null
-  /** Answers to the six intake questions; submittedAt is null until the merchant submits. */
+  /** Legacy only: answers stored before the intake moved to Formbold. submittedAt marks the step done. */
   intake?: { answers: IntakeAnswers | null; submittedAt: string | null }
 }
 
@@ -201,20 +203,47 @@ export default function OnboardingWizard() {
     }
   }
 
-  /** Saves the intake answers, then closes the wizard in one go. */
+  /**
+   * The intake answers are posted straight to Formbold and never touch our database; all that is
+   * stamped back here is the fact that the step is done.
+   */
   const submitIntake = async (answers: IntakeAnswers) => {
     setBusy(true)
     setError(null)
+    const storeName =
+      describeIntakeAnswer("storeName", answers) || me?.store.name || storeForm.name || "Merchant intake"
+
     try {
-      await merchantApi("/api/merchants/me/intake", { method: "POST", json: answers })
-      await merchantApi("/api/merchants/me/onboarding", { method: "PATCH", json: { completed: true } })
-      setStep("done")
-      router.refresh()
+      await submitToFormbold(
+        MERCHANT_INTAKE_ENDPOINT,
+        {
+          name: storeName,
+          email: me?.store.contactEmail || account?.email,
+          subject: `Merchant intake — ${storeName}`,
+          message: formatIntakeDigest(answers),
+          storeUrl: me?.store.storeUrl || storeForm.storeUrl,
+          contactPhone: me?.store.contactPhone || storeForm.contactPhone,
+          ...describeIntakeAnswers(answers),
+        },
+        "We couldn't send your intake answers. Please try again.",
+      )
     } catch (err: any) {
-      setError(err.message)
-    } finally {
+      setError(err?.message || "We couldn't send your intake answers. Please try again.")
       setBusy(false)
+      return
     }
+
+    // Already delivered, so a failed stamp must not push the merchant into submitting twice.
+    try {
+      await merchantApi("/api/merchants/me/intake", { method: "POST", json: { submitted: true } })
+      await merchantApi("/api/merchants/me/onboarding", { method: "PATCH", json: { completed: true } })
+    } catch {
+      // Progress persistence is best-effort; the wizard still moves forward.
+    }
+
+    setStep("done")
+    setBusy(false)
+    router.refresh()
   }
 
   if (loading) {

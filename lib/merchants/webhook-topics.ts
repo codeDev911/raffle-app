@@ -32,7 +32,16 @@ export const WEBHOOK_TOPICS: WebhookTopic[] = [
   {
     topic: "refunds/create",
     adminLabel: "Refund creation",
-    purpose: "Voids the ticket when the order is refunded.",
+    purpose: "Voids the ticket when the order is refunded — unbilled, or turned into credit if you already paid for it.",
+    required: true,
+  },
+  {
+    // The safety net: a return refunded through Shopify's returns flow, a partial refund, or a
+    // refund recorded by another app can arrive only as an order update. Without this topic the
+    // ticket stays billed and the merchant sees nothing.
+    topic: "orders/updated",
+    adminLabel: "Order update",
+    purpose: "Catches refunds and returns that arrive as an order change, so the ticket is voided and credited.",
     required: true,
   },
   {
@@ -71,6 +80,14 @@ const TOPIC_ALIASES: Record<string, string> = {
   "refunds/created": "refunds/create",
   "order/refund": "refunds/create",
   "orders/refunded": "refunds/create",
+  "orders/update": "orders/updated",
+  "order/update": "orders/updated",
+  "order/updated": "orders/updated",
+  // returns/* is deliberately not aliased: a Return payload carries no order id (only the Return
+  // GID and line-item deltas), so it cannot be matched to a ticket here. The money movement that
+  // follows a return always arrives as refunds/create or an order update — which is also the
+  // merchant's instruction for a return handled at the counter: record it in Shopify, and the
+  // webhook does the void, the refund and the credit.
 }
 
 /** Maps any accepted spelling onto the canonical topic, lowercased and trimmed. */

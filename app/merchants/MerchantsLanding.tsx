@@ -128,7 +128,7 @@ const FEATURES = [
   {
     icon: RefreshCcw,
     title: "Cancel-safe billing",
-    body: "Shopify cancellation and refund webhooks void the ticket automatically — and a voided ticket never hits your invoice.",
+    body: "Shopify cancellation and refund webhooks void the ticket, refund its payment and raise a credit on your next invoice — all in the same call.",
   },
   {
     icon: Receipt,
@@ -173,11 +173,11 @@ const FAQ = [
   },
   {
     q: "What happens if an order is cancelled or refunded?",
-    a: "We register the order cancellation and refund webhooks when you connect Shopify, so the ticket is voided automatically — as long as the batch has not been paid yet. Voided tickets are removed from your invoice.",
+    a: "We register the order cancellation and refund webhooks when you connect Shopify, so the ticket is voided the moment the webhook arrives. If the batch was still open, the ticket is simply removed from your invoice. If you had already paid for it, we raise a credit for the refundable amount and apply it to your next batch — or you can ask us to pay it out instead.",
   },
   {
     q: "Can I get a ticket refunded?",
-    a: "Yes, up to the moment the draw runs. The refund is the ticket price minus the card and wallet charge we already paid on it — 2.9% plus Rs. 30 per ticket. A refunded ticket is voided and its entry is withdrawn from the draw.",
+    a: "Yes, up to the moment the draw runs. The refund is the ticket price minus the card and wallet charge we already paid on it — 2.9% plus Rs 30 per ticket. There is no refund form to fill: refund or cancel the order in Shopify and the credit shows up on your dashboard in the same second the webhook lands. The ticket is voided, its payment is marked refunded, and the shopper's entry is withdrawn from the draw.",
   },
   {
     q: "Can one order earn multiple tickets?",
@@ -373,7 +373,7 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
 
             <p className="mt-5 flex items-center justify-center gap-1.5 text-[11.5px] text-slate-500">
               <RefreshCcw className="h-3.5 w-3.5 shrink-0 text-rose-500" strokeWidth={2.2} />
-              A cancellation or refund at any node voids the ticket, and a voided ticket never reaches your invoice.
+              A cancellation or refund voids the ticket the second Shopify reports it. Unbilled, it never reaches your invoice; billed, it comes back to you as credit.
             </p>
           </div>
 
@@ -855,7 +855,7 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
                     {[
                       ["Charged when", "A batch closes"],
                       ["One order", "One ticket"],
-                      ["Cancelled order", "Voided, not billed"],
+                      ["Cancelled order", "Voided, or credited"],
                     ].map(([k, v]) => (
                       <div key={k} className="flex items-center justify-between gap-3">
                         <span className="text-slate-600">{k}</span>
@@ -871,7 +871,8 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
                   </p>
                   <p className="mt-2 text-sm leading-relaxed text-amber-950">
                     Refundable any time before the draw runs, minus the card and wallet charge already paid on it —{" "}
-                    <strong>2.9% + Rs. 30</strong> per ticket. The ticket is voided and its entry withdrawn.
+                    <strong>2.9% + Rs. 30</strong> per ticket. The ticket is voided and its entry withdrawn. Credit settles
+                    itself on your next batch; a payout is the only case that needs us.
                   </p>
                 </div>
               </div>

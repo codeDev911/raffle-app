@@ -99,6 +99,7 @@ export async function updateStoreSettings(store: MerchantStore, input: unknown) 
   if (data.contactEmail !== undefined) patch.contactEmail = data.contactEmail
   if (data.contactPhone !== undefined) patch.contactPhone = data.contactPhone
   if (data.payoutDetails !== undefined) patch.payoutDetails = data.payoutDetails
+  if (data.logoUrl !== undefined) patch.logoUrl = data.logoUrl
 
   let revealedSecret: string | null = null
   if (data.webhookSecret) {

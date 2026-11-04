@@ -11,6 +11,10 @@
     "build": "next build",
     "start": "next start -p 3000 -H 0.0.0.0",
     "lint": "echo 'Lint check passed'",
+    "kb:build": "node scripts/sanity-kb.mjs build",
+    "kb:export": "node scripts/sanity-kb.mjs export",
+    "kb:dry-run": "node scripts/sanity-kb.mjs push",
+    "kb:push": "node scripts/sanity-kb.mjs push --live --delete-all --yes",
     "postinstall": "prisma generate"
   },
   "dependencies": {

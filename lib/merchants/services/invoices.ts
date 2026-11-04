@@ -11,6 +11,7 @@ import { generateInvoiceSchema, submitPaymentSchema } from "../validators"
 import { getOwnedCampaign } from "./campaigns"
 import { invoiceCheckoutOpen } from "./checkout"
 import { settleInvoiceEntries, ticketPaymentStatuses } from "./entry-payments"
+import { applyCreditsToInvoice, refundSummary } from "./refunds"
 
 const INVOICEABLE_STATUSES = ["ACTIVE", "PAUSED"]
 
@@ -20,12 +21,19 @@ export async function previewInvoice(store: MerchantStore, campaignId: string) {
   const totalEntries: number = await db.merchantEntry.count({
     where: { campaignId: campaign.id, status: "ISSUED", isTest: false },
   })
+  const gross = totalEntries * campaign.ticketPrice
+  // Credits from returned orders of earlier batches are applied when the invoice is raised, so the
+  // preview has to show the real figure the merchant will be asked to pay.
+  const summary = await refundSummary(store)
   return {
     campaignId: campaign.id,
     campaignTitle: campaign.title,
     totalEntries,
     unitPrice: campaign.ticketPrice,
-    amountDue: totalEntries * campaign.ticketPrice,
+    amountDue: gross,
+    /** What the merchant will actually owe once their credits are applied. */
+    creditsAvailable: summary.creditsAvailable,
+    estimatedDue: Math.max(0, gross - summary.creditsAvailable),
     canGenerate: INVOICEABLE_STATUSES.includes(campaign.status) && totalEntries > 0,
   }
 }
@@ -80,7 +88,11 @@ export async function generateInvoice(store: MerchantStore, input: unknown) {
         if (linked.count !== entries.length) {
           throw conflict("Entries changed while generating the invoice. Please retry.")
         }
-        return created
+
+        // Settle the merchant's credits here, in the same transaction, so a batch is never billed at
+        // full price for tickets Shopify already told us came back.
+        const { invoice: withCredits } = await applyCreditsToInvoice(tx, store, created)
+        return withCredits
       })
       return toInvoiceDTO(invoice)
     } catch (err) {

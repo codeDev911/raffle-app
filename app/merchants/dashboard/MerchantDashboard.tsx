@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { AlertTriangle, ChevronDown, ExternalLink, KeyRound, LayoutDashboard, LogOut, Menu, Receipt, RefreshCw, Settings, Ticket, X, Zap } from "lucide-react"
+import { AlertTriangle, ChevronDown, ExternalLink, KeyRound, LayoutDashboard, LogOut, Menu, Receipt, RefreshCw, Settings, Ticket, Undo2, X, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { BrandMark } from "@/components/brand"
 import { ThemeToggle } from "@/components/merchants/theme-toggle"
@@ -12,6 +12,7 @@ import { CampaignsTab } from "@/components/merchants/dashboard/campaigns"
 import { EntriesTab } from "@/components/merchants/dashboard/entries"
 import { InvoicesTab } from "@/components/merchants/dashboard/invoices"
 import { OverviewTab } from "@/components/merchants/dashboard/overview"
+import { RefundsTab } from "@/components/merchants/dashboard/refunds"
 import { SettingsTab } from "@/components/merchants/dashboard/settings"
 import { SimulatorTab } from "@/components/merchants/dashboard/simulator"
 import type { CampaignDTO, InvoiceDTO, MeResponse, StoreDTO } from "@/components/merchants/dashboard/types"
@@ -21,6 +22,7 @@ const TABS = [
   { key: "campaigns", label: "Campaigns", icon: Zap },
   { key: "entries", label: "Entries", icon: Ticket },
   { key: "invoices", label: "Invoices", icon: Receipt },
+  { key: "refunds", label: "Refunds", icon: Undo2 },
   { key: "simulator", label: "Simulator", icon: RefreshCw },
   { key: "settings", label: "Settings", icon: Settings },
 ] as const
@@ -36,6 +38,8 @@ export default function MerchantDashboard() {
   const [me, setMe] = useState<MeResponse | null>(null)
   const [campaigns, setCampaigns] = useState<CampaignDTO[]>([])
   const [invoices, setInvoices] = useState<InvoiceDTO[]>([])
+  /** Credits the merchant has not spent yet, plus payout requests waiting on the desk. */
+  const [refundTotals, setRefundTotals] = useState({ creditsAvailable: 0, creditCount: 0, countAwaitingStaff: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [feedKey, setFeedKey] = useState(0)
@@ -68,12 +72,21 @@ export default function MerchantDashboard() {
   }, [navOpen])
 
   const loadAll = useCallback(async () => {
-    const [campaignsRes, invoicesRes] = await Promise.all([
+    const [campaignsRes, invoicesRes, refundRes] = await Promise.all([
       merchantApi<{ campaigns: CampaignDTO[] }>("/api/merchants/me/campaigns"),
       merchantApi<{ invoices: InvoiceDTO[] }>("/api/merchants/me/invoices"),
+      // Never let a refund-summary hiccup break the dashboard: it only feeds a badge.
+      merchantApi<{ creditsAvailable: number; creditCount: number; countAwaitingStaff: number }>("/api/merchants/me/refunds?summary=1").catch(
+        () => ({ creditsAvailable: 0, creditCount: 0, countAwaitingStaff: 0 }),
+      ),
     ])
     setCampaigns(campaignsRes.campaigns)
     setInvoices(invoicesRes.invoices)
+    setRefundTotals({
+      creditsAvailable: refundRes.creditsAvailable,
+      creditCount: refundRes.creditCount,
+      countAwaitingStaff: refundRes.countAwaitingStaff,
+    })
   }, [])
 
   useEffect(() => {
@@ -164,7 +177,8 @@ export default function MerchantDashboard() {
   const minting = campaigns.filter((c) => c.isAcceptingEntries).length
   const openInvoices = invoices.filter((i) => i.status !== "PAID").length
   const current = TABS.find((item) => item.key === tab) || TABS[0]
-  const tabBadge = (key: TabKey) => (key === "campaigns" ? minting : key === "invoices" ? openInvoices : null)
+  const tabBadge = (key: TabKey) =>
+    key === "campaigns" ? minting : key === "invoices" ? openInvoices : key === "refunds" ? refundTotals.countAwaitingStaff : null
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -379,8 +393,11 @@ export default function MerchantDashboard() {
             me={me}
             campaigns={campaigns}
             invoices={invoices}
+            creditsAvailable={refundTotals.creditsAvailable}
+            creditsCount={refundTotals.creditCount}
             onOpenCampaigns={() => changeTab("campaigns")}
             onOpenInvoices={() => changeTab("invoices")}
+            onOpenRefunds={() => changeTab("refunds")}
           />
         )}
         {tab === "campaigns" && (
@@ -423,6 +440,7 @@ export default function MerchantDashboard() {
             onChanged={refresh}
           />
         )}
+        {tab === "refunds" && <RefundsTab store={store} />}
         {tab === "simulator" && <SimulatorTab campaigns={campaigns} onSimulated={refresh} />}
         {tab === "settings" && (
           <SettingsTab

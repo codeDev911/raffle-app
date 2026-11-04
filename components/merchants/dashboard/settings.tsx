@@ -33,7 +33,7 @@ export function SettingsTab({
   onStoreChanged: (store: StoreDTO) => Promise<void> | void
   onLogout: () => Promise<void> | void
 }) {
-  const [form, setForm] = useState({ name: "", contactEmail: "", contactPhone: "", payoutDetails: "" })
+  const [form, setForm] = useState({ name: "", contactEmail: "", contactPhone: "", payoutDetails: "", logoUrl: "" })
   const [secretInput, setSecretInput] = useState("")
   const [saving, setSaving] = useState(false)
   const [rotating, setRotating] = useState(false)
@@ -50,6 +50,7 @@ export function SettingsTab({
       contactEmail: me.store.contactEmail,
       contactPhone: me.store.contactPhone,
       payoutDetails: me.store.payoutDetails || "",
+      logoUrl: me.store.logoUrl || "",
     })
   }, [me.store])
 
@@ -69,6 +70,7 @@ export function SettingsTab({
         json: {
           ...form,
           payoutDetails: form.payoutDetails.trim() || null,
+          logoUrl: form.logoUrl.trim(),
           ...(secretInput.trim() ? { webhookSecret: secretInput.trim() } : {}),
         },
       })
@@ -257,6 +259,17 @@ export function SettingsTab({
           <Field label="Store name">
             <TextInput required minLength={2} maxLength={80} value={form.name} onChange={set("name")} />
           </Field>
+          <Field
+            label="Store logo URL"
+            hint="Shown beside your name on the public raffle page. A square PNG or SVG works best; leave blank to show your shop initial."
+          >
+            <TextInput
+              value={form.logoUrl}
+              onChange={set("logoUrl")}
+              placeholder="https://cdn.shopify.com/…/logo.png"
+              className="font-mono"
+            />
+          </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Contact email">
               <TextInput required type="email" value={form.contactEmail} onChange={set("contactEmail")} />
@@ -297,7 +310,11 @@ export function SettingsTab({
       <Panel>
         <PanelHeader
           title="Store profile"
-          description="The answers you gave when you joined"
+          description={
+            me.store.intake?.answers
+              ? "The answers you gave when you joined"
+              : "Your intake goes straight to our team, so the answers are not listed here."
+          }
           action={
             <Link
               href="/merchants/onboarding?step=tally"

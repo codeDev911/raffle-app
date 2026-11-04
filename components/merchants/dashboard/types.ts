@@ -6,6 +6,8 @@ export interface StoreDTO {
   id: string
   name: string
   storeUrl: string
+  /** Merchant-supplied logo; blank means the public pages show the shop initial instead. */
+  logoUrl: string | null
   platform: string
   apiKeyPrefix: string
   webhookSecretPreview: string
@@ -124,6 +126,8 @@ export interface InvoiceDTO {
   totalEntries: number
   unitPrice: number
   amountDue: number
+  /** Credits from returned tickets of earlier batches, already deducted from amountDue. */
+  creditApplied: number
   paymentMethod: string | null
   paymentProof: string | null
   transactionRef: string | null
@@ -159,6 +163,10 @@ export interface InvoicePreview {
   totalEntries: number
   unitPrice: number
   amountDue: number
+  /** Unspent credits from returned orders that this batch will absorb. */
+  creditsAvailable?: number
+  /** What the merchant will actually owe after those credits. */
+  estimatedDue?: number
   canGenerate: boolean
 }
 
@@ -171,7 +179,50 @@ export interface WebhookResult {
   action: "minted" | "cancelled" | "ignored"
   message: string
   outcomes?: IngestOutcome[]
-  cancellation?: { cancelled: number; locked: number }
+  refund?: { voided: number; credited: number; alreadyVoided: number; deferred: number }
+}
+
+/** One readable step of a refund's trail, oldest first. */
+export interface RefundEvent {
+  at: string
+  kind: "detected" | "voided" | "requested" | "approved" | "credited" | "paid" | "rejected" | "reversed" | "note"
+  label: string
+  detail?: string | null
+}
+
+export interface RefundDTO {
+  id: string
+  storeId: string
+  storeName: string | null
+  payoutDetails: string | null
+  campaignId: string
+  entryId: string
+  ticketNumber: string
+  shopifyOrderId: string
+  orderName: string | null
+  invoiceId: string | null
+  creditInvoiceId: string | null
+  grossAmount: number
+  gatewayCost: number
+  netAmount: number
+  reason: string
+  note: string | null
+  source: "WEBHOOK" | "MERCHANT" | "ADMIN"
+  settlement: "CREDIT" | "PAYOUT"
+  status: "REQUESTED" | "APPROVED" | "PAID" | "REJECTED" | "CREDITED"
+  statusLabel: string
+  triggerTopic: string | null
+  shopifyEventAt: string | null
+  receivedAt: string
+  actionedAt: string | null
+  decidedAt: string | null
+  decidedBy: string | null
+  settledAt: string | null
+  events: RefundEvent[]
+  applied: boolean
+  /** Milliseconds between Shopify's event and our receipt of it. */
+  detectedInMs: number | null
+  createdAt: string
 }
 
 export const PAYMENT_METHOD_LABELS: Record<string, string> = {

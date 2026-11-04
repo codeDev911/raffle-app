@@ -49,7 +49,9 @@ export function CampaignStatus({ campaign }: { campaign: CampaignDTO }) {
  */
 export function entryStatusKey(entry: EntryDTO): string {
   if (entry.status === "PAID") return "PAID"
-  if (entry.status === "CANCELLED") return "CANCELLED"
+  // A refunded ticket must not read as a plain cancellation: the money came back and the shopper is
+  // out of the draw, which is a different fact — and one the merchant needs to see without asking.
+  if (entry.status === "CANCELLED") return entry.paymentStatus === "REFUNDED" ? "REFUNDED" : "CANCELLED"
   if (entry.paymentStatus === "FAILED" || entry.paymentStatus === "REFUNDED") return "PAYMENT_FAILED"
   if (entry.paymentStatus === "CANCELLED") return "PAYMENT_CANCELLED"
   if (entry.paymentStatus === "PENDING" || entry.paymentStatus === "PROCESSING") return "AWAITING_CONFIRMATION"
