@@ -21,6 +21,7 @@ import {
   merchantApi,
 } from "../ui"
 import type { MeResponse, StoreDTO } from "./types"
+import { GUIDES, GuideStrip } from "./guides"
 import { INTAKE_QUESTIONS, describeIntakeAnswer } from "@/lib/merchants/intake"
 import { WEBHOOK_TOPICS } from "@/lib/merchants/webhook-topics"
 
@@ -211,6 +212,8 @@ export function SettingsTab({
               <li>Copy the signing secret Shopify shows and paste it into Store profile → Shopify webhook signing secret.</li>
               <li>Add the widget tag to theme.liquid so shoppers see their free entry unlock in the cart and under the product details.</li>
             </ol>
+            {/* The written version of the three steps, for anyone doing this on a phone. */}
+            <GuideStrip guides={[GUIDES.shopify, GUIDES.campaign]} title="Full guide" className="mt-4 border-slate-200 bg-white" />
           </div>
 
           <div className="flex flex-wrap gap-2">

@@ -3,12 +3,21 @@
  *
  *   node scripts/sanity-kb.mjs export [--out <file>]
  *        Backup every article document to JSON. Public read, no token needed.
+ *   node scripts/sanity-kb.mjs unpack [--live-dir <path>] [--overwrite]
+ *        Write the published documents back into content/knowledge-base/<slug>.md so the repo
+ *        mirrors the dataset. Skips a slug whose file already exists unless --overwrite.
  *   node scripts/sanity-kb.mjs build
  *        Parse content/knowledge-base/*.md and report what would be published. No token needed.
- *   node scripts/sanity-kb.mjs push [--live] [--wipe-existing] [--delete-all --yes]
+ *   node scripts/sanity-kb.mjs push [--live] [--only slugA,slugB] [--wipe-existing] [--delete-all --yes]
  *        Publish. Sanity validates without writing unless --live is present.
+ *        --only limits the publish to the named slugs, which keeps every other article untouched.
  *        --delete-all first removes every existing article document (backs up with `export` first).
  *        Requires SANITY_WRITE_TOKEN in .env (a read token cannot mutate).
+ *
+ *   node scripts/sanity-kb.mjs covers [--live] [--only slugA,slugB]
+ *        Upload content/knowledge-base/images/<slug>.<png|jpg|webp|svg> to Sanity and point that
+ *        document's coverImage at it. Touches nothing else on the document, so an article body is
+ *        never rewritten by a cover change. Re-uploads only when the bytes changed.
  *
  *   node scripts/sanity-kb.mjs restore [--from <file>] [--live]
  *        Roll a backup written by `export` straight back into the dataset.
@@ -19,10 +28,14 @@
  */
 import fs from "node:fs"
 import path from "node:path"
+import { createHash } from "node:crypto"
 
 const ROOT = process.cwd()
 const CONTENT_DIR = path.join(ROOT, "content", "knowledge-base")
+const IMAGE_DIR = path.join(CONTENT_DIR, "images")
 const BACKUP_DIR = path.join(ROOT, ".backups")
+/** slug -> { hash, assetId } so `covers` never uploads the same bytes twice. */
+const ASSET_MAP = path.join(BACKUP_DIR, "kb-assets.json")
 
 /* ------------------------------------------------------------------------ env */
 
@@ -54,6 +67,12 @@ if (!PROJECT) {
 
 const QUERY_URL = `https://${PROJECT}.api.sanity.io/v${API_VERSION}/data/query/${DATASET}`
 const MUTATE_URL = `https://${PROJECT}.api.sanity.io/v${API_VERSION}/data/mutate/${DATASET}`
+// Sanity's asset endpoint: the file bytes are the body and a `sanity.imageAsset` document is the reply.
+// `auto=format` is deliberately NOT an upload parameter — the CDN transform is applied at read time by
+// sanityImageUrl() in lib/sanity.ts.
+const IMAGES_URL = `https://${PROJECT}.api.sanity.io/v${API_VERSION}/assets/images/${DATASET}`
+
+const IMAGE_TYPES = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".svg": "image/svg+xml" }
 
 /** Sanity document ids may only contain letters, digits, dot, dash, underscore, apostrophe. */
 function docId(slug) {
@@ -286,6 +305,120 @@ function validateCrossLinks(articles) {
   if (problems.length) throw new Error(`Broken internal links:\n  ${problems.join("\n  ")}`)
 }
 
+/* ------------------------------------------------------------- reverse: PT -> md */
+
+/** Rebuild one block's inline markdown from its spans and markDefs (the inverse of `inline`). */
+function blockToInline(block) {
+  const defs = new Map((block.markDefs || []).map((d) => [d._key, d]))
+  let out = ""
+  for (const child of block.children || []) {
+    if (child._type !== "span" || !child.text) continue
+    let text = child.text
+    const marks = child.marks || []
+    if (marks.includes("code")) text = `\`${text}\``
+    if (marks.includes("strong")) text = `**${text}**`
+    if (marks.includes("em")) text = `*${text}*`
+    const link = marks.map((mark) => defs.get(mark)).find((d) => d?._type === "link")
+    if (link?.href) text = `[${text}](${link.href})`
+    out += text
+  }
+  return out.trim()
+}
+
+/**
+ * Portable Text back into the exact markdown subset `portableText()` reads, so `unpack | push` is a
+ * round trip. Anything outside that subset (inline images, annotations we do not emit) is reported
+ * rather than silently dropped in place of the reader.
+ */
+function blocksToMarkdown(blocks, slug) {
+  const lines = []
+  let numbering = 0
+  for (const block of blocks || []) {
+    if (block._type !== "block") {
+      console.warn(`    ! ${slug}: skipped a content node of type "${block._type}" — it has no markdown form`)
+      continue
+    }
+    const text = blockToInline(block)
+    if (!text) continue
+    if (block.list === "number") {
+      numbering += 1
+      lines.push(`${numbering}. ${text}`)
+      continue
+    }
+    numbering = 0
+    if (block.list === "bullet") lines.push(`- ${text}`)
+    else if (block.style === "blockquote") lines.push(`> ${text}`)
+    else if (/^h[234]$/.test(block.style || "")) lines.push(`${"#".repeat(Number(block.style[1]))} ${text}`)
+    else lines.push(text)
+    lines.push("")
+  }
+  // Collapse the blank line that follows every block, except where a list needs its own spacing.
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim()
+}
+
+function frontMatterFor(doc) {
+  const tags = Array.isArray(doc.tags) && doc.tags.length ? `[${doc.tags.join(", ")}]` : "[]"
+  return [
+    "---",
+    `title: ${doc.title}`,
+    `excerpt: ${doc.excerpt || ""}`,
+    `tags: ${tags}`,
+    doc.date ? `date: ${String(doc.date).slice(0, 10)}` : null,
+    doc.readingTime ? `readingTime: ${doc.readingTime}` : null,
+    doc.featured ? "featured: true" : null,
+    "---",
+    "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+}
+
+/* ------------------------------------------------------------------- thumbnails */
+
+/** `<slug>.png|jpg|jpeg|webp|svg` in content/knowledge-base/images, first match wins. */
+function findImageFor(slug) {
+  if (!fs.existsSync(IMAGE_DIR)) return null
+  for (const [ext, contentType] of Object.entries(IMAGE_TYPES)) {
+    const file = path.join(IMAGE_DIR, `${slug}${ext}`)
+    if (fs.existsSync(file)) return { file, contentType }
+  }
+  return null
+}
+
+function readAssetMap() {
+  try {
+    return JSON.parse(fs.readFileSync(ASSET_MAP, "utf8"))
+  } catch {
+    return {}
+  }
+}
+
+function writeAssetMap(map) {
+  fs.mkdirSync(BACKUP_DIR, { recursive: true })
+  fs.writeFileSync(ASSET_MAP, JSON.stringify(map, null, 2), "utf8")
+}
+
+/**
+ * Uploads raw image bytes to Sanity's image endpoint and returns the asset document id, which is what
+ * a `coverImage.asset` reference needs. `auto=format` lets the CDN negotiate webp/avif at serve time.
+ */
+async function uploadImage(file, contentType) {
+  if (!TOKEN) throw new Error("Uploading a cover needs SANITY_API_KEY (or SANITY_WRITE_TOKEN) in .env")
+  const res = await fetch(IMAGES_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${TOKEN}`, "Content-Type": contentType, Accept: "application/json" },
+    body: fs.readFileSync(file),
+    signal: AbortSignal.timeout(120_000),
+  })
+  const body = await res.json().catch(() => null)
+  if (!res.ok || body?.error) {
+    throw new Error(`Sanity image upload failed (${res.status}) ${body?.error?.description || body?.error?.message || ""}`)
+  }
+  const asset = body?.document || {}
+  if (!asset._id) throw new Error(`Sanity upload reply carried no asset document: ${JSON.stringify(body).slice(0, 200)}`)
+  return { assetId: asset._id, url: asset.url || "" }
+}
+
 /* -------------------------------------------------------------------- network */
 
 async function groq(query, params = {}) {
@@ -357,6 +490,29 @@ if (command === "export") {
   const bytes = fs.statSync(out).size
   console.log(`Exported ${docs.length} ${DOC_TYPE} document(s) -> ${path.relative(ROOT, out)} (${(bytes / 1024).toFixed(1)} KB)`)
   for (const d of docs) console.log(`  ${d._id}  ${(d.slug?.current || "(no slug)").slice(0, 52)}`)
+} else if (command === "unpack") {
+  // The dataset is the source of truth once articles are published; this writes it back out as the
+  // markdown the pipeline reads, so the repo can be cloned and re-published without a Studio.
+  const docs = await groq(`*[_type == $t]{..., "slug": slug.current, content}`, { t: DOC_TYPE })
+  const outDir = value("live-dir") || CONTENT_DIR
+  fs.mkdirSync(outDir, { recursive: true })
+  let written = 0
+  let skipped = 0
+  for (const doc of docs.sort((a, b) => String(a.slug).localeCompare(String(b.slug)))) {
+    if (!doc.slug) continue
+    const file = path.join(outDir, `${doc.slug}.md`)
+    if (fs.existsSync(file) && !flag("overwrite")) {
+      skipped += 1
+      continue
+    }
+    const body = blocksToMarkdown(doc.content, doc.slug)
+    // A blank line after the closing fence, so the file reads as ordinary front matter in any
+    // markdown editor as well as in this script's own parser.
+    fs.writeFileSync(file, `${frontMatterFor(doc)}\n${body}\n`, "utf8")
+    written += 1
+    console.log(`  wrote ${doc.slug}.md (${(doc.content || []).length} blocks)`)
+  }
+  console.log(`\nUnpacked ${written} article(s) into ${path.relative(ROOT, outDir)}${skipped ? ` · ${skipped} existing file(s) left alone (use --overwrite)` : ""}.`)
 } else if (command === "build") {
   const articles = loadArticles()
   validateCrossLinks(articles)
@@ -378,21 +534,44 @@ if (command === "export") {
   const styles = new Set()
   for (const a of articles) for (const b of a.doc.content) styles.add(`${b.style}${b.list ? ":" + b.list : ""}`)
   console.log(`\nBlock styles produced: ${[...styles].sort().join(", ")}`)
+  const withoutCover = articles.filter((a) => !findImageFor(a.slug))
+  console.log(
+    `Thumbnails: ${articles.length - withoutCover.length}/${articles.length} present in content/knowledge-base/images${
+      withoutCover.length ? `\n  missing: ${withoutCover.map((a) => a.slug).join(", ")}` : ""
+    }`,
+  )
 } else if (command === "push") {
   const live = flag("live")
   describeTarget()
-  const articles = loadArticles()
-  validateCrossLinks(articles)
+  const all = loadArticles()
+  validateCrossLinks(all)
+  // --only publishes a named subset, so adding one article can never rewrite the other eighteen.
+  const only = value("only")
+    ? value("only").split(",").map((s) => s.trim()).filter(Boolean)
+    : null
+  const articles = only ? all.filter((a) => only.includes(a.slug)) : all
+  if (only) {
+    const unknown = only.filter((slug) => !all.some((a) => a.slug === slug))
+    if (unknown.length) throw new Error(`--only names slugs with no file in content/knowledge-base: ${unknown.join(", ")}`)
+    console.log(`Publishing ${articles.length} of ${all.length} local article(s): ${articles.map((a) => a.slug).join(", ")}`)
+  }
   const mutations = []
 
   if (flag("delete-all")) {
     // Irreversible, so it asks twice: an explicit confirmation and a backup to roll back to.
     if (!flag("yes")) throw new Error("--delete-all removes every article document. Re-run with --yes to confirm.")
+    if (!articles.length) throw new Error("--delete-all with no local markdown would empty the library. Author the files first.")
     const backups = fs.existsSync(BACKUP_DIR) ? fs.readdirSync(BACKUP_DIR).filter((f) => f.startsWith(`sanity-${DOC_TYPE}-`)).sort() : []
     if (!backups.length && !flag("force")) {
       throw new Error(`Nothing in .backups to roll back to. Run \`node scripts/sanity-kb.mjs export\` first, or pass --force.`)
     }
     const doomed = await groq(`*[_type == $t]._id`, { t: DOC_TYPE })
+    // Wiping everything and re-creating fewer documents than live would quietly drop the difference.
+    if (!flag("force") && articles.length < doomed.length) {
+      throw new Error(
+        `Refusing --delete-all: ${doomed.length} article(s) live but only ${articles.length} local file(s) would replace them. Publish them all first, or pass --force.`,
+      )
+    }
     // Probed against this API version: `{delete: {id}}` is accepted, while `{delete: "id"}` fails with
     // `unexpected value of type "string"` and an `eventId` field is rejected as unknown.
     for (const id of doomed) mutations.push({ delete: { id } })
@@ -413,6 +592,85 @@ if (command === "export") {
   if (result?.validationError || result?.errors) {
     console.error("VALIDATION PROBLEMS:", JSON.stringify(result.validationError || result.errors, null, 2).slice(0, 2000))
     process.exitCode = 1
+  }
+} else if (command === "covers") {
+  // Covers are patched onto the document rather than re-sent with it: an article body must not be
+  // rewritten just because its thumbnail changed.
+  const live = flag("live")
+  describeTarget()
+  const only = value("only")
+    ? value("only").split(",").map((s) => s.trim()).filter(Boolean)
+    : null
+  const docs = await groq(`*[_type == $t]{_id, "slug": slug.current, title, coverImage}`, { t: DOC_TYPE })
+  const map = readAssetMap()
+  const mutations = []
+  const missing = []
+  let pending = 0
+
+  for (const doc of docs.sort((a, b) => String(a.slug).localeCompare(String(b.slug)))) {
+    if (!doc.slug) continue
+    if (only && !only.includes(doc.slug)) continue
+    const found = findImageFor(doc.slug)
+    if (!found) {
+      missing.push(doc.slug)
+      continue
+    }
+    const hash = createHash("sha256").update(fs.readFileSync(found.file)).digest("hex")
+    const known = map[doc.slug]
+    if (known && known.hash === hash && doc.coverImage?.asset?._ref === known.assetId) {
+      console.log(`  up to date      ${doc.slug}`)
+      continue
+    }
+    if (!live) {
+      console.log(`  would ${known && known.hash === hash ? "re-point" : "upload + patch"}  ${doc.slug}  (${path.basename(found.file)})`)
+      pending += 1
+      continue
+    }
+    let assetId = known && known.hash === hash ? known.assetId : null
+    if (!assetId) {
+      const uploaded = await uploadImage(found.file, found.contentType)
+      assetId = uploaded.assetId
+      map[doc.slug] = { hash, assetId, url: uploaded.url, file: path.basename(found.file) }
+      // Persisted immediately: an upload that succeeds and a run that then crashes must not lose
+      // the asset id, or the next run pays for the same file twice.
+      writeAssetMap(map)
+      console.log(`  uploaded        ${doc.slug}  ->  ${assetId.slice(4, 16)}…`)
+    } else {
+      console.log(`  reusing asset   ${doc.slug}`)
+    }
+    mutations.push({
+      // Probed against this API version: the patch operations sit beside `id` (`{patch: {id, set}}`),
+      // not nested in a second `patch` object — the nested form is refused with "Unknown field".
+      patch: {
+        id: doc._id,
+        set: {
+          coverImage: {
+            _type: "image",
+            alt: `${doc.title} — PakRaffle guide cover`,
+            asset: { _type: "reference", _ref: assetId },
+          },
+        },
+      },
+    })
+  }
+
+  if (live) {
+    writeAssetMap(map)
+    if (!mutations.length) console.log("\nEvery cover already matches its file — nothing to write.")
+    else {
+      const result = await mutate(mutations, false)
+      console.log(`\nPUBLISHED ${mutations.length} cover patch(es). transactionId: ${result.transactionId || "n/a"}`)
+      if (result?.validationError || result?.errors) {
+        console.error("VALIDATION PROBLEMS:", JSON.stringify(result.validationError || result.errors, null, 2).slice(0, 2000))
+        process.exitCode = 1
+      }
+    }
+  } else {
+    console.log(`\nDRY RUN — nothing uploaded or written. ${pending} cover(s) to change, ${missing.length} article(s) without an image file.`)
+  }
+  if (missing.length) {
+    console.log(`Missing thumbnails:\n  ${missing.join("\n  ")}`)
+    if (live) process.exitCode = 1
   }
 } else if (command === "restore") {
   // Writes a previous `export` back verbatim — the rollback path if --delete-all went too far.
@@ -435,6 +693,6 @@ if (command === "export") {
   )
 } else {
   console.log(
-    "Usage:\n  node scripts/sanity-kb.mjs export [--out <file>]\n  node scripts/sanity-kb.mjs build [--emit <file>]\n  node scripts/sanity-kb.mjs push [--live] [--delete-all --yes] [--wipe-existing]\n  node scripts/sanity-kb.mjs restore [--from <file>] [--live]\n\nPublishing needs SANITY_WRITE_TOKEN in .env. Without --live, Sanity validates the mutations and writes nothing.",
+    "Usage:\n  node scripts/sanity-kb.mjs export [--out <file>]\n  node scripts/sanity-kb.mjs unpack [--overwrite]\n  node scripts/sanity-kb.mjs build [--emit <file>]\n  node scripts/sanity-kb.mjs push [--live] [--only slugA,slugB] [--delete-all --yes] [--wipe-existing]\n  node scripts/sanity-kb.mjs covers [--live] [--only slugA,slugB]\n  node scripts/sanity-kb.mjs restore [--from <file>] [--live]\n\nPublishing needs SANITY_WRITE_TOKEN in .env. Without --live, Sanity validates the mutations and writes nothing.",
   )
 }

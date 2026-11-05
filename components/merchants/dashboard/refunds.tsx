@@ -16,6 +16,7 @@ import {
   timeAgo,
 } from "@/components/merchants/ui"
 import type { RefundDTO, StoreDTO } from "./types"
+import { GUIDES, GuideStrip } from "./guides"
 
 /** Colours for the money trail, so a merchant can see at a glance whose step is next. */
 const STATUS_TONE: Record<string, string> = {
@@ -101,6 +102,8 @@ export function RefundsTab({ store }: { store: StoreDTO }) {
         <strong>Refunds follow Shopify — there is nothing to request.</strong> When an order is cancelled or refunded in Shopify, that webhook voids the ticket, marks its payment refunded, withdraws
         the shopper from the draw and raises this credit, all in the same call. So record the return in Shopify and it lands here in seconds — no form, no email, no waiting on the desk.
       </Alert>
+
+      <GuideStrip guides={[GUIDES.refunds, GUIDES.invoice]} />
 
       {error && <Alert tone="error">{error}</Alert>}
 

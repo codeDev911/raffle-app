@@ -15,6 +15,7 @@ import {
   formatPKR,
 } from "../ui"
 import { useEntryFeed } from "./entries"
+import { GUIDES, GuideStrip } from "./guides"
 import { CampaignProgress, EntriesTable } from "./shared"
 import type { CampaignDTO, InvoiceDTO, MeResponse } from "./types"
 
@@ -62,6 +63,9 @@ export function OverviewTab({
         <Metric label="Awaiting settlement" value={formatNumber(outstanding.length)} hint={formatPKR(outstandingAmount) + " due"} />
         <Metric label="Tickets in draw pool" value={formatNumber(ticketsPaid)} hint="paid & verified" />
       </div>
+
+      {/* The four operational guides, one line, directly under the numbers they explain. */}
+      <GuideStrip guides={[GUIDES.shopify, GUIDES.campaign, GUIDES.invoice, GUIDES.refunds]} title="Guides" />
 
       {creditsAvailable > 0 && (
         <Panel className="border-emerald-200 bg-emerald-50/70">

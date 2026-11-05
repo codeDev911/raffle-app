@@ -25,6 +25,7 @@ import {
   merchantApi,
 } from "../ui"
 import { dialogClass } from "./campaigns"
+import { GUIDES, GuideStrip } from "./guides"
 import { entryStatusKey } from "./shared"
 import { PAYMENT_METHOD_LABELS, paymentMethodLabel, type InvoiceDTO, type InvoiceDetail } from "./types"
 
@@ -68,6 +69,8 @@ export function InvoicesTab({
             </>
           }
         />
+
+        <GuideStrip guides={[GUIDES.invoice, GUIDES.refunds]} className="mx-5 mt-4" />
         {invoices.length === 0 ? (
           <EmptyState icon={Receipt} title="No invoices yet">
             Close a campaign batch with “Review & Settle Batch Invoice” to bill its fulfilled-order tickets.

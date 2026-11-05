@@ -13,6 +13,10 @@
     "lint": "echo 'Lint check passed'",
     "kb:build": "node scripts/sanity-kb.mjs build",
     "kb:export": "node scripts/sanity-kb.mjs export",
+    "kb:unpack": "node scripts/sanity-kb.mjs unpack",
+    "kb:covers-art": "node scripts/kb-cover-art.mjs",
+    "kb:covers": "node scripts/sanity-kb.mjs covers",
+    "kb:covers:push": "node scripts/sanity-kb.mjs covers --live",
     "kb:dry-run": "node scripts/sanity-kb.mjs push",
     "kb:push": "node scripts/sanity-kb.mjs push --live --delete-all --yes",
     "postinstall": "prisma generate"

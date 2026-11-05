@@ -6,6 +6,7 @@ import Image from "next/image"
 import { CalendarClock, FileText, Gift, Pause, Pencil, Play, Plus, Sparkles, Trophy } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { describeRule, validateRuleConfig } from "@/lib/merchants/rules"
+import { GUIDES, GuideStrip } from "./guides"
 import { cn } from "@/lib/utils"
 import {
   Alert,
@@ -103,6 +104,8 @@ export function CampaignsTab({
             </Btn>
           }
         />
+
+        <GuideStrip guides={[GUIDES.campaign, GUIDES.shopify]} className="mx-5 mt-4" />
 
         {campaigns.length === 0 ? (
           <EmptyState icon={Sparkles} title="No campaigns yet">
