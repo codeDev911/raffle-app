@@ -77,9 +77,38 @@ export interface MerchantCampaign {
   endDate: Date
   winnerEntryId?: string | null
   drawnAt?: Date | null
+  /**
+   * Storefront creative the seller uploads for this campaign. Both images are absolute URLs on our
+   * own CDN; every flag is opt-in, so a campaign with no creative simply never paints one.
+   */
+  bannerUrl?: string | null
+  popupUrl?: string | null
+  showBannerHome?: boolean
+  showPopupHome?: boolean
+  showBannerProduct?: boolean
+  showPopupProduct?: boolean
+  showCustomPage?: boolean
+  /** Shopify page handle (the part after /pages/), matched case-insensitively by the widget. */
+  pageSlug?: string | null
+  /** Banner click / popup button destination: a store path or an https URL. */
+  ctaUrl?: string | null
   createdAt: Date
   updatedAt: Date
 }
+
+/** The creative half of a campaign, as the widget and the dashboard both see it. */
+export type CampaignCreative = Pick<
+  MerchantCampaign,
+  | "bannerUrl"
+  | "popupUrl"
+  | "showBannerHome"
+  | "showPopupHome"
+  | "showBannerProduct"
+  | "showPopupProduct"
+  | "showCustomPage"
+  | "pageSlug"
+  | "ctaUrl"
+>
 
 export interface MerchantEntry {
   id: string

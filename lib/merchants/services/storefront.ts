@@ -2,6 +2,7 @@
 // No merchant credentials are involved: everything is scoped by the store id baked into the
 // script tag, and only non-sensitive, shopper-facing fields are returned.
 import { getMerchantDb } from "../db"
+import { toCreativeDTO } from "../dto"
 import { cleanFilters, describeRule, evaluateOrder, productMatchesFilters, type RuleEvaluation } from "../rules"
 import type { MerchantCampaign, MerchantEntry, NormalizedLineItem, NormalizedOrder } from "../types"
 import { getPrizeMap } from "./prizes"
@@ -37,6 +38,8 @@ export interface StorefrontCampaign {
   hasProductFilters: boolean
   prize: { title: string; image: string | null } | null
   drawDate: Date | null
+  /** The seller's own banner/popup images and where they are allowed to appear. */
+  creative: ReturnType<typeof toCreativeDTO>
 }
 
 /**
@@ -126,6 +129,7 @@ function campaignView(campaign: MerchantCampaign, prize: { title: string; image:
     hasProductFilters: cleanFilters(campaign.productFilters).length > 0,
     prize,
     drawDate: campaign.endDate ? new Date(campaign.endDate) : null,
+    creative: toCreativeDTO(campaign),
   }
 }
 
