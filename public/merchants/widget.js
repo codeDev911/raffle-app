@@ -7,7 +7,11 @@
  *  2. On a product page the card leads with the campaign rule itself — "Buy 3+ items to win <prize>",
  *     how it is claimed, the prize and the draw date — so the offer is readable before anything is
  *     in the cart. Sending the product also lets a campaign that is filtered to specific products
- *     advertise on exactly those products' pages.
+ *     advertise on exactly those products' pages. The product page never shows the cart's arithmetic:
+ *     no progress bar and no "items to go" there, because the shopper has not decided to buy yet.
+ *  2b. The seller's own campaign artwork — a wide banner and a square popup, uploaded in the
+ *     dashboard's Campaign details tab — is placed on whichever surfaces they switched it on: the
+ *     home page, product pages, or one custom /pages/ page. The cart page is never decorated.
  *  3. Adopts the store's own design. It measures the theme's buy button, text colours, surfaces,
  *     borders, radii and font stacks, then paints the card with those tokens; anything unreadable
  *     falls back to PakRaffle green. Every card lives in its own shadow root, so the theme's CSS
@@ -53,7 +57,10 @@
   var TOKEN_KEY = "pakraffle_token_" + storeId
   var SEEN_KEY = "pakraffle_seen_" + storeId
   var DISMISS_KEY = "pakraffle_dismiss_" + storeId
+  var POPUP_KEY = "pakraffle_popup_" + storeId
   var DISMISS_MINUTES = 30
+  /** The nudge needs time to be noticed after the page settles, but must not ambush the shopper. */
+  var POPUP_DELAY_MS = 1800
   var DEBUG = /[?&]pakraffle_debug=1/.test(window.location.search)
 
   var state = {
@@ -64,6 +71,9 @@
     host: null,
     root: null,
     inline: null,
+    promo: null,
+    popup: null,
+    popupArmed: false,
     tokens: null,
     refreshing: false,
     quiet: false,
@@ -83,6 +93,15 @@
       window.localStorage.setItem(key, value)
     } catch (e) {}
     return value === undefined ? null : value
+  }
+
+  /** Session storage, for a nudge that may happen once per visit but must not repeat per page load. */
+  function session(key, value) {
+    try {
+      if (value === undefined) return window.sessionStorage.getItem(key)
+      window.sessionStorage.setItem(key, value)
+    } catch (e) {}
+    return null
   }
 
   function deviceToken() {
@@ -247,14 +266,49 @@
     return null
   }
 
+  /** The path with Shopify's market/language prefix and any trailing slash removed. */
+  function plainPath() {
+    var stripped = window.location.pathname.replace(/^\/[a-z]{2}(?:-[a-z]{2})?(?=\/)/i, "").replace(/\/+$/, "")
+    return stripped || "/"
+  }
+
   /** Where the card belongs on this page: the cart, a product's details column, or nowhere. */
   function pageKind() {
-    // Market and language paths (/en/products/…, /en-pk/products/…) keep the same placement.
-    var path = window.location.pathname.replace(/^\/[a-z]{2}(?:-[a-z]{2})?(?=\/)/i, "")
+    var path = plainPath()
     if (/^\/cart(\/|$)/.test(path)) return "cart"
     // Collection grids link collection-scoped (/collections/lawn/products/kameez), so the product
     // handle can sit anywhere in the path — testing only the prefix would hide the card there.
     return path.indexOf("/products/") >= 0 ? "product" : null
+  }
+
+  /**
+   * Which of the surfaces a seller can switch campaign artwork on we are standing in: the cart, a
+   * product page, the home page, one custom /pages/ page, or somewhere else entirely. Shopify stamps
+   * the template type on every storefront, so that is preferred and the URL is the fallback.
+   */
+  function surface() {
+    var path = plainPath()
+    if (/^\/cart(\/|$)/.test(path)) return "cart"
+    if (path.indexOf("/products/") >= 0) return "product"
+    if (/^\/pages\//.test(path)) return "custom"
+    var type = ""
+    try {
+      type = String((window.Shopify && window.Shopify.page && window.Shopify.page.type) || "").toLowerCase()
+    } catch (e) {}
+    if (type === "page") return "custom"
+    if (type === "index" || path === "/") return "home"
+    return "other"
+  }
+
+  /** The handle a seller is asked to type for a custom page: the part after /pages/. */
+  function pageHandle() {
+    var match = /\/pages\/([^/?#]+)/i.exec(plainPath())
+    if (!match) return ""
+    try {
+      return decodeURIComponent(match[1]).toLowerCase()
+    } catch (e) {
+      return String(match[1]).toLowerCase()
+    }
   }
 
   /** Dawn-style themes wrap the product in one section; quick-add forms live outside it. */
@@ -390,15 +444,89 @@
     return tag ? tag.getAttribute("content") : ""
   }
 
+  // ── campaign creative ──────────────────────────────────────────────────────
+
+  /** Only an absolute https image is ever painted into someone else's storefront. */
+  function httpsUrl(value) {
+    var text = String(value == null ? "" : value).trim()
+    return /^https:\/\/[^\s"'<>]+$/i.test(text) ? text : ""
+  }
+
+  /** A click-through target: a path on the shop's own domain, or a full https link. Nothing else. */
+  function clickTarget(value) {
+    var text = String(value == null ? "" : value).trim()
+    if (/^\/(?!\/)[^\s"'<>]*$/.test(text)) return text
+    return httpsUrl(text)
+  }
+
+  /**
+   * The seller may type "promo", "/pages/promo" or paste the whole address. Compare handles rather
+   * than spellings, because the dashboard stores what the merchant typed, not what we reformat.
+   */
+  function slugOf(value) {
+    var text = String(value == null ? "" : value).trim().toLowerCase()
+    var pages = /\/pages\/([^/?#]+)/.exec(text)
+    if (pages) return pages[1]
+    return text.replace(/^[a-z]+:\/\/[^/]+\//, "").replace(/^\/+/, "").replace(/\/+$/, "")
+  }
+
+  /**
+   * Which of the seller's campaign images belong on this surface. Every flag comes from the status
+   * payload — that is, from the dashboard's Campaign details tab — so switching a placement off
+   * changes the storefront without a theme edit, and a creative-less campaign changes nothing at all.
+   * The cart is deliberately excluded: it is the till, not the shop window.
+   */
+  function readCreative(status, place) {
+    var campaign = (status && status.campaign) || null
+    var creative = (campaign && campaign.creative) || (status && status.creative) || null
+    var out = { banner: false, popup: false, bannerUrl: "", popupUrl: "", ctaUrl: "", pageSlug: "" }
+    if (!creative || place === "cart" || place === "other") return out
+
+    out.bannerUrl = httpsUrl(creative.bannerUrl)
+    out.popupUrl = httpsUrl(creative.popupUrl)
+    out.ctaUrl = clickTarget(creative.ctaUrl)
+    out.pageSlug = slugOf(creative.pageSlug)
+
+    if (place === "home") {
+      out.banner = Boolean(creative.showBannerHome && out.bannerUrl)
+      out.popup = Boolean(creative.showPopupHome && out.popupUrl)
+    } else if (place === "product") {
+      out.banner = Boolean(creative.showBannerProduct && out.bannerUrl)
+      out.popup = Boolean(creative.showPopupProduct && out.popupUrl)
+    } else if (place === "custom") {
+      var named = Boolean(creative.showCustomPage) && out.pageSlug !== "" && out.pageSlug === pageHandle()
+      out.banner = Boolean(named && out.bannerUrl)
+      out.popup = Boolean(named && out.popupUrl)
+    }
+    return out
+  }
+
   // ── theme tokens ───────────────────────────────────────────────────────────
 
+  // Every colour carries an alpha, including the brand constants: over() reads .a, and an object
+  // without one used to compute NaN straight through into the CSS custom properties.
   var BRAND = {
-    accent: { r: 5, g: 150, b: 105 },
-    ink: { r: 15, g: 23, b: 42 },
-    surface: { r: 255, g: 255, b: 255 },
-    line: { r: 226, g: 232, b: 240 },
+    accent: { r: 5, g: 150, b: 105, a: 1 },
+    ink: { r: 15, g: 23, b: 42, a: 1 },
+    surface: { r: 255, g: 255, b: 255, a: 1 },
+    line: { r: 226, g: 232, b: 240, a: 1 },
     radius: 16,
     font: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
+  }
+
+  /** The same palette as strings, ready as the last-resort value for any token a theme defeats. */
+  var BRAND_CSS = {
+    accent: "rgb(5,150,105)",
+    accentInk: "rgb(255,255,255)",
+    accentSoft: "rgb(52,211,153)",
+    accentDeep: "rgb(4,120,87)",
+    ink: "rgb(15,23,42)",
+    muted: "rgb(71,85,105)",
+    surface: "rgb(255,255,255)",
+    panel: "rgb(248,250,252)",
+    line: "rgb(226,232,240)",
+    tint: "rgb(236,253,245)",
+    tintLine: "rgb(167,243,208)",
   }
 
   var ACCENT_VARS = [
@@ -470,17 +598,47 @@
     return colour
   }
 
-  function over(fg, bg) {
+  var WHITE = { r: 255, g: 255, b: 255, a: 1 }
+
+  function clamp(value, floor, ceiling) {
+    return Math.min(ceiling, Math.max(floor, value))
+  }
+
+  /**
+   * A usable colour is three finite numbers, and an alpha that defaults to opaque when the source
+   * never declared one (every literal in this file, plus anything a theme paints without alpha).
+   * Anything else is "no colour here" and returns null, so the caller falls back to the brand value
+   * instead of writing rgb(NaN,NaN,NaN) into a custom property and rendering the card colourless.
+   */
+  function solid(color) {
+    if (!color) return null
+    var r = Number(color.r)
+    var g = Number(color.g)
+    var b = Number(color.b)
+    if (!isFinite(r) || !isFinite(g) || !isFinite(b)) return null
+    var a = Number(color.a)
+    return { r: clamp(Math.round(r), 0, 255), g: clamp(Math.round(g), 0, 255), b: clamp(Math.round(b), 0, 255), a: isFinite(a) ? clamp(a, 0, 1) : 1 }
+  }
+
+  function over(fgColor, bgColor) {
+    var fg = solid(fgColor)
+    var bg = solid(bgColor) || WHITE
+    if (!fg) return bg
     if (fg.a >= 1) return { r: fg.r, g: fg.g, b: fg.b, a: 1 }
     var k = fg.a
     return { r: k * fg.r + (1 - k) * bg.r, g: k * fg.g + (1 - k) * bg.g, b: k * fg.b + (1 - k) * bg.b, a: 1 }
   }
 
-  function mix(a, b, amount) {
+  function mix(aColor, bColor, amount) {
+    var a = solid(aColor)
+    var b = solid(bColor)
+    if (!a || !b) return null
+    var t = clamp(Number(amount), 0, 1)
+    if (!isFinite(t)) t = 0
     return {
-      r: Math.round(a.r + (b.r - a.r) * amount),
-      g: Math.round(a.g + (b.g - a.g) * amount),
-      b: Math.round(a.b + (b.b - a.b) * amount),
+      r: Math.round(a.r + (b.r - a.r) * t),
+      g: Math.round(a.g + (b.g - a.g) * t),
+      b: Math.round(a.b + (b.b - a.b) * t),
       a: 1,
     }
   }
@@ -499,8 +657,10 @@
     return (Math.max(one, two) + 0.05) / (Math.min(one, two) + 0.05)
   }
 
-  function css(color) {
-    return "rgb(" + Math.round(color.r) + "," + Math.round(color.g) + "," + Math.round(color.b) + ")"
+  function css(color, fallback) {
+    var resolved = solid(color)
+    if (resolved) return "rgb(" + resolved.r + "," + resolved.g + "," + resolved.b + ")"
+    return fallback || BRAND_CSS.accent
   }
 
   /** Whatever the theme paints its button with, the label on it must stay readable. */
@@ -551,12 +711,14 @@
     var buttonStyle = button ? getComputedStyle(button) : null
 
     var surface = paintedBackground(firstVisible(PRODUCT_CONTAINERS, scope) || scope) || paintedBackground(document.body)
-    surface = surface || firstColorOf(SURFACE_VARS, rootStyle) || BRAND.surface
-    var ink = toColor(bodyStyle.color) || firstColorOf(INK_VARS, rootStyle) || BRAND.ink
+    surface = solid(surface || firstColorOf(SURFACE_VARS, rootStyle) || BRAND.surface) || BRAND.surface
+    var ink = solid(toColor(bodyStyle.color) || firstColorOf(INK_VARS, rootStyle) || BRAND.ink) || BRAND.ink
     var accent = buttonStyle ? toColor(buttonStyle.backgroundColor) : null
-    accent = accent || firstColorOf(ACCENT_VARS, rootStyle) || BRAND.accent
+    // A theme that paints its button transparent, with no readable accent variable, is exactly the
+    // case that used to leave every accent-derived token as NaN — so normalise here, once.
+    accent = solid(accent) || firstColorOf(ACCENT_VARS, rootStyle) || BRAND.accent
     accent = over(accent, surface)
-    var line = firstColorOf(LINE_VARS, rootStyle) || mix(ink, surface, 0.86)
+    var line = solid(firstColorOf(LINE_VARS, rootStyle) || mix(ink, surface, 0.86)) || BRAND.line
 
     // A theme's own button label is only trusted if it actually reads against the button.
     var accentText = buttonStyle ? toColor(buttonStyle.color) : null
@@ -570,18 +732,18 @@
     var headFont = heading ? getComputedStyle(heading).fontFamily : bodyStyle.fontFamily
 
     state.tokens = {
-      accent: css(accent),
-      accentInk: css(accentText),
-      accentSoft: css(mix(accent, surface, 0.28)),
-      accentDeep: css(mix(accent, { r: 0, g: 0, b: 0 }, 0.16)),
-      ink: css(over(ink, surface)),
-      muted: css(mix(over(ink, surface), surface, 0.42)),
-      surface: css(over(surface, { r: 255, g: 255, b: 255 })),
-      panel: css(mix(over(surface, { r: 255, g: 255, b: 255 }), { r: 255, g: 255, b: 255 }, 0.35)),
-      line: css(over(line, surface)),
-      tint: css(mix(accent, surface, 0.86)),
-      tintLine: css(mix(accent, surface, 0.6)),
-      radius: radius + "px",
+      accent: css(accent, BRAND_CSS.accent),
+      accentInk: css(accentText, BRAND_CSS.accentInk),
+      accentSoft: css(mix(accent, surface, 0.28), BRAND_CSS.accentSoft),
+      accentDeep: css(mix(accent, { r: 0, g: 0, b: 0, a: 1 }, 0.16), BRAND_CSS.accentDeep),
+      ink: css(over(ink, surface), BRAND_CSS.ink),
+      muted: css(mix(over(ink, surface), surface, 0.42), BRAND_CSS.muted),
+      surface: css(over(surface, WHITE), BRAND_CSS.surface),
+      panel: css(mix(over(surface, WHITE), WHITE, 0.35), BRAND_CSS.panel),
+      line: css(over(line, surface), BRAND_CSS.line),
+      tint: css(mix(accent, surface, 0.86), BRAND_CSS.tint),
+      tintLine: css(mix(accent, surface, 0.6), BRAND_CSS.tintLine),
+      radius: (isFinite(radius) ? radius : BRAND.radius) + "px",
       font: bodyStyle.fontFamily || BRAND.font,
       headFont: headFont || bodyStyle.fontFamily || BRAND.font,
     }
@@ -687,7 +849,24 @@
     ".pakr-brand img{display:block;width:18px;height:18px;border-radius:5px}" +
     ".pakr-terms{font-size:10.5px;white-space:nowrap;text-decoration:underline;text-underline-offset:2px;" +
     "color:var(--pakr-accent-deep,#475569)}" +
-    ".pakr-terms:hover{color:var(--pakr-accent,#059669)}"
+    ".pakr-terms:hover{color:var(--pakr-accent,#059669)}" +
+    // The seller's own artwork, framed with the storefront's tokens so an uploaded banner reads as
+    // part of the theme rather than as an ad pasted over it.
+    ".pakr-card.pakr-plain{padding:10px 10px 12px}" +
+    ".pakr-plain .pakr-hero{margin-top:0;border-width:0;border-radius:calc(var(--pakr-radius,16px) - 6px)}" +
+    ".pakr-hero{display:block;margin-top:11px;overflow:hidden;background:var(--pakr-panel,#f8fafc);" +
+    "border:1px solid var(--pakr-line,#e2e8f0);border-radius:calc(var(--pakr-radius,16px) - 5px)}" +
+    ".pakr-hero a{display:block;text-decoration:none}" +
+    ".pakr-hero img{display:block;width:100%;height:auto;max-height:300px;object-fit:cover}" +
+    ".pakr-promo-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;" +
+    "margin-top:10px;padding:0 4px}" +
+    ".pakr-promo-text{min-width:0;flex:1 1 14rem;font-family:var(--pakr-head-font,var(--pakr-font));" +
+    "font-size:13.5px;font-weight:700;line-height:1.4;color:var(--pakr-ink,#0f172a)}" +
+    ".pakr-promo-cta{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;" +
+    "border-radius:calc(var(--pakr-radius,16px) - 6px);font-size:12px;font-weight:700;text-decoration:none;" +
+    "white-space:nowrap;background:var(--pakr-accent,#059669);color:var(--pakr-accent-ink,#fff)}" +
+    ".pakr-promo-cta:hover{background:var(--pakr-accent-deep,#047857)}" +
+    ".pakr-promo-cta:focus-visible{outline:2px solid var(--pakr-accent,#059669);outline-offset:2px}"
 
   var MODAL_CSS =
     ".pakr-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;" +
@@ -710,6 +889,18 @@
     "font-size:13px;font-weight:700;cursor:pointer;background:var(--pakr-accent,#059669);color:var(--pakr-accent-ink,#fff)}" +
     ".pakr-go:hover{background:var(--pakr-accent-deep,#047857)}" +
     ".pakr-fine{margin-top:10px;font-size:10.5px;color:var(--pakr-muted,#94a3b8)}" +
+    // The campaign nudge: the seller's square creative, then the rule it advertises.
+    ".pakr-kicker{font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;" +
+    "color:var(--pakr-accent-deep,#047857)}" +
+    ".pakr-popup-img{display:block;width:100%;max-width:340px;aspect-ratio:1/1;object-fit:cover;" +
+    "margin:14px auto 0;border-radius:calc(var(--pakr-radius,20px) - 8px);border:1px solid var(--pakr-line,#e2e8f0);" +
+    "background:var(--pakr-panel,#f8fafc)}" +
+    "a.pakr-go{display:block;text-decoration:none}" +
+    ".pakr-go:focus-visible{outline:2px solid var(--pakr-accent,#059669);outline-offset:2px}" +
+    // Declared after the modal reset, because `.pakr-modal *` would otherwise flatten the pills.
+    ".pakr-facts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px}" +
+    ".pakr-facts span{font-size:10.5px;font-weight:600;white-space:nowrap;border-radius:999px;padding:3px 9px;" +
+    "color:var(--pakr-accent-deep,#047857);background:var(--pakr-tint,#d1fae5);border:1px solid var(--pakr-tint-line,#a7f3d0)}" +
     "@media (prefers-reduced-motion:reduce){.pakr-card,.pakr-modal{animation:none}}"
 
   function escapeHtml(value) {
@@ -794,6 +985,12 @@
     state.inline = null
   }
 
+  /** The campaign banner has its own slot, so it can sit in the page while a card floats elsewhere. */
+  function removePromo() {
+    if (state.promo && state.promo.parentNode) state.promo.parentNode.removeChild(state.promo)
+    state.promo = null
+  }
+
   function dismissed(signature) {
     var raw = store(DISMISS_KEY)
     if (!raw) return false
@@ -824,22 +1021,42 @@
   }
 
   /**
+   * Home and custom pages have no details column to sit inside, so the banner goes straight after the
+   * first block the theme actually paints — under the hero, above the product grid. No painted block
+   * means no mount: a banner belongs in the page flow, not floating over someone's artwork.
+   */
+  function promoAnchor() {
+    var scope = firstVisible(["main", "#MainContent", "#main", "[role='main']"]) || document.body
+    if (!scope) return null
+    var kids = scope.children
+    for (var i = 0; i < kids.length; i++) {
+      var node = kids[i]
+      if (!node.id || !/^pakr-/.test(node.id)) {
+        if (visible(node)) return { node: node, inside: false }
+      }
+    }
+    return null
+  }
+
+  /**
    * Cards mounted inside the theme get their own shadow root: the theme's stylesheet cannot reach
    * in, and our reset cannot leak out. Browsers without shadow support fall back to the namespaced
    * classes, which are prefixed precisely so a theme is unlikely to collide with them.
    */
   function mountCard(html, signature, options) {
     if (dismissed(signature)) return
+    var slot = options.slot === "promo" ? "promo" : "inline"
     var kind = options.placement
-    var target = kind === "cart" ? { node: cartAnchor(), inside: false } : kind === "product" ? productDetails() : null
+    var target = options.target || (kind === "cart" ? { node: cartAnchor(), inside: false } : kind === "product" ? productDetails() : null)
     var anchor = target ? target.node : null
 
     var wrapper = document.createElement("div")
-    wrapper.id = "pakr-banner"
+    wrapper.id = slot === "promo" ? "pakr-promo" : "pakr-banner"
     var card =
       "<div class='pakr-card" +
       (options.celebrate ? " pakr-eligible" : "") +
       (anchor ? " pakr-stretch" : " pakr-float") +
+      (slot === "promo" ? " pakr-plain" : "") +
       "'>" +
       html +
       "</div>"
@@ -847,7 +1064,8 @@
     var scope = wrapper
 
     if (anchor) {
-      wrapper.style.cssText = "display:block;max-width:100%;margin:0 auto 14px"
+      wrapper.style.cssText =
+        slot === "promo" ? "display:block;max-width:100%;margin:16px auto 20px" : "display:block;max-width:100%;margin:0 auto 14px"
       if (wrapper.attachShadow) {
         scope = wrapper.attachShadow({ mode: "open" })
         var style = document.createElement("style")
@@ -870,7 +1088,7 @@
       shadowRoot().appendChild(wrapper)
     }
 
-    state.inline = wrapper
+    state[slot] = wrapper
     var close = scope.querySelector(".pakr-close")
     if (close) {
       close.addEventListener("click", function () {
@@ -910,22 +1128,42 @@
   }
 
   /**
+   * The offer in one sentence: what the shopper has to do, and what doing it wins them. The product
+   * card, the page banner and the campaign popup all say it, so they can never say different things.
+   */
+  function ruleHeadline(campaign) {
+    var qty = Number(campaign.minQuantity) || 0
+    var amt = Number(campaign.minAmount) || 0
+    var goal = campaignPrize(campaign) || "a free lucky-draw ticket"
+    var type = campaign.ruleType
+    if (type === "MIN_QUANTITY" && qty) return "Buy " + qty + "+ item" + (qty === 1 ? "" : "s") + " to win " + goal
+    if (type === "MIN_AMOUNT" && amt) return "Spend " + money(amt) + "+ to win " + goal
+    if (type === "MIN_QUANTITY_AND_AMOUNT") return "Buy " + qty + "+ items and spend " + money(amt) + "+ to win " + goal
+    return "Every order wins " + goal
+  }
+
+  /** The seller's banner, framed in the card. Optional click-through only when they set a target. */
+  function heroHtml(creative, alt) {
+    if (!creative || !creative.banner) return ""
+    var img = '<img src="' + escapeHtml(creative.bannerUrl) + '" alt="' + escapeHtml(alt || "Campaign offer") + '" loading="lazy" />'
+    var href = creative.ctaUrl
+    if (!href) return '<div class="pakr-hero">' + img + "</div>"
+    var external = /^https?:/i.test(href) ? ' target="_blank" rel="noopener noreferrer"' : ""
+    return '<div class="pakr-hero"><a href="' + escapeHtml(href) + '"' + external + ">" + img + "</a></div>"
+  }
+
+  /**
    * The product-page card: the campaign rule itself, stated as what the shopper has to do, then how
    * the ticket arrives. Shown before anything is in the cart, on the product the rule covers.
    */
-  function ruleHtml(status) {
+  function ruleHtml(status, creative) {
     var campaign = status.campaign || {}
     var qty = Number(campaign.minQuantity) || 0
     var amt = Number(campaign.minAmount) || 0
     var goal = campaignPrize(campaign) || "a free lucky-draw ticket"
     var type = campaign.ruleType
 
-    var headline
-    if (type === "MIN_QUANTITY" && qty) headline = "Buy " + qty + "+ item" + (qty === 1 ? "" : "s") + " to win " + goal
-    else if (type === "MIN_AMOUNT" && amt) headline = "Spend " + money(amt) + "+ to win " + goal
-    else if (type === "MIN_QUANTITY_AND_AMOUNT")
-      headline = "Buy " + qty + "+ items and spend " + money(amt) + "+ to win " + goal
-    else headline = "Every order wins " + goal
+    var headline = ruleHeadline(campaign)
 
     var needsQty = type === "MIN_QUANTITY" || type === "MIN_QUANTITY_AND_AMOUNT"
     var needsAmt = type === "MIN_AMOUNT" || type === "MIN_QUANTITY_AND_AMOUNT"
@@ -943,6 +1181,7 @@
       '<span class="pakr-tag">Free lucky draw</span>' +
       '<p class="pakr-title">' + escapeHtml(headline) + "</p>" +
       "</div></div>" +
+      heroHtml(creative, goal) +
       '<p class="pakr-body">Complete checkout and PakRaffle issues your ticket automatically — no code, no extra cost.' +
       drawLine + "</p>" +
       '<div class="pakr-steps">' +
@@ -1005,17 +1244,123 @@
     )
   }
 
+  /**
+   * The page banner the seller uploaded, placed in the theme's own flow. Unlike the rule card it has
+   * no threshold to explain: it is the campaign's artwork, one line of the offer, and wherever the
+   * seller wanted the click to go. Skipped when the theme gives us no page flow to join.
+   */
+  function mountPromo(status, creative) {
+    var campaign = status.campaign || {}
+    var where = promoAnchor()
+    if (!where || !where.node || !where.node.parentNode) {
+      log("no page flow to place the campaign banner in - skipped")
+      return
+    }
+    var href = creative.ctaUrl
+    var external = /^https?:/i.test(href) ? ' target="_blank" rel="noopener noreferrer"' : ""
+    var cta = href ? '<a class="pakr-promo-cta" href="' + escapeHtml(href) + '"' + external + ">See the draw</a>" : ""
+    var html =
+      '<button class="pakr-close" type="button" aria-label="Dismiss">&times;</button>' +
+      heroHtml(creative, campaignPrize(campaign) || campaign.title) +
+      '<div class="pakr-promo-row">' +
+      '<p class="pakr-promo-text">' + escapeHtml(ruleHeadline(campaign)) + "</p>" +
+      cta +
+      "</div>"
+    mountCard(html, "promo:" + (campaign.id || "") + ":" + surface(), {
+      slot: "promo",
+      placement: "page",
+      celebrate: false,
+      target: where,
+    })
+  }
+
+  /**
+   * The campaign nudge: the seller's square creative, the campaign's own title, the rule it
+   * advertises and the draw date. Once per campaign per visit - a shopper who has already seen the
+   * offer must not be shown it again on every page - and never over a ticket confirmation.
+   */
+  function maybePopup(status, creative) {
+    var campaign = status.campaign || {}
+    var key = POPUP_KEY + ":" + (campaign.id || "campaign")
+    if (session(key) === "1") return
+    var root = shadowRoot()
+    if (root.querySelector(".pakr-overlay")) return
+    session(key, "1")
+
+    var goal = campaignPrize(campaign)
+    var title = String(campaign.title || goal || "Lucky draw")
+    var facts = ['<span class="pakr-pill">' + escapeHtml(shortRule(campaign)) + "</span>"]
+    if (campaign.drawDate) facts.push('<span class="pakr-pill pakr-ghost">Draw ' + escapeHtml(drawLabel(campaign.drawDate)) + "</span>")
+    var href = creative.ctaUrl
+    var external = /^https?:/i.test(href) ? ' target="_blank" rel="noopener noreferrer"' : ""
+    var action = href
+      ? '<a class="pakr-go" href="' + escapeHtml(href) + '"' + external + ">Enter the draw</a>"
+      : '<button class="pakr-go" type="button">Keep shopping</button>'
+
+    var overlay = document.createElement("div")
+    overlay.className = "pakr-overlay"
+    overlay.setAttribute("role", "dialog")
+    overlay.setAttribute("aria-modal", "true")
+    overlay.setAttribute("aria-label", title)
+    overlay.innerHTML =
+      '<div class="pakr-modal">' +
+      '<button class="pakr-close" type="button" aria-label="Close">&times;</button>' +
+      '<span class="pakr-kicker">Free lucky draw</span>' +
+      "<h2>" + escapeHtml(title) + "</h2>" +
+      (goal ? '<p class="pakr-prize">Win ' + escapeHtml(goal) + "</p>" : "") +
+      '<img class="pakr-popup-img" src="' + escapeHtml(creative.popupUrl) + '" alt="' + escapeHtml(title) + '" loading="lazy" />' +
+      "<p>" + escapeHtml(ruleHeadline(campaign)) + ". Buy now and your ticket is issued automatically at checkout, no code and no extra cost.</p>" +
+      '<div class="pakr-facts">' + facts.join("") + "</div>" +
+      action +
+      '<p class="pakr-fine">Powered by PakRaffle</p>' +
+      "</div>"
+
+    root.appendChild(overlay)
+    state.popup = overlay
+
+    function close() {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay)
+      if (state.popup === overlay) state.popup = null
+    }
+    var go = overlay.querySelector(".pakr-go")
+    if (go) go.addEventListener("click", close)
+    var x = overlay.querySelector(".pakr-close")
+    if (x) x.addEventListener("click", close)
+    overlay.addEventListener("click", function (event) {
+      if (event.target === overlay) close()
+    })
+    document.addEventListener("keydown", function onKey(event) {
+      if (event.key === "Escape") {
+        close()
+        document.removeEventListener("keydown", onKey)
+      }
+    })
+    log("campaign popup shown", campaign.id)
+  }
+
   function renderState() {
     var status = state.status
     removeBanner()
+    removePromo()
 
     var kind = pageKind()
+    var place = surface()
     var empty = !state.cart || !state.cart.item_count
-    // Elsewhere an empty cart has nothing to say; a product page still has an offer to make.
-    if (empty && kind !== "product") {
-      log("no cart items — nothing to show")
-      return
+    var creative = readCreative(status, place)
+    var hasCampaign = Boolean(status && status.success !== false && status.campaign)
+
+    // The artwork is the merchant's own and it has a different job from the rule card: it attracts
+    // the purchase, so it shows whether or not anything is in the cart. Never on the cart page.
+    if (hasCampaign && place !== "cart" && place !== "other") {
+      if (creative.banner && place !== "product") mountPromo(status, creative)
+      if (creative.popup && !state.popupArmed) {
+        state.popupArmed = true
+        setTimeout(function () {
+          maybePopup(status, creative)
+        }, POPUP_DELAY_MS)
+      }
     }
+
     if (!status || status.success === false) {
       log("status unavailable", status && status.error)
       return
@@ -1027,23 +1372,25 @@
 
     var signature = bannerSignature(status, kind)
 
-    if (empty) {
-      if (status.state !== "pitch") {
-        log("empty cart, no offer to pitch", status.state)
-        return
-      }
-      // The product page earns its space with the rule itself, not a progress bar at zero.
-      mountCard(ruleHtml(status), signature, { placement: kind, celebrate: false })
+    // A product page is a shop window, not a till. It states the buying rule and the free ticket that
+    // rule earns, and nothing else: no progress bar and no "2 items to go", because the shopper has
+    // not decided to buy yet and that arithmetic belongs on the cart page.
+    if (place === "product") {
+      mountCard(ruleHtml(status, creative), signature, { placement: "product", celebrate: false })
       return
     }
 
+    if (empty) {
+      log("empty cart away from a product page - nothing to say", status.state)
+      return
+    }
     if (status.state === "eligible") {
       // Good news travels: the congratulations card follows the shopper around the store.
       mountCard(eligibleHtml(status), signature, { placement: kind, celebrate: true })
       return
     }
-    if (status.state === "progress" && kind) {
-      // The nudge only earns its space where the shopper is about to buy: the cart and the product page.
+    if (status.state === "progress" && kind === "cart") {
+      // The nudge only earns its space where the shopper is about to pay: the cart page.
       mountCard(progressHtml(status), signature, { placement: kind, celebrate: false })
       return
     }
@@ -1051,6 +1398,10 @@
   }
 
   function renderCongrats(claim) {
+    // A ticket confirmation outranks the marketing nudge, which may still be on screen.
+    if (state.popup && state.popup.parentNode) state.popup.parentNode.removeChild(state.popup)
+    state.popup = null
+
     var root = shadowRoot()
     var overlay = document.createElement("div")
     overlay.className = "pakr-overlay"
@@ -1102,9 +1453,10 @@
       .then(function (cart) {
         state.cart = cart
         var empty = !cart || !cart.item_count
-        // Only the product page has something to say about an empty cart, so every other page
-        // skips the round trip entirely.
-        if (empty && pageKind() !== "product") {
+        var place = surface()
+        // The product page has a rule to state, and the home and custom pages may carry campaign
+        // artwork, so they ask even with an empty cart. Every other page skips the round trip.
+        if (empty && place !== "product" && place !== "home" && place !== "custom") {
           state.status = null
           renderState()
           return null

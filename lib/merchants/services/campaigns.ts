@@ -5,7 +5,7 @@ import { toCampaignDTO } from "../dto"
 import { MerchantError, conflict, notFound } from "../errors"
 import { validateRuleConfig } from "../rules"
 import type { MerchantCampaign, MerchantStore } from "../types"
-import { createCampaignSchema, updateCampaignSchema } from "../validators"
+import { createCampaignSchema, updateCampaignSchema, updateCreativeSchema } from "../validators"
 import { getActivePrize, getPrizeMap } from "./prizes"
 
 const MAX_OPEN_CAMPAIGNS = 10
@@ -145,6 +145,53 @@ export async function updateCampaign(store: MerchantStore, campaignId: string, i
     const { count } = await db.merchantCampaign.updateMany({ where: { id: campaign.id, status: from }, data: { status: to } })
     if (count === 0) throw conflict(`Campaign could not be ${data.action}d — its status just changed`)
   }
+
+  const fresh = await getOwnedCampaign(store.id, campaign.id)
+  const [dto] = await decorateCampaigns([fresh])
+  return dto
+}
+
+/**
+ * Saves the storefront creative (banner + popup images, and the surfaces each may appear on).
+ *
+ * A field missing from the request means "leave it alone", so the cross-field rules are judged on
+ * the merged state rather than on a half-filled payload — otherwise a dashboard that only sends the
+ * toggles it touched would reject its own stored image.
+ */
+export async function updateCampaignCreative(store: MerchantStore, campaignId: string, input: unknown) {
+  const data = updateCreativeSchema.parse(input)
+  const campaign = await getOwnedCampaign(store.id, campaignId)
+  if (campaign.status === "COMPLETED") {
+    throw conflict("This campaign has drawn its winner, so its storefront creative is locked")
+  }
+
+  const pick = <T>(next: T | undefined, stored: T) => (next === undefined ? stored : next)
+  const merged = {
+    bannerUrl: pick(data.bannerUrl, campaign.bannerUrl ?? null),
+    popupUrl: pick(data.popupUrl, campaign.popupUrl ?? null),
+    pageSlug: pick(data.pageSlug, campaign.pageSlug ?? null),
+    ctaUrl: pick(data.ctaUrl, campaign.ctaUrl ?? null),
+    showBannerHome: pick(data.showBannerHome, Boolean(campaign.showBannerHome)),
+    showPopupHome: pick(data.showPopupHome, Boolean(campaign.showPopupHome)),
+    showBannerProduct: pick(data.showBannerProduct, Boolean(campaign.showBannerProduct)),
+    showPopupProduct: pick(data.showPopupProduct, Boolean(campaign.showPopupProduct)),
+    showCustomPage: pick(data.showCustomPage, Boolean(campaign.showCustomPage)),
+  }
+
+  // An enabled placement with no image would paint an empty box on the shopper's screen, which is
+  // worse than painting nothing at all — so refuse it here instead of rendering a hole.
+  const bannerOn = merged.showBannerHome || merged.showBannerProduct
+  const popupOn = merged.showPopupHome || merged.showPopupProduct
+  const customOn = merged.showCustomPage
+  if (bannerOn && !merged.bannerUrl) throw new MerchantError("Upload the banner image before switching the banner on")
+  if (popupOn && !merged.popupUrl) throw new MerchantError("Upload the square popup image before switching the popup on")
+  if (customOn && !merged.pageSlug) throw new MerchantError("Enter the page name (the part after /pages/) for the custom page")
+  if (customOn && !merged.bannerUrl && !merged.popupUrl) {
+    throw new MerchantError("Upload at least one image before switching the custom page on")
+  }
+
+  const db = await getMerchantDb()
+  await db.merchantCampaign.update({ where: { id: campaign.id }, data: merged })
 
   const fresh = await getOwnedCampaign(store.id, campaign.id)
   const [dto] = await decorateCampaigns([fresh])

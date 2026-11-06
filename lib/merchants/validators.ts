@@ -113,6 +113,95 @@ export const generateInvoiceSchema = z.object({
   campaignId: z.string().trim().min(1, { message: "campaignId is required" }),
 })
 
+/**
+ * Creative images normally come back from our own upload endpoint, but a seller may equally paste a
+ * Shopify CDN link. Either way the stored value is an https URL, and an empty string clears the slot
+ * — which is why blank maps to null instead of being dropped from the patch.
+ */
+const creativeImage = (label: string) =>
+  z
+    .string()
+    .trim()
+    .max(600, { message: `${label} image URL is too long` })
+    .optional()
+    .nullable()
+    .transform((v) =>
+      v === undefined ? undefined : v === null || v === "" ? null : /^https?:\/\//i.test(v) ? v : `https://${v.replace(/^\/\//, "")}`,
+    )
+    .refine((v) => v === undefined || v === null || /^https:\/\/[^/?]+\.[a-z]{2,}/i.test(v), {
+      message: `Enter a full ${label.toLowerCase()} image URL, e.g. https://cdn.example.com/banner.jpg`,
+    })
+
+/**
+ * The page the seller points at, however they paste it: "promo", "promo/", "/pages/promo" and a full
+ * storefront URL all mean the same handle. The widget compares this against the live URL.
+ */
+const pageHandle = z
+  .string()
+  .trim()
+  .optional()
+  .nullable()
+  .transform((v) => {
+    if (v === undefined) return undefined
+    if (v === null) return null
+    const cleaned = v
+      .replace(/^https?:\/\/[^/]+/i, "")
+      .replace(/^\/?(?:en(?:-[a-z]{2})?\/)?(?:pages|products|collections)\//i, "")
+      .replace(/[?#].*$/, "")
+      .replace(/^\/+|\/+$/g, "")
+      .toLowerCase()
+    return cleaned ? cleaned.slice(0, 120) : null
+  })
+  .refine((v) => v === undefined || v === null || /^[a-z0-9][a-z0-9_-]*$/.test(v), {
+    message: "Page name can only contain letters, numbers, hyphens or underscores",
+  })
+
+/** Checkboxes arrive as booleans from fetch and as "true"/"false" from plain form encoders. */
+const toggle = z
+  .union([z.boolean(), z.string(), z.number()])
+  .optional()
+  .transform((v) => {
+    if (v === undefined) return undefined
+    if (typeof v === "boolean") return v
+    if (typeof v === "number") return v === 1
+    return v === "true" || v === "1"
+  })
+
+/**
+ * Where the creative sends the shopper: a path on their own storefront ("/collections/summer") or a
+ * full https URL. Protocol-relative and scheme URLs are refused here, long before anything is echoed
+ * into an <a href> on a live theme.
+ */
+const ctaTarget = z
+  .string()
+  .trim()
+  .max(400, { message: "Destination is too long" })
+  .optional()
+  .nullable()
+  .transform((v) => (v === undefined ? undefined : v === null || v === "" ? null : v))
+  .refine((v) => {
+    if (v === undefined || v === null) return true
+    if (v.charAt(0) === "/") return v.charAt(1) !== "/"
+    return /^https:\/\/[^/?]+\.[a-z]{2,}/i.test(v)
+  }, { message: "Use a store path like /collections/summer, or a full https:// link" })
+
+/**
+ * Everything the "Campaign details" tab writes. Each field is optional so a partial save works, and
+ * the cross-field rules (an enabled placement needs its image, a custom page needs its handle) are
+ * checked in the service against the merged state — never against half a payload.
+ */
+export const updateCreativeSchema = z.object({
+  bannerUrl: creativeImage("Banner"),
+  popupUrl: creativeImage("Popup"),
+  showBannerHome: toggle,
+  showPopupHome: toggle,
+  showBannerProduct: toggle,
+  showPopupProduct: toggle,
+  showCustomPage: toggle,
+  pageSlug: pageHandle,
+  ctaUrl: ctaTarget,
+})
+
 export const submitPaymentSchema = z.object({
   paymentMethod: z.enum(PAYMENT_METHODS),
   transactionRef: trimmed(4, 100, "Transaction reference"),

@@ -56,6 +56,26 @@ export function toStoreDTO(store: MerchantStore) {
   }
 }
 
+/**
+ * The storefront creative, in the exact shape the widget reads. Field names deliberately match the
+ * database columns so a grep for a placement answers in both places, and every flag is coerced to a
+ * boolean so the storefront payload never carries null where the browser expects true/false.
+ */
+export function toCreativeDTO(campaign: MerchantCampaign) {
+  return {
+    bannerUrl: campaign.bannerUrl ?? null,
+    popupUrl: campaign.popupUrl ?? null,
+    pageSlug: campaign.pageSlug ?? null,
+    /** Store path or https URL the banner and popup button lead to; null means "no link". */
+    ctaUrl: campaign.ctaUrl ?? null,
+    showBannerHome: Boolean(campaign.showBannerHome),
+    showPopupHome: Boolean(campaign.showPopupHome),
+    showBannerProduct: Boolean(campaign.showBannerProduct),
+    showPopupProduct: Boolean(campaign.showPopupProduct),
+    showCustomPage: Boolean(campaign.showCustomPage),
+  }
+}
+
 export function toCampaignDTO(
   campaign: MerchantCampaign,
   extras: { prize?: PrizeSummary | null; billableEntries?: number; testEntries?: number } = {},
@@ -86,6 +106,7 @@ export function toCampaignDTO(
     drawnAt: campaign.drawnAt ?? null,
     createdAt: campaign.createdAt,
     prize: extras.prize ?? null,
+    creative: toCreativeDTO(campaign),
     billableEntries: extras.billableEntries ?? 0,
     billableAmount: (extras.billableEntries ?? 0) * campaign.ticketPrice,
     testEntries: extras.testEntries ?? 0,

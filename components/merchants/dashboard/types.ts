@@ -67,6 +67,25 @@ export interface PrizeDTO {
 
 export type RuleType = "ALL_ORDERS" | "MIN_QUANTITY" | "MIN_AMOUNT" | "MIN_QUANTITY_AND_AMOUNT"
 
+/**
+ * The storefront artwork, exactly as toCreativeDTO() publishes it: the two images plus one switch per
+ * surface the widget can draw on. Field names match the database columns deliberately, so a search for
+ * a placement answers in the schema, the service and this tab alike.
+ */
+export interface CampaignCreativeDTO {
+  bannerUrl: string | null
+  popupUrl: string | null
+  /** Handle of the /pages/<handle> page the creative is also allowed on. */
+  pageSlug: string | null
+  /** Store path or https URL the banner and the popup button lead to. */
+  ctaUrl: string | null
+  showBannerHome: boolean
+  showPopupHome: boolean
+  showBannerProduct: boolean
+  showPopupProduct: boolean
+  showCustomPage: boolean
+}
+
 export interface CampaignDTO {
   id: string
   storeId: string
@@ -90,6 +109,7 @@ export interface CampaignDTO {
   drawnAt: string | null
   createdAt: string
   prize: PrizeDTO | null
+  creative: CampaignCreativeDTO
   billableEntries: number
   billableAmount: number
   testEntries: number

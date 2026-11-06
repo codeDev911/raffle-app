@@ -262,6 +262,20 @@ model MerchantCampaign {
   endDate        DateTime
   winnerEntryId  String?
   drawnAt        DateTime?
+  // Storefront creative, managed on the dashboard's "Campaign details" tab and delivered to shoppers
+  // by public/merchants/widget.js. Two assets (a wide banner and a square popup image) plus one flag
+  // per surface, so a seller can put the banner on the home page and the popup only on product pages.
+  bannerUrl         String?
+  popupUrl          String?
+  showBannerHome    Boolean @default(false)
+  showPopupHome     Boolean @default(false)
+  showBannerProduct Boolean @default(false)
+  showPopupProduct  Boolean @default(false)
+  /** Also show both creatives on one of the store's own pages, addressed by its handle. */
+  showCustomPage    Boolean @default(false)
+  pageSlug          String?
+  /** Where the banner click / popup button goes: a store path (/collections/…) or an https URL. */
+  ctaUrl            String?
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
 
