@@ -55,6 +55,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { TOKEN_KEY } from "@/app/admin/merchants/_shared"
 
 interface Customer {
   id: string
@@ -172,8 +173,13 @@ export default function AdminCustomersPage() {
           if (endDate) params.append("endDate", endDate)
         }
 
+        const token = typeof window !== "undefined" ? sessionStorage.getItem(TOKEN_KEY) : null
         const res = await fetch(`/api/admin/customers?${params.toString()}`, {
-          headers: { "Cache-Control": "no-cache" },
+          headers: {
+            "Cache-Control": "no-cache",
+            "x-admin-request": "true",
+            ...(token ? { "x-admin-token": token } : {}),
+          },
         })
 
         if (!res.ok) {
@@ -288,7 +294,13 @@ export default function AdminCustomersPage() {
         if (endDate) params.append("endDate", endDate)
       }
 
-      const res = await fetch(`/api/admin/customers?${params.toString()}`)
+      const token = typeof window !== "undefined" ? sessionStorage.getItem(TOKEN_KEY) : null
+      const res = await fetch(`/api/admin/customers?${params.toString()}`, {
+        headers: {
+          "x-admin-request": "true",
+          ...(token ? { "x-admin-token": token } : {}),
+        },
+      })
       const data = await res.json()
       const exportList: Customer[] = data.customers || customers
 

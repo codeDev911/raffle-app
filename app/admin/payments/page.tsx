@@ -45,6 +45,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
+import { TOKEN_KEY } from "@/app/admin/merchants/_shared"
 
 interface Payment {
   id: string
@@ -128,9 +129,12 @@ export default function AdminPaymentsPage() {
           t: Date.now().toString(),
         })
 
+        const token = typeof window !== "undefined" ? sessionStorage.getItem(TOKEN_KEY) : null
         const res = await fetch(`/api/admin/payments?${params.toString()}`, {
           headers: {
             "Cache-Control": "no-cache",
+            "x-admin-request": "true",
+            ...(token ? { "x-admin-token": token } : {}),
           },
         })
 
@@ -180,7 +184,13 @@ export default function AdminPaymentsPage() {
         status: statusFilter,
         search: debouncedSearch,
       })
-      const res = await fetch(`/api/admin/payments?${params.toString()}`)
+      const token = typeof window !== "undefined" ? sessionStorage.getItem(TOKEN_KEY) : null
+      const res = await fetch(`/api/admin/payments?${params.toString()}`, {
+        headers: {
+          "x-admin-request": "true",
+          ...(token ? { "x-admin-token": token } : {}),
+        },
+      })
       const data = await res.json()
       const exportList: Payment[] = data.payments || payments
 

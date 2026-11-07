@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
+import { TOKEN_KEY } from "@/app/admin/merchants/_shared"
 
 interface ProductRequest {
   id: string
@@ -82,10 +83,12 @@ export default function AdminRequestDetailPage() {
     if (!id) return
     if (showLoading) setLoading(true)
     try {
+      const token = typeof window !== "undefined" ? sessionStorage.getItem(TOKEN_KEY) : null
       const res = await fetch(`/api/listing-requests/${encodeURIComponent(id)}?_t=${Date.now()}`, {
         cache: "no-store",
         headers: {
           "x-admin-request": "true",
+          ...(token ? { "x-admin-token": token } : {}),
           "Cache-Control": "no-cache",
           Pragma: "no-cache",
         },
@@ -116,9 +119,14 @@ export default function AdminRequestDetailPage() {
     setUpdatingStatus(true)
     setMessage(null)
     try {
+      const token = typeof window !== "undefined" ? sessionStorage.getItem(TOKEN_KEY) : null
       const res = await fetch(`/api/listing-requests/${request.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-request": "true",
+          ...(token ? { "x-admin-token": token } : {}),
+        },
         body: JSON.stringify({ status: newStatus }),
       })
       const data = await res.json()
@@ -143,9 +151,14 @@ export default function AdminRequestDetailPage() {
     setSavingNotes(true)
     setMessage(null)
     try {
+      const token = typeof window !== "undefined" ? sessionStorage.getItem(TOKEN_KEY) : null
       const res = await fetch(`/api/listing-requests/${request.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-request": "true",
+          ...(token ? { "x-admin-token": token } : {}),
+        },
         body: JSON.stringify({ adminNotes: notes }),
       })
       const data = await res.json()
@@ -167,9 +180,13 @@ export default function AdminRequestDetailPage() {
     if (!request) return
     setDeleting(true)
     try {
+      const token = typeof window !== "undefined" ? sessionStorage.getItem(TOKEN_KEY) : null
       const res = await fetch(`/api/listing-requests/${request.id}`, {
         method: "DELETE",
-        headers: { "x-admin-request": "true" },
+        headers: {
+          "x-admin-request": "true",
+          ...(token ? { "x-admin-token": token } : {}),
+        },
       })
       const data = await res.json()
       if (data.success) {

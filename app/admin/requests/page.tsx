@@ -45,6 +45,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { TOKEN_KEY } from "@/app/admin/merchants/_shared"
 
 interface ProductRequest {
   id: string
@@ -81,11 +82,14 @@ export default function AdminRequestsPage() {
   const fetchRequests = async (showLoading = true) => {
     if (showLoading) setLoading(true)
     try {
+      const token = typeof window !== "undefined" ? sessionStorage.getItem(TOKEN_KEY) : null
       const res = await fetch(`/api/listing-requests?_t=${Date.now()}`, {
         cache: "no-store",
         headers: {
           "Cache-Control": "no-cache",
           Pragma: "no-cache",
+          "x-admin-request": "true",
+          ...(token ? { "x-admin-token": token } : {}),
         },
       })
       const data = await res.json()
@@ -106,9 +110,14 @@ export default function AdminRequestsPage() {
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     setActionLoading(id)
     try {
+      const token = typeof window !== "undefined" ? sessionStorage.getItem(TOKEN_KEY) : null
       const res = await fetch(`/api/listing-requests/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-request": "true",
+          ...(token ? { "x-admin-token": token } : {}),
+        },
         body: JSON.stringify({ status: newStatus }),
       })
       const data = await res.json()
@@ -132,9 +141,13 @@ export default function AdminRequestsPage() {
   const handleDelete = async (id: string) => {
     setDeletingId(id)
     try {
+      const token = typeof window !== "undefined" ? sessionStorage.getItem(TOKEN_KEY) : null
       const res = await fetch(`/api/listing-requests/${id}`, {
         method: "DELETE",
-        headers: { "x-admin-request": "true" },
+        headers: {
+          "x-admin-request": "true",
+          ...(token ? { "x-admin-token": token } : {}),
+        },
       })
       const data = await res.json()
       if (data.success) {
