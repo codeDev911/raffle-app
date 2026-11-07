@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import Image from "next/image"
+import NextImage from "next/image"
 import { AlertTriangle, Check, ExternalLink, ImagePlus, Maximize, Megaphone, Minimize, RotateCcw, RotateCw, Upload, X } from "lucide-react"
 import { GUIDES, GuideStrip } from "./guides"
 import { cn } from "@/lib/utils"
@@ -170,18 +170,20 @@ export function CampaignDetailsTab({
   }
 
   async function finishCrop(blob: Blob) {
-    const file = new File([blob], cropFile?.name || "image.jpg", { type: cropFile?.type || "image/jpeg" })
+    if (!cropKind || !cropFile) return
+    const kind = cropKind
+    const file = new File([blob], cropFile.name || "image.jpg", { type: cropFile.type || "image/jpeg" })
     setCropKind(null)
     setCropFile(null)
     setCropSrc(null)
-    setUploading(cropKind)
+    setUploading(kind)
     try {
       const form = new FormData()
       form.append("file", file)
-      form.append("kind", cropKind)
+      form.append("kind", kind)
       const res = await merchantApi<{ image: { url: string } }>("/api/merchants/me/upload", { method: "POST", body: form })
-      setDraft((prev) => (cropKind === "banner" ? { ...prev, bannerUrl: res.image.url } : { ...prev, popupUrl: res.image.url }))
-      setSizes((prev) => ({ ...prev, [cropKind]: undefined }))
+      setDraft((prev) => (kind === "banner" ? { ...prev, bannerUrl: res.image.url } : { ...prev, popupUrl: res.image.url }))
+      setSizes((prev) => ({ ...prev, [kind]: undefined }))
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -428,7 +430,8 @@ interface CropModalProps {
 
 function CropModal({ kind, src, file, onConfirm, onCancel }: CropModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const imageRef = useRef<HTMLImageElement>(null)
+  const imageRef = useRef<HTMLImageElement | null>(null)
+  const [imageReady, setImageReady] = useState(false)
   const [scale, setScale] = useState(1)
   const [rotation, setRotation] = useState(0)
   const [zoom, setZoom] = useState(1)
@@ -439,8 +442,11 @@ function CropModal({ kind, src, file, onConfirm, onCancel }: CropModalProps) {
   const targetRatio = SLOT_COPY[kind].want
 
   useEffect(() => {
-    const img = new Image()
+    let active = true
+    setImageReady(false)
+    const img = new window.Image()
     img.onload = () => {
+      if (!active) return
       imageRef.current = img
       // Center and fit: scale so the image fills the crop frame.
       const frameW = 600
@@ -449,43 +455,50 @@ function CropModal({ kind, src, file, onConfirm, onCancel }: CropModalProps) {
       setScale(scaleToFit)
       setOffset({ x: 0, y: 0 })
       setRotation(0)
+      setZoom(1)
+      setImageReady(true)
+    }
+    img.onerror = () => {
+      if (active) setImageReady(false)
     }
     img.src = src
+    return () => {
+      active = false
+    }
   }, [src, targetRatio])
 
   const targetSize = useMemo(() => {
     const maxDim = 2000
-    const dim = Math.min(Math.max(file.width || 1200, file.height || 400), maxDim)
-    return kind === "banner" ? { w: dim * targetRatio, h: dim } : { w: dim, h: dim }
-  }, [file, kind, targetRatio])
+    const sourceWidth = imageRef.current?.naturalWidth || 1200
+    const sourceHeight = imageRef.current?.naturalHeight || 400
+    const dim = Math.min(Math.max(sourceWidth, sourceHeight), maxDim)
+    return kind === "banner" ? { w: Math.round(dim * targetRatio), h: dim } : { w: dim, h: dim }
+  }, [imageReady, kind, targetRatio])
 
-  const canvas = canvasRef.current
-  if (!canvas || !imageRef.current) return null
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const image = imageRef.current
+    if (!canvas || !image || !imageReady) return
 
-  const ctx = canvas.getContext("2d")
-  if (!ctx) return null
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
 
-  // Canvas sized to the cropped output dimensions.
-  canvas.width = targetSize.w
-  canvas.height = targetSize.h
+    // Canvas sized to the cropped output dimensions.
+    canvas.width = targetSize.w
+    canvas.height = targetSize.h
 
-  const frameW = canvas.width
-  const frameH = canvas.height
-  const drawW = imageRef.current.naturalWidth * scale * zoom
-  const drawH = imageRef.current.naturalHeight * scale * zoom
+    const frameW = canvas.width
+    const frameH = canvas.height
+    const drawW = image.naturalWidth * scale * zoom
+    const drawH = image.naturalHeight * scale * zoom
 
-  ctx.clearRect(0, 0, frameW, frameH)
-  ctx.save()
-  ctx.translate(frameW / 2, frameH / 2)
-  ctx.rotate((rotation * Math.PI) / 180)
-  ctx.drawImage(
-    imageRef.current,
-    -drawW / 2 + offset.x,
-    -drawH / 2 + offset.y,
-    drawW,
-    drawH
-  )
-  ctx.restore()
+    ctx.clearRect(0, 0, frameW, frameH)
+    ctx.save()
+    ctx.translate(frameW / 2, frameH / 2)
+    ctx.rotate((rotation * Math.PI) / 180)
+    ctx.drawImage(image, -drawW / 2 + offset.x, -drawH / 2 + offset.y, drawW, drawH)
+    ctx.restore()
+  }, [imageReady, offset, rotation, scale, targetSize, zoom])
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onCancel() }}>
@@ -522,10 +535,12 @@ function CropModal({ kind, src, file, onConfirm, onCancel }: CropModalProps) {
         <div className="border-t bg-slate-50 px-6 py-3 flex items-center justify-between">
           <button type="button" onClick={onCancel} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded">Cancel</button>
           <button type="button" onClick={() => {
+            const canvas = canvasRef.current
+            if (!canvas) return
             canvas.toBlob((blob) => {
               if (blob) onConfirm(blob)
             }, "image/jpeg", 0.92)
-          }} disabled={dragging} className="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded">
+          }} disabled={dragging || !imageReady} className="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded disabled:opacity-50">
             Use this crop
           </button>
         </div>
@@ -573,7 +588,7 @@ function CreativeSlot({
         >
           {url ? (
             <>
-              <Image src={url} alt="" fill sizes="(max-width: 1024px) 100vw, 480px" className="object-cover" unoptimized onLoad={(event) => onMeasured({ w: event.currentTarget.naturalWidth, h: event.currentTarget.naturalHeight })} />
+              <NextImage src={url} alt="" fill sizes="(max-width: 1024px) 100vw, 480px" className="object-cover" unoptimized onLoad={(event) => onMeasured({ w: event.currentTarget.naturalWidth, h: event.currentTarget.naturalHeight })} />
               <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-white/85 px-3 py-2 backdrop-blur">
                 <span className="truncate font-mono text-[11px] text-slate-600">{size ? `${size.w} × ${size.h}px` : "measuring…"}</span>
                 <div className="flex shrink-0 items-center gap-1.5">
