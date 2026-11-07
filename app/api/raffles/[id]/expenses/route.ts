@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { requireAdmin } from "@/lib/merchants/session"
 
 export const dynamic = "force-dynamic"
 
@@ -15,6 +16,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    await requireAdmin(request)
     const raffleId = params.id
     const raffle = await prisma.raffle.findUnique({
       where: { id: raffleId },
@@ -70,6 +72,9 @@ export async function POST(
     })
   } catch (error: any) {
     console.error("Add expense error:", error)
+    if (error?.status && error?.code) {
+      return NextResponse.json({ error: error.message || "Unauthorized" }, { status: error.status })
+    }
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Validation failed", details: error.errors },
@@ -88,6 +93,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    await requireAdmin(request)
     const raffleId = params.id
     const { searchParams } = new URL(request.url)
     const expenseId = searchParams.get("expenseId")
@@ -132,6 +138,9 @@ export async function DELETE(
     return NextResponse.json({ success: true, message: "Expense removed" })
   } catch (error: any) {
     console.error("Delete expense error:", error)
+    if (error?.status && error?.code) {
+      return NextResponse.json({ error: error.message || "Unauthorized" }, { status: error.status })
+    }
     return NextResponse.json(
       { error: error?.message || "Internal server error" },
       { status: 500 }

@@ -1,11 +1,33 @@
+import crypto from "crypto"
+
 // Paymob Pakistan Payment Gateway Integration
 export class PaymobPayment {
   private apiKey: string
   private baseUrl: string
+  private hmacSecret: string
 
   constructor() {
     this.apiKey = process.env.PAYMOB_API_KEY || ""
     this.baseUrl = "https://pakistan.paymob.com/api"
+    this.hmacSecret = process.env.PAYMOB_HMAC_SECRET || ""
+  }
+
+  private safeEqualHex(a: string, b: string) {
+    try {
+      const A = Buffer.from(String(a || ""), "hex")
+      const B = Buffer.from(String(b || ""), "hex")
+      if (A.length === 0 || B.length === 0 || A.length !== B.length) return false
+      return crypto.timingSafeEqual(A, B)
+    } catch {
+      return false
+    }
+  }
+
+  verifyWebhookSignature(rawBody: string, signature?: string | null): boolean {
+    if (!this.hmacSecret) return process.env.NODE_ENV !== "production"
+    if (!signature) return false
+    const digest = crypto.createHmac("sha512", this.hmacSecret).update(rawBody, "utf8").digest("hex")
+    return this.safeEqualHex(digest, signature)
   }
 
   // Step 1: Get Authentication Token
@@ -280,8 +302,11 @@ export class PaymobPayment {
   }
 
   // Verify transaction callback
-  verifyCallback(data: any): boolean {
-    // Basic verification - you can add HMAC verification if Paymob provides it
+  verifyCallback(data: any, signature?: string | null, rawBody?: string): boolean {
+    if (this.hmacSecret && rawBody) {
+      return this.verifyWebhookSignature(rawBody, signature)
+    }
+    if (process.env.NODE_ENV === "production" && !this.hmacSecret) return false
     return data && data.success !== undefined
   }
 }

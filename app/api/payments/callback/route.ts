@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { PaymobPayment } from "@/lib/payments"
 import { PaymentStatus } from "@prisma/client"
+import { requireAdmin } from "@/lib/merchants/session"
+import crypto from "crypto"
+
+function safeEqual(a: string, b: string) {
+  try {
+    const A = Buffer.from(String(a || ""))
+    const B = Buffer.from(String(b || ""))
+    if (A.length !== B.length) return false
+    return crypto.timingSafeEqual(A, B)
+  } catch {
+    return false
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +22,7 @@ export async function POST(request: NextRequest) {
     
     const paymob = new PaymobPayment()
 
-    // Verify callback
+    // Verify callback (signature when configured via env; basic fallback only outside production per payments.ts)
     if (!paymob.verifyCallback(body)) {
       console.error("Invalid callback data")
       return NextResponse.json({ error: "Invalid callback" }, { status: 400 })
@@ -121,6 +134,19 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   // Handle GET callback (for return URL)
   try {
+    // Require admin or a configured server-to-server token; do not trust client body alone.
+    let authorized = false
+    try {
+      await requireAdmin(request)
+      authorized = true
+    } catch {
+      const configured = process.env.PAYMENT_CALLBACK_TOKEN || ""
+      const provided = request.headers.get("x-payment-callback-token") || ""
+      authorized = Boolean(configured && provided && safeEqual(provided, configured))
+    }
+    if (!authorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
      const body = await request.json()
     // Update raffle current entries and create entry of
     

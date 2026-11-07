@@ -2,8 +2,18 @@ import { SignJWT, jwtVerify } from "jose"
 import { cookies } from "next/headers"
 import bcrypt from "bcryptjs"
 
-const secretKey = process.env.JWT_SECRET || "your-secret-key"
-const key = new TextEncoder().encode(secretKey)
+function getJwtKey() {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("JWT_SECRET must be configured in production")
+    }
+    return new TextEncoder().encode("dev-only-insecure-jwt-secret-change-me")
+  }
+  return new TextEncoder().encode(secret)
+}
+
+const key = getJwtKey()
 
 export async function encrypt(payload: any) {
   return await new SignJWT(payload)

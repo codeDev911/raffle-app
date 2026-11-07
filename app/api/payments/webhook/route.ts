@@ -8,8 +8,10 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get("x-paymob-signature") || ""
 
     const paymob = new PaymobPayment()
+    if (!paymob.verifyWebhookSignature(body, signature)) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
+    }
 
-    
     const webhookData = JSON.parse(body)
     const transactionData = paymob.processWebhookData(webhookData)
 
