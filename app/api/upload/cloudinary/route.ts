@@ -1,10 +1,21 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { cloudinary } from "@/lib/cloudinary"
+import { getUser } from "@/lib/auth"
+import { requireAdmin } from "@/lib/merchants/session"
 
 export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
   try {
+    // Restrict to authenticated admin or authenticated user
+    try {
+      await requireAdmin(request)
+    } catch {
+      const user = await getUser()
+      if (!user) {
+        return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+      }
+    }
     const formData = await request.formData()
     const folder = (formData.get("folder") as string) || "raffles"
     

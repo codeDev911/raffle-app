@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma, mockPrisma } from "@/lib/prisma"
-import { getUser } from "@/lib/auth"
+import { requireAdmin } from "@/lib/merchants/session"
 import { z } from "zod"
 
 const createRaffleSchema = z.object({
@@ -52,10 +52,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // const user = await getUser()
-    // if (!user || user.role !== "ADMIN") {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    // }
+    await requireAdmin(request)
 
     const body = await request.json()
     const data = createRaffleSchema.parse(body)
@@ -101,6 +98,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(raffle)
   } catch (error) {
     console.error("Create raffle error:", error)
+    if ((error as any)?.status && (error as any)?.code) {
+      return NextResponse.json({ error: (error as any).message || "Unauthorized" }, { status: (error as any).status })
+    }
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Validation failed", details: error.errors }, { status: 400 })
     }

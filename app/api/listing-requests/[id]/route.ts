@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma, mockPrisma } from "@/lib/prisma"
+import { requireAdmin } from "@/lib/merchants/session"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -10,6 +11,15 @@ const noCacheHeaders = {
   "Expires": "0",
 }
 
+async function isAuthorizedAdmin(req: Request) {
+  try {
+    await requireAdmin(req)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -18,8 +28,7 @@ export async function GET(
     const { id } = await params
     const { searchParams } = new URL(req.url)
     const token = searchParams.get("token")
-    const referer = req.headers.get("referer") || ""
-    const isAdmin = req.headers.get("x-admin-request") === "true" || referer.includes("/admin")
+    const isAdmin = await isAuthorizedAdmin(req)
 
     let request: any = null
     try {
@@ -248,6 +257,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdmin(req)
     const { id } = await params
     const body = await req.json()
     const { status, adminNotes } = body
@@ -315,6 +325,9 @@ export async function PATCH(
     )
   } catch (error) {
     console.error("Error updating listing request:", error)
+    if ((error as any)?.status && (error as any)?.code) {
+      return NextResponse.json({ success: false, error: (error as any).message || "Unauthorized" }, { status: (error as any).status, headers: noCacheHeaders })
+    }
     return NextResponse.json(
       { success: false, error: "Failed to update listing request" },
       { status: 500, headers: noCacheHeaders }
@@ -327,6 +340,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdmin(req)
     const { id } = await params
     try {
       await prisma.productListingRequest.delete({
@@ -347,6 +361,9 @@ export async function DELETE(
     )
   } catch (error) {
     console.error("Error deleting listing request:", error)
+    if ((error as any)?.status && (error as any)?.code) {
+      return NextResponse.json({ success: false, error: (error as any).message || "Unauthorized" }, { status: (error as any).status, headers: noCacheHeaders })
+    }
     return NextResponse.json(
       { success: false, error: "Failed to delete listing request" },
       { status: 500, headers: noCacheHeaders }

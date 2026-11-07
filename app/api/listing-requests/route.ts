@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma, mockPrisma } from "@/lib/prisma"
 import crypto from "crypto"
+import { requireAdmin } from "@/lib/merchants/session"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -13,6 +14,7 @@ const noCacheHeaders = {
 
 export async function GET(req: NextRequest) {
   try {
+    await requireAdmin(req)
     const { searchParams } = new URL(req.url)
     const status = searchParams.get("status")
     const search = searchParams.get("search")
@@ -63,6 +65,9 @@ export async function GET(req: NextRequest) {
     )
   } catch (error) {
     console.error("Error fetching listing requests:", error)
+    if ((error as any)?.status && (error as any)?.code) {
+      return NextResponse.json({ success: false, error: (error as any).message || "Unauthorized" }, { status: (error as any).status, headers: noCacheHeaders })
+    }
     return NextResponse.json(
       { success: false, error: "Failed to fetch listing requests" },
       { status: 500, headers: noCacheHeaders }

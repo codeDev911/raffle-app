@@ -1,9 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { settleMerchantPayment, releaseMerchantPayment, refundPayment } from "@/lib/merchants/services/entry-payments"
+import { requireAdmin } from "@/lib/merchants/session"
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    await requireAdmin(request)
 
     const { status,transactionId,referralLinkId } = await request.json()
 
@@ -109,6 +111,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json(updatedPayment)
   } catch (error) {
     console.error("Error updating payment status:", error)
+    if ((error as any)?.status && (error as any)?.code) {
+      return NextResponse.json({ error: (error as any).message || "Unauthorized" }, { status: (error as any).status })
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

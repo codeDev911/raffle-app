@@ -1,13 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getUser } from "@/lib/auth"
+import { requireAdmin } from "@/lib/merchants/session"
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // const user = await getUser()
-    // if (!user || user.role !== "ADMIN") {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    // }
+    await requireAdmin(request)
 
     const body = await request.json()
     const { entryNumber } = body
@@ -99,6 +96,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     })
   } catch (error) {
     console.error("Select winner error:", error)
+    if ((error as any)?.status && (error as any)?.code) {
+      return NextResponse.json({ error: (error as any).message || "Unauthorized" }, { status: (error as any).status })
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -1,8 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { requireAdmin } from "@/lib/merchants/session"
 
 export async function POST(request: NextRequest) {
   try {
+    await requireAdmin(request)
     const { paymentId } = await request.json()
 
     const payment = await prisma.payment.findUnique({
@@ -45,6 +47,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Error sending receipt:", error)
+    if ((error as any)?.status && (error as any)?.code) {
+      return NextResponse.json({ error: (error as any).message || "Unauthorized" }, { status: (error as any).status })
+    }
     return NextResponse.json({ error: "Failed to send receipt" }, { status: 500 })
   }
 }

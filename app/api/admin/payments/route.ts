@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { unstable_noStore as noStore } from "next/cache"
 import { PaymentStatus } from "@prisma/client"
+import { requireAdmin } from "@/lib/merchants/session"
 
 // Force dynamic rendering and disable caching
 export const dynamic = "force-dynamic"
@@ -12,6 +13,7 @@ export async function GET(request: NextRequest) {
   noStore()
 
   try {
+    await requireAdmin(request)
     const { searchParams } = new URL(request.url)
     const pageParam = searchParams.get("page")
     const limitParam = searchParams.get("limit")
@@ -131,6 +133,9 @@ export async function GET(request: NextRequest) {
     return response
   } catch (error) {
     console.error("API Error fetching payments:", error)
+    if ((error as any)?.status && (error as any)?.code) {
+      return NextResponse.json({ error: (error as any).message || "Unauthorized" }, { status: (error as any).status })
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

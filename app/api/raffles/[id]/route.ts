@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getUser } from "@/lib/auth"
+import { requireAdmin } from "@/lib/merchants/session"
 import { z } from "zod"
 
 const updateRaffleSchema = z.object({
@@ -57,11 +57,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // const user = await getUser()
-    // if (!user || user.role !== "ADMIN") { 
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    // }
- 
+    await requireAdmin(request)
+
     const body = await request.json()
     const data = updateRaffleSchema.parse(body)
     
@@ -82,6 +79,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json(raffle)
   } catch (error) {
     console.error("Update raffle error:", error)
+    if ((error as any)?.status && (error as any)?.code) {
+      return NextResponse.json({ error: (error as any).message || "Unauthorized" }, { status: (error as any).status })
+    }
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Validation failed", details: error.errors }, { status: 400 })
     }
@@ -91,10 +91,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // const user = await getUser()
-    // if (!user || user.role !== "ADMIN") {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    // }
+    await requireAdmin(request)
 
     await prisma.raffle.delete({
       where: { id: params.id },
@@ -103,6 +100,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     return NextResponse.json({ message: "Raffle deleted successfully" })
   } catch (error) {
     console.error("Delete raffle error:", error)
+    if ((error as any)?.status && (error as any)?.code) {
+      return NextResponse.json({ error: (error as any).message || "Unauthorized" }, { status: (error as any).status })
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
