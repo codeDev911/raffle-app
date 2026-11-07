@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
-import { AlertTriangle, Check, ExternalLink, ImagePlus, Megaphone, Upload, X } from "lucide-react"
+import { AlertTriangle, Check, ExternalLink, ImagePlus, Maximize, Megaphone, Minimize, RotateCcw, RotateCw, Upload, X } from "lucide-react"
 import { GUIDES, GuideStrip } from "./guides"
 import { cn } from "@/lib/utils"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Alert, Btn, EmptyState, Field, Panel, PanelHeader, SelectInput, TextInput, merchantApi } from "../ui"
 import type { CampaignCreativeDTO, CampaignDTO } from "./types"
 
@@ -100,6 +101,9 @@ export function CampaignDetailsTab({
   const [uploading, setUploading] = useState<Slot | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [savedAt, setSavedAt] = useState<Date | null>(null)
+  const [cropKind, setCropKind] = useState<Slot | null>(null)
+  const [cropFile, setCropFile] = useState<File | null>(null)
+  const [cropSrc, setCropSrc] = useState<string | null>(null)
 
   const campaign = campaigns.find((c) => c.id === campaignId) || campaigns[0] || null
   // Change detector for the load effect below; deliberately the raw DTO, so a background refresh that
@@ -149,7 +153,7 @@ export function CampaignDetailsTab({
         : { ...prev, popupUrl: null, showPopupHome: false, showPopupProduct: false, showCustomPage: prev.bannerUrl ? prev.showCustomPage : false },
     )
 
-  async function upload(kind: Slot, file: File | null) {
+  function upload(kind: Slot, file: File | null) {
     if (!file || !campaign) return
     setError(null)
     if (!ACCEPTED.includes(file.type)) {
@@ -160,14 +164,24 @@ export function CampaignDetailsTab({
       setError(`That image is ${(file.size / 1048576).toFixed(1)} MB. Upload 8 MB or less — we resize long edges to 2000px anyway.`)
       return
     }
-    setUploading(kind)
+    setCropKind(kind)
+    setCropFile(file)
+    setCropSrc(URL.createObjectURL(file))
+  }
+
+  async function finishCrop(blob: Blob) {
+    const file = new File([blob], cropFile?.name || "image.jpg", { type: cropFile?.type || "image/jpeg" })
+    setCropKind(null)
+    setCropFile(null)
+    setCropSrc(null)
+    setUploading(cropKind)
     try {
       const form = new FormData()
       form.append("file", file)
-      form.append("kind", kind)
+      form.append("kind", cropKind)
       const res = await merchantApi<{ image: { url: string } }>("/api/merchants/me/upload", { method: "POST", body: form })
-      setDraft((prev) => (kind === "banner" ? { ...prev, bannerUrl: res.image.url } : { ...prev, popupUrl: res.image.url }))
-      setSizes((prev) => ({ ...prev, [kind]: undefined }))
+      setDraft((prev) => (cropKind === "banner" ? { ...prev, bannerUrl: res.image.url } : { ...prev, popupUrl: res.image.url }))
+      setSizes((prev) => ({ ...prev, [cropKind]: undefined }))
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -381,8 +395,142 @@ export function CampaignDetailsTab({
                     : "Nothing is switched on yet"}
           </p>
         </div>
+
+      {cropKind && cropSrc && cropFile && (
+        <CropModal
+          kind={cropKind}
+          src={cropSrc}
+          file={cropFile}
+          onConfirm={finishCrop}
+          onCancel={() => {
+            setCropKind(null)
+            setCropFile(null)
+            setCropSrc(null)
+            if (cropSrc) URL.revokeObjectURL(cropSrc)
+          }}
+        />
+      )}
+
       </Panel>
     </div>
+  )
+}
+
+// ───────────────────────── image crop modal ─────────────────────────
+
+interface CropModalProps {
+  kind: Slot
+  src: string
+  file: File
+  onConfirm: (blob: Blob) => void
+  onCancel: () => void
+}
+
+function CropModal({ kind, src, file, onConfirm, onCancel }: CropModalProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const imageRef = useRef<HTMLImageElement>(null)
+  const [scale, setScale] = useState(1)
+  const [rotation, setRotation] = useState(0)
+  const [zoom, setZoom] = useState(1)
+  const [dragging, setDragging] = useState(false)
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+
+  const targetRatio = SLOT_COPY[kind].want
+
+  useEffect(() => {
+    const img = new Image()
+    img.onload = () => {
+      imageRef.current = img
+      // Center and fit: scale so the image fills the crop frame.
+      const frameW = 600
+      const frameH = frameW / targetRatio
+      const scaleToFit = Math.max(frameW / img.naturalWidth, frameH / img.naturalHeight)
+      setScale(scaleToFit)
+      setOffset({ x: 0, y: 0 })
+      setRotation(0)
+    }
+    img.src = src
+  }, [src, targetRatio])
+
+  const targetSize = useMemo(() => {
+    const maxDim = 2000
+    const dim = Math.min(Math.max(file.width || 1200, file.height || 400), maxDim)
+    return kind === "banner" ? { w: dim * targetRatio, h: dim } : { w: dim, h: dim }
+  }, [file, kind, targetRatio])
+
+  const canvas = canvasRef.current
+  if (!canvas || !imageRef.current) return null
+
+  const ctx = canvas.getContext("2d")
+  if (!ctx) return null
+
+  // Canvas sized to the cropped output dimensions.
+  canvas.width = targetSize.w
+  canvas.height = targetSize.h
+
+  const frameW = canvas.width
+  const frameH = canvas.height
+  const drawW = imageRef.current.naturalWidth * scale * zoom
+  const drawH = imageRef.current.naturalHeight * scale * zoom
+
+  ctx.clearRect(0, 0, frameW, frameH)
+  ctx.save()
+  ctx.translate(frameW / 2, frameH / 2)
+  ctx.rotate((rotation * Math.PI) / 180)
+  ctx.drawImage(
+    imageRef.current,
+    -drawW / 2 + offset.x,
+    -drawH / 2 + offset.y,
+    drawW,
+    drawH
+  )
+  ctx.restore()
+
+  return (
+    <Dialog open onOpenChange={(open) => { if (!open) onCancel() }}>
+      <DialogContent className="p-0 sm:max-w-2xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="px-6 py-4 border-b">
+          <DialogTitle className="text-lg font-semibold">Crop {kind === "banner" ? "banner" : "popup"} image</DialogTitle>
+          <DialogDescription className="text-xs text-slate-500 mt-1">
+            Drag to position, rotate and zoom to fit the {targetRatio}:1 frame.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex-1 relative overflow-hidden bg-slate-100 flex items-center justify-center">
+          {/* Crop frame indicator */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ outline: `2px dashed ${kind === "banner" ? "#059669" : "#2563eb"}` }} />
+          <canvas ref={canvasRef} className="max-w-full max-h-full object-contain" />
+        </div>
+
+        <div className="border-t bg-slate-50 px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs text-slate-600">
+            <span>{Math.round(file.size / 1024)} KB · {imageRef.current?.naturalWidth} × {imageRef.current?.naturalHeight}px</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => setRotation((r) => r - 90)} disabled={dragging} className="p-1.5 hover:bg-slate-200 rounded"><RotateCcw className="h-4 w-4" /></button>
+            <button type="button" onClick={() => setRotation((r) => r + 90)} disabled={dragging} className="p-1.5 hover:bg-slate-200 rounded"><RotateCw className="h-4 w-4" /></button>
+            <button type="button" onClick={() => setScale((s) => s * -1)} disabled={dragging} className="p-1.5 hover:bg-slate-200 rounded" title="Flip"><Maximize className="h-4 w-4" /></button>
+            <div className="h-[24px] w-[1px] bg-slate-300 mx-1" />
+            <button type="button" onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))} disabled={dragging} className="p-1.5 hover:bg-slate-200 rounded">-</button>
+            <span className="text-xs font-mono text-slate-600">{Math.round(zoom * 100)}%</span>
+            <button type="button" onClick={() => setZoom((z) => Math.min(2, z + 0.1))} disabled={dragging} className="p-1.5 hover:bg-slate-200 rounded">+</button>
+          </div>
+        </div>
+
+        <div className="border-t bg-slate-50 px-6 py-3 flex items-center justify-between">
+          <button type="button" onClick={onCancel} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded">Cancel</button>
+          <button type="button" onClick={() => {
+            canvas.toBlob((blob) => {
+              if (blob) onConfirm(blob)
+            }, "image/jpeg", 0.92)
+          }} disabled={dragging} className="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded">
+            Use this crop
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 

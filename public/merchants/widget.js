@@ -1256,16 +1256,10 @@
       log("no page flow to place the campaign banner in - skipped")
       return
     }
-    var href = creative.ctaUrl
-    var external = /^https?:/i.test(href) ? ' target="_blank" rel="noopener noreferrer"' : ""
-    var cta = href ? '<a class="pakr-promo-cta" href="' + escapeHtml(href) + '"' + external + ">See the draw</a>" : ""
+
     var html =
       '<button class="pakr-close" type="button" aria-label="Dismiss">&times;</button>' +
-      heroHtml(creative, campaignPrize(campaign) || campaign.title) +
-      '<div class="pakr-promo-row">' +
-      '<p class="pakr-promo-text">' + escapeHtml(ruleHeadline(campaign)) + "</p>" +
-      cta +
-      "</div>"
+      heroHtml(creative, campaignPrize(campaign) || campaign.title)
     mountCard(html, "promo:" + (campaign.id || "") + ":" + surface(), {
       slot: "promo",
       placement: "page",
@@ -1357,6 +1351,7 @@
         state.popupArmed = true
         setTimeout(function () {
           maybePopup(status, creative)
+          state.popupArmed = false
         }, POPUP_DELAY_MS)
       }
     }

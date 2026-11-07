@@ -9,7 +9,6 @@ import { BrandMark } from "@/components/brand"
 import { ThemeToggle } from "@/components/merchants/theme-toggle"
 import { ApiError, Alert, Btn, Panel, Sep, StatusText, formatNumber, merchantApi } from "@/components/merchants/ui"
 import { CampaignsTab } from "@/components/merchants/dashboard/campaigns"
-import { CampaignDetailsTab } from "@/components/merchants/dashboard/campaign-details"
 import { EntriesTab } from "@/components/merchants/dashboard/entries"
 import { InvoicesTab } from "@/components/merchants/dashboard/invoices"
 import { OverviewTab } from "@/components/merchants/dashboard/overview"
@@ -21,7 +20,6 @@ import type { CampaignDTO, InvoiceDTO, MeResponse, StoreDTO } from "@/components
 const TABS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
   { key: "campaigns", label: "Campaigns", icon: Zap },
-  { key: "campaign-details", label: "Campaign details", icon: Megaphone },
   { key: "entries", label: "Entries", icon: Ticket },
   { key: "invoices", label: "Invoices", icon: Receipt },
   { key: "refunds", label: "Refunds", icon: Undo2 },
@@ -35,8 +33,6 @@ export default function MerchantDashboard() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const paramTab = searchParams.get("tab") as TabKey | null
-  /** Deep link from anywhere in the workspace straight to one campaign's creative. */
-  const paramCampaign = searchParams.get("campaign")
   const [tab, setTab] = useState<TabKey>("overview")
 
   const [me, setMe] = useState<MeResponse | null>(null)
@@ -419,9 +415,6 @@ export default function MerchantDashboard() {
             }}
             onOpenInvoices={() => changeTab("invoices")}
           />
-        )}
-        {tab === "campaign-details" && (
-          <CampaignDetailsTab campaigns={campaigns} storeUrl={store.storeUrl} initialCampaignId={paramCampaign} onChanged={refresh} />
         )}
         {tab === "entries" && (
           <EntriesTab

@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import type React from "react"
 import { useEffect, useMemo, useState } from "react"
 import Image from "next/image"
@@ -121,7 +122,7 @@ export function CampaignsTab({
                     <PrizeThumb prize={c.prize} />
                     <div className="min-w-0 space-y-1">
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <h4 className="truncate font-semibold text-slate-900">{c.title}</h4>
+                        <Link href={"/admin/merchants/campaigns/" + c.id} className="truncate font-semibold text-slate-900 hover:no-underline"><h4>{c.title}</h4></Link>
                         <CampaignStatus campaign={c} />
                       </div>
                       <p className="text-sm text-emerald-700">{c.ruleSummary}</p>
