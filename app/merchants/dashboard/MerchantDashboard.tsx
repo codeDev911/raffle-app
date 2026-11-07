@@ -16,10 +16,12 @@ import { RefundsTab } from "@/components/merchants/dashboard/refunds"
 import { SettingsTab } from "@/components/merchants/dashboard/settings"
 import { SimulatorTab } from "@/components/merchants/dashboard/simulator"
 import type { CampaignDTO, InvoiceDTO, MeResponse, StoreDTO } from "@/components/merchants/dashboard/types"
+import { CampaignDetailsTab } from "@/components/merchants/dashboard/campaign-details"
 
 const TABS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
   { key: "campaigns", label: "Campaigns", icon: Zap },
+   { key: "campaign-details", label: "Campaign details", icon: Megaphone },
   { key: "entries", label: "Entries", icon: Ticket },
   { key: "invoices", label: "Invoices", icon: Receipt },
   { key: "refunds", label: "Refunds", icon: Undo2 },
@@ -34,7 +36,8 @@ export default function MerchantDashboard() {
   const searchParams = useSearchParams()
   const paramTab = searchParams.get("tab") as TabKey | null
   const [tab, setTab] = useState<TabKey>("overview")
-
+ /** Deep link from anywhere in the workspace straight to one campaign's creative. */
+  const paramCampaign = searchParams.get("campaign")
   const [me, setMe] = useState<MeResponse | null>(null)
   const [campaigns, setCampaigns] = useState<CampaignDTO[]>([])
   const [invoices, setInvoices] = useState<InvoiceDTO[]>([])
@@ -415,6 +418,9 @@ export default function MerchantDashboard() {
             }}
             onOpenInvoices={() => changeTab("invoices")}
           />
+        )}
+         {tab === "campaign-details" && (
+          <CampaignDetailsTab campaigns={campaigns} storeUrl={store.storeUrl} initialCampaignId={paramCampaign} onChanged={refresh} />
         )}
         {tab === "entries" && (
           <EntriesTab
