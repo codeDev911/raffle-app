@@ -63,7 +63,7 @@ interface RafflesClientProps {
   categories: string[]
 }
 
-const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/invite/pakraffle-official"
+const WHATSAPP_COMMUNITY_URL = "https://whatsapp.com/channel/0029VbB0CzJ8fewyBXpXy210"
 
 const BAND = [
   "100% target ticket rule",

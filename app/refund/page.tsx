@@ -463,7 +463,7 @@ export default function RefundPage() {
                 A transaction question deserves an answer, not a form letter.
               </h2>
               <p className="mt-3 max-w-xl text-[13.5px] leading-relaxed text-slate-600">
-                Our customer care team is available 24/7 on WhatsApp and email to resolve any transaction queries or
+                Our customer care team is available 24/7 on live chat and email to resolve any transaction queries or
                 ticket confirmation questions.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">

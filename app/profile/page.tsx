@@ -571,7 +571,7 @@ export default async function ProfilePage() {
                 </h4>
               </div>
               <p className="text-xs text-emerald-100/90 leading-relaxed">
-                Need help checking your ticket status or verifying a payment? Our Pakistani team is active on WhatsApp and email.
+                Need help checking your ticket status or verifying a payment? Our Pakistani team is active on live chat and email.
               </p>
               <Link
                 href="/contact"

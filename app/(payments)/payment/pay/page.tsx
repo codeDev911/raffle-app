@@ -8,7 +8,6 @@ import {
   Copy,
   CheckCircle2,
   Upload,
-  ArrowRight,
   ShieldCheck,
   ArrowLeft,
   Loader2,
@@ -24,8 +23,6 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-
-const WHATSAPP_PHONE_CLEAN = "923377155722"
 
 // Pakistani Payment Methods Config
 const paymentMethodsConfig: Record<
@@ -86,14 +83,6 @@ const paymentMethodsConfig: Record<
     accountName: process.env.NEXT_PUBLIC_MEEZAN_ACCOUNT_NAME || "Muhammad Afnan",
     iban: process.env.NEXT_PUBLIC_MEEZAN_ACCOUNT_IBAN || "PK53MEZN0000300112437772",
   },
-}
-
-function WhatsAppIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.699c.971.53 1.77.813 2.796.814 3.183 0 5.768-2.586 5.768-5.766 0-3.18-2.585-5.766-5.768-5.766zm3.376 8.204c-.144.405-.837.774-1.17.824-.312.045-.694.06-2.146-.541-1.854-.769-3.037-2.671-3.13-2.794-.093-.124-.75-1-0.75-1.906s.469-1.353.636-1.54c.167-.187.365-.234.487-.234.122 0 .245.001.352.007.113.006.264-.043.413.315.153.365.523 1.277.568 1.37.045.093.076.202.015.324-.061.122-.092.198-.182.304-.091.106-.192.237-.274.318-.091.091-.186.19-.08.372.106.182.471.777 1.011 1.258.697.621 1.285.813 1.467.904.182.091.289.076.396-.045.106-.122.456-.532.578-.714.122-.182.243-.152.41-.091.167.061 1.058.499 1.24.59.182.091.304.137.35.213.045.076.045.441-.099.846z" />
-    </svg>
-  )
 }
 
 function PaymentPageContent() {
@@ -244,10 +233,6 @@ function PaymentPageContent() {
         year: "numeric",
       })
     : "Verified Live Draw"
-
-  const waHelpUrl = `https://wa.me/${WHATSAPP_PHONE_CLEAN}?text=${encodeURIComponent(
-    `Salam PakRaffle! I need help with payment for Order #${orderId} (${selectedMethod.name}, Rs. ${totalAmount}).`,
-  )}`
 
   return (
     <div className="min-h-screen bg-gray-50/70 text-gray-900 pb-20">
@@ -533,33 +518,6 @@ function PaymentPageContent() {
               </div>
             </div>
 
-            {/* Direct WhatsApp Help Banner */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#25D366] text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <WhatsAppIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-gray-900">
-                    Facing any issue during transfer?
-                  </h4>
-                  <p className="text-[11px] text-gray-600 mt-0.5">
-                    Pakistani Support 24/7 on WhatsApp — Instant receipt help
-                  </p>
-                </div>
-              </div>
-
-              <a
-                href={waHelpUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs py-2.5 px-3.5 rounded-xl transition-colors flex items-center justify-center gap-1.5 shadow-xs"
-              >
-                <WhatsAppIcon className="w-3.5 h-3.5" />
-                <span>Chat on WhatsApp</span>
-                <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
-              </a>
-            </div>
           </div>
 
           {/* RIGHT COLUMN: Order Summary & Receipt Upload Dropzone (5 cols) */}
@@ -786,15 +744,6 @@ function PaymentPageContent() {
           <Link href="/refund" className="hover:text-gray-900 transition-colors">
             Refund Guarantee
           </Link>
-          <span>•</span>
-          <a
-            href={waHelpUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-emerald-700 font-semibold text-emerald-800 transition-colors"
-          >
-            WhatsApp Support
-          </a>
         </div>
         <p className="text-[11px] text-gray-400">
           PakRaffle © {new Date().getFullYear()} — Pakistan&apos;s Verified Transparent Digital Draws.

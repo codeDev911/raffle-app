@@ -9,7 +9,6 @@ import {
   LifeBuoy,
   Lock,
   Mail,
-  MessageCircle,
   MessagesSquare,
   RotateCcw,
   Search,
@@ -75,8 +74,6 @@ export const metadata = {
     description: "How draws work, how to pay, how winners are picked and how prizes are delivered — answered.",
   },
 }
-
-const WHATSAPP_URL = "https://wa.me/923377155722?text=Hello%20PakRaffle%20Support%2C%20I%20need%20help%20with%20a%20draw"
 
 /**
  * One array feeds three places: the topic rail, the accordions and the FAQPage JSON-LD.
@@ -328,13 +325,6 @@ const CHANNELS = [
     hint: "Every answer on this page, searchable without an account",
   },
   {
-    icon: MessageCircle,
-    label: "WhatsApp live",
-    value: "Under 15 min",
-    href: WHATSAPP_URL,
-    hint: "Payments, tickets, quick questions",
-  },
-  {
     icon: Mail,
     label: "Email desk",
     value: "Same working day",
@@ -421,7 +411,7 @@ export default function HelpPage() {
               </Pill>
               <Pill className="hidden sm:inline-flex">
                 <LiveDot />
-                WhatsApp replies under 15 minutes
+                Live chat replies under 15 minutes
               </Pill>
             </div>
 
@@ -445,10 +435,6 @@ export default function HelpPage() {
                 className="w-full sm:w-auto"
               />
               <KnowledgeBaseLink label="Help articles" className="w-full sm:w-auto" />
-              <Cta href={WHATSAPP_URL} variant="ghost" className="w-full sm:w-auto">
-                <MessageCircle className="h-4 w-4" />
-                Ask on WhatsApp
-              </Cta>
             </div>
 
             <p className="mt-7 font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
@@ -524,11 +510,11 @@ export default function HelpPage() {
             <div>
               <p className="text-[13px] font-semibold text-slate-900">Rather just ask?</p>
               <p className="mt-1 text-[11.5px] leading-relaxed text-slate-600">
-                The desk is live 24/7 on WhatsApp and answers in under fifteen minutes.
+                The desk is live 24/7 on chat and answers in under fifteen minutes.
               </p>
             </div>
             <a
-              href={WHATSAPP_URL}
+              href="/contact"
               className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-700 hover:underline"
             >
               Message support

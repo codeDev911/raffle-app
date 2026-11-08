@@ -52,7 +52,6 @@ import { prisma } from "@/lib/prisma"
 
 export const revalidate = 300
 
-const WHATSAPP_INTL = "923377155722"
 const WHATSAPP_CHANNEL_URL = "https://whatsapp.com/channel/0029VbB0CzJ8fewyBXpXy210"
 
 const STANDARDS = [
@@ -679,7 +678,7 @@ export default async function WinnersPage() {
                   <Cta href="/knowledge-base/if-you-win-verification-and-prize-handover" variant="light" className="min-h-[42px] px-4 text-[13px]">
                     Verification guide
                   </Cta>
-                  <Cta href={`https://wa.me/${WHATSAPP_INTL}?text=${encodeURIComponent("Salam PakRaffle! I want to verify a winner handover from the winners page.")}`} variant="light" className="min-h-[42px] px-4 text-[13px]">
+                  <Cta href="/contact" variant="light" className="min-h-[42px] px-4 text-[13px]">
                     Ask our team
                   </Cta>
                 </div>

@@ -420,7 +420,20 @@ export default function MerchantDashboard() {
           />
         )}
          {tab === "campaign-details" && (
-          <CampaignDetailsTab campaigns={campaigns} storeUrl={store.storeUrl} initialCampaignId={paramCampaign} onChanged={refresh} />
+          <CampaignDetailsTab
+            campaigns={campaigns}
+            invoices={invoices}
+            storeUrl={store.storeUrl}
+            initialCampaignId={paramCampaign}
+            entryFee={me.integration.entryFee}
+            settlementAccounts={me.settlementAccounts}
+            safepayEnabled={me.integration.safepay}
+            onChanged={refresh}
+            onNavigate={(tabKey, params) => {
+              const sp = new URLSearchParams(params || {})
+              router.replace(`/merchants/dashboard?tab=${tabKey}${sp.toString() ? `&${sp.toString()}` : ""}`, { scroll: false })
+            }}
+          />
         )}
         {tab === "entries" && (
           <EntriesTab

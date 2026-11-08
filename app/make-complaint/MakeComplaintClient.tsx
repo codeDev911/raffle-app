@@ -7,8 +7,7 @@ import { useSearchParams } from "next/navigation"
 import { ArrowLeft, CheckCircle2, Flag, Loader2, ShieldAlert } from "lucide-react"
 import { CONTAINER, Mesh, PANEL, SHELL } from "@/components/marketing/kit"
 import { COMPLAINT_ENDPOINT, emailField, submitToFormbold } from "@/lib/forms"
-
-const WHATSAPP_INTL = "923377155722"
+import { SUPPORT_EMAIL } from "@/lib/support-links"
 
 // The reason travels as its own field so the complaints inbox can be triaged without opening
 // every message.
@@ -56,7 +55,7 @@ export default function MakeComplaintClient() {
     setError(null)
 
     if (!COMPLAINT_ENDPOINT) {
-      setError("Complaints are temporarily unavailable. Please report to PakRaffle support on WhatsApp.")
+      setError("Complaints are temporarily unavailable. Please report to PakRaffle support at " + SUPPORT_EMAIL + ".")
       setStatus("idle")
       return
     }
@@ -235,12 +234,10 @@ export default function MakeComplaintClient() {
                 <p className="rounded-xl bg-rose-50 px-3.5 py-2.5 text-[12.5px] font-medium leading-relaxed text-rose-700">
                   {error}{" "}
                   <a
-                    href={`https://wa.me/${WHATSAPP_INTL}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`mailto:${SUPPORT_EMAIL}`}
                     className="font-semibold underline underline-offset-2"
                   >
-                    Message us on WhatsApp
+                    Email our complaints desk
                   </a>
                   .
                 </p>

@@ -93,7 +93,6 @@ interface PartnerStore {
 }
 
 const WHATSAPP_COMMUNITY_URL = "https://whatsapp.com/channel/0029VbB0CzJ8fewyBXpXy210"
-const WHATSAPP_PHONE_CLEAN = "923377155722"
 
 // Currency and dates run long; on a two-up mobile grid they would push past the tile, so the
 // fact row shrinks its figures and lets "Rs" wrap onto its own line instead of clipping.
@@ -539,9 +538,6 @@ const ClientSide = ({ raffle, related = [], stores = [] }: { raffle: Raffle; rel
 
   const status = statusMeta(raffle.status)
   const winner = raffle.winners?.[0]
-  const waInquiryUrl = `https://wa.me/${WHATSAPP_PHONE_CLEAN}?text=${encodeURIComponent(
-    `Salam PakRaffle! I have an inquiry about the "${raffle.title}" draw (Ticket: ${formatCurrency(raffle.price)}). Please guide me.`,
-  )}`
 
   return (
     <div className={SHELL}>
@@ -892,7 +888,7 @@ const ClientSide = ({ raffle, related = [], stores = [] }: { raffle: Raffle; rel
                   </div>
                 ) : (
                   <p className="text-[12.5px] leading-relaxed text-slate-500">
-                    Standard factory specifications and the official warranty apply. Message us on WhatsApp if you want
+                    Standard factory specifications and the official warranty apply. Ask our desk on live chat if you want
                     the full box contents before entering.
                   </p>
                 )}
@@ -986,7 +982,7 @@ const ClientSide = ({ raffle, related = [], stores = [] }: { raffle: Raffle; rel
               <Cta href={WHATSAPP_COMMUNITY_URL} className="w-full">
                 Join the channel
               </Cta>
-              <Cta href={waInquiryUrl} variant="ghost" className="w-full">
+              <Cta href="/contact" variant="ghost" className="w-full">
                 Ask about this draw
               </Cta>
             </div>

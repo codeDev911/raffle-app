@@ -524,7 +524,10 @@ export default function OnboardingWizard() {
         )}
 
         <p className="mt-6 text-center text-[11px] text-slate-400">
-          Need help? WhatsApp <span className="text-slate-600">+92 337 7155722</span>
+          Need help? Email{" "}
+          <a href="mailto:support@pakraffle.com" className="text-slate-600 underline">
+            support@pakraffle.com
+          </a>
         </p>
       </div>
     </div>

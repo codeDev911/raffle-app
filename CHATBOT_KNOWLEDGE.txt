@@ -30,10 +30,10 @@ The assistant must **never**:
 Every route below terminates at the same desk. A **Tawk.to live-chat widget is injected on every page** of the site (see §10.1), so it is the default intake; the other channels are for when the widget is offline, when a document must be attached, or when a structured record is required.
 | Situation | Route to |
 |---|---|
-| Paid but tickets missing after 15 min | WhatsApp desk with Transaction ID + screenshot |
-| Duplicate debit | WhatsApp or email with statement; full reversal, no deduction |
+| Paid but tickets missing after 15 min | Live chat or email desk with Transaction ID + screenshot |
+| Duplicate debit | Live chat or email with statement; full reversal, no deduction |
 | Complaint against a seller/store | `/make-complaint` |
-| Cannot log in, forgot password, changed number | `/contact` or WhatsApp (≈30 min) |
+| Cannot log in, forgot password, changed number | `/contact` or live chat (≈30 min) |
 | Merchant billing, webhook or ticket-void dispute | Merchant desk via `/merchants` or the merchant dashboard |
 | Seller custody, inspection or payout question | Seller desk via `/list-product` reference details |
 | Suspected fraud / someone asking for a fee | `/make-complaint` immediately |
@@ -252,7 +252,7 @@ A cancellation or refund at **any** node voids the ticket the moment the webhook
 | `/winners` | Winners gallery | Published winners with named prize, city and handover proof |
 | `/about` | About PakRaffle | Who we are, mission, transparency mechanics, operating principles |
 | `/help` | Help Centre | 7 topics, 35 answered questions — the primary FAQ source (§11) |
-| `/contact` | Contact | Channels and SLAs (§10); 24/7 desk, WhatsApp under 15 minutes |
+| `/contact` | Contact | Channels and SLAs (§10); 24/7 desk, live chat under 15 minutes |
 | `/make-complaint` | Report a seller | Confidential complaint intake routed to trust & safety (deliberately `noindex`) |
 | `/merchants` | Merchant Connect | Shopify draw programme (§4) |
 | `/list-product` | List your product | Seller listing dossier form + payout calculator (§5.1) |
@@ -306,8 +306,7 @@ All error responses are JSON. The widget talks to `storefront/status` (eligibili
 | Channel | Commitment | Use for |
 |---|---|---|
 | **Live chat widget** (Tawk.to, on every page) | **under 15 minutes** while agents are online | in-context help: a shopper mid-checkout or mid-payment does not have to leave the page |
-| WhatsApp live — **+92 337 7155722** | **under 15 minutes** | payments, tickets, quick questions, sending screenshots |
-| Email desk — **support@pakraffle.com** | same working day | audits, disputes, paperwork |
+| Email desk — **support@pakraffle.com** | same working day | audits, disputes, paperwork, sending screenshots |
 | **Knowledge base** — `https://pakraffle.tawk.help/` | self-serve, always available | "how do I…" questions that do not need an agent |
 | Complaint form — `/make-complaint` | logged and answered | seller/store conduct, suspected fraud |
 | Contact desk — `/contact` | 7 days a week, 24/7 | everything else |
@@ -418,7 +417,7 @@ Source: `app/list-product/ListProductClient.tsx`.
 ### 11.4 Affiliate partner FAQs
 Source: `app/become-a-partner/BecomeACustomerPartnerClient.tsx`.
 - **Do I need a large following or expensive camera to start?** Absolutely not! Over 60% of our successful affiliates are students, housewives, and everyday individuals who simply share links on their personal WhatsApp status or family groups. Even referring 3-5 ticket buyers a day earns you a solid passive monthly income.
-- **How and when do I get paid?** You can request a withdrawal directly through your partner platform dashboard or via WhatsApp to our Affiliate Manager. Payouts are sent within 2 to 6 hours directly to your JazzCash, Easypaisa, Raast, or any Pakistani Bank Account.
+- **How and when do I get paid?** You can request a withdrawal directly through your partner platform dashboard or via our support desk. Payouts are sent within 2 to 6 hours directly to your JazzCash, Easypaisa, Raast, or any Pakistani Bank Account.
 - **Is there any cost, deposit, or subscription fee to join?** No! PakRaffle Affiliate Program is 100% completely free to join and will always remain free. You never have to pay a single rupee to earn commissions.
 - **What if someone clicks my link today but buys a ticket 2 weeks later?** We use a 30-day tracking cookie! If someone clicks your link today and decides to purchase tickets anytime within the next 30 days, you will automatically receive full commission credit for that sale.
 - **What is the minimum amount I can withdraw?** The minimum payout threshold is just Rs. 500! As soon as you earn Rs. 500 from your first few referrals, you can immediately transfer it to your mobile wallet.
@@ -458,11 +457,10 @@ Source: `app/become-a-partner/BecomeACustomerPartnerClient.tsx`.
 | Partner attribution | 30-day cookie | `/become-a-partner` |
 | Partner minimum withdrawal | Rs 500 | `/become-a-partner` |
 | Partner payout speed | 2–6 hours | `/become-a-partner` |
-| WhatsApp response | under 15 minutes | `/contact` |
+| Live chat response | under 15 minutes | `/contact` |
 | Email response | same working day | `/contact` |
 | Account / technical support | ~30 minutes | `/contact` |
 | Support hours | 24/7, 7 days a week | `/contact` |
-| WhatsApp number | +92 337 7155722 | `lib/merchants/config.ts`, `/help` |
 | Support email | support@pakraffle.com | `/help` |
 | Draw randomness | cryptographically secure RNG, recorded seed + ledger | `/help` |
 | Broadcast | YouTube + Facebook, uncut | `/help` |

@@ -17,10 +17,8 @@ import {
   Video,
   Truck,
   Sparkles,
-  ExternalLink,
   Copy,
   Ticket,
-  Clock,
   Share2,
   AlertTriangle,
   Flame,
@@ -32,17 +30,6 @@ import Image from "next/image"
 import { prisma } from "@/lib/prisma"
 import { formatCurrency, formatDateTime } from "@/lib/utils"
 import { notFound } from "next/navigation"
-
-export const WHATSAPP_CLEAN = "923377155722"
-export const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/invite/pakraffle-official"
-
-function WhatsAppIcon({ className = "w-5 h-5" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path d="M17.507 14.307l-.009.075c-.238-.12-1.406-.694-1.624-.774-.219-.079-.378-.12-.538.12-.158.239-.617.774-.757.933-.138.16-.279.179-.517.06-.239-.12-1.008-.372-1.92-1.185-.709-.633-1.188-1.415-1.328-1.654-.139-.239-.015-.368.105-.487.108-.107.239-.279.359-.418.119-.14.159-.239.239-.399.08-.159.04-.299-.02-.418-.06-.12-.538-1.296-.737-1.774-.194-.467-.393-.404-.539-.412l-.46-.008c-.159 0-.418.06-.637.299-.22.239-.837.817-.837 1.993 0 1.176.857 2.311.976 2.471.12.16 1.687 2.576 4.088 3.613.571.247 1.018.395 1.366.506.574.183 1.096.157 1.509.095.46-.069 1.406-.575 1.605-1.131.199-.557.199-1.035.139-1.135-.059-.1-.219-.16-.458-.279zM12.023 2C6.49 2 2 6.48 2 12c0 1.979.578 3.824 1.579 5.378L2.094 22l4.802-1.436C8.36 21.435 10.134 22 12.023 22c5.534 0 10.024-4.48 10.024-10S17.557 2 12.023 2zm0 18.25c-1.644 0-3.18-.49-4.475-1.332l-.321-.21-2.852.853.865-2.784-.23-.332A8.196 8.196 0 013.78 12c0-4.545 3.697-8.243 8.243-8.243 4.545 0 8.243 3.698 8.243 8.243 0 4.545-3.698 8.25-8.243 8.25z" />
-    </svg>
-  )
-}
 
 async function getWinnerDetails(raffleId: string) {
   // Support exact ID match or fallback numeric prefix
@@ -167,7 +154,7 @@ async function getWinnerDetails(raffleId: string) {
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   return {
     title: "Official Verified Raffle Winner - PakRaffle Pakistan",
-    description: "Verified winner details, prize handover proof, and official live draw certificate. Contact official WhatsApp support for inquiries.",
+    description: "Verified winner details, prize handover proof, and official live draw certificate. Contact our verification desk for inquiries.",
   }
 }
 
@@ -203,10 +190,6 @@ export default async function WinnerDetailPage({ params }: { params: { id: strin
   const drawCertNumber = `PKR-VERIFIED-${winner.raffle.id.toUpperCase().replace(/[^A-Z0-9]/g, "")}-${new Date(winner.drawnAt).getFullYear()}`
   const winningTicketNo = `#TKT-084${(winner.prizeValue % 89) + 10}`
 
-  const waInquiryUrl = `https://wa.me/${WHATSAPP_CLEAN}?text=${encodeURIComponent(
-    `Salam PakRaffle! I am checking the official winner announcement for "${winner.raffle.title}" (Winner: ${winner.user.name}, Draw ID: ${drawCertNumber}). Please share details about upcoming live draws and tickets.`,
-  )}`
-
   return (
     <div className="min-h-screen bg-gray-50 pb-24 sm:pb-16 text-gray-900">
       {/* Top Notification / Trust Bar */}
@@ -216,17 +199,6 @@ export default async function WinnerDetailPage({ params }: { params: { id: strin
             <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
             <span className="font-semibold">Official PakRaffle Verified Draw Record</span>
             <span className="hidden md:inline text-emerald-200">| Certified Public Audit</span>
-          </div>
-          <div className="flex items-center gap-3 text-emerald-100 text-[11px]">
-            <a
-              href={waInquiryUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-bold text-white hover:text-emerald-300 flex items-center gap-1.5"
-            >
-              <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
-              <span>Official WhatsApp Support</span>
-            </a>
           </div>
         </div>
       </div>
@@ -339,59 +311,6 @@ export default async function WinnerDetailPage({ params }: { params: { id: strin
                 </div>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* PROMINENT OFFICIAL WHATSAPP CARD - REQUESTED BY USER */}
-        <div className="rounded-3xl border-2 border-emerald-400 bg-gradient-to-br from-emerald-50 via-teal-50/50 to-white p-5 sm:p-7 shadow-sm">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-            <div className="flex items-start gap-4">
-              <div className="w-13 h-13 rounded-2xl bg-[#25D366] text-white flex items-center justify-center shadow-md shrink-0">
-                <WhatsAppIcon className="w-7 h-7" />
-              </div>
-              <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold uppercase tracking-wider">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                  Official WhatsApp Contact & Draw Support
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
-                  WhatsApp: <span className="text-emerald-700 font-bold">Official Support Desk</span>
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-xl">
-                  Connect directly with our Islamabad/Lahore operations center for draw video recordings, winner verification, upcoming draw announcements, or ticket payment assistance.
-                </p>
-                <div className="flex items-center gap-3 pt-1 text-[11px] text-gray-500">
-                  <span className="flex items-center gap-1 text-emerald-700 font-semibold">
-                    <Clock className="w-3.5 h-3.5" /> Fast reply: Under 5 mins
-                  </span>
-                  <span>•</span>
-                  <span>7 Days a Week Support</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-stretch gap-2.5 w-full md:w-auto shrink-0 pt-2 md:pt-0">
-              <a
-                href={waInquiryUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-[#25D366] hover:bg-[#20ba59] active:bg-[#1caa52] text-white text-sm font-bold shadow-sm transition-all whitespace-nowrap min-h-[48px]"
-              >
-                <WhatsAppIcon className="w-5 h-5" />
-                Chat on WhatsApp Now
-              </a>
-
-              <a
-                href={WHATSAPP_COMMUNITY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-3.5 rounded-2xl bg-emerald-100/70 hover:bg-emerald-200/70 text-emerald-800 text-xs font-semibold transition-all whitespace-nowrap min-h-[48px]"
-                title="Join official community"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                Join Alerts Group
-              </a>
-            </div>
           </div>
         </div>
 
@@ -629,15 +548,11 @@ export default async function WinnerDetailPage({ params }: { params: { id: strin
       {/* MOBILE STICKY BOTTOM BAR (FOR 90% MOBILE USERS) */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 p-2.5 sm:hidden shadow-lg">
         <div className="flex items-center gap-2">
-          <a
-            href={waInquiryUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl bg-[#25D366] active:bg-[#1caa52] text-white text-xs font-bold shadow-xs min-h-[44px]"
-          >
-            <WhatsAppIcon className="w-4 h-4" />
-            WhatsApp Support
-          </a>
+          <Button asChild variant="outline" className="flex-1 rounded-xl text-xs font-bold py-3 min-h-[44px]">
+            <Link href="/contact">
+              Contact Support
+            </Link>
+          </Button>
 
           <Button asChild className="flex-1 rounded-xl bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-3 min-h-[44px]">
             <Link href="/raffles">

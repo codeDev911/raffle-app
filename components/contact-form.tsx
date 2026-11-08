@@ -3,8 +3,7 @@
 import { useState } from "react"
 import { CheckCircle2, Loader2, Send } from "lucide-react"
 import { CONTACT_ENDPOINT, submitToFormbold } from "@/lib/forms"
-
-const WHATSAPP_INTL = "923377155722"
+import { SUPPORT_EMAIL } from "@/lib/support-links"
 
 const INPUT =
   "w-full rounded-2xl border border-slate-900/10 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
@@ -47,7 +46,7 @@ export function ContactForm() {
     setError(null)
 
     if (!CONTACT_ENDPOINT) {
-      setError("The inquiry form is temporarily unavailable. Please reach us on WhatsApp.")
+      setError("The inquiry form is temporarily unavailable. Please email our support desk.")
       setStatus("idle")
       return
     }
@@ -81,7 +80,7 @@ export function ContactForm() {
         </h4>
         <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-slate-600">
           Thank you, {formData.name || "Customer"}. Your inquiry has been routed to our support desk. We will contact
-          you via WhatsApp or email within 15 to 30 minutes.
+          you via live chat or email within 15 to 30 minutes.
         </p>
         <button
           type="button"
@@ -196,12 +195,10 @@ export function ContactForm() {
         <p className="rounded-xl bg-rose-50 px-3.5 py-2.5 text-[12.5px] font-medium leading-relaxed text-rose-700">
           {error}{" "}
           <a
-            href={`https://wa.me/${WHATSAPP_INTL}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`mailto:${SUPPORT_EMAIL}`}
             className="font-semibold underline underline-offset-2"
           >
-            Message us on WhatsApp
+            Email our support desk
           </a>
           .
         </p>

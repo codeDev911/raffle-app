@@ -18,8 +18,6 @@ import {
   AlertCircle,
   HelpCircle,
   Sparkles,
-  ExternalLink,
-  Users,
   ChevronDown,
   RefreshCw,
   Home,
@@ -27,17 +25,6 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-
-const WHATSAPP_PHONE_CLEAN = "923377155722"
-const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/invite/pakraffle-official"
-
-function WhatsAppIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path d="M17.507 14.307l-.009.075c-.238-.12-1.406-.694-1.624-.774-.219-.079-.378-.12-.538.12-.158.239-.617.774-.757.933-.138.16-.279.179-.517.06-.239-.12-1.008-.372-1.92-1.185-.709-.633-1.188-1.415-1.328-1.654-.139-.239-.015-.368.105-.487.108-.107.239-.279.359-.418.119-.14.159-.239.239-.399.08-.159.04-.299-.02-.418-.06-.12-.538-1.296-.737-1.774-.194-.467-.393-.404-.539-.412l-.46-.008c-.159 0-.418.06-.637.299-.22.239-.837.817-.837 1.993 0 1.176.857 2.311.976 2.471.12.16 1.687 2.576 4.088 3.613.571.247 1.018.395 1.366.506.574.183 1.096.157 1.509.095.46-.069 1.406-.575 1.605-1.131.199-.557.199-1.035.139-1.135-.059-.1-.219-.16-.458-.279zM12.023 2C6.49 2 2 6.48 2 12c0 1.979.578 3.824 1.579 5.378L2.094 22l4.802-1.436C8.36 21.435 10.134 22 12.023 22c5.534 0 10.024-4.48 10.024-10S17.557 2 12.023 2zm0 18.25c-1.644 0-3.18-.49-4.475-1.332l-.321-.21-2.852.853.865-2.784-.23-.332A8.196 8.196 0 013.78 12c0-4.545 3.697-8.243 8.243-8.243 4.545 0 8.243 3.698 8.243 8.243 0 4.545-3.698 8.25-8.243 8.25z" />
-    </svg>
-  )
-}
 
 const paymentMethodsConfig: Record<
   string,
@@ -123,13 +110,6 @@ function ThankYouContent() {
     }
   }
 
-  const fastTrackWaText = encodeURIComponent(
-    `Salam PakRaffle! I have submitted my payment receipt for Order #${orderId}${
-      raffleTitleParam ? ` (${raffleTitleParam})` : ""
-    }${amountParam ? ` for Rs. ${amountParam}` : ""}. Kindly verify and issue my ticket.`
-  )
-  const fastTrackWaUrl = `https://wa.me/${WHATSAPP_PHONE_CLEAN}?text=${fastTrackWaText}`
-
   const toggleFaq = (index: number) => {
     setOpenFaq(openFaq === index ? null : index)
   }
@@ -147,18 +127,7 @@ function ThankYouContent() {
             <span>Home</span>
           </Link>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 hidden sm:inline">Official WhatsApp Desk:</span>
-            <a
-              href={`https://wa.me/${WHATSAPP_PHONE_CLEAN}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold hover:bg-emerald-100 transition-colors"
-            >
-              <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
-              <span className="font-mono">{WHATSAPP_SUPPORT_NUMBER}</span>
-            </a>
-          </div>
+          <span className="text-xs text-gray-400 hidden sm:inline">Receipt queued for verification</span>
         </div>
       </header>
 
@@ -217,38 +186,6 @@ function ThankYouContent() {
                 </>
               )}
             </Button>
-          </div>
-        </div>
-
-        {/* FAST-TRACK WHATSAPP CALLOUT */}
-        <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 rounded-3xl p-6 sm:p-7 text-white shadow-md relative overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
-            <div className="space-y-1.5 max-w-xl">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider">
-                  <Zap className="w-3 h-3 text-amber-300" />
-                  Instant Fast-Track
-                </span>
-                <span className="text-xs text-emerald-100">Direct WhatsApp Desk</span>
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold">
-                Want Instant Approval for Order #{orderId}?
-              </h3>
-              <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
-                Send your order reference and receipt screenshot to our official WhatsApp support desk for prioritized 5-minute verification!
-              </p>
-            </div>
-
-            <a
-              href={fastTrackWaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 inline-flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20ba59] text-white px-5 py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-black/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <WhatsAppIcon className="w-5 h-5" />
-              <span>Fast-Track on WhatsApp</span>
-              <ArrowRight className="w-4 h-4 ml-0.5" />
-            </a>
           </div>
         </div>
 
@@ -410,61 +347,6 @@ function ThankYouContent() {
           </Link>
         </div>
 
-        {/* Community & WhatsApp Channels */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          {/* Card 1: WhatsApp Community */}
-          <div className="bg-white rounded-3xl p-5 border border-gray-200/80 shadow-2xs flex flex-col justify-between space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-100">
-                <Users className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-gray-900">Join PakRaffle WhatsApp Community</h4>
-                <p className="text-xs text-gray-600 mt-0.5">
-                  Get real-time live draw links, winner announcements, and upcoming mega jackpot notifications.
-                </p>
-              </div>
-            </div>
-
-            <a
-              href={WHATSAPP_COMMUNITY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-800 text-xs font-bold border border-gray-200 transition-colors"
-            >
-              <Users className="w-4 h-4 text-emerald-600" />
-              <span>Join Official WhatsApp Group</span>
-              <ExternalLink className="w-3.5 h-3.5 text-gray-400 ml-auto" />
-            </a>
-          </div>
-
-          {/* Card 2: 24/7 Helpline */}
-          <div className="bg-white rounded-3xl p-5 border border-gray-200/80 shadow-2xs flex flex-col justify-between space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center shrink-0 border border-[#25D366]/20">
-                <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-gray-900">Need Immediate Help?</h4>
-                <p className="text-xs text-gray-600 mt-0.5">
-                  Our live support executive is active on WhatsApp 24/7 for any questions or receipt help.
-                </p>
-              </div>
-            </div>
-
-            <a
-              href={`https://wa.me/${WHATSAPP_PHONE_CLEAN}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200 transition-colors"
-            >
-              <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
-              <span>Chat on WhatsApp Support</span>
-              <ArrowRight className="w-3.5 h-3.5 text-emerald-600 ml-auto" />
-            </a>
-          </div>
-        </div>
-
         {/* Trust & Guarantee Banner */}
         <div className="p-4 sm:p-5 rounded-2xl bg-gray-50 border border-gray-200 text-center space-y-1 text-xs text-gray-500">
           <div className="flex items-center justify-center gap-1.5 font-bold text-gray-700">
@@ -473,19 +355,11 @@ function ThankYouContent() {
           </div>
           <p className="text-[11px] text-gray-500 max-w-xl mx-auto">
             All draws are conducted live with certified random selection. Receipts are manually matched to official bank statements.
-            For any dispute or clarification, reach us anytime via our official WhatsApp support.
+            For any dispute or clarification, reach us anytime through our support desk at support@pakraffle.com.
           </p>
         </div>
       </main>
     </div>
-  )
-}
-
-function Zap({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" stroke="none">
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-    </svg>
   )
 }
 

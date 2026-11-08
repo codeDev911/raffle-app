@@ -13,9 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-export const WHATSAPP_CLEAN = "923377155722"
-export const WHATSAPP_COMMUNITY_URL = "https://whatsapp.com/channel/0029VbB0CzJ8fewyBXpXy210"
-
 /**
  * Plain text navigation — no pills, no icon buttons. The bar floats over the hero on the marketing
  * pages and turns solid white as soon as the reader scrolls, so the first impression is the page.
@@ -100,10 +97,6 @@ export function Header() {
     OVERLAY_EXACT.includes(pathname || "") || OVERLAY_ROUTES.some((route) => pathname?.startsWith(route))
   // Colourless over the hero, white the moment it scrolls — and always white on inner pages.
   const solid = scrolled || !overlays
-
-  const waInquiryUrl = `https://wa.me/${WHATSAPP_CLEAN}?text=${encodeURIComponent(
-    "Salam PakRaffle! I have an inquiry about lucky draws and upcoming draws.",
-  )}`
 
   return (
     <>
@@ -295,14 +288,13 @@ export function Header() {
 
                   <p className="mt-8 border-t border-slate-900/5 pt-5 text-[11.5px] leading-relaxed text-slate-500">
                     Need help with a ticket?{" "}
-                    <a
-                      href={waInquiryUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Link
+                      href="/contact"
+                      onClick={() => setIsOpen(false)}
                       className="font-semibold text-emerald-700 hover:underline"
                     >
-                      Message us on WhatsApp
-                    </a>
+                      Message our support desk
+                    </Link>
                     .
                   </p>
                 </div>

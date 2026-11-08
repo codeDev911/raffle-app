@@ -36,8 +36,6 @@ import {
   TicketCard,
 } from "@/components/marketing/kit"
 
-const WHATSAPP_INTL = "923377155722"
-
 interface PublicTicket {
   ticketNumber: string
   status: "ISSUED" | "INVOICED" | "PAID" | "CANCELLED"
@@ -236,10 +234,7 @@ export default function StoreTicketLookupClient() {
                 and only for stores running a live campaign. Check the order number again or contact the store.
               </p>
               <div className="mt-5 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
-                <Cta
-                  href={`https://wa.me/${WHATSAPP_INTL}?text=${encodeURIComponent(`Ticket lookup: ${query}`)}`}
-                  variant="ghost"
-                >
+                <Cta href="/contact" variant="ghost">
                   <MessageCircle className="h-4 w-4" />
                   Ask PakRaffle support
                 </Cta>

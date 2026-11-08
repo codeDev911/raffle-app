@@ -842,6 +842,12 @@
     ".pakr-close{position:absolute;top:8px;right:10px;border:0;background:transparent;padding:2px;line-height:1;" +
     "font-size:16px;cursor:pointer;color:var(--pakr-muted,#94a3b8)}" +
     ".pakr-close:hover{color:var(--pakr-ink,#0f172a)}" +
+    // On an image-only banner the close control sits on the artwork, so it needs its own backdrop
+    // to read as a button instead of a stray mark over the seller's image.
+    ".pakr-plain .pakr-close{top:10px;right:10px;display:flex;align-items:center;justify-content:center;" +
+    "width:28px;height:28px;border-radius:999px;background:rgba(15,23,42,.55);color:#fff;" +
+    "font-size:18px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}" +
+    ".pakr-plain .pakr-close:hover{background:rgba(15,23,42,.75)}" +
     ".pakr-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;" +
     "padding-top:10px;border-top:1px solid var(--pakr-line,#e2e8f0)}" +
     ".pakr-brand{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;" +
@@ -852,12 +858,16 @@
     ".pakr-terms:hover{color:var(--pakr-accent,#059669)}" +
     // The seller's own artwork, framed with the storefront's tokens so an uploaded banner reads as
     // part of the theme rather than as an ad pasted over it.
-    ".pakr-card.pakr-plain{padding:10px 10px 12px}" +
-    ".pakr-plain .pakr-hero{margin-top:0;border-width:0;border-radius:calc(var(--pakr-radius,16px) - 6px)}" +
+    // An image-only banner carries no copy of its own, so it must not wear the card's chrome:
+    // no frame, no padding, no surface — just the artwork with the store's radius.
+    ".pakr-card.pakr-plain{padding:0;border:0;background:transparent;box-shadow:none}" +
+    ".pakr-plain .pakr-hero{margin:0;border:0;border-radius:var(--pakr-radius,16px)}" +
     ".pakr-hero{display:block;margin-top:11px;overflow:hidden;background:var(--pakr-panel,#f8fafc);" +
     "border:1px solid var(--pakr-line,#e2e8f0);border-radius:calc(var(--pakr-radius,16px) - 5px)}" +
     ".pakr-hero a{display:block;text-decoration:none}" +
-    ".pakr-hero img{display:block;width:100%;height:auto;max-height:300px;object-fit:cover}" +
+    // Height stays natural so a correctly-shaped banner is never cropped; the cap only tames a
+    // badly-proportioned legacy upload.
+    ".pakr-hero img{display:block;width:100%;height:auto;max-height:420px;object-fit:cover}" +
     ".pakr-promo-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;" +
     "margin-top:10px;padding:0 4px}" +
     ".pakr-promo-text{min-width:0;flex:1 1 14rem;font-family:var(--pakr-head-font,var(--pakr-font));" +
@@ -869,12 +879,14 @@
     ".pakr-promo-cta:focus-visible{outline:2px solid var(--pakr-accent,#059669);outline-offset:2px}"
 
   var MODAL_CSS =
-    ".pakr-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;" +
-    "background:rgba(2,6,23,.66);pointer-events:auto;z-index:1}" +
+    // overflow + margin:auto on the modal (below) is the pair that keeps a tall modal fully
+    // reachable on a short screen: it centres when it fits and scrolls when it does not.
+    ".pakr-overlay{position:fixed;inset:0;display:flex;padding:20px;" +
+    "background:rgba(2,6,23,.66);pointer-events:auto;z-index:1;overflow-y:auto}" +
     ".pakr-modal,.pakr-modal *{box-sizing:border-box;margin:0;padding:0;font-family:var(--pakr-font,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif)}" +
-    ".pakr-modal{position:relative;width:420px;max-width:100%;background:var(--pakr-surface,#fff);" +
+    ".pakr-modal{position:relative;margin:auto;width:420px;max-width:100%;background:var(--pakr-surface,#fff);" +
     "color:var(--pakr-ink,#0f172a);border:1px solid var(--pakr-line,#e2e8f0);border-radius:var(--pakr-radius,20px);" +
-    "padding:26px 24px;text-align:center;animation:pakr-in .3s ease-out}" +
+    "padding:24px 22px;text-align:center;animation:pakr-in .3s ease-out}" +
     ".pakr-emoji{font-size:36px;line-height:1}" +
     ".pakr-modal h2{margin-top:12px;font-family:var(--pakr-head-font,var(--pakr-font));font-size:20px;font-weight:800}" +
     ".pakr-modal p{margin-top:6px;font-size:13px;line-height:1.6;color:var(--pakr-muted,#475569)}" +
@@ -892,7 +904,9 @@
     // The campaign nudge: the seller's square creative, then the rule it advertises.
     ".pakr-kicker{font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;" +
     "color:var(--pakr-accent-deep,#047857)}" +
-    ".pakr-popup-img{display:block;width:100%;max-width:340px;aspect-ratio:1/1;object-fit:cover;" +
+    // Sized by the smallest of its own cap, the modal width and the viewport height, so the square
+    // creative always fits on screen instead of pushing the modal past the fold.
+    ".pakr-popup-img{display:block;width:min(340px,100%,40vh);aspect-ratio:1/1;object-fit:cover;" +
     "margin:14px auto 0;border-radius:calc(var(--pakr-radius,20px) - 8px);border:1px solid var(--pakr-line,#e2e8f0);" +
     "background:var(--pakr-panel,#f8fafc)}" +
     "a.pakr-go{display:block;text-decoration:none}" +
@@ -1279,7 +1293,6 @@
     if (session(key) === "1") return
     var root = shadowRoot()
     if (root.querySelector(".pakr-overlay")) return
-    session(key, "1")
 
     var goal = campaignPrize(campaign)
     var title = String(campaign.title || goal || "Lucky draw")
@@ -1311,6 +1324,9 @@
 
     root.appendChild(overlay)
     state.popup = overlay
+    // Stamp only once the overlay is really on screen: a render that threw must not spend the
+    // shopper's single nudge for this visit.
+    session(key, "1")
 
     function close() {
       if (overlay.parentNode) overlay.parentNode.removeChild(overlay)

@@ -684,7 +684,7 @@ export default async function LandingPage() {
               index="04"
               kicker="Questions"
               title="Asked before every first ticket"
-              body="If something here is still unclear, the support team answers on WhatsApp during business hours."
+              body="If something here is still unclear, the support team answers on live chat and email during business hours."
               align="center"
               className="max-w-3xl"
             />

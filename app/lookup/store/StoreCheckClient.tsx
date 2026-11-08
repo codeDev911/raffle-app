@@ -34,8 +34,6 @@ import {
   TicketCard,
 } from "@/components/marketing/kit"
 
-const WHATSAPP_INTL = "923377155722"
-
 type CampaignState = "live" | "paused" | "full" | "drawing" | "ended"
 
 interface StoreCampaign {
@@ -306,10 +304,7 @@ export default function StoreCheckClient() {
                 <Cta href="/raffles" variant="ghost">
                   Browse PakRaffle draws
                 </Cta>
-                <Cta
-                  href={`https://wa.me/${WHATSAPP_INTL}?text=${encodeURIComponent(`Store check: ${result.domain}`)}`}
-                  variant="ghost"
-                >
+                <Cta href="/contact" variant="ghost">
                   <MessageCircle className="h-4 w-4" />
                   Ask PakRaffle
                 </Cta>

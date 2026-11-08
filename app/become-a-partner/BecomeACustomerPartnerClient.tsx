@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import Link from "next/link"
 import {
   BadgeCheck,
   BarChart3,
@@ -42,8 +43,6 @@ import {
 } from "@/components/marketing/kit"
 import { Counter } from "@/components/marketing/motion"
 
-const WHATSAPP_INTL = "923377155722"
-
 const pkr = (value: number) => `Rs ${Math.round(value).toLocaleString("en-PK")}`
 const num = (value: number) => Math.round(value).toLocaleString("en-PK")
 
@@ -74,7 +73,7 @@ const TIERS = [
     perks: [
       "Everything in Starter",
       "Rs 15,000 growth milestone bonus",
-      "A named affiliate manager on WhatsApp",
+      "A named affiliate manager on live chat",
     ],
   },
   {
@@ -100,7 +99,7 @@ const FAQ = [
   },
   {
     q: "How and when do I get paid?",
-    a: "You can request a withdrawal directly through your partner platform dashboard or via WhatsApp to our Affiliate Manager. Payouts are sent within 2 to 6 hours directly to your JazzCash, Easypaisa, Raast, or any Pakistani Bank Account.",
+    a: "You can request a withdrawal directly through your partner platform dashboard or via our support desk. Payouts are sent within 2 to 6 hours directly to your JazzCash, Easypaisa, Raast, or any Pakistani Bank Account.",
   },
   {
     q: "Is there any cost, deposit, or subscription fee to join?",
@@ -274,8 +273,7 @@ export default function PartnerPage() {
   const tierProgress = nextTier ? Math.min(100, Math.round((monthlyTickets / nextTier) * 100)) : 100
 
   // Fallback target for partner platform redirect
-  const redirectHref =
-    partnerAppUrl || `https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20am%20ready%20to%20access%20the%20Partner%20Platform.`
+  const redirectHref = partnerAppUrl || "/contact"
 
   return (
     <div className={SHELL}>
@@ -322,13 +320,9 @@ export default function PartnerPage() {
                 <Handshake className="h-4 w-4" />
                 Go to Partner Platform
               </Cta>
-              <Cta
-                href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle%20Team!%20I%20want%20to%20join%20the%20Affiliate%20Program%20and%20start%20earning%20commissions.`}
-                variant="ghost"
-                className="w-full sm:w-auto"
-              >
+              <Cta href="/contact" variant="ghost" className="w-full sm:w-auto">
                 <MessageCircle className="h-4 w-4" />
-                Chat on WhatsApp
+                Talk to the desk
               </Cta>
             </div>
 
@@ -822,13 +816,9 @@ export default function PartnerPage() {
                   Launch partner platform
                   {partnerAppUrl ? <ExternalLink className="h-3.5 w-3.5" /> : null}
                 </Cta>
-                <Cta
-                  href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20have%20questions%20about%20the%20Partner%20Platform.`}
-                  variant="light"
-                  className="w-full sm:w-auto"
-                >
+                <Cta href="/contact" variant="light" className="w-full sm:w-auto">
                   <MessageCircle className="h-4 w-4" />
-                  VIP WhatsApp support
+                  Ask our partner desk
                 </Cta>
               </div>
               {partnerAppUrl && (
@@ -895,13 +885,10 @@ export default function PartnerPage() {
           <div>
             <SectionHead index="06" kicker="Questions" title="Everything before you start." />
             <p className="mt-4 text-[13.5px] leading-relaxed text-slate-600">
-              Still unsure? Message the affiliate desk on WhatsApp — a human answers, not a bot.
+              Still unsure? Reach the affiliate desk through the contact form — a human answers, not a bot.
             </p>
             <div className="mt-6 flex flex-col gap-2.5 sm:flex-row lg:flex-col">
-              <Cta
-                href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20am%20ready%20to%20start%20as%20an%20affiliate%20partner.`}
-                variant="ghost"
-              >
+              <Cta href="/contact" variant="ghost">
                 <MessageCircle className="h-4 w-4" />
                 Talk to the affiliate desk
               </Cta>
@@ -946,13 +933,9 @@ export default function PartnerPage() {
                 <Handshake className="h-4 w-4" />
                 Go to partner platform
               </Cta>
-              <Cta
-                href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20am%20ready%20to%20start%20as%20an%20affiliate%20partner.`}
-                variant="light"
-                className="w-full sm:w-auto"
-              >
+              <Cta href="/contact" variant="light" className="w-full sm:w-auto">
                 <MessageCircle className="h-4 w-4" />
-                Talk to VIP manager
+                Talk to the partner desk
               </Cta>
             </div>
 
@@ -967,24 +950,22 @@ export default function PartnerPage() {
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Check className="h-3.5 w-3.5 text-emerald-400" strokeWidth={3} />
-                WhatsApp payout support
+                Dedicated payout support
               </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ------------------------------------------- Floating WhatsApp helper */}
-      <a
-        href={`https://wa.me/${WHATSAPP_INTL}?text=Hi%20PakRaffle!%20I%20have%20a%20question%20about%20the%20affiliate%20partner%20program.`}
-        target="_blank"
-        rel="noopener noreferrer"
+      {/* ------------------------------------------- Floating partner help */}
+      <Link
+        href="/contact"
         className="fixed bottom-6 right-5 z-50 inline-flex items-center gap-2 rounded-full border border-white/20 bg-emerald-600 px-4 py-3 text-white shadow-[0_18px_40px_-16px_rgba(5,120,87,0.9)] transition hover:-translate-y-0.5 hover:bg-emerald-500"
-        title="Chat with Affiliate VIP Support on WhatsApp"
+        title="Chat with the affiliate partner desk"
       >
         <MessageCircle className="h-5 w-5" />
         <span className="hidden text-xs font-semibold sm:inline">Affiliate help</span>
-      </a>
+      </Link>
     </div>
   )
 }

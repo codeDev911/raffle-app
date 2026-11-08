@@ -1,13 +1,13 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import NextImage from "next/image"
-import { AlertTriangle, Check, ExternalLink, ImagePlus, Maximize, Megaphone, Minimize, RotateCcw, RotateCw, Upload, X } from "lucide-react"
+import { AlertTriangle, Check, ChevronRight, ExternalLink, ImagePlus, Maximize, Megaphone, Receipt, RotateCcw, RotateCw, Settings as SettingsIcon, Ticket, Upload, X } from "lucide-react"
 import { GUIDES, GuideStrip } from "./guides"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Alert, Btn, EmptyState, Field, Panel, PanelHeader, SelectInput, TextInput, merchantApi } from "../ui"
-import type { CampaignCreativeDTO, CampaignDTO } from "./types"
+import { Alert, Btn, EmptyState, Field, Panel, PanelHeader, SelectInput, Sep, TextInput, formatNumber, formatPKR, merchantApi } from "../ui"
+import type { CampaignCreativeDTO, CampaignDTO, InvoiceDTO, SettlementAccount } from "./types"
 
 /**
  * Campaign details — the storefront creative.
@@ -85,14 +85,24 @@ function ratioNote(kind: Slot, size?: { w: number; h: number }) {
 
 export function CampaignDetailsTab({
   campaigns,
+  invoices,
   storeUrl,
   initialCampaignId,
+  entryFee,
+  settlementAccounts,
+  safepayEnabled,
   onChanged,
+  onNavigate,
 }: {
   campaigns: CampaignDTO[]
+  invoices: InvoiceDTO[]
   storeUrl: string
   initialCampaignId?: string | null
+  entryFee: number
+  settlementAccounts: SettlementAccount[]
+  safepayEnabled: boolean
   onChanged: () => Promise<void> | void
+  onNavigate: (tab: string, params?: Record<string, string>) => void
 }) {
   const [campaignId, setCampaignId] = useState<string>("")
   const [draft, setDraft] = useState<Draft>(toDraft(null))
@@ -281,6 +291,16 @@ export function CampaignDetailsTab({
         )}
       </Panel>
 
+      {/* ── live context ──────────────────────────────────────────────────── */}
+      <ContextStrip
+        campaign={campaign}
+        invoices={invoices.filter((i) => i.campaignId === campaign?.id)}
+        entryFee={entryFee}
+        settlementAccounts={settlementAccounts}
+        safepayEnabled={safepayEnabled}
+        onNavigate={onNavigate}
+      />
+
       {error && (
         <Alert>{error}</Alert>
       )}
@@ -418,6 +438,172 @@ export function CampaignDetailsTab({
   )
 }
 
+// ───────────────────────── live context strip ─────────────────────────
+
+/**
+ * Three compact cards showing live counts from Entries, Invoices and Settings, scoped to the
+ * selected campaign. Read-only — clicking a card navigates to the dedicated tab pre-filtered.
+ */
+function ContextStrip({
+  campaign,
+  invoices,
+  entryFee,
+  settlementAccounts,
+  safepayEnabled,
+  onNavigate,
+}: {
+  campaign: CampaignDTO | null
+  invoices: InvoiceDTO[]
+  entryFee: number
+  settlementAccounts: SettlementAccount[]
+  safepayEnabled: boolean
+  onNavigate: (tab: string, params?: Record<string, string>) => void
+}) {
+  if (!campaign) return null
+
+  const openInvoices = invoices.filter((i) => i.status !== "PAID")
+  const paidInvoices = invoices.filter((i) => i.status === "PAID")
+  const totalDue = openInvoices.reduce((sum, i) => sum + i.amountDue, 0)
+  const latestOpenId = openInvoices[0]?.id
+
+  const pct = campaign.maxEntries
+    ? Math.min(100, Math.round((campaign.currentEntries / campaign.maxEntries) * 100))
+    : null
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-3">
+      {/* ── Entries card ──────────────────────────────────────────────── */}
+      <button
+        type="button"
+        onClick={() => onNavigate("entries", { campaign: campaign.id })}
+        className="group flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-emerald-200 hover:shadow-md"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+              <Ticket className="h-4 w-4" />
+            </div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Entries</span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-slate-300 transition group-hover:text-emerald-500" />
+        </div>
+
+        <div>
+          <p className="font-mono text-lg font-semibold tabular-nums text-slate-900">
+            {formatNumber(campaign.currentEntries)}
+            {campaign.maxEntries ? (
+              <>
+                <span className="text-slate-400"> / </span>
+                <span className="text-slate-500">{formatNumber(campaign.maxEntries)}</span>
+              </>
+            ) : null}
+          </p>
+          {pct !== null && (
+            <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className={cn("h-full rounded-full transition-all", campaign.capReached ? "bg-amber-500" : "bg-emerald-500")}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
+          <span className="font-mono tabular-nums">
+            {formatNumber(campaign.billableEntries)} × {formatPKR(entryFee)}
+          </span>
+          {campaign.testEntries > 0 && (
+            <>
+              <Sep />
+              <span>{campaign.testEntries} test</span>
+            </>
+          )}
+        </div>
+      </button>
+
+      {/* ── Invoices card ─────────────────────────────────────────────── */}
+      <button
+        type="button"
+        onClick={() => onNavigate("invoices", latestOpenId ? { open: latestOpenId } : undefined)}
+        className="group flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-emerald-200 hover:shadow-md"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+              <Receipt className="h-4 w-4" />
+            </div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Invoices</span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-slate-300 transition group-hover:text-emerald-500" />
+        </div>
+
+        <p className="font-mono text-lg font-semibold tabular-nums text-slate-900">
+          {formatPKR(totalDue)}
+        </p>
+
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
+          {openInvoices.length > 0 ? (
+            <span className="font-medium text-amber-700">
+              {openInvoices.length} open
+            </span>
+          ) : invoices.length > 0 ? (
+            <span className="font-medium text-emerald-700">
+              {paidInvoices.length} paid
+            </span>
+          ) : (
+            <span>No invoices yet</span>
+          )}
+          {openInvoices.length > 0 && paidInvoices.length > 0 && (
+            <>
+              <Sep />
+              <span>{paidInvoices.length} paid</span>
+            </>
+          )}
+        </div>
+      </button>
+
+      {/* ── Settings card ─────────────────────────────────────────────── */}
+      <button
+        type="button"
+        onClick={() => onNavigate("settings")}
+        className="group flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-emerald-200 hover:shadow-md"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+              <SettingsIcon className="h-4 w-4" />
+            </div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Settings</span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-slate-300 transition group-hover:text-emerald-500" />
+        </div>
+
+        <p className="font-mono text-lg font-semibold tabular-nums text-slate-900">
+          {formatPKR(entryFee)}
+          <span className="ml-1 text-xs font-normal text-slate-500">/ ticket</span>
+        </p>
+
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
+          {safepayEnabled ? (
+            <span className="font-medium text-emerald-700">Card checkout on</span>
+          ) : (
+            <span className="font-medium text-slate-500">Transfer only</span>
+          )}
+          {settlementAccounts.length > 0 && (
+            <>
+              <Sep />
+              <span className="truncate">
+                {settlementAccounts.slice(0, 2).map((a) => a.label).join(", ")}
+                {settlementAccounts.length > 2 && ` +${settlementAccounts.length - 2}`}
+              </span>
+            </>
+          )}
+        </div>
+      </button>
+    </div>
+  )
+}
+
 // ───────────────────────── image crop modal ─────────────────────────
 
 interface CropModalProps {
@@ -435,11 +621,13 @@ function CropModal({ kind, src, file, onConfirm, onCancel }: CropModalProps) {
   const [scale, setScale] = useState(1)
   const [rotation, setRotation] = useState(0)
   const [zoom, setZoom] = useState(1)
-  const [dragging, setDragging] = useState(false)
+  const [flipped, setFlipped] = useState(false)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [dragging, setDragging] = useState(false)
+  const dragStartRef = useRef({ x: 0, y: 0, ox: 0, oy: 0 })
 
   const targetRatio = SLOT_COPY[kind].want
+  const VP_SIZE = 480
 
   useEffect(() => {
     let active = true
@@ -448,14 +636,12 @@ function CropModal({ kind, src, file, onConfirm, onCancel }: CropModalProps) {
     img.onload = () => {
       if (!active) return
       imageRef.current = img
-      // Center and fit: scale so the image fills the crop frame.
-      const frameW = 600
-      const frameH = frameW / targetRatio
-      const scaleToFit = Math.max(frameW / img.naturalWidth, frameH / img.naturalHeight)
+      const scaleToFit = Math.max(VP_SIZE / img.naturalWidth, VP_SIZE / img.naturalHeight)
       setScale(scaleToFit)
       setOffset({ x: 0, y: 0 })
       setRotation(0)
       setZoom(1)
+      setFlipped(false)
       setImageReady(true)
     }
     img.onerror = () => {
@@ -475,6 +661,36 @@ function CropModal({ kind, src, file, onConfirm, onCancel }: CropModalProps) {
     return kind === "banner" ? { w: Math.round(dim * targetRatio), h: dim } : { w: dim, h: dim }
   }, [imageReady, kind, targetRatio])
 
+  // Frame dimensions in viewport pixels (centered, filling the viewport at target ratio)
+  const frame = useMemo(() => {
+    const w = VP_SIZE
+    const h = VP_SIZE / targetRatio
+    const x = 0
+    const y = (VP_SIZE - h) / 2
+    return { x, y, w, h }
+  }, [targetRatio])
+
+  // Pointer drag handlers
+  const onPointerDown = (e: React.PointerEvent) => {
+    e.preventDefault()
+    setDragging(true)
+    dragStartRef.current = { x: e.clientX, y: e.clientY, ox: offset.x, oy: offset.y }
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  }
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!dragging) return
+    const dx = e.clientX - dragStartRef.current.x
+    const dy = e.clientY - dragStartRef.current.y
+    setOffset({ x: dragStartRef.current.ox + dx, y: dragStartRef.current.oy + dy })
+  }
+  const onPointerUp = () => setDragging(false)
+
+  // Image CSS transform
+  const imgTransform = imageReady
+    ? `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${scale * zoom * (flipped ? -1 : 1)}, ${scale * zoom}) rotate(${rotation}deg)`
+    : ""
+
+  // Canvas rendering (for the final crop blob)
   useEffect(() => {
     const canvas = canvasRef.current
     const image = imageRef.current
@@ -483,22 +699,36 @@ function CropModal({ kind, src, file, onConfirm, onCancel }: CropModalProps) {
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Canvas sized to the cropped output dimensions.
     canvas.width = targetSize.w
     canvas.height = targetSize.h
 
-    const frameW = canvas.width
-    const frameH = canvas.height
-    const drawW = image.naturalWidth * scale * zoom
-    const drawH = image.naturalHeight * scale * zoom
+    // Compute the source region that maps to the frame in the viewport.
+    const sz = scale * zoom
+    const srcW = frame.w / sz
+    const srcH = frame.h / sz
+    const srcCX = image.naturalWidth / 2 - offset.x / sz
+    const srcCY = image.naturalHeight / 2 - offset.y / sz
 
-    ctx.clearRect(0, 0, frameW, frameH)
+    ctx.clearRect(0, 0, targetSize.w, targetSize.h)
     ctx.save()
-    ctx.translate(frameW / 2, frameH / 2)
+    ctx.translate(targetSize.w / 2, targetSize.h / 2)
     ctx.rotate((rotation * Math.PI) / 180)
-    ctx.drawImage(image, -drawW / 2 + offset.x, -drawH / 2 + offset.y, drawW, drawH)
+    if (flipped) ctx.scale(-1, 1)
+    ctx.drawImage(
+      image,
+      srcCX - srcW / 2,
+      srcCY - srcH / 2,
+      srcW,
+      srcH,
+      -targetSize.w / 2,
+      -targetSize.h / 2,
+      targetSize.w,
+      targetSize.h
+    )
     ctx.restore()
-  }, [imageReady, offset, rotation, scale, targetSize, zoom])
+  }, [imageReady, offset, rotation, scale, targetSize, zoom, flipped, frame])
+
+  const accentColor = kind === "banner" ? "#059669" : "#2563eb"
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onCancel() }}>
@@ -506,29 +736,86 @@ function CropModal({ kind, src, file, onConfirm, onCancel }: CropModalProps) {
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle className="text-lg font-semibold">Crop {kind === "banner" ? "banner" : "popup"} image</DialogTitle>
           <DialogDescription className="text-xs text-slate-500 mt-1">
-            Drag to position, rotate and zoom to fit the {targetRatio}:1 frame.
+            Drag to position, rotate and zoom. The highlighted frame shows exactly what shoppers will see.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 relative overflow-hidden bg-slate-100 flex items-center justify-center">
-          {/* Crop frame indicator */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ outline: `2px dashed ${kind === "banner" ? "#059669" : "#2563eb"}` }} />
-          <canvas ref={canvasRef} className="max-w-full max-h-full object-contain" />
+        {/* Viewport */}
+        <div className="flex-1 flex items-center justify-center overflow-hidden bg-slate-100 px-4 py-2">
+          <div
+            className="relative overflow-hidden bg-slate-900 cursor-grab active:cursor-grabbing select-none touch-none"
+            style={{ width: VP_SIZE, height: VP_SIZE, maxWidth: "100%", maxHeight: "60vh" }}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+          >
+            {/* Image layer */}
+            {imageReady && imageRef.current && (
+              <img
+                src={src}
+                alt=""
+                draggable={false}
+                className="absolute pointer-events-none"
+                style={{
+                  left: "50%",
+                  top: "50%",
+                  width: imageRef.current.naturalWidth * scale,
+                  height: imageRef.current.naturalHeight * scale,
+                  transform: imgTransform,
+                  transformOrigin: "center center",
+                }}
+              />
+            )}
+
+            {/* Overlay: darkened outside with frame cutout */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div
+                className="absolute"
+                style={{
+                  left: frame.x,
+                  top: frame.y,
+                  width: frame.w,
+                  height: frame.h,
+                  boxShadow: "0 0 0 9999px rgba(15, 23, 42, 0.55)",
+                  border: `2px solid ${accentColor}`,
+                }}
+              >
+                {/* Rule of thirds */}
+                <div className="absolute left-1/3 top-0 bottom-0 w-px bg-white/25" />
+                <div className="absolute left-2/3 top-0 bottom-0 w-px bg-white/25" />
+                <div className="absolute top-1/3 left-0 right-0 h-px bg-white/25" />
+                <div className="absolute top-2/3 left-0 right-0 h-px bg-white/25" />
+
+                {/* Corner label */}
+                <div className="absolute -top-7 left-0">
+                  <span className="rounded bg-slate-900/80 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                    {kind === "banner" ? "Banner 3:1" : "Popup 1:1"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Hidden canvas for crop output */}
+        <canvas ref={canvasRef} className="hidden" />
 
         <div className="border-t bg-slate-50 px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs text-slate-600">
             <span>{Math.round(file.size / 1024)} KB · {imageRef.current?.naturalWidth} × {imageRef.current?.naturalHeight}px</span>
+            <Sep />
+            <span>Output: {targetSize.w} × {targetSize.h}px</span>
           </div>
 
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => setRotation((r) => r - 90)} disabled={dragging} className="p-1.5 hover:bg-slate-200 rounded"><RotateCcw className="h-4 w-4" /></button>
             <button type="button" onClick={() => setRotation((r) => r + 90)} disabled={dragging} className="p-1.5 hover:bg-slate-200 rounded"><RotateCw className="h-4 w-4" /></button>
-            <button type="button" onClick={() => setScale((s) => s * -1)} disabled={dragging} className="p-1.5 hover:bg-slate-200 rounded" title="Flip"><Maximize className="h-4 w-4" /></button>
+            <button type="button" onClick={() => setFlipped((f) => !f)} disabled={dragging} className="p-1.5 hover:bg-slate-200 rounded" title="Flip horizontal"><Maximize className="h-4 w-4" /></button>
             <div className="h-[24px] w-[1px] bg-slate-300 mx-1" />
-            <button type="button" onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))} disabled={dragging} className="p-1.5 hover:bg-slate-200 rounded">-</button>
+            <button type="button" onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))} disabled={dragging} className="p-1.5 hover:bg-slate-200 rounded">−</button>
             <span className="text-xs font-mono text-slate-600">{Math.round(zoom * 100)}%</span>
-            <button type="button" onClick={() => setZoom((z) => Math.min(2, z + 0.1))} disabled={dragging} className="p-1.5 hover:bg-slate-200 rounded">+</button>
+            <button type="button" onClick={() => setZoom((z) => Math.min(3, z + 0.1))} disabled={dragging} className="p-1.5 hover:bg-slate-200 rounded">+</button>
           </div>
         </div>
 

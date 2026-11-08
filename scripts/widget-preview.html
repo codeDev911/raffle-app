@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PakRaffle widget preview harness</title>
+    <!--
+      Local-only harness: fakes a Shopify theme + the storefront API so widget.js can be exercised
+      without a live store. Query params drive the scenario. Not linked from anywhere in the app.
+        ?surface=home|product|collection   which page we pretend to be on
+        ?banner=1|0   showBannerHome / showBannerProduct
+        ?popup=1|0    showPopupHome  / showPopupProduct
+        ?items=0|3    cart line-item count
+        ?ratio=3      banner aspect ratio used for the placeholder art
+    -->
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #111827; background: #fff; }
+      .site-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 32px; border-bottom: 1px solid #e5e7eb; }
+      .site-header .logo { font-weight: 800; letter-spacing: -0.02em; font-size: 20px; }
+      .site-header nav a { margin-left: 22px; text-decoration: none; color: #374151; font-size: 14px; font-weight: 600; }
+      .hero { background: linear-gradient(120deg, #0f172a, #1e293b); color: #fff; padding: 72px 32px; text-align: center; }
+      .hero h1 { margin: 0 0 10px; font-size: 40px; letter-spacing: -0.03em; }
+      .hero p { margin: 0; opacity: 0.75; font-size: 16px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; padding: 32px; max-width: 1200px; margin: 0 auto; }
+      .tile { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
+      .tile .thumb { aspect-ratio: 1/1; background: #f3f4f6; }
+      .tile .meta { padding: 12px; }
+      .tile .meta b { display: block; font-size: 14px; }
+      .tile .meta span { font-size: 13px; color: #6b7280; }
+      .product { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 32px; max-width: 1200px; margin: 0 auto; }
+      .product .gallery { aspect-ratio: 1/1; background: #f3f4f6; border-radius: 14px; }
+      .product h1 { margin: 0 0 8px; font-size: 30px; letter-spacing: -0.02em; }
+      .price { font-size: 20px; font-weight: 700; margin: 0 0 18px; }
+      .buy { width: 100%; padding: 15px 20px; border: 0; border-radius: 10px; background: #111827; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+      .harness-note { position: fixed; left: 12px; bottom: 12px; z-index: 999999; background: #111827; color: #d1d5db; font: 11px/1.5 ui-monospace, Menlo, monospace; padding: 8px 10px; border-radius: 8px; max-width: 320px; }
+      @media (max-width: 800px) { .product { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="logo">Aurora&nbsp;Threads</div>
+      <nav><a href="#">Shop</a><a href="#">About</a><a href="#">Cart</a></nav>
+    </header>
+
+    <main id="MainContent" role="main"></main>
+
+    <div class="harness-note" id="harnessNote">harness booting…</div>
+
+    <script>
+      // ── scenario ────────────────────────────────────────────────────────────
+      // The surface comes from the real URL the server rendered us on, because widget.js reads
+      // location.pathname itself: "/" = home, "/products/..." = product, anything else = other.
+      var qs = new URLSearchParams(window.location.search)
+      var REAL_PATH = window.location.pathname.replace(/\/+$/, "") || "/"
+      var SURFACE = REAL_PATH.indexOf("/products/") === 0 ? "product" : REAL_PATH === "/" ? "home" : "collection"
+      var BANNER = qs.get("banner") !== "0"
+      var POPUP = qs.get("popup") !== "0"
+      var ITEMS = Number(qs.get("items") || 0)
+      var RATIO = Number(qs.get("ratio") || 3)
+
+      var bannerH = Math.round(1200 / RATIO)
+      var ART = {
+        banner: "https://placehold.co/1200x" + bannerH + "/059669/ffffff?text=Banner+" + RATIO + "%3A1",
+        popup: "https://placehold.co/800x800/0f172a/ffffff?text=Popup+1%3A1",
+      }
+
+      // ── fake theme page body ────────────────────────────────────────────────
+      var main = document.getElementById("MainContent")
+      if (SURFACE === "product") {
+        main.innerHTML =
+          '<div class="product">' +
+          '<div class="gallery"></div>' +
+          '<div class="product__details">' +
+          '<h1 class="product-title">Embroidered Lawn Kameez</h1>' +
+          '<p class="price">Rs. 4,500</p>' +
+          '<form action="/cart/add" method="post" class="product-form">' +
+          '<button class="buy" type="submit">Add to cart</button>' +
+          "</form></div></div>"
+      } else if (SURFACE === "collection") {
+        main.innerHTML =
+          '<section class="hero"><h1>Summer Lawn</h1><p>The full collection</p></section>' +
+          '<section class="grid">' +
+          Array.from({ length: 4 }, function (_, i) {
+            return '<div class="tile"><div class="thumb"></div><div class="meta"><b>Item ' + (i + 1) + "</b><span>Rs. 3,200</span></div></div>"
+          }).join("") +
+          "</section>"
+      } else {
+        main.innerHTML =
+          '<section class="hero"><h1>Summer Lawn 2026</h1><p>Hand-finished, limited run</p></section>' +
+          '<section class="grid">' +
+          Array.from({ length: 4 }, function (_, i) {
+            return '<div class="tile"><div class="thumb"></div><div class="meta"><b>Item ' + (i + 1) + "</b><span>Rs. 3,200</span></div></div>"
+          }).join("") +
+          "</section>"
+      }
+
+      // ── fake Shopify global ─────────────────────────────────────────────────
+      window.Shopify = {
+        currency: { active: "PKR" },
+        page: { type: SURFACE === "product" ? "product" : SURFACE === "collection" ? "collection" : "index" },
+      }
+
+      // ── stub the network ────────────────────────────────────────────────────
+      var CART = {
+        item_count: ITEMS,
+        items_subtotal_price: ITEMS * 450000,
+        total_price: ITEMS * 450000,
+        attributes: {},
+        items: Array.from({ length: ITEMS }, function (_, i) {
+          return { title: "Item " + (i + 1), quantity: 1, price: 450000, product_id: 900 + i, variant_id: 800 + i, sku: "SKU-" + i }
+        }),
+      }
+
+      var STATUS = {
+        success: true,
+        store: { name: "Aurora Threads" },
+        cart: { itemCount: ITEMS, amount: ITEMS * 4500 },
+        state: ITEMS === 0 ? "pitch" : "progress",
+        eligible: false,
+        missingItems: ITEMS === 0 ? 3 : Math.max(0, 3 - ITEMS),
+        missingAmount: 0,
+        reason: "Add " + Math.max(0, 3 - ITEMS) + " more items to qualify.",
+        progress: Math.min(99, ITEMS * 33),
+        tickets: 1,
+        campaign: {
+          id: "camp_demo_1",
+          title: "Win an iPhone 17 Pro",
+          ruleType: "MIN_QUANTITY",
+          ruleSummary: "Buy 3+ items from any collection",
+          minQuantity: 3,
+          minAmount: null,
+          hasProductFilters: false,
+          prize: { title: "iPhone 17 Pro", image: null },
+          drawDate: new Date(Date.now() + 21 * 864e5).toISOString(),
+          creative: {
+            bannerUrl: BANNER ? ART.banner : null,
+            popupUrl: POPUP ? ART.popup : null,
+            pageSlug: null,
+            ctaUrl: "/collections/all",
+            showBannerHome: BANNER,
+            showPopupHome: POPUP,
+            showBannerProduct: BANNER,
+            showPopupProduct: POPUP,
+            showCustomPage: false,
+          },
+        },
+      }
+
+      var nativeFetch = window.fetch.bind(window)
+      window.fetch = function (input, init) {
+        var url = typeof input === "string" ? input : (input && input.url) || ""
+        if (/\/cart\.js/.test(url)) return Promise.resolve(new Response(JSON.stringify(CART), { status: 200, headers: { "Content-Type": "application/json" } }))
+        if (/\/cart\/update\.js/.test(url)) return Promise.resolve(new Response("{}", { status: 200, headers: { "Content-Type": "application/json" } }))
+        if (/\/api\/merchants\/storefront\/status/.test(url)) {
+          window.__pakraffleStatusCalls = (window.__pakraffleStatusCalls || 0) + 1
+          return Promise.resolve(new Response(JSON.stringify(STATUS), { status: 200, headers: { "Content-Type": "application/json" } }))
+        }
+        if (/\/api\/merchants\/storefront\/claim/.test(url)) return Promise.resolve(new Response(JSON.stringify({ success: true, claims: [] }), { status: 200, headers: { "Content-Type": "application/json" } }))
+        return nativeFetch(input, init)
+      }
+
+      document.getElementById("harnessNote").textContent =
+        "path=" + REAL_PATH + "  surface=" + SURFACE + "  banner=" + (BANNER ? 1 : 0) + "  popup=" + (POPUP ? 1 : 0) + "  items=" + ITEMS + "  ratio=" + RATIO + ":1"
+    </script>
+
+    <script src="/merchants/widget.js?store=harness_demo"></script>
+  </body>
+</html>

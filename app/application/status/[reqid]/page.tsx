@@ -69,8 +69,6 @@ interface ApplicationData {
   updatedAt: string | Date
 }
 
-const WHATSAPP_INTL = "923377155722"
-
 /** Listing figures arrive in rupees; they are grouped locally, never scaled like entry prices. */
 const num = (value: number) => (Number.isFinite(value) ? value : 0).toLocaleString("en-PK")
 const money = (value: number) => `Rs ${num(Math.round(Number.isFinite(value) ? value : 0))}`
@@ -435,12 +433,7 @@ function StatusDetailContent() {
               <Cta href="/list-product" variant="ghost" className="w-full sm:w-auto">
                 Back to sell product
               </Cta>
-              <Cta
-                href={`https://wa.me/${WHATSAPP_INTL}?text=${encodeURIComponent(
-                  `Assalam o Alaikum PakRaffle, I need help accessing my listing application status for ID: ${reqId}`,
-                )}`}
-                className="w-full sm:w-auto"
-              >
+              <Cta href="/contact" className="w-full sm:w-auto">
                 <MessageCircle className="h-4 w-4" />
                 Contact verification desk
               </Cta>
@@ -543,7 +536,6 @@ function StatusDetailContent() {
   const effectiveToken = activeToken || application.secureToken || ""
   const dashboardHref = `/application/details/${application.id}?token=${effectiveToken}`
   const trackingLink = `${origin || ""}/application/status/${application.id}?token=${effectiveToken}`
-  const inquiryText = `Assalam o Alaikum PakRaffle Team, I am inquiring regarding my Product Listing Application #${application.id} for "${application.productName}".`
 
   return (
     <div className={SHELL}>
@@ -958,12 +950,9 @@ function StatusDetailContent() {
           <Cta href="/raffles" variant="ghost" className="w-full sm:w-auto">
             Browse live draws
           </Cta>
-          <Cta
-            href={`https://wa.me/${WHATSAPP_INTL}?text=${encodeURIComponent(inquiryText)}`}
-            className="w-full sm:ml-auto sm:w-auto"
-          >
+          <Cta href="/contact" className="w-full sm:ml-auto sm:w-auto">
             <MessageCircle className="h-4 w-4" />
-            Direct WhatsApp inquiry
+            Contact support desk
           </Cta>
         </section>
       </div>

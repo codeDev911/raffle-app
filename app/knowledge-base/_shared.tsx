@@ -13,8 +13,6 @@ import { sanityImageUrl, type KbArticle } from "@/lib/sanity"
 export const KB_PATH = "/knowledge-base"
 export const KB_SEARCH_PATH = "/knowledge-base/search"
 
-const WHATSAPP_URL = "https://wa.me/923377155722?text=Hello%20PakRaffle%20Support%2C%20I%20need%20help%20with%20an%20answer"
-
 export function KbShell({ children }: { children: React.ReactNode }) {
   return <div className={SHELL}>{children}</div>
 }
@@ -192,8 +190,8 @@ export function SupportRail() {
           <Cta href={LIVE_CHAT_URL} variant="primary" className="justify-center">
             <MessagesSquare className="h-4 w-4" /> Chat with support
           </Cta>
-          <Cta href={WHATSAPP_URL} variant="ghost" className="justify-center">
-            <LifeBuoy className="h-4 w-4" /> WhatsApp +92 337 7155722
+          <Cta href="/contact" variant="ghost" className="justify-center">
+            <LifeBuoy className="h-4 w-4" /> Contact the help desk
           </Cta>
           <Cta href={`mailto:${SUPPORT_EMAIL}`} variant="ghost" className="justify-center">
             <BookOpen className="h-4 w-4" /> {SUPPORT_EMAIL}

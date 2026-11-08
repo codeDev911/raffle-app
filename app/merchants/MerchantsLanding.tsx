@@ -943,7 +943,7 @@ export default function MerchantsLanding({ entryFee }: { entryFee: number }) {
               index="06"
               kicker="Questions"
               title="The things merchants ask first"
-              body="If something is still unclear, the merchant team answers on WhatsApp — and the lookup page lets you test a ticket before you launch."
+              body="If something is still unclear, the merchant team answers on live chat — and the lookup page lets you test a ticket before you launch."
               align="center"
             />
           </Reveal>

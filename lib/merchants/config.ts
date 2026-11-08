@@ -23,8 +23,6 @@ export const CHECKOUT_SESSION_TTL_MS = 30 * 60 * 1000
 
 export const TICKET_PREFIX = "PKR-SHOPIFY"
 
-export const WHATSAPP_SUPPORT_INTL = "923377155722"
-
 export interface SettlementAccount {
   key: string
   label: string

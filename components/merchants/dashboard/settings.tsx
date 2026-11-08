@@ -356,7 +356,7 @@ export function SettingsTab({
           {me.store.status === "PAUSED" && (
             <Alert>
               PakRaffle has paused this store. Webhooks are ignored and campaigns cannot resume. Contact{" "}
-              <a href={`https://wa.me/923377155722`} className="underline">
+              <a href="mailto:support@pakraffle.com" className="underline">
                 support
               </a>
               .

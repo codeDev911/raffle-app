@@ -32,16 +32,16 @@ import { LiveChatLink } from "@/components/marketing/live-chat"
 import { KNOWLEDGE_BASE_URL, LIVE_CHAT_URL } from "@/lib/support-links"
 
 export const metadata = {
-  title: "Contact PakRaffle — 24/7 Support on WhatsApp, Email & Phone",
+  title: "Contact PakRaffle — 24/7 Support on Live Chat, Email & Inquiry Desk",
   description:
-    "Reach PakRaffle support anytime: ticket verification help, draw schedules, prize delivery status, refund requests and merchant onboarding queries. WhatsApp, email and inquiry desk — average response under 15 minutes, 24/7 across Pakistan.",
+    "Reach PakRaffle support anytime: ticket verification help, draw schedules, prize delivery status, refund requests and merchant onboarding queries. Live chat, email and inquiry desk — average response under 15 minutes, 24/7 across Pakistan.",
   keywords: [
     "contact PakRaffle",
     "PakRaffle support",
     "lucky draw help Pakistan",
     "ticket verification help",
     "PakRaffle customer care",
-    "PakRaffle WhatsApp number",
+    "PakRaffle live chat",
     "raffle complaint Pakistan",
   ],
   robots: "index, follow",
@@ -50,7 +50,7 @@ export const metadata = {
   },
   openGraph: {
     title: "Contact Us - PakRaffle Pakistan",
-    description: "Get in touch with PakRaffle customer care via WhatsApp, email, or our inquiry desk — 24/7.",
+    description: "Get in touch with PakRaffle customer care via live chat, email, or our inquiry desk — 24/7.",
     url: "https://pakraffle.com/contact",
     siteName: "PakRaffle",
     type: "website",
@@ -59,12 +59,9 @@ export const metadata = {
   twitter: {
     card: "summary",
     title: "Contact PakRaffle Support",
-    description: "Ticket checks, draw schedules, prize claims — 24/7 support on WhatsApp and email.",
+    description: "Ticket checks, draw schedules, prize claims — 24/7 support on live chat and email.",
   },
 }
-
-const WHATSAPP_URL =
-  "https://wa.me/923377155722?text=Hello%20PakRaffle%20Support%2C%20I%20need%20assistance"
 
 const ROUTES = [
   {
@@ -81,14 +78,6 @@ const ROUTES = [
     value: "35 answers, always open",
     hint: "The searchable library, no account needed",
     href: KNOWLEDGE_BASE_URL,
-    external: true,
-  },
-  {
-    icon: MessageSquare,
-    label: "WhatsApp live",
-    value: "Under 15 min",
-    hint: "Ticket confirmation, payment slips, rapid questions",
-    href: WHATSAPP_URL,
     external: true,
   },
   {
@@ -158,7 +147,6 @@ export default function ContactPage() {
               contactPoint: [
                 {
                   "@type": "ContactPoint",
-                  telephone: "+92-337-7155722",
                   contactType: "customer support",
                   areaServed: "PK",
                   availableLanguage: ["English", "Urdu"],
@@ -221,10 +209,6 @@ export default function ContactPage() {
                 arrow
                 className="w-full sm:w-auto"
               />
-              <Cta href={WHATSAPP_URL} variant="ghost" className="w-full sm:w-auto">
-                <MessageSquare className="h-4 w-4" />
-                WhatsApp
-              </Cta>
               <Cta href="mailto:support@pakraffle.com" variant="ghost" className="w-full sm:w-auto">
                 <Mail className="h-4 w-4" />
                 Email the desk
@@ -232,7 +216,7 @@ export default function ContactPage() {
             </div>
 
             <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-slate-500">
-              {["Lahore & Islamabad desks", "24/7 WhatsApp & email", "Officer replies, never bots"].map((chip) => (
+              {["Lahore & Islamabad desks", "24/7 live chat & email", "Officer replies, never bots"].map((chip) => (
                 <span key={chip} className="inline-flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-600" strokeWidth={3} />
                   {chip}
@@ -293,7 +277,7 @@ export default function ContactPage() {
       {/* ------------------------------------------------------------ Key numbers */}
       <section className={`${CONTAINER} relative pb-4 pt-6`}>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatTile label="First reply" value="< 15 min" hint="WhatsApp, 7 days a week" accent />
+          <StatTile label="First reply" value="< 15 min" hint="Live chat, 7 days a week" accent />
           <StatTile label="Payment review" value="5–15 min" hint="TID or screenshot" />
           <StatTile label="Physical desks" value="2 cities" hint="Lahore & Islamabad" />
           <StatTile label="Prize handover" value="Rs 0" hint="Insured nationwide courier" />
@@ -310,7 +294,7 @@ export default function ContactPage() {
             </h2>
             <p className="mt-2 max-w-xl text-[13.5px] leading-relaxed text-slate-600">
               Include your transaction ID if the query is about payment, or your ticket serial if it is about an entry.
-              Every submission is logged with a reference you can quote on WhatsApp.
+              Every submission is logged with a reference you can quote with our desk.
             </p>
 
             <div className="mt-6 border-t border-slate-900/5 pt-6">
@@ -320,7 +304,7 @@ export default function ContactPage() {
 
           <div className="space-y-3">
             <a
-              href={WHATSAPP_URL}
+              href={LIVE_CHAT_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="group block rounded-3xl border border-emerald-500/25 bg-emerald-50/60 p-5 transition hover:border-emerald-500/40 hover:bg-emerald-50"
@@ -331,7 +315,7 @@ export default function ContactPage() {
                 </span>
                 <ArrowRight className="h-4 w-4 text-emerald-700 transition-transform group-hover:translate-x-0.5" />
               </div>
-              <h3 className="mt-3 font-display text-base font-semibold text-emerald-950">WhatsApp live support</h3>
+              <h3 className="mt-3 font-display text-base font-semibold text-emerald-950">Live chat support</h3>
               <p className="mt-1 text-[12px] leading-relaxed text-emerald-900/70">
                 Best for instant ticket confirmation, payment slip reviews and rapid questions. Average reply under 15
                 minutes.

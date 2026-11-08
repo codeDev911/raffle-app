@@ -104,8 +104,6 @@ interface ProductApplication {
   updatedAt: string
 }
 
-const WHATSAPP_INTL = "923377155722"
-
 /** Ledger amounts arrive in rupees, so they are grouped locally and never divided like entry prices. */
 const num = (value: number) => (Number.isFinite(value) ? value : 0).toLocaleString("en-PK")
 const money = (value: number) => `Rs ${num(Math.round(Number.isFinite(value) ? value : 0))}`
@@ -484,12 +482,7 @@ function ApplicationDashboardContent() {
               <Cta href={`/application/status/${id}`} variant="ghost" className="w-full sm:w-auto">
                 Check public status
               </Cta>
-              <Cta
-                href={`https://wa.me/${WHATSAPP_INTL}?text=${encodeURIComponent(
-                  `Assalam-o-Alaikum PakRaffle, I need assistance accessing my partner dashboard for application ID: ${id}`,
-                )}`}
-                className="w-full sm:w-auto"
-              >
+              <Cta href="/contact" className="w-full sm:w-auto">
                 <MessageCircle className="h-4 w-4" />
                 Contact verification desk
               </Cta>
@@ -547,7 +540,6 @@ function ApplicationDashboardContent() {
   const shareText = `Assalam-o-Alaikum! My ${application.productName} is officially live on PakRaffle! Tickets are just ${money(
     stats.ticketPrice,
   )} each! Grab your entry before it's sold out: ${shareUrl}`
-  const managerText = `Assalam-o-Alaikum! This is ${application.fullNameCnic}, seller for ${application.productName} (ID: ${application.id}). I would like to inquire about campaign promotion and draw schedule.`
 
   return (
     <div className={SHELL}>
@@ -973,11 +965,7 @@ function ApplicationDashboardContent() {
               <p className="mt-2 text-[12.5px] leading-relaxed text-emerald-50/75">
                 Message the partner desk for promotional banners, social shout-outs and the live draw schedule.
               </p>
-              <Cta
-                href={`https://wa.me/${WHATSAPP_INTL}?text=${encodeURIComponent(managerText)}`}
-                variant="light"
-                className="mt-4 w-full"
-              >
+              <Cta href="/contact" variant="light" className="mt-4 w-full">
                 <MessageCircle className="h-4 w-4" />
                 Chat with partner desk
               </Cta>

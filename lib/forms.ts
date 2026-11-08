@@ -50,7 +50,7 @@ export async function submitToFormbold(
   fallbackMessage = "We couldn't send that. Please try again in a moment.",
 ): Promise<void> {
   if (!endpoint) {
-    throw new Error("Submissions are temporarily unavailable. Please reach us on WhatsApp.")
+    throw new Error("Submissions are temporarily unavailable. Please email our support desk.")
   }
 
   const body = new FormData()

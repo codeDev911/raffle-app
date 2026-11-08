@@ -576,13 +576,9 @@ export default function AboutPage() {
                 <Trophy className="h-4 w-4" />
                 Explore active raffles
               </Cta>
-              <Cta
-                href="https://wa.me/923377155722?text=Hello%20PakRaffle%20Support%2C%20I%20have%20a%20question%20about%20a%20draw"
-                variant="light"
-                className="w-full sm:w-auto"
-              >
+              <Cta href="/contact" variant="light" className="w-full sm:w-auto">
                 <MessageSquare className="h-4 w-4" />
-                Chat on WhatsApp
+                Talk to our desk
               </Cta>
             </div>
 
