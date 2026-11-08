@@ -915,21 +915,26 @@
     "font-size:13px;font-weight:700;cursor:pointer;background:var(--pakr-accent,#059669);color:var(--pakr-accent-ink,#fff)}" +
     ".pakr-go:hover{background:var(--pakr-accent-deep,#047857)}" +
     ".pakr-fine{margin-top:10px;font-size:10.5px;color:var(--pakr-muted,#94a3b8)}" +
-    // The campaign nudge: the seller's square creative, then the rule it advertises.
-    ".pakr-kicker{font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;" +
-    "color:var(--pakr-accent-deep,#047857)}" +
-    // Sized by the smallest of its own cap, the modal width and the viewport height, so the square
-    // creative always fits on screen instead of pushing the modal past the fold.
-    ".pakr-popup-img{display:block;width:min(340px,100%,40vh);aspect-ratio:1/1;object-fit:cover;" +
-    "margin:14px auto 0;border-radius:calc(var(--pakr-radius,20px) - 8px);border:1px solid var(--pakr-line,#e2e8f0);" +
-    "background:var(--pakr-panel,#f8fafc)}" +
-    "a.pakr-go{display:block;text-decoration:none}" +
+    // The campaign nudge is the seller's square creative and nothing else — the artwork is the
+    // message, so nothing competes with it. min() keeps the 500px desktop square inside every
+    // viewport: the width rule wins on phones, the height rule wins on short laptop screens.
+    // (40px matches the overlay's own 20px padding.)
+    ".pakr-shot,.pakr-shot *{box-sizing:border-box;margin:0;padding:0}" +
+    ".pakr-shot{position:relative;margin:auto;overflow:hidden;aspect-ratio:1/1;" +
+    "width:min(500px,calc(100vw - 40px),calc(100vh - 40px));" +
+    "width:min(500px,calc(100vw - 40px),calc(100dvh - 40px));" +
+    "border-radius:calc(var(--pakr-radius,20px) - 6px);background:var(--pakr-panel,#f8fafc);" +
+    "animation:pakr-in .3s ease-out}" +
+    ".pakr-shot a{display:block;width:100%;height:100%}" +
+    ".pakr-shot a:focus-visible{outline:2px solid var(--pakr-accent,#059669);outline-offset:-2px}" +
+    ".pakr-shot img{display:block;width:100%;height:100%;object-fit:cover}" +
+    // The dismiss control sits on the artwork, so it needs the chip backdrop to read as a button.
+    ".pakr-shot .pakr-close{top:10px;right:10px;display:flex;align-items:center;justify-content:center;" +
+    "width:30px;height:30px;border-radius:999px;background:rgba(2,6,23,.55);color:#fff;" +
+    "font-size:18px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}" +
+    ".pakr-shot .pakr-close:hover{background:rgba(2,6,23,.78)}" +
     ".pakr-go:focus-visible{outline:2px solid var(--pakr-accent,#059669);outline-offset:2px}" +
-    // Declared after the modal reset, because `.pakr-modal *` would otherwise flatten the pills.
-    ".pakr-facts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px}" +
-    ".pakr-facts span{font-size:10.5px;font-weight:600;white-space:nowrap;border-radius:999px;padding:3px 9px;" +
-    "color:var(--pakr-accent-deep,#047857);background:var(--pakr-tint,#d1fae5);border:1px solid var(--pakr-tint-line,#a7f3d0)}" +
-    "@media (prefers-reduced-motion:reduce){.pakr-card,.pakr-modal{animation:none}}"
+    "@media (prefers-reduced-motion:reduce){.pakr-card,.pakr-modal,.pakr-shot{animation:none}}"
 
   function escapeHtml(value) {
     return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) {
@@ -1310,15 +1315,13 @@
     var root = shadowRoot()
     if (root.querySelector(".pakr-overlay")) return
 
-    var goal = campaignPrize(campaign)
-    var title = String(campaign.title || goal || "Lucky draw")
-    var facts = ['<span class="pakr-pill">' + escapeHtml(shortRule(campaign)) + "</span>"]
-    if (campaign.drawDate) facts.push('<span class="pakr-pill pakr-ghost">Draw ' + escapeHtml(drawLabel(campaign.drawDate)) + "</span>")
+    var title = String(campaign.title || campaignPrize(campaign) || "Lucky draw")
     var href = creative.ctaUrl
-    var external = /^https?:/i.test(href) ? ' target="_blank" rel="noopener noreferrer"' : ""
-    var action = href
-      ? '<a class="pakr-go" href="' + escapeHtml(href) + '"' + external + ">Enter the draw</a>"
-      : '<button class="pakr-go" type="button">Keep shopping</button>'
+    var img = '<img src="' + escapeHtml(creative.popupUrl) + '" alt="' + escapeHtml(title) + '" loading="lazy" />'
+    // The artwork is the whole message; when the seller set a target the whole shot is the link.
+    var shot = href
+      ? '<a href="' + escapeHtml(href) + '"' + (/^https?:/i.test(href) ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" + img + "</a>"
+      : img
 
     var overlay = document.createElement("div")
     overlay.className = "pakr-overlay"
@@ -1326,16 +1329,9 @@
     overlay.setAttribute("aria-modal", "true")
     overlay.setAttribute("aria-label", title)
     overlay.innerHTML =
-      '<div class="pakr-modal">' +
+      '<div class="pakr-shot">' +
       '<button class="pakr-close" type="button" aria-label="Close">&times;</button>' +
-      '<span class="pakr-kicker">Free lucky draw</span>' +
-      "<h2>" + escapeHtml(title) + "</h2>" +
-      (goal ? '<p class="pakr-prize">Win ' + escapeHtml(goal) + "</p>" : "") +
-      '<img class="pakr-popup-img" src="' + escapeHtml(creative.popupUrl) + '" alt="' + escapeHtml(title) + '" loading="lazy" />' +
-      "<p>" + escapeHtml(ruleHeadline(campaign)) + ". Buy now and your ticket is issued automatically at checkout, no code and no extra cost.</p>" +
-      '<div class="pakr-facts">' + facts.join("") + "</div>" +
-      action +
-      '<p class="pakr-fine">Powered by PakRaffle</p>' +
+      shot +
       "</div>"
 
     root.appendChild(overlay)
@@ -1348,7 +1344,7 @@
       if (overlay.parentNode) overlay.parentNode.removeChild(overlay)
       if (state.popup === overlay) state.popup = null
     }
-    var go = overlay.querySelector(".pakr-go")
+    var go = overlay.querySelector(".pakr-shot a")
     if (go) go.addEventListener("click", close)
     var x = overlay.querySelector(".pakr-close")
     if (x) x.addEventListener("click", close)
