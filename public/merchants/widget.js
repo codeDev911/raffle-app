@@ -835,10 +835,13 @@
     ".pakr-pill.pakr-ghost{color:var(--pakr-muted,#475569);background:var(--pakr-panel,#f1f5f9);border-color:var(--pakr-line,#e2e8f0)}" +
     ".pakr-steps{display:grid;gap:7px;margin-top:11px}" +
     ".pakr-step{display:flex;gap:8px;font-size:11.5px;line-height:1.5;color:var(--pakr-muted,#475569)}" +
-    ".pakr-step b{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:15px;height:15px;" +
+    ".pakr-step > b{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:16px;height:16px;" +
     "margin-top:1px;border-radius:50%;background:var(--pakr-accent,#059669);color:var(--pakr-accent-ink,#fff);" +
     "font-size:9.5px;font-weight:700}" +
     ".pakr-step span{min-width:0}" +
+    // The sentence emphasises numbers and the prize; those <b>s are inline words, not badges, so
+    // they must never inherit the number circle above (which collapses them to 16px).
+    ".pakr-step span b{color:var(--pakr-accent-deep,#047857);font-weight:700}" +
     ".pakr-close{position:absolute;top:8px;right:10px;border:0;background:transparent;padding:2px;line-height:1;" +
     "font-size:16px;cursor:pointer;color:var(--pakr-muted,#94a3b8)}" +
     ".pakr-close:hover{color:var(--pakr-ink,#0f172a)}" +
@@ -868,6 +871,17 @@
     // Height stays natural so a correctly-shaped banner is never cropped; the cap only tames a
     // badly-proportioned legacy upload.
     ".pakr-hero img{display:block;width:100%;height:auto;max-height:420px;object-fit:cover}" +
+    // Cover mode: a rule card that opens with the seller's artwork. The image runs flush to the
+    // card's top edge (the negative margins cancel the card's own padding) and squares off at the
+    // bottom, so the card reads image-first instead of framed-image-inside-a-box.
+    ".pakr-card.pakr-cover .pakr-hero{margin:-14px -16px 12px;border:0;" +
+    "border-radius:calc(var(--pakr-radius,16px) - 1px) calc(var(--pakr-radius,16px) - 1px) 0 0}" +
+    // The close control now sits on the artwork, so it takes the same chip treatment as the
+    // page banner instead of floating as a bare glyph.
+    ".pakr-cover .pakr-close{top:10px;right:10px;display:flex;align-items:center;justify-content:center;" +
+    "width:28px;height:28px;border-radius:999px;background:rgba(15,23,42,.55);color:#fff;" +
+    "font-size:18px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}" +
+    ".pakr-cover .pakr-close:hover{background:rgba(15,23,42,.75)}" +
     ".pakr-promo-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;" +
     "margin-top:10px;padding:0 4px}" +
     ".pakr-promo-text{min-width:0;flex:1 1 14rem;font-family:var(--pakr-head-font,var(--pakr-font));" +
@@ -1071,6 +1085,7 @@
       (options.celebrate ? " pakr-eligible" : "") +
       (anchor ? " pakr-stretch" : " pakr-float") +
       (slot === "promo" ? " pakr-plain" : "") +
+      (options.cover ? " pakr-cover" : "") +
       "'>" +
       html +
       "</div>"
@@ -1191,11 +1206,12 @@
 
     return (
       '<button class="pakr-close" type="button" aria-label="Dismiss">&times;</button>' +
+      // Artwork first when the seller has a banner: it is the purchase magnet, the rule reads under it.
+      heroHtml(creative, goal) +
       '<div class="pakr-head"><span class="pakr-seal">🎟️</span><div>' +
       '<span class="pakr-tag">Free lucky draw</span>' +
       '<p class="pakr-title">' + escapeHtml(headline) + "</p>" +
       "</div></div>" +
-      heroHtml(creative, goal) +
       '<p class="pakr-body">Complete checkout and PakRaffle issues your ticket automatically — no code, no extra cost.' +
       drawLine + "</p>" +
       '<div class="pakr-steps">' +
@@ -1387,7 +1403,7 @@
     // rule earns, and nothing else: no progress bar and no "2 items to go", because the shopper has
     // not decided to buy yet and that arithmetic belongs on the cart page.
     if (place === "product") {
-      mountCard(ruleHtml(status, creative), signature, { placement: "product", celebrate: false })
+      mountCard(ruleHtml(status, creative), signature, { placement: "product", celebrate: false, cover: Boolean(creative.banner) })
       return
     }
 
